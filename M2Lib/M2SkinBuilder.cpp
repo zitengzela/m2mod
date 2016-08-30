@@ -322,6 +322,7 @@ bool M2Lib::M2SkinBuilder::Build(M2Lib::M2Skin* pResult, UInt32 BoneLoD, M2Lib::
 	{
 		CSubMesh* pNewSubset = new CSubMesh();
 		pNewSubset->ID = pM2I->SubMeshList[i]->ID;
+		pNewSubset->pComparisonData = &pM2I->SubMeshList[i]->ComparisonData;
 
 		// add sub mesh partitions
 		for (UInt32 k = 0; k < m_BonePartitions.size(); k++)
@@ -479,7 +480,6 @@ bool M2Lib::M2SkinBuilder::Build(M2Lib::M2Skin* pResult, UInt32 BoneLoD, M2Lib::
 			if (m_SubMeshList[i]->SubsetPartitions[j]->Triangles.size())
 			{
 				M2Lib::M2Skin::CElement_SubMesh* pSubsetOut = &SubsetsOut[iSubsetPartition];
-				iSubsetPartition++;
 
 				pSubsetOut->ID = m_SubMeshList[i]->ID;
 				pSubsetOut->VertexStart = pSubsetPartitionIn->VertexStart;
@@ -494,6 +494,11 @@ bool M2Lib::M2SkinBuilder::Build(M2Lib::M2Skin* pResult, UInt32 BoneLoD, M2Lib::
 
 				// don't know what this is
 				//pSubsetOut->Unknown2 = pSubsetPartitionIn->Unknown2;
+
+				// store comparison data that is calculated from original mesh before it was separated
+				pResult->ComparisonDataBySubmeshIndex[iSubsetPartition] = m_SubMeshList[i]->pComparisonData;
+
+				++iSubsetPartition;
 			}
 		}
 	}

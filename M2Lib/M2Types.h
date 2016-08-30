@@ -1,6 +1,7 @@
 #pragma once
 
 #include "BaseTypes.h"
+#include <vector>
 
 namespace M2Lib
 {
@@ -87,4 +88,5 @@ namespace M2Lib
 
 	const char* GetErrorText(EError Error);
 
+	void CalculateBoundaries(std::vector<M2Lib::CVertex> const& vertices, Float32* CenterMass, Float32* BoundingCenter, Float32& BoundingRadius);
 }

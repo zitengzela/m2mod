@@ -3,6 +3,7 @@
 #include "BaseTypes.h"
 #include "M2Types.h"
 #include "M2Skin.h"
+#include "M2I.h"
 #include <vector>
 #include <map>
 #include <assert.h>
@@ -111,10 +112,11 @@ namespace M2Lib
 			//
 			//std::vector< M2Lib::M2Skin::CElement_Material* > pMaterials;
 
+			SubmeshComparisonData const* pComparisonData;
 
 		public:
 			CSubMesh()
-				: ID(0)
+				: ID(0), pComparisonData(NULL)
 			{
 			}
 

@@ -14,3 +14,10 @@ typedef wchar_t Char16;
 #ifndef MakeFourCC
 #define MakeFourCC(ch0, ch1, ch2, ch3) ((UInt32)(UInt8)(ch0) | ((UInt32)(UInt8)(ch1) << 8) | ((UInt32)(UInt8)(ch2) << 16) | ((UInt32)(UInt8)(ch3) << 24 ))
 #endif
+
+struct SubmeshComparisonData
+{
+	UInt32 ID;
+	Float32 CenterMass[3];
+	Float32 CenterBounds[3];
+};

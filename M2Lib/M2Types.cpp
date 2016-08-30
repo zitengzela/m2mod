@@ -251,3 +251,71 @@ const char* M2Lib::GetErrorText(EError Error)
 
 	return "error: unrecognized error";
 }
+
+void M2Lib::CalculateBoundaries(std::vector<M2Lib::CVertex> const& vertices, Float32* CenterMass, Float32* BoundingCenter, Float32& BoundingRadius)
+{
+	CenterMass[0] = 0.0f;
+	CenterMass[1] = 0.0f;
+	CenterMass[2] = 0.0f;
+
+	bool FirstPass = true;
+	Float32 BoundingMin[3], BoundingMax[3];
+	for (auto const& Vertex : vertices)
+	{
+		if (FirstPass)
+		{
+			BoundingMin[0] = Vertex.Position[0];
+			BoundingMin[1] = Vertex.Position[1];
+			BoundingMin[2] = Vertex.Position[2];
+
+			BoundingMax[0] = Vertex.Position[0];
+			BoundingMax[1] = Vertex.Position[1];
+			BoundingMax[2] = Vertex.Position[2];
+
+			FirstPass = false;
+		}
+		else
+		{
+			if (BoundingMin[0] > Vertex.Position[0])
+				BoundingMin[0] = Vertex.Position[0];
+			if (BoundingMin[1] > Vertex.Position[1])
+				BoundingMin[1] = Vertex.Position[1];
+			if (BoundingMin[2] > Vertex.Position[2])
+				BoundingMin[2] = Vertex.Position[2];
+
+			if (BoundingMax[0] < Vertex.Position[0])
+				BoundingMax[0] = Vertex.Position[0];
+			if (BoundingMax[1] < Vertex.Position[1])
+				BoundingMax[1] = Vertex.Position[1];
+			if (BoundingMax[2] < Vertex.Position[2])
+				BoundingMax[2] = Vertex.Position[2];
+		}
+
+		CenterMass[0] += Vertex.Position[0];
+		CenterMass[1] += Vertex.Position[1];
+		CenterMass[2] += Vertex.Position[2];
+	}
+
+	CenterMass[0] /= (Float32)vertices.size();
+	CenterMass[1] /= (Float32)vertices.size();
+	CenterMass[2] /= (Float32)vertices.size();
+
+	BoundingCenter[0] = (BoundingMin[0] + BoundingMax[0]) / 2.0f;
+	BoundingCenter[1] = (BoundingMin[1] + BoundingMax[1]) / 2.0f;
+	BoundingCenter[2] = (BoundingMin[2] + BoundingMax[2]) / 2.0f;
+
+	BoundingRadius = 0.0f;
+	for (auto const& Vertex : vertices)
+	{
+		Float32 PositionLocal[3];
+		Float32 Distance;
+
+		PositionLocal[0] = Vertex.Position[0] - BoundingCenter[0];
+		PositionLocal[1] = Vertex.Position[1] - BoundingCenter[1];
+		PositionLocal[2] = Vertex.Position[2] - BoundingCenter[2];
+
+		Distance = sqrt((PositionLocal[0] * PositionLocal[0]) + (PositionLocal[1] * PositionLocal[1]) + (PositionLocal[2] * PositionLocal[2]));
+		if (Distance > BoundingRadius)
+			BoundingRadius = Distance;
+	}
+}

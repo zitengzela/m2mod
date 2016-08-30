@@ -3,6 +3,7 @@
 #include "M2Element.h"
 #include "M2Types.h"
 #include <vector>
+#include <map>
 
 namespace M2Lib
 {
@@ -174,6 +175,8 @@ namespace M2Lib
 		CM2SkinHeader Header;
 		M2Element Elements[EElement__Count__];
 
+		std::map<int, SubmeshComparisonData const*> ComparisonDataBySubmeshIndex;
+
 		// pointer to M2 that this skin belongs to.
 		M2* pM2;
 
@@ -197,7 +200,7 @@ namespace M2Lib
 		bool PrintInfo();
 
 		// returns sub mesh with ID using CenterBounds to narrow search. some times there are multiple sub meshes with the same ID, so we can narrow our search to whatever sub mesh lies closest to CenterBounds.
-		CElement_SubMesh* GetSubMesh(CElement_SubMesh const * TargetSubMesh, SInt32& SubMeshTriangleIndexOut);
+		CElement_SubMesh* GetSubMesh(SubmeshComparisonData const& TargetSubMeshData, SInt32& SubMeshTriangleIndexOut);
 
 		// gathers list of materials that affect a given sub mesh within this skin.
 		void GetSubMeshMaterials(UInt32 SubMeshTriangleIndex, std::vector< CElement_Material* >& Result);

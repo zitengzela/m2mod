@@ -561,6 +561,7 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16* FileName, bool IgnoreBones
 
 		// read id
 		pNewSubMesh->ID = DataBinary.ReadUInt16();
+		pNewSubMesh->ComparisonData.ID = pNewSubMesh->ID;
 		// FMN 2015-02-13: read level
 		pNewSubMesh->Level = DataBinary.ReadUInt16();
 
@@ -572,6 +573,7 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16* FileName, bool IgnoreBones
 			return M2Lib::EError_FailedToImportM2I_TooManyVertices;
 		}
 
+		std::vector<CVertex> submeshVertices;
 		for (UInt32 j = 0; j < InVertexCount; j++)
 		{
 			M2Lib::CVertex InVertex;
@@ -606,7 +608,12 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16* FileName, bool IgnoreBones
 			UInt16 VertexTriangleIndex = NewVertexList.size();
 			NewVertexList.push_back(InVertex);
 			pNewSubMesh->Indices.push_back(VertexTriangleIndex);
+
+			submeshVertices.push_back(InVertex);
 		}
+
+		Float32 BoundingRadius;
+		CalculateBoundaries(submeshVertices, pNewSubMesh->ComparisonData.CenterMass, pNewSubMesh->ComparisonData.CenterBounds, BoundingRadius);
 
 		// read triangles
 		UInt32 InTriangleCount = 0;
