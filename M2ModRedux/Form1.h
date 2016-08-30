@@ -72,6 +72,8 @@ namespace M2ModRedux
 	private: System::Windows::Forms::Label^  label4;
 	private: System::Windows::Forms::Label^  labelSatus;
 	private: System::Windows::Forms::Button^  buttonGo;
+	private: System::Windows::Forms::CheckBox^  checkBoxFixSeams;
+
 	private: System::ComponentModel::IContainer^  components;
 
 
@@ -115,6 +117,7 @@ namespace M2ModRedux
 				 this->panelOutputM2 = (gcnew System::Windows::Forms::Panel());
 				 this->textBoxOutputM2 = (gcnew System::Windows::Forms::TextBox());
 				 this->panelImportCb = (gcnew System::Windows::Forms::Panel());
+				 this->checkBoxFixSeams = (gcnew System::Windows::Forms::CheckBox());
 				 this->label4 = (gcnew System::Windows::Forms::Label());
 				 this->labelSatus = (gcnew System::Windows::Forms::Label());
 				 this->tabControl1->SuspendLayout();
@@ -442,6 +445,7 @@ namespace M2ModRedux
 				 // 
 				 // panelImportCb
 				 // 
+				 this->panelImportCb->Controls->Add(this->checkBoxFixSeams);
 				 this->panelImportCb->Controls->Add(this->checkBoxMergeCameras);
 				 this->panelImportCb->Controls->Add(this->checkBoxMergeAttachments);
 				 this->panelImportCb->Controls->Add(this->checkBoxMergeBones);
@@ -449,6 +453,16 @@ namespace M2ModRedux
 				 this->panelImportCb->Name = L"panelImportCb";
 				 this->panelImportCb->Size = System::Drawing::Size(531, 63);
 				 this->panelImportCb->TabIndex = 25;
+				 // 
+				 // checkBoxFixSeams
+				 // 
+				 this->checkBoxFixSeams->AutoSize = true;
+				 this->checkBoxFixSeams->Location = System::Drawing::Point(204, 0);
+				 this->checkBoxFixSeams->Name = L"checkBoxFixSeams";
+				 this->checkBoxFixSeams->Size = System::Drawing::Size(74, 17);
+				 this->checkBoxFixSeams->TabIndex = 18;
+				 this->checkBoxFixSeams->Text = L"Fix Seams";
+				 this->checkBoxFixSeams->UseVisualStyleBackColor = true;
 				 // 
 				 // label4
 				 // 
@@ -659,7 +673,7 @@ namespace M2ModRedux
 
 				// export M2
 				StringPointer = System::Runtime::InteropServices::Marshal::StringToHGlobalUni(textBoxOutputM2->Text);
-				Error = M2->Save((Char16*)StringPointer.ToPointer());
+				Error = M2->Save((Char16*)StringPointer.ToPointer(), checkBoxFixSeams->Checked);
 				System::Runtime::InteropServices::Marshal::FreeHGlobal(StringPointer);
 
 				if (Error != 0)

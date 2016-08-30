@@ -153,8 +153,10 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 }
 
 
-M2Lib::EError M2Lib::M2::Save(const Char16* FileName)
+M2Lib::EError M2Lib::M2::Save(const Char16* FileName, bool FixSeams)
 {
+	this->FixSeams = FixSeams;
+
 	// check path
 	if (!FileName)
 		return M2Lib::EError_FailedToSaveM2_NoFileSpecified;
@@ -702,18 +704,17 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16* FileName, bool IgnoreBones
 		Skins[i] = i == 0 ? pNewSkin0 : 0;
 	}
 
-	// fix normals within submeshes
-	FixSeamsSubMesh(SubmeshPositionalTolerance, SubmeshAngularTolerance * DegreesToRadians);
+	if (FixSeams)
+	{
+		// fix normals within submeshes
+		FixSeamsSubMesh(SubmeshPositionalTolerance, SubmeshAngularTolerance * DegreesToRadians);
 
-	// fix normals between body submeshes
-	FixSeamsBody(BodyPositionalTolerance, BodyAngularTolerance * DegreesToRadians);
+		// fix normals between body submeshes
+		FixSeamsBody(BodyPositionalTolerance, BodyAngularTolerance * DegreesToRadians);
 
-	// close gaps between clothes and body
-	FixSeamsClothing(ClothingPositionalTolerance, ClothingAngularTolerance * DegreesToRadians);
-
-
-
-
+		// close gaps between clothes and body
+		FixSeamsClothing(ClothingPositionalTolerance, ClothingAngularTolerance * DegreesToRadians);
+	}
 
 	//
 	//

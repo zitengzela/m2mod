@@ -892,18 +892,21 @@ namespace M2Lib
 			m_OriginalSize = 0;
 			RawData = 0;
 			ImportedM2I = false;
+			FixSeams = false;
 		}
 
 		~M2()
 		{
 		}
 
+	protected:
+		bool FixSeams;
 
 	public:
 		// loads an M2 from a file.
 		M2Lib::EError Load(const Char16* FileName);
 		// saves this M2 to a file.
-		M2Lib::EError Save(const Char16* FileName);
+		M2Lib::EError Save(const Char16* FileName, bool FixSeams);
 
 		// exports the loaded M2 as an M2I file.
 		M2Lib::EError ExportM2Intermediate(Char16* FileName);
