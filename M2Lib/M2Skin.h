@@ -48,12 +48,13 @@ namespace M2Lib
 			UInt32 nMaterial;
 			UInt32 oMaterial;
 
-			UInt32 Unknown1;	// always 0. was bone LoD in v3.
+			UInt32 Unknown1;	// non-zero only in ChickenMount01.skin
 
 			UInt32 nFlags;
 			UInt32 oFlags;
 
-			UInt32 Unknown2;	// always 0.
+			UInt32 Unknown2;	// non-zero only in ChickenMount01.skin
+			UInt32 Unknown3;	// non-zero only in ChickenMount01.skin
 		};
 
 		class CElement_Vertex

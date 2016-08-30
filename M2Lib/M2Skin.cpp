@@ -585,6 +585,7 @@ bool M2Lib::M2Skin::PrintInfo()
 	FileStream << std::endl;
 
 	FileStream << "Unknown2:      " << Header.Unknown2 << std::endl;
+	FileStream << "Unknown3:      " << Header.Unknown3 << std::endl;
 	FileStream << std::endl;
 
 
@@ -597,6 +598,7 @@ bool M2Lib::M2Skin::PrintInfo()
 		CElement_SubMesh& Subset = SubMeshes[i];
 		FileStream << "[" << i << "]" << std::endl;
 		FileStream << "ID:           " << Subset.ID << std::endl;
+		FileStream << "Level:        " << Subset.Level << std::endl;
 		FileStream << "VertexStart:  " << Subset.VertexStart << std::endl;
 		FileStream << "VertexCount:  " << Subset.VertexCount << std::endl;
 		FileStream << "TriangleIndexStart:   " << Subset.TriangleIndexStart << std::endl;
@@ -604,7 +606,7 @@ bool M2Lib::M2Skin::PrintInfo()
 		FileStream << "BoneCount:    " << Subset.BoneCount << std::endl;
 		FileStream << "BoneStart:    " << Subset.BoneStart << std::endl;
 		FileStream << "MaxBonesPerVertex:     " << Subset.MaxBonesPerVertex << std::endl;
-		FileStream << "Unknown2:     " << Subset.SortTriangleIndex << std::endl;
+		FileStream << "SortTriangleIndex:     " << Subset.SortTriangleIndex << std::endl;
 		FileStream << "CenterMass:   " << "( " << Subset.CenterMass[0] << ", " << Subset.CenterMass[1] << ", " << Subset.CenterMass[2] << " ) " << std::endl;
 		FileStream << "CenterBounds: " << "( " << Subset.CenterBounds[0] << ", " << Subset.CenterBounds[1] << ", " << Subset.CenterBounds[2] << " ) " << std::endl;
 		FileStream << "Radius:       " << Subset.Radius << std::endl;

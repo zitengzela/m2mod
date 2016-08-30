@@ -216,8 +216,7 @@ M2Lib::EError M2Lib::M2::Save(const Char16* FileName)
 	if ((Header.Elements.nSkin == 0) || (Header.Elements.nSkin > 4))
 		return M2Lib::EError_FailedToSaveM2;
 
-	//for (UInt32 i = 0; i < Header.Elements.nSkin; i++)
-	for (UInt32 i = 0; i < 6; i++)
+	for (UInt32 i = 0; i < Header.Elements.nSkin; i++)
 	{
 		Char16 FileNameSkin[1024];
 		GetFileSkin(FileNameSkin, FileName, i);
@@ -232,7 +231,14 @@ M2Lib::EError M2Lib::M2::Save(const Char16* FileName)
 			if (M2Lib::EError Error = Skins[i]->Save(FileNameSkin))
 				return Error;
 		}
+	}
 
+	for (int i = 0; i < 2; ++i)
+	{
+		Char16 FileNameSkin[1024];
+		GetFileSkin(FileNameSkin, FileName, i + 4);
+		if (M2Lib::EError Error = (Skins[(Skins[1]) ? 1 : 0])->Save(FileNameSkin))
+			return Error;
 	}
 
 	return M2Lib::EError_OK;
@@ -446,16 +452,8 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16* FileName, bool IgnoreBones
 	// load signature
 	UInt32 InSignature = 0;
 	InSignature = DataBinary.ReadFourCC();
-	if (InSignature == 1)
-	{
-	}
-	else if (InSignature == Signature_M2I0)
-	{
-	}
-	else
-	{
+	if (InSignature != 1 && InSignature != Signature_M2I0)
 		return M2Lib::EError_FailedToImportM2I_FileCorrupt;
-	}
 
 	// load version
 	UInt16 VersionMajor;
@@ -464,20 +462,8 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16* FileName, bool IgnoreBones
 	{
 		VersionMajor = DataBinary.ReadUInt16();
 		VersionMinor = DataBinary.ReadUInt16();
-		if (VersionMajor == 4)
-		{
-			if (VersionMinor == 5)
-			{
-			}
-			else
-			{
-				return EError_FailedToImportM2I_UnsupportedVersion;
-			}
-		}
-		else
-		{
+		if (VersionMajor != 4 && VersionMinor != 5)
 			return EError_FailedToImportM2I_UnsupportedVersion;
-		}
 	}
 
 	// load sub meshes, build new vertex list
@@ -705,7 +691,7 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16* FileName, bool IgnoreBones
 	Elements[EElement_Skin].Count = 1;
 	for (UInt32 i = 0; i < 4; i++)
 	{
-		if (i > 0 && Skins[i])
+		if (i != 0 && Skins[i])
 		{
 			delete Skins[i];
 		}
@@ -1794,6 +1780,18 @@ void M2Lib::M2::m_LoadElements_FindSizes(UInt32 FileSize)
 
 #define VERIFY_OFFSET_LOCAL( offset ) assert( ( Elements[iElement].Offset <= offset ) && ( offset < ( Elements[iElement].Offset + Elements[iElement].DataSize ) ) );
 #define VERIFY_OFFSET_NOTLOCAL( offset ) assert( offset > ( Elements[iElement].OffsetOriginal + Elements[iElement].DataSize ) );
+#define FIX_FAKE_ANIMATION_BLOCK(block) \
+	if (block.oTimes) \
+	{ \
+		VERIFY_OFFSET_LOCAL(block.oTimes) \
+		block.oTimes += OffsetDelta; \
+	} \
+	if (block.oKeys) \
+	{ \
+		VERIFY_OFFSET_LOCAL(block.oKeys) \
+		block.oKeys += OffsetDelta; \
+	}
+
 void M2Lib::M2::m_SaveElements_FindOffsets()
 {
 	// thanks TP
@@ -1960,8 +1958,16 @@ void M2Lib::M2::m_SaveElements_FindOffsets()
 					{
 						VERIFY_OFFSET_LOCAL(ParticleEmitters[j].oFileNameModel);
 						ParticleEmitters[j].oFileNameModel += OffsetDelta;
-						VERIFY_OFFSET_LOCAL(ParticleEmitters[j].oUnknown);
-						ParticleEmitters[j].oUnknown += OffsetDelta;
+						if (ParticleEmitters[j].oChildEmitter)
+						{
+							VERIFY_OFFSET_LOCAL(ParticleEmitters[j].oChildEmitter);
+							ParticleEmitters[j].oChildEmitter += OffsetDelta;
+						}
+						if (ParticleEmitters[j].oUnk)
+						{
+							VERIFY_OFFSET_LOCAL(ParticleEmitters[j].oUnk);
+							ParticleEmitters[j].oUnk += OffsetDelta;
+						}
 
 						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_EmitSpeed, iElement, false);
 						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_SpeedVariance, iElement, false);
@@ -1974,6 +1980,12 @@ void M2Lib::M2::m_SaveElements_FindOffsets()
 						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_EmitWidth, iElement, false);
 						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_GravityStrong, iElement, false);
 						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_Visibility, iElement, false);
+
+						FIX_FAKE_ANIMATION_BLOCK(ParticleEmitters[j].colorTrack);
+						FIX_FAKE_ANIMATION_BLOCK(ParticleEmitters[j].alphaTrack);
+						FIX_FAKE_ANIMATION_BLOCK(ParticleEmitters[j].scaleTrack);
+						FIX_FAKE_ANIMATION_BLOCK(ParticleEmitters[j].headCellTrack);
+						FIX_FAKE_ANIMATION_BLOCK(ParticleEmitters[j].tailCellTrack);
 					}
 					break;
 				}

@@ -313,6 +313,14 @@ namespace M2Lib
 
 		};
 
+		class CElement_FakeAnimationBlock
+		{
+		public:
+			UInt32 nTimes;
+			UInt32 oTimes;
+			UInt32 nKeys;
+			UInt32 oKeys;
+		};
 
 		//
 		// a list of these makes up a skeleton.
@@ -780,7 +788,7 @@ namespace M2Lib
 
 
 		//
-		//
+		// 492 0x1EC
 		class CElement_ParticleEmitter
 		{
 		public:
@@ -791,14 +799,21 @@ namespace M2Lib
 			UInt16 Texture;
 			UInt32 nFileNameModel;	//
 			UInt32 oFileNameModel;	// name of model to spawn *.mdx.
-			UInt32 nUnknown;
-			UInt32 oUnknown;
-			UInt16 BlendMode;
-			UInt16 EmitterType;
-			UInt16 ParticleType;
+
+			UInt32 nChildEmitter;	//
+			UInt32 oChildEmitter;	//
+
+			UInt8 BlendingType;
+			UInt8 EmitterType;
+
+			UInt16 ParticleColorIndex;
+			UInt8 ParticleType;
+			UInt8 HeadOrTail;
+
 			UInt16 Rotation;
-			UInt16 Columns;
 			UInt16 Rows;
+			UInt16 Columns;
+
 
 			CElement_AnimationBlock AnimationBlock_EmitSpeed;		// Float32
 			CElement_AnimationBlock AnimationBlock_SpeedVariance;	// Float32
@@ -806,25 +821,37 @@ namespace M2Lib
 			CElement_AnimationBlock AnimationBlock_Unknown;			// Float32
 			CElement_AnimationBlock AnimationBlock_Gravity;			// Float32
 			CElement_AnimationBlock AnimationBlock_Lifespan;		// Float32
+			UInt32 unknownPadding;
 			CElement_AnimationBlock AnimationBlock_EmitRate;		// Float32
+			UInt32 unknownPadding2;
 			CElement_AnimationBlock AnimationBlock_EmitLength;		// Float32
 			CElement_AnimationBlock AnimationBlock_EmitWidth;		// Float32
 			CElement_AnimationBlock AnimationBlock_GravityStrong;	// Float32
 
-			struct
-			{
-				Float32 Mid;
-				UInt32 Colors[3];
-				Float32 Sizes[3];
-				UInt16 Indices[10];
-				Float32 Unknown[3];
-				Float32 Scales[3];
-				Float32 Slowdown;
-				Float32 Rotation;
-				Float32 f2[16];
-			} Attributes;
+			CElement_FakeAnimationBlock colorTrack;
+			CElement_FakeAnimationBlock alphaTrack;
+			CElement_FakeAnimationBlock scaleTrack;
+			float _unk[2];
+			CElement_FakeAnimationBlock headCellTrack;
+			CElement_FakeAnimationBlock tailCellTrack;
+			float _unk2;
+			float _unk3[2];
+			float _min;
+			float _max;
+			UInt32 _unk4;
+			float drag;
+			float _unk5[2];
+			float rotation;
+			float _unk6[2];
+			float Rot1[3];
+			float Rot2[3];
+			float Trans[3];
+			float FollowParams[4];
 
+			UInt32 nUnk;	//
+			UInt32 oUnk;	//
 			CElement_AnimationBlock AnimationBlock_Visibility;		// UInt16
+			UInt32 _unk7[0x4];
 		};
 #pragma pack(pop)
 

@@ -422,6 +422,7 @@ bool M2Lib::M2SkinBuilder::Build(M2Lib::M2Skin* pResult, UInt32 BoneLoD, M2Lib::
 	//pResult->Header.LevelOfDetail = m_MaxBones;
 	pResult->Header.Unknown1 = 0;
 	pResult->Header.Unknown2 = 0;
+	pResult->Header.Unknown3 = 0;
 
 	UInt32 TotalPartitionCount = 0;
 	for (UInt32 i = 0; i < m_SubMeshList.size(); i++)
