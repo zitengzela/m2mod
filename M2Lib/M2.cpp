@@ -205,7 +205,7 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 }
 
 
-M2Lib::EError M2Lib::M2::Save(const Char16* FileName, bool FixSeams, bool ChunkedFormat)
+M2Lib::EError M2Lib::M2::Save(const Char16* FileName, bool FixSeams)
 {
 	this->FixSeams = FixSeams;
 
@@ -224,16 +224,10 @@ M2Lib::EError M2Lib::M2::Save(const Char16* FileName, bool FixSeams, bool Chunke
 	m_SaveElements_CopyElementsToHeader();
 
 	// Reserve model chunk header
-	UInt16 Version = 0x0110;
+	M2Lib::M2Element::SetFileOffset(8);
+	FileStream.seekp(8, std::ios::beg);
 
-	if (ChunkedFormat)
-	{
-		M2Lib::M2Element::SetFileOffset(8);
-		FileStream.seekp(8, std::ios::beg);
-	}
-
-	Header.Description.Version[0] = Version & 0xFF;
-	Header.Description.Version[1] = (Version >> 8) & 0xFF;
+	*(UInt16*)Header.Description.Version = 0x0110;
 
 	// save header
 	FileStream.write((Char8*)&Header.Description, sizeof(Header.Description));
@@ -267,25 +261,22 @@ M2Lib::EError M2Lib::M2::Save(const Char16* FileName, bool FixSeams, bool Chunke
 			return M2Lib::EError_FailedToSaveM2;
 	}
 
-	if (ChunkedFormat)
+	UInt32 MD20Size = FileStream.tellp();
+	MD20Size -= 8;
+
+	for (UInt32 i = M2::EChunk_Model + 1; i < M2::EChunk__Count__; i++)
 	{
-		UInt32 MD20Size = FileStream.tellp();
-		MD20Size -= 8;
-
-		for (UInt32 i = M2::EChunk_Model + 1; i < M2::EChunk__Count__; i++)
+		if (Chunks[i].DataSize)
 		{
-			if (Chunks[i].DataSize)
-			{
-				FileStream.write(kChunkIDs[i], 4);
-				FileStream.write((Char8*)&(Chunks[i].DataSize), 4);
-				FileStream.write((Char8*)Chunks[i].Data, Chunks[i].DataSize);
-			}
+			FileStream.write(kChunkIDs[i], 4);
+			FileStream.write((Char8*)&(Chunks[i].DataSize), 4);
+			FileStream.write((Char8*)Chunks[i].Data, Chunks[i].DataSize);
 		}
-
-		FileStream.seekp(0, std::ios::beg);
-		FileStream.write(kChunkIDs[M2::EChunk_Model], 4);
-		FileStream.write((Char8*)(&MD20Size), 4);
 	}
+
+	FileStream.seekp(0, std::ios::beg);
+	FileStream.write(kChunkIDs[M2::EChunk_Model], 4);
+	FileStream.write((Char8*)(&MD20Size), 4);
 
 	// close file stream
 	FileStream.close();
@@ -659,6 +650,18 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16* FileName, bool IgnoreBones
 			BoneToMod.Position[2] = DataBinary.ReadFloat32();
 		}
 	}
+	else
+	{
+		UInt32 BoneCountIn = DataBinary.ReadUInt32();
+		for (UInt32 i = 0; i < BoneCountIn; ++i)
+		{
+			DataBinary.ReadUInt16();
+			DataBinary.ReadSInt16();
+			DataBinary.ReadFloat32();
+			DataBinary.ReadFloat32();
+			DataBinary.ReadFloat32();
+		}
+	}
 
 	if (!IgnoreAttachments)
 	{
@@ -698,6 +701,19 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16* FileName, bool IgnoreBones
 				DataBinary.ReadFloat32();
 				DataBinary.ReadFloat32();
 			}
+		}
+	}
+	else
+	{
+		UInt32 AttachmentCountIn = DataBinary.ReadUInt32();
+		for (UInt32 i = 0; i < AttachmentCountIn; ++i)
+		{
+			DataBinary.ReadUInt32();
+			DataBinary.ReadUInt16();
+			DataBinary.ReadFloat32();
+			DataBinary.ReadFloat32();
+			DataBinary.ReadFloat32();
+			DataBinary.ReadFloat32();
 		}
 	}
 
@@ -759,6 +775,23 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16* FileName, bool IgnoreBones
 				DataBinary.ReadFloat32();
 				DataBinary.ReadFloat32();
 			}
+		}
+	}
+	else
+	{
+		UInt32 CameraCountIn = DataBinary.ReadUInt32();
+		for (UInt32 i = 0; i < CameraCountIn; ++i)
+		{
+			DataBinary.ReadSInt32();
+			DataBinary.ReadFloat32();
+			DataBinary.ReadFloat32();
+			DataBinary.ReadFloat32();
+			DataBinary.ReadFloat32();
+			DataBinary.ReadFloat32();
+			DataBinary.ReadFloat32();
+			DataBinary.ReadFloat32();
+			DataBinary.ReadFloat32();
+			DataBinary.ReadFloat32();
 		}
 	}
 

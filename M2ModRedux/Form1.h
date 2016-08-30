@@ -673,7 +673,7 @@ namespace M2ModRedux
 
 				// export M2
 				StringPointer = System::Runtime::InteropServices::Marshal::StringToHGlobalUni(textBoxOutputM2->Text);
-				Error = M2->Save((Char16*)StringPointer.ToPointer(), checkBoxFixSeams->Checked, true);
+				Error = M2->Save((Char16*)StringPointer.ToPointer(), checkBoxFixSeams->Checked);
 				System::Runtime::InteropServices::Marshal::FreeHGlobal(StringPointer);
 
 				if (Error != 0)
