@@ -5,21 +5,21 @@
 
 M2Lib::CTriangle::CTriangle()
 {
-	Index = 0;
+	TriangleIndex = 0;
 
 	Vertices[0] = 0;
 	Vertices[1] = 0;
 	Vertices[2] = 0;
 }
 
-M2Lib::CTriangle::CTriangle( const CTriangle& Other )
+M2Lib::CTriangle::CTriangle(const CTriangle& Other)
 {
 	*this = Other;
 }
 
-M2Lib::CTriangle& M2Lib::CTriangle::operator = ( const CTriangle& Other )
+M2Lib::CTriangle& M2Lib::CTriangle::operator = (const CTriangle& Other)
 {
-	Index = Other.Index;
+	TriangleIndex = Other.TriangleIndex;
 
 	Vertices[0] = Other.Vertices[0];
 	Vertices[1] = Other.Vertices[1];
@@ -55,12 +55,12 @@ M2Lib::CVertex::CVertex()
 	Padding[1] = 0.0f;
 }
 
-M2Lib::CVertex::CVertex( const CVertex& Other )
+M2Lib::CVertex::CVertex(const CVertex& Other)
 {
 	*this = Other;
 }
 
-M2Lib::CVertex& M2Lib::CVertex::operator = ( const CVertex& Other )
+M2Lib::CVertex& M2Lib::CVertex::operator = (const CVertex& Other)
 {
 	Position[0] = Other.Position[0];
 	Position[1] = Other.Position[1];
@@ -90,57 +90,61 @@ M2Lib::CVertex& M2Lib::CVertex::operator = ( const CVertex& Other )
 }
 
 // compares 2 vertices to see if they have the same position, bones, and texture coordinates. vertices between subsets that pass this test are most likely duplicates.
-bool M2Lib::CVertex::CompareSimilar( CVertex& A, CVertex& B, bool CompareTextures, bool CompareBones, Float32 PositionalTolerance, Float32 AngularTolerance )
+bool M2Lib::CVertex::CompareSimilar(CVertex& A, CVertex& B, bool CompareTextures, bool CompareBones, Float32 PositionalTolerance, Float32 AngularTolerance)
 {
 	// compare position
 	PositionalTolerance = PositionalTolerance * PositionalTolerance;
-	if ( PositionalTolerance > 0.0f )
+	if (PositionalTolerance > 0.0f)
 	{
 		Float32 Delta[3];
 		Delta[0] = A.Position[0] - B.Position[0];
 		Delta[1] = A.Position[1] - B.Position[1];
 		Delta[2] = A.Position[2] - B.Position[2];
-		Float32 Distance = ( ( Delta[0] * Delta[0] ) + ( Delta[1] * Delta[1] ) + ( Delta[2] * Delta[2] ) );
-		if ( Distance > PositionalTolerance )
+		Float32 Distance = ((Delta[0] * Delta[0]) + (Delta[1] * Delta[1]) + (Delta[2] * Delta[2]));
+		if (Distance > PositionalTolerance)
 		{
 			return false;
 		}
 	}
 	else
 	{
-		if ( ( A.Position[0] != B.Position[0] ) || ( A.Position[1] != B.Position[1] ) || ( A.Position[2] != B.Position[2] ) )
+		if ((A.Position[0] != B.Position[0]) || (A.Position[1] != B.Position[1]) || (A.Position[2] != B.Position[2]))
 		{
 			return false;
 		}
 	}
 
 	// compare texture coordinates
-	if ( CompareTextures )
+	if (CompareTextures)
 	{
-		if ( ( A.Texture[0] != B.Texture[0] ) || ( A.Texture[1] != B.Texture[1] ) )
+		if ((A.Texture[0] != B.Texture[0]) || (A.Texture[1] != B.Texture[1]))
 		{
 			return false;
 		}
 	}
 
 	// compare bones
-	if ( CompareBones )
+	if (CompareBones)
 	{
 		// order independent comparison
-		bool SameBones[4]; SameBones[0] = false; SameBones[1] = false; SameBones[2] = false; SameBones[3] = false;
-		for ( UInt32 i = 0; i < 4; i++ )
+		bool SameBones[4];
+		SameBones[0] = false;
+		SameBones[1] = false;
+		SameBones[2] = false;
+		SameBones[3] = false;
+		for (UInt32 i = 0; i < 4; i++)
 		{
 			bool HasSameBone = false;
-			for ( UInt32 j = 0; j < 4; j++ )
+			for (UInt32 j = 0; j < 4; j++)
 			{
-				if ( A.BoneIndices[i] == B.BoneIndices[j] && SameBones[j] == false )
+				if (A.BoneIndices[i] == B.BoneIndices[j] && SameBones[j] == false)
 				{
 					SameBones[j] = true;
 					break;
 				}
 			}
 		}
-		if ( !( SameBones[0] && SameBones[1] && SameBones[2] && SameBones[3] ) )
+		if (!(SameBones[0] && SameBones[1] && SameBones[2] && SameBones[3]))
 		{
 			return false;
 		}
@@ -151,17 +155,17 @@ bool M2Lib::CVertex::CompareSimilar( CVertex& A, CVertex& B, bool CompareTexture
 	// we want to determine what side of the PlaneA that the PointB lies on
 	// it's just as simple as getting the dot product of the two vectors and checking the sign of the result
 	// arc cosine the dot product of the vectors to get the angle between them
-	if ( AngularTolerance > 0.0f )
+	if (AngularTolerance > 0.0f)
 	{
-		Float32 Dot = ( A.Normal[0] * B.Normal[0] ) + ( A.Normal[1] * B.Normal[1] ) + ( A.Normal[2] * B.Normal[2] );
-		if ( acos( Dot ) > AngularTolerance )	// units are radians
+		Float32 Dot = (A.Normal[0] * B.Normal[0]) + (A.Normal[1] * B.Normal[1]) + (A.Normal[2] * B.Normal[2]);
+		if (acos(Dot) > AngularTolerance)	// units are radians
 		{
 			return false;
 		}
 	}
 	else
 	{
-		if ( ( A.Normal[0] != B.Normal[0] ) || ( A.Normal[1] != B.Normal[1] ) || ( A.Normal[2] != B.Normal[2] ) )
+		if ((A.Normal[0] != B.Normal[0]) || (A.Normal[1] != B.Normal[1]) || (A.Normal[2] != B.Normal[2]))
 		{
 			return false;
 		}
@@ -170,9 +174,9 @@ bool M2Lib::CVertex::CompareSimilar( CVertex& A, CVertex& B, bool CompareTexture
 	return true;
 }
 
-const char* M2Lib::GetErrorText( EError Error )
+const char* M2Lib::GetErrorText(EError Error)
 {
-	switch ( Error )
+	switch (Error)
 	{
 	case EError_OK:
 		return "ok";

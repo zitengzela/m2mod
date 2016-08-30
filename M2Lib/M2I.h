@@ -12,49 +12,50 @@ namespace M2Lib
 
 
 
-class M2I
-{
-public:
-	class CSubMesh
+	class M2I
 	{
 	public:
-		// this subset's ID.
-		UInt32 ID;
+		class CSubMesh
+		{
+		public:
+			// this subset's ID.
+			UInt16 ID;
+			UInt16 Level;
 
-		// vertices that make up this subset, as indices into the global vertex list.
-		std::vector< UInt16 > Indices;
-		// triangles that make up this subset, as indices into the global vertex list.
-		std::vector< M2Lib::CTriangle > Triangles;
+			// vertices that make up this subset, as indices into the global vertex list.
+			std::vector< UInt16 > Indices;
+			// triangles that make up this subset, as indices into the global vertex list.
+			std::vector< M2Lib::CTriangle > Triangles;
+
+		};
+
+
+	public:
+		// the global vertex list
+		std::vector< M2Lib::CVertex > VertexList;
+
+		// list of subsets in this M2I.
+		std::vector< CSubMesh* > SubMeshList;
+
+
+	public:
+		M2I()
+		{
+		}
+
+		~M2I()
+		{
+			for (UInt32 i = 0; i < SubMeshList.size(); i++)
+			{
+				delete SubMeshList[i];
+			}
+		}
+
+
+	public:
+
 
 	};
-
-
-public:
-	// the global vertex list
-	std::vector< M2Lib::CVertex > VertexList;
-
-	// list of subsets in this M2I.
-	std::vector< CSubMesh* > SubMeshList;
-
-
-public:
-	M2I()
-	{
-	}
-
-	~M2I()
-	{
-		for ( UInt32 i = 0; i < SubMeshList.size(); i++ )
-		{
-			delete SubMeshList[i];
-		}
-	}
-
-
-public:
-
-
-};
 
 
 

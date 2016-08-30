@@ -1,83 +1,89 @@
 #include "M2.h"
 #include "DataBinary.h"
 #include "M2SkinBuilder.h"
+#include <sstream>
+#include <locale>
+#include <codecvt>
+#include <string>
 
 // level of detail for output messages
 int g_Verbose = 1;
 
-M2Lib::EError M2Lib::M2::Load( const Char16* FileName )
+M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 {
 	// check path
-	if ( !FileName )
+	if (!FileName)
 		return M2Lib::EError_FailedToLoadM2_NoFileSpecified;
 	UInt32 Length = 0;
-	while ( FileName[Length] != '\0' )
+	while (FileName[Length] != '\0')
 	{
 		Length++;
 	}
-	if ( Length >= 1024 )
+
+	if (Length >= 1024)
 		return M2Lib::EError_PathTooLong;
+
 	_FileName[Length] = '\0';
-	for ( UInt32 i = 0; i != Length; i++ )
+	for (UInt32 i = 0; i != Length; i++)
 	{
 		_FileName[i] = FileName[i];
 	}
 
 	// open file stream
 	std::fstream FileStream;
-	FileStream.open( FileName, std::ios::in | std::ios::binary );
-	if ( FileStream.fail() )
+	FileStream.open(FileName, std::ios::in | std::ios::binary);
+	if (FileStream.fail())
 		return M2Lib::EError_FailedToLoadM2_CouldNotOpenFile;
 
 	// find file size
-	FileStream.seekg( 0, std::ios::end );
+	FileStream.seekg(0, std::ios::end);
 	UInt32 FileSize = (UInt32)FileStream.tellg();
 	m_OriginalSize = FileSize;
-	FileStream.seekg( 0, std::ios::beg );
+	FileStream.seekg(0, std::ios::beg);
 
 	// load entire thing
 	RawData = new UInt8[FileSize];
-	FileStream.read( (Char8*)RawData, FileSize );
-	FileStream.seekg( 0, std::ios::beg );
+	FileStream.read((Char8*)RawData, FileSize);
+	FileStream.seekg(0, std::ios::beg);
 
 	// load header
-	FileStream.read( (Char8*)&Header.Description, sizeof( Header.Description ) );
+	FileStream.read((Char8*)&Header.Description, sizeof(Header.Description));
 
 	// check header
-	if ( Header.Description.ID[0] != 'M' || Header.Description.ID[1] != 'D' || Header.Description.ID[2] != '2' || Header.Description.ID[3] != '0' )
+	if (Header.Description.ID[0] != 'M' || Header.Description.ID[1] != 'D' || Header.Description.ID[2] != '2' || Header.Description.ID[3] != '0')
 		return M2Lib::EError_FailedToLoadM2_FileCorrupt;
 	UInt32 VersionInt = (UInt32&)Header.Description.Version;
-	if ( ( 263 > VersionInt ) || ( VersionInt > 272 ) )
+	if ((263 > VersionInt) || (VersionInt > 272))
 		return M2Lib::EError_FailedToLoadM2_VersionNotSupported;
 
 	// load more header
-	if ( Header.Description.Flags & 0x08 )
+	if (Header.Description.Flags & 0x08)
 	{
 		// special long header
-		FileStream.read( (Char8*)&Header.Elements, sizeof( Header.Elements ) );
+		FileStream.read((Char8*)&Header.Elements, sizeof(Header.Elements));
 	}
 	else
 	{
 		// normal header
-		FileStream.read( (Char8*)&Header.Elements, sizeof( Header.Elements ) - 8 );
+		FileStream.read((Char8*)&Header.Elements, sizeof(Header.Elements) - 8);
 		Header.Elements.nUnknown1 = 0;
 		Header.Elements.oUnknown1 = 0;
 	}
 
 	// fill elements header data
 	m_LoadElements_CopyHeaderToElements();
-	m_LoadElements_FindSizes( FileSize );
+	m_LoadElements_FindSizes(FileSize);
 
 	// load elements
 	UInt32 ElementCount = EElement__Count__;
-	if ( !( Header.Description.Flags & 0x08 ) )
+	if (!(Header.Description.Flags & 0x08))
 	{
 		ElementCount--;
 	}
-	for ( UInt32 i = 0; i != ElementCount; i++ )
+	for (UInt32 i = 0; i != ElementCount; i++)
 	{
 		Elements[i].Align = 16;
-		if ( !Elements[i].Load( FileStream ) )
+		if (!Elements[i].Load(FileStream))
 			return M2Lib::EError_FailedToLoadM2_FileCorrupt;
 	}
 
@@ -85,15 +91,57 @@ M2Lib::EError M2Lib::M2::Load( const Char16* FileName )
 	FileStream.close();
 
 	// load skins
-	if ( ( Header.Elements.nSkin == 0 ) || ( Header.Elements.nSkin > 4 ) )
+	if ((Header.Elements.nSkin == 0) || (Header.Elements.nSkin > 4))
 		return M2Lib::EError_FailedToLoadM2_FileCorrupt;
-	for ( UInt32 i = 0; i != Header.Elements.nSkin; i++ )
+
+	for (UInt32 i = 0; i != Header.Elements.nSkin; i++)
 	{
 		Char16 FileNameSkin[1024];
-		GetFileSkin( FileNameSkin, FileName, i );
+		GetFileSkin(FileNameSkin, FileName, i);
 
-		Skins[i] = new M2Lib::M2Skin( this );
-		if ( M2Lib::EError Error = Skins[i]->Load( FileNameSkin ) )
+		// FMN 2015-02-03: LOD skins.
+		/*
+		if (i == 1 || i == 2)
+		{
+			std::string strFileName;
+			std::wstring wstrFileName = (std::wstring)FileName;
+
+			for (UInt8 j = 0; j < wstrFileName.size(); j++)
+				strFileName += (char)wstrFileName.at(j);
+
+			//std::string chrI = std::string(i);
+			std::stringstream ss;
+			std::string strI;
+			ss << i;
+			ss >> strI;
+
+			std::string strFileNameLOD = strFileName.substr(0, strFileName.length() - 3) + "_LOD0" + strI + ".skin";
+			//std::wstring  wstrFileNameLOD = (std::wstring)strFileNameLOD;
+
+			//wchar_t wstrFileNameLOD = '\0';
+			//for (UInt8 j = 0; j < strFileNameLOD.size(); j++)
+			//	wstrFileNameLOD += (wchar_t)strFileNameLOD.at(j);
+
+			//std::wstring name = (std::wstring)strFileNameLOD;
+			std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+			//std::string narrow = converter.to_bytes(wide_utf16_source_string);
+			std::wstring wstrFileNameLOD = converter.from_bytes(strFileNameLOD);
+
+			wchar_t* wchrFileNameLOD = (wchar_t*)wstrFileNameLOD.c_str();
+
+			Char16* FileNameLOD = (Char16*)wchrFileNameLOD;
+
+			GetFileSkin(FileNameLOD, FileName, i);
+
+			// Add the LODs after the 4 main skins.
+			Skins[i + 4] = new M2Lib::M2Skin(this);
+			if (M2Lib::EError Error = Skins[i + 4]->Load(FileNameSkin))
+				return Error;
+		}
+		*/
+
+		Skins[i] = new M2Lib::M2Skin(this);
+		if (M2Lib::EError Error = Skins[i]->Load(FileNameSkin))
 			return Error;
 	}
 
@@ -105,16 +153,16 @@ M2Lib::EError M2Lib::M2::Load( const Char16* FileName )
 }
 
 
-M2Lib::EError M2Lib::M2::Save( const Char16* FileName )
+M2Lib::EError M2Lib::M2::Save(const Char16* FileName)
 {
 	// check path
-	if ( !FileName )
+	if (!FileName)
 		return M2Lib::EError_FailedToSaveM2_NoFileSpecified;
 
 	// open file stream
 	std::fstream FileStream;
-	FileStream.open( FileName, std::ios::out | std::ios::trunc | std::ios::binary  );
-	if ( FileStream.fail() )
+	FileStream.open(FileName, std::ios::out | std::ios::trunc | std::ios::binary);
+	if (FileStream.fail())
 		return M2Lib::EError_FailedToSaveM2;
 
 	// fill elements header data
@@ -122,34 +170,34 @@ M2Lib::EError M2Lib::M2::Save( const Char16* FileName )
 	m_SaveElements_CopyElementsToHeader();
 
 	// save header
-	FileStream.write( (Char8*)&Header.Description, sizeof( Header.Description ) );
+	FileStream.write((Char8*)&Header.Description, sizeof(Header.Description));
 
-	if ( Header.Description.Flags & 0x08 )
+	if (Header.Description.Flags & 0x08)
 	{
 		// long header
-		FileStream.write( (Char8*)&Header.Elements, sizeof( Header.Elements ) );
+		FileStream.write((Char8*)&Header.Elements, sizeof(Header.Elements));
 	}
 	else
 	{
 		// normal header
-		FileStream.write( (Char8*)&Header.Elements, sizeof( Header.Elements ) - 8 );
+		FileStream.write((Char8*)&Header.Elements, sizeof(Header.Elements) - 8);
 	}
 
 	// save elements
 	UInt32 ElementCount = EElement__Count__;
-	if ( !( Header.Description.Flags & 0x08 ) )
+	if (!(Header.Description.Flags & 0x08))
 	{
 		ElementCount--;
 	}
-	for ( UInt32 i = 0; i != ElementCount; i++ )
+	for (UInt32 i = 0; i != ElementCount; i++)
 	{
-		if ( !Elements[i].Save( FileStream ) )
+		if (!Elements[i].Save(FileStream))
 			return M2Lib::EError_FailedToSaveM2;
 	}
 
-	if ( Element_NewVertex.DataSize )
+	if (Element_NewVertex.DataSize)
 	{
-		if ( !Element_NewVertex.Save( FileStream ) )
+		if (!Element_NewVertex.Save(FileStream))
 			return M2Lib::EError_FailedToSaveM2;
 	}
 
@@ -157,39 +205,49 @@ M2Lib::EError M2Lib::M2::Save( const Char16* FileName )
 	FileStream.close();
 
 	// delete existing skin files
-	for ( UInt32 i = 0; i < 4; i++ )
+	for (UInt32 i = 0; i < 6; i++)
 	{
 		Char16 FileNameSkin[1024];
-		GetFileSkin( FileNameSkin, FileName, i );
-		_wremove( FileNameSkin );
+		GetFileSkin(FileNameSkin, FileName, i);
+		_wremove(FileNameSkin);
 	}
 
 	// save skins
-	if ( ( Header.Elements.nSkin == 0 ) || ( Header.Elements.nSkin > 4 ) )
+	if ((Header.Elements.nSkin == 0) || (Header.Elements.nSkin > 4))
 		return M2Lib::EError_FailedToSaveM2;
-	for ( UInt32 i = 0; i < Header.Elements.nSkin; i++ )
+
+	//for (UInt32 i = 0; i < Header.Elements.nSkin; i++)
+	for (UInt32 i = 0; i < 6; i++)
 	{
 		Char16 FileNameSkin[1024];
-		GetFileSkin( FileNameSkin, FileName, i );
+		GetFileSkin(FileNameSkin, FileName, i);
 
-		if ( M2Lib::EError Error = Skins[i]->Save( FileNameSkin ) )
-			return Error;
+		if (i > 3)
+		{
+			if (M2Lib::EError Error = Skins[i - 3]->Save(FileNameSkin))
+				return Error;
+		}
+		else
+		{
+			if (M2Lib::EError Error = Skins[i]->Save(FileNameSkin))
+				return Error;
+		}
+
 	}
 
 	return M2Lib::EError_OK;
 }
 
-
-M2Lib::EError M2Lib::M2::ExportM2Intermediate( Char16* FileName )
+M2Lib::EError M2Lib::M2::ExportM2Intermediate(Char16* FileName)
 {
 	// open file stream
 	std::fstream FileStream;
-	FileStream.open( FileName, std::ios::out | std::ios::trunc | std::ios::binary );
-	if ( FileStream.fail() )
+	FileStream.open(FileName, std::ios::out | std::ios::trunc | std::ios::binary);
+	if (FileStream.fail())
 		return M2Lib::EError_FailedToExportM2I_CouldNotOpenFile;
 
 	// open binary stream
-	M2Lib::DataBinary DataBinary( &FileStream, M2Lib::EEndianness_Little );
+	M2Lib::DataBinary DataBinary(&FileStream, M2Lib::EEndianness_Little);
 
 	// get data to save
 	M2Skin* pSkin = Skins[0];
@@ -198,7 +256,7 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate( Char16* FileName )
 	M2Skin::CElement_SubMesh* Subsets = (M2Skin::CElement_SubMesh*)pSkin->Elements[M2Skin::EElement_SubMesh].Data;
 
 	M2Lib::CVertex* Vertices = (CVertex*)GetElement_Vertex().Data;
-	UInt16* Triangles = (UInt16*)pSkin->Elements[M2Skin::EElement_Index].Data;
+	UInt16* Triangles = (UInt16*)pSkin->Elements[M2Skin::EElement_TriangleIndex].Data;
 	UInt16* Indices = (UInt16*)pSkin->Elements[M2Skin::EElement_VertexLookup].Data;
 
 	UInt32 BonesCount = Elements[EElement_Bone].Count;
@@ -211,125 +269,145 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate( Char16* FileName )
 	CElement_Camera* Cameras = (CElement_Camera*)Elements[EElement_Camera].Data;
 
 	// save signature
-	DataBinary.WriteFourCC( Signature_M2I0 );
+	DataBinary.WriteFourCC(Signature_M2I0);
 
 	// save version
 	UInt16 VersionMajor = 4;
 	UInt16 VersionMinor = 5;
-	DataBinary.WriteUInt16( VersionMajor );
-	DataBinary.WriteUInt16( VersionMinor );
+	DataBinary.WriteUInt16(VersionMajor);
+	DataBinary.WriteUInt16(VersionMinor);
 
 	// save subsets
 	UInt32 TotalVertexCount = 0;
 	UInt32 TotalTriangleCount = 0;
-	DataBinary.WriteUInt32( SubsetCount );
-	for ( UInt32 i = 0; i < SubsetCount; i++ )
+	DataBinary.WriteUInt32(SubsetCount);
+	for (UInt32 i = 0; i < SubsetCount; i++)
 	{
 		M2Lib::M2Skin::CElement_SubMesh* pSubsetOut = &Subsets[i];
 
 		// write subset ID
-		UInt32 SubsetID = pSubsetOut->ID;
-		DataBinary.WriteUInt32( SubsetID );
+
+		UInt16 SubsetID = pSubsetOut->ID;
+		UInt16 SubsetLevel = pSubsetOut->Level;
+
+		DataBinary.WriteUInt16(SubsetID);
+		DataBinary.WriteUInt16(SubsetLevel);
 
 		// write vertices
-		DataBinary.WriteUInt32( pSubsetOut->VertexCount );
+		DataBinary.WriteUInt32(pSubsetOut->VertexCount);
 		UInt32 VertexEnd = pSubsetOut->VertexStart + pSubsetOut->VertexCount;
-		for ( UInt32 k = pSubsetOut->VertexStart; k < VertexEnd; k++ )
+		for (UInt32 k = pSubsetOut->VertexStart; k < VertexEnd; k++)
 		{
 			M2Lib::CVertex& Vertex = Vertices[Indices[k]];
 
-			DataBinary.WriteFloat32( Vertex.Position[0] );
-			DataBinary.WriteFloat32( Vertex.Position[1] );
-			DataBinary.WriteFloat32( Vertex.Position[2] );
+			DataBinary.WriteFloat32(Vertex.Position[0]);
+			DataBinary.WriteFloat32(Vertex.Position[1]);
+			DataBinary.WriteFloat32(Vertex.Position[2]);
 
-			DataBinary.WriteUInt8( Vertex.BoneWeights[0] );
-			DataBinary.WriteUInt8( Vertex.BoneWeights[1] );
-			DataBinary.WriteUInt8( Vertex.BoneWeights[2] );
-			DataBinary.WriteUInt8( Vertex.BoneWeights[3] );
+			DataBinary.WriteUInt8(Vertex.BoneWeights[0]);
+			DataBinary.WriteUInt8(Vertex.BoneWeights[1]);
+			DataBinary.WriteUInt8(Vertex.BoneWeights[2]);
+			DataBinary.WriteUInt8(Vertex.BoneWeights[3]);
 
-			DataBinary.WriteUInt8( Vertex.BoneIndices[0] );
-			DataBinary.WriteUInt8( Vertex.BoneIndices[1] );
-			DataBinary.WriteUInt8( Vertex.BoneIndices[2] );
-			DataBinary.WriteUInt8( Vertex.BoneIndices[3] );
+			DataBinary.WriteUInt8(Vertex.BoneIndices[0]);
+			DataBinary.WriteUInt8(Vertex.BoneIndices[1]);
+			DataBinary.WriteUInt8(Vertex.BoneIndices[2]);
+			DataBinary.WriteUInt8(Vertex.BoneIndices[3]);
 
-			DataBinary.WriteFloat32( Vertex.Normal[0] );
-			DataBinary.WriteFloat32( Vertex.Normal[1] );
-			DataBinary.WriteFloat32( Vertex.Normal[2] );
+			DataBinary.WriteFloat32(Vertex.Normal[0]);
+			DataBinary.WriteFloat32(Vertex.Normal[1]);
+			DataBinary.WriteFloat32(Vertex.Normal[2]);
 
-			DataBinary.WriteFloat32( Vertex.Texture[0] );
-			DataBinary.WriteFloat32( Vertex.Texture[1] );
+			DataBinary.WriteFloat32(Vertex.Texture[0]);
+			DataBinary.WriteFloat32(Vertex.Texture[1]);
 		}
 		TotalVertexCount += pSubsetOut->VertexCount;
 
 		// write triangles
-		UInt32 SubsetTriangleCountOut = pSubsetOut->IndexCount / 3;
-		DataBinary.WriteUInt32( SubsetTriangleCountOut );
-		UInt32 IndexEnd = pSubsetOut->IndexStart + pSubsetOut->IndexCount;
-		for ( UInt32 k = pSubsetOut->IndexStart; k < IndexEnd; k++ )
+		UInt32 SubsetTriangleCountOut = pSubsetOut->TriangleIndexCount / 3;
+		DataBinary.WriteUInt32(SubsetTriangleCountOut);
+
+		// FMN 2015-01-26: changing TriangleIndexstart, depending on ID. See http://forums.darknestfantasyerotica.com/showthread.php?20446-TUTORIAL-Here-is-how-WoD-.skin-works.&p=402561
+		UInt32 TriangleIndexStart = 0;
+
+		//if (pSubsetOut->ID > 65536)
+		if (pSubsetOut->Level == 1)
 		{
-			UInt16 IndexOut = Triangles[k] - pSubsetOut->VertexStart;
-			assert( IndexOut < pSubsetOut->VertexCount );
-			DataBinary.WriteUInt16( IndexOut );
+			TriangleIndexStart = pSubsetOut->TriangleIndexStart + 65536;
 		}
-		TotalTriangleCount += pSubsetOut->IndexCount;
+		else
+		{
+			TriangleIndexStart = pSubsetOut->TriangleIndexStart;
+		}
+
+		//UInt32 TriangleIndexEnd = pSubsetOut->TriangleIndexStart + pSubsetOut->TriangleIndexCount;
+		//for (UInt32 k = pSubsetOut->TriangleIndexStart; k < TriangleIndexEnd; k++)
+		UInt32 TriangleIndexEnd = TriangleIndexStart + pSubsetOut->TriangleIndexCount;
+		for (UInt32 k = TriangleIndexStart; k < TriangleIndexEnd; k++)
+		{
+			UInt16 TriangleIndexOut = Triangles[k] - pSubsetOut->VertexStart;
+			assert(TriangleIndexOut < pSubsetOut->VertexCount);
+			DataBinary.WriteUInt16(TriangleIndexOut);
+		}
+		TotalTriangleCount += pSubsetOut->TriangleIndexCount;
 	}
 
 	// write bones
-	DataBinary.WriteUInt32( BonesCount );
-	for ( UInt16 i = 0; i < BonesCount; i++ )
+	DataBinary.WriteUInt32(BonesCount);
+	for (UInt16 i = 0; i < BonesCount; i++)
 	{
 		CElement_Bone& Bone = Bones[i];
 
-		DataBinary.WriteUInt16( i );
-		DataBinary.WriteSInt16( Bone.ParentBone );
-		DataBinary.WriteFloat32( Bone.Position[0] );
-		DataBinary.WriteFloat32( Bone.Position[1] );
-		DataBinary.WriteFloat32( Bone.Position[2] );
+		DataBinary.WriteUInt16(i);
+		DataBinary.WriteSInt16(Bone.ParentBone);
+		DataBinary.WriteFloat32(Bone.Position[0]);
+		DataBinary.WriteFloat32(Bone.Position[1]);
+		DataBinary.WriteFloat32(Bone.Position[2]);
 	}
 
 	// write attachments
-	DataBinary.WriteUInt32( AttachmentsCount );
-	for ( UInt16 i = 0; i < AttachmentsCount; i++ )
+	DataBinary.WriteUInt32(AttachmentsCount);
+	for (UInt16 i = 0; i < AttachmentsCount; i++)
 	{
 		CElement_Attachment& Attachment = Attachments[i];
 
-		DataBinary.WriteUInt32( Attachment.ID );
-		DataBinary.WriteSInt16( Attachment.ParentBone );
-		DataBinary.WriteFloat32( Attachment.Position[0] );
-		DataBinary.WriteFloat32( Attachment.Position[1] );
-		DataBinary.WriteFloat32( Attachment.Position[2] );
-		DataBinary.WriteFloat32( 1.0f );
+		DataBinary.WriteUInt32(Attachment.ID);
+		DataBinary.WriteSInt16(Attachment.ParentBone);
+		DataBinary.WriteFloat32(Attachment.Position[0]);
+		DataBinary.WriteFloat32(Attachment.Position[1]);
+		DataBinary.WriteFloat32(Attachment.Position[2]);
+		DataBinary.WriteFloat32(1.0f);
 	}
 
 	// write cameras
-	DataBinary.WriteUInt32( CamerasCount );
-	for ( UInt16 i = 0; i < CamerasCount; i++ )
+	DataBinary.WriteUInt32(CamerasCount);
+	for (UInt16 i = 0; i < CamerasCount; i++)
 	{
 		CElement_Camera& Camera = Cameras[i];
 
-		DataBinary.WriteSInt32( Camera.Type );
+		DataBinary.WriteSInt32(Camera.Type);
 
 		// extract field of view of camera from animation block
-		if ( Camera.AnimationBlock_FieldOfView.nKeys > 0 )
+		if (Camera.AnimationBlock_FieldOfView.nKeys > 0)
 		{
-			SExternalAnimation* ExternalAnimations = (SExternalAnimation*)Elements[EElement_Camera].GetLocalPointer( Camera.AnimationBlock_FieldOfView.oKeys );
+			SExternalAnimation* ExternalAnimations = (SExternalAnimation*)Elements[EElement_Camera].GetLocalPointer(Camera.AnimationBlock_FieldOfView.oKeys);
 			Float32* FieldOfView_Keys = (Float32*)(&RawData[ExternalAnimations[0].Offset]);
-			DataBinary.WriteFloat32( FieldOfView_Keys[0] );
+			DataBinary.WriteFloat32(FieldOfView_Keys[0]);
 		}
 		else
 		{
 			Float32 TempFoV = 0.785398163f;	// 45 degrees in radians, assuming that WoW stores camera FoV in radians. or maybe it's half FoV.
-			DataBinary.WriteFloat32( TempFoV );
+			DataBinary.WriteFloat32(TempFoV);
 		}
-		
-		DataBinary.WriteFloat32( Camera.ClipFar );
-		DataBinary.WriteFloat32( Camera.ClipNear );
-		DataBinary.WriteFloat32( Camera.Position[0] );
-		DataBinary.WriteFloat32( Camera.Position[1] );
-		DataBinary.WriteFloat32( Camera.Position[2] );
-		DataBinary.WriteFloat32( Camera.Target[0] );
-		DataBinary.WriteFloat32( Camera.Target[1] );
-		DataBinary.WriteFloat32( Camera.Target[2] );
+
+		DataBinary.WriteFloat32(Camera.ClipFar);
+		DataBinary.WriteFloat32(Camera.ClipNear);
+		DataBinary.WriteFloat32(Camera.Position[0]);
+		DataBinary.WriteFloat32(Camera.Position[1]);
+		DataBinary.WriteFloat32(Camera.Position[2]);
+		DataBinary.WriteFloat32(Camera.Target[0]);
+		DataBinary.WriteFloat32(Camera.Target[1]);
+		DataBinary.WriteFloat32(Camera.Target[2]);
 	}
 
 	FileStream.close();
@@ -337,8 +415,7 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate( Char16* FileName )
 	return M2Lib::EError_OK;
 }
 
-
-M2Lib::EError M2Lib::M2::ImportM2Intermediate( Char16* FileName, bool IgnoreBones, bool IgnoreAttachments, bool IgnoreCameras )
+M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16* FileName, bool IgnoreBones, bool IgnoreAttachments, bool IgnoreCameras)
 {
 	Float32 SubmeshPositionalTolerance = 0.0001f;
 	Float32 SubmeshAngularTolerance = 45.0f;
@@ -347,11 +424,11 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate( Char16* FileName, bool IgnoreBone
 	Float32 ClothingPositionalTolerance = 0.0001f;
 	Float32 ClothingAngularTolerance = 90.0f;
 
-	if ( !FileName )
+	if (!FileName)
 		return EError_FailedToImportM2I_NoFileSpecified;
 
 	// check that we have an M2 already loaded and ready to be injected
-	if ( Elements[EElement_Skin].Count == 0 )
+	if (Elements[EElement_Skin].Count == 0)
 		return M2Lib::EError_FailedToExportM2I_M2NotLoaded;
 
 	// loaded M2I will be stored here.
@@ -361,18 +438,18 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate( Char16* FileName, bool IgnoreBone
 
 	// open file stream
 	std::fstream FileStream;
-	FileStream.open( FileName, std::ios::in | std::ios::binary );
-	if ( FileStream.fail() )
+	FileStream.open(FileName, std::ios::in | std::ios::binary);
+	if (FileStream.fail())
 		return M2Lib::EError_FailedToImportM2I_CouldNotOpenFile;
-	M2Lib::DataBinary DataBinary( &FileStream, M2Lib::EEndianness_Little );
+	M2Lib::DataBinary DataBinary(&FileStream, M2Lib::EEndianness_Little);
 
 	// load signature
 	UInt32 InSignature = 0;
 	InSignature = DataBinary.ReadFourCC();
-	if ( InSignature == 1 )
+	if (InSignature == 1)
 	{
 	}
-	else if ( InSignature == Signature_M2I0 )
+	else if (InSignature == Signature_M2I0)
 	{
 	}
 	else
@@ -383,13 +460,13 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate( Char16* FileName, bool IgnoreBone
 	// load version
 	UInt16 VersionMajor;
 	UInt16 VersionMinor;
-	if ( InSignature == Signature_M2I0 )
+	if (InSignature == Signature_M2I0)
 	{
 		VersionMajor = DataBinary.ReadUInt16();
 		VersionMinor = DataBinary.ReadUInt16();
-		if ( VersionMajor == 4 )
+		if (VersionMajor == 4)
 		{
-			if ( VersionMinor == 5 )
+			if (VersionMinor == 5)
 			{
 			}
 			else
@@ -408,21 +485,25 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate( Char16* FileName, bool IgnoreBone
 	UInt32 InSubsetCount = 0;
 	InSubsetCount = DataBinary.ReadUInt32();
 	UInt32 iTriangle = 0;
-	for ( UInt32 i = 0; i < InSubsetCount; i++ )
+
+	for (UInt32 i = 0; i < InSubsetCount; i++)
 	{
 		M2Lib::M2I::CSubMesh* pNewSubMesh = new M2Lib::M2I::CSubMesh();
 
 		// read id
-		pNewSubMesh->ID = DataBinary.ReadUInt32();
+		pNewSubMesh->ID = DataBinary.ReadUInt16();
+		// FMN 2015-02-13: read level
+		pNewSubMesh->Level = DataBinary.ReadUInt16();
 
 		// read vertices
 		UInt32 InVertexCount = 0;
 		InVertexCount = DataBinary.ReadUInt32();
-		if ( NewVertexList.size() + InVertexCount > 0xFFFF )
+		if (NewVertexList.size() + InVertexCount > 0xFFFF)
 		{
 			return M2Lib::EError_FailedToImportM2I_TooManyVertices;
 		}
-		for ( UInt32 j = 0; j < InVertexCount; j++ )
+
+		for (UInt32 j = 0; j < InVertexCount; j++)
 		{
 			M2Lib::CVertex InVertex;
 
@@ -436,7 +517,7 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate( Char16* FileName, bool IgnoreBone
 			InVertex.BoneWeights[3] = DataBinary.ReadUInt8();
 
 			int WeightSum = InVertex.BoneWeights[0] + InVertex.BoneWeights[1] + InVertex.BoneWeights[2] + InVertex.BoneWeights[3];
-			if ( WeightSum < 255 )
+			if (WeightSum < 255)
 			{
 				int pause = 1;
 			}
@@ -453,45 +534,46 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate( Char16* FileName, bool IgnoreBone
 			InVertex.Texture[0] = DataBinary.ReadFloat32();
 			InVertex.Texture[1] = DataBinary.ReadFloat32();
 
-			UInt16 VertexIndex = NewVertexList.size();
-			NewVertexList.push_back( InVertex );
-			pNewSubMesh->Indices.push_back( VertexIndex );
+			UInt16 VertexTriangleIndex = NewVertexList.size();
+			NewVertexList.push_back(InVertex);
+			pNewSubMesh->Indices.push_back(VertexTriangleIndex);
 		}
 
 		// read triangles
 		UInt32 InTriangleCount = 0;
 		InTriangleCount = DataBinary.ReadUInt32();
-		for ( UInt32 j = 0; j < InTriangleCount; j++ )
+
+		for (UInt32 j = 0; j < InTriangleCount; j++)
 		{
 			M2Lib::CTriangle NewTriangle;
 
-			NewTriangle.Index = iTriangle;
+			NewTriangle.TriangleIndex = iTriangle;
 			iTriangle++;
 
 			NewTriangle.Vertices[0] = DataBinary.ReadUInt16() + VertexStart;
 			NewTriangle.Vertices[1] = DataBinary.ReadUInt16() + VertexStart;
 			NewTriangle.Vertices[2] = DataBinary.ReadUInt16() + VertexStart;
 
-			pNewSubMesh->Triangles.push_back( NewTriangle );
+			pNewSubMesh->Triangles.push_back(NewTriangle);
 		}
 
 		VertexStart += InVertexCount;
 
-		InM2I.SubMeshList.push_back( pNewSubMesh );
+		InM2I.SubMeshList.push_back(pNewSubMesh);
 	}
 
-	if ( !IgnoreBones )
+	if (!IgnoreBones)
 	{
 		// read bones, overwrite existing
 		UInt32 BoneCount = Elements[EElement_Bone].Count;
 		CElement_Bone* Bones = (CElement_Bone*)Elements[EElement_Bone].Data;
 		UInt32 BoneCountIn;
 		BoneCountIn = DataBinary.ReadUInt32();
-		for ( UInt32 i = 0; i < BoneCountIn; i++ )
+		for (UInt32 i = 0; i < BoneCountIn; i++)
 		{
 			UInt16 InBoneIndex = 0;
 			InBoneIndex = DataBinary.ReadUInt16();
-			assert( InBoneIndex < BoneCount );
+			assert(InBoneIndex < BoneCount);
 			CElement_Bone& BoneToMod = Bones[InBoneIndex];
 
 			BoneToMod.ParentBone = DataBinary.ReadSInt16();
@@ -502,27 +584,27 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate( Char16* FileName, bool IgnoreBone
 		}
 	}
 
-	if ( !IgnoreAttachments )
+	if (!IgnoreAttachments)
 	{
 		// read attachments, overwrite existing
 		UInt32 AttachmentsCount = Elements[EElement_Attachment].Count;
 		CElement_Attachment* Attachments = (CElement_Attachment*)Elements[EElement_Attachment].Data;
 		UInt32 AttachmentCountIn;
 		AttachmentCountIn = DataBinary.ReadUInt32();
-		for ( UInt32 i = 0; i < AttachmentCountIn; i++ )
+		for (UInt32 i = 0; i < AttachmentCountIn; i++)
 		{
 			UInt32 InAttachmentID = 0;
 			InAttachmentID = DataBinary.ReadUInt32();
 			CElement_Attachment* pAttachmentToMod = 0;
-			for ( UInt32 j = 0; j < AttachmentsCount; j++ )
+			for (UInt32 j = 0; j < AttachmentsCount; j++)
 			{
-				if ( Attachments[j].ID == InAttachmentID )
+				if (Attachments[j].ID == InAttachmentID)
 				{
 					pAttachmentToMod = &Attachments[j];
 					break;
 				}
 			}
-			if ( pAttachmentToMod )
+			if (pAttachmentToMod)
 			{
 				pAttachmentToMod->ParentBone = DataBinary.ReadSInt16();
 
@@ -543,34 +625,34 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate( Char16* FileName, bool IgnoreBone
 		}
 	}
 
-	if ( !IgnoreCameras )
+	if (!IgnoreCameras)
 	{
 		// read cameras, overwrite existing
 		UInt32 CameraCount = Elements[EElement_Camera].Count;
 		CElement_Camera* Cameras = (CElement_Camera*)Elements[EElement_Camera].Data;
 		UInt32 CameraCountIn;
 		CameraCountIn = DataBinary.ReadUInt32();
-		for ( UInt32 i = 0; i < CameraCountIn; i++ )
+		for (UInt32 i = 0; i < CameraCountIn; i++)
 		{
 			SInt32 InType;
 			InType = DataBinary.ReadSInt32();
 
 			CElement_Camera* pCameraToMod = 0;
-			for ( UInt32 j = 0; j < CameraCount; j++ )
+			for (UInt32 j = 0; j < CameraCount; j++)
 			{
-				if ( Cameras[j].Type == InType )
+				if (Cameras[j].Type == InType)
 				{
 					pCameraToMod = &Cameras[j];
 					break;
 				}
 			}
-			if ( pCameraToMod )
+			if (pCameraToMod)
 			{
 				pCameraToMod->Type = InType;
 
-				if ( pCameraToMod->AnimationBlock_FieldOfView.nKeys > 0 )
+				if (pCameraToMod->AnimationBlock_FieldOfView.nKeys > 0)
 				{
-					SExternalAnimation* ExternalAnimations = (SExternalAnimation*)Elements[EElement_Camera].GetLocalPointer( pCameraToMod->AnimationBlock_FieldOfView.oKeys );
+					SExternalAnimation* ExternalAnimations = (SExternalAnimation*)Elements[EElement_Camera].GetLocalPointer(pCameraToMod->AnimationBlock_FieldOfView.oKeys);
 					Float32* FieldOfView_Keys = (Float32*)(&RawData[ExternalAnimations[0].Offset]);
 					Float32 InFoV;
 					InFoV = DataBinary.ReadFloat32();	// we are writing to RawData in memory, this change will not be saved to the M2 because it lies out of bounds of any elements.
@@ -605,8 +687,8 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate( Char16* FileName, bool IgnoreBone
 	}
 
 	// copy new vertex list from M2I to M2
-	Elements[EElement_Vertex].SetDataSize( NewVertexList.size(), NewVertexList.size() * sizeof( M2Lib::CVertex ), false );
-	memcpy( Elements[EElement_Vertex].Data, &NewVertexList[0], NewVertexList.size() * sizeof( M2Lib::CVertex ) );
+	Elements[EElement_Vertex].SetDataSize(NewVertexList.size(), NewVertexList.size() * sizeof(M2Lib::CVertex), false);
+	memcpy(Elements[EElement_Vertex].Data, &NewVertexList[0], NewVertexList.size() * sizeof(M2Lib::CVertex));
 
 	// fix seams
 	// this is hacky, but we gotta fix seams first
@@ -615,15 +697,15 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate( Char16* FileName, bool IgnoreBone
 	M2Lib::M2SkinBuilder SkinBuilder;
 	std::vector< UInt16 > NewBoneLookup;
 	SInt32 BoneStart = 0;
-	M2Lib::M2Skin* pNewSkin0 = new M2Lib::M2Skin( this );
-	assert( SkinBuilder.Build( pNewSkin0, 256, &InM2I, &NewVertexList[0], BoneStart ) );
+	M2Lib::M2Skin* pNewSkin0 = new M2Lib::M2Skin(this);
+	assert(SkinBuilder.Build(pNewSkin0, 256, &InM2I, &NewVertexList[0], BoneStart));
 
 	// set skin 0 so we can begin seam fixing
 	M2Lib::M2Skin* pOriginalSkin0 = Skins[0];	// save this because we will need to copy materials from it later.
 	Elements[EElement_Skin].Count = 1;
-	for ( UInt32 i = 0; i < 4; i++ )
+	for (UInt32 i = 0; i < 4; i++)
 	{
-		if ( i > 0 && Skins[i] )
+		if (i > 0 && Skins[i])
 		{
 			delete Skins[i];
 		}
@@ -631,13 +713,13 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate( Char16* FileName, bool IgnoreBone
 	}
 
 	// fix normals within submeshes
-	FixSeamsSubMesh( SubmeshPositionalTolerance, SubmeshAngularTolerance * DegreesToRadians );
+	FixSeamsSubMesh(SubmeshPositionalTolerance, SubmeshAngularTolerance * DegreesToRadians);
 
 	// fix normals between body submeshes
-	FixSeamsBody( BodyPositionalTolerance, BodyAngularTolerance * DegreesToRadians );
+	FixSeamsBody(BodyPositionalTolerance, BodyAngularTolerance * DegreesToRadians);
 
 	// close gaps between clothes and body
-	FixSeamsClothing( ClothingPositionalTolerance, ClothingAngularTolerance * DegreesToRadians );
+	FixSeamsClothing(ClothingPositionalTolerance, ClothingAngularTolerance * DegreesToRadians);
 
 
 
@@ -666,21 +748,22 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate( Char16* FileName, bool IgnoreBone
 	NewBoneLookup.clear();
 	BoneStart = 0;
 	UInt32 iSkin = 0;
-	for ( UInt32 iLoD = 0; iLoD < 4; iLoD++ )
+
+	for (UInt32 iLoD = 0; iLoD < 4; iLoD++)
 	{
-		M2Lib::M2Skin* pNewSkin = new M2Lib::M2Skin( this );
-		assert( SkinBuilder.Build( pNewSkin, MaxBoneList[iLoD], &InM2I, (M2Lib::CVertex*)Elements[EElement_Vertex].Data, BoneStart ) );
+		M2Lib::M2Skin* pNewSkin = new M2Lib::M2Skin(this);
+		assert(SkinBuilder.Build(pNewSkin, MaxBoneList[iLoD], &InM2I, (M2Lib::CVertex*)Elements[EElement_Vertex].Data, BoneStart));
 		// if there are more bones than the next lowest level of detail
-		if ( SkinBuilder.m_Bones.size() > MaxBoneList[iLoD + 1] )
+		if (SkinBuilder.m_Bones.size() > MaxBoneList[iLoD + 1])
 		{
 			// copy skin to result list
 			NewSkinList[iSkin] = pNewSkin;
 			iSkin++;
 
 			// copy skin's bone lookup to the global bone lookup list
-			for ( UInt32 i = 0; i < SkinBuilder.m_Bones.size(); i++ )
+			for (UInt32 i = 0; i < SkinBuilder.m_Bones.size(); i++)
 			{
-				NewBoneLookup.push_back( SkinBuilder.m_Bones[i] );
+				NewBoneLookup.push_back(SkinBuilder.m_Bones[i]);
 			}
 
 			// advance for where next skin's bone lookup will begin
@@ -695,26 +778,26 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate( Char16* FileName, bool IgnoreBone
 
 	// set skin count
 	Elements[EElement_Skin].Count = iSkin;
-	if ( iSkin == 0 )
+	if (iSkin == 0)
 	{
 		int pause = 1;
 	}
 
 	// copy materials from old sub meshes to new sub meshes
-	for ( UInt32 i = 0; i < 4; i++ )
+	for (UInt32 i = 0; i < 4; i++)
 	{
-		if ( NewSkinList[i] )
+		if (NewSkinList[i])
 		{
-			NewSkinList[i]->CopyMaterials( pOriginalSkin0 );
+			NewSkinList[i]->CopyMaterials(pOriginalSkin0);
 			//NewSkinList[i]->SortSubMeshes();
 		}
 	}
 	delete pOriginalSkin0;
 
 	// replace old skins with new
-	for ( UInt32 i = 0; i < 4; i++ )
+	for (UInt32 i = 0; i < 4; i++)
 	{
-		if ( Skins[i] )
+		if (Skins[i])
 		{
 			delete Skins[i];
 		}
@@ -722,13 +805,13 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate( Char16* FileName, bool IgnoreBone
 	}
 
 	// copy new bone lookup
-	Elements[EElement_SkinnedBoneLookup].SetDataSize( NewBoneLookup.size(), NewBoneLookup.size() * sizeof( UInt16 ), false );
-	memcpy( Elements[EElement_SkinnedBoneLookup].Data, &NewBoneLookup[0], NewBoneLookup.size() * sizeof( UInt16 ) );
+	Elements[EElement_SkinnedBoneLookup].SetDataSize(NewBoneLookup.size(), NewBoneLookup.size() * sizeof(UInt16), false);
+	memcpy(Elements[EElement_SkinnedBoneLookup].Data, &NewBoneLookup[0], NewBoneLookup.size() * sizeof(UInt16));
 
 	// build vertex bone indices
-	for ( UInt32 i = 0; i != Header.Elements.nSkin; i++ )
+	for (UInt32 i = 0; i != Header.Elements.nSkin; i++)
 	{
-		if ( Skins[i] )
+		if (Skins[i])
 		{
 			Skins[i]->BuildVertexBoneIndices();
 		}
@@ -751,7 +834,7 @@ void M2Lib::M2::PrintInfo()
 
 	Char16 szFileOut[1024];
 	UInt32 Length = 0;
-	while ( _FileName[Length] != '\0' )
+	while (_FileName[Length] != '\0')
 	{
 		szFileOut[Length] = _FileName[Length];
 		Length++;
@@ -763,14 +846,14 @@ void M2Lib::M2::PrintInfo()
 	szFileOut[Length++] = '\0';
 
 	std::fstream FileStream;
-	FileStream.open( szFileOut, std::ios::out | std::ios::trunc );
+	FileStream.open(szFileOut, std::ios::out | std::ios::trunc);
 
 	FileStream << "ID       " << Header.Description.ID[0] << Header.Description.ID[1] << Header.Description.ID[2] << Header.Description.ID[3] << std::endl;		// 'MD20'
 	FileStream << "Version  ";
-	FileStream << _itoa_s( (int)Header.Description.Version[0], szItoA, 32, 10 ) << " ";
-	FileStream << _itoa_s( (int)Header.Description.Version[1], szItoA, 32, 10 ) << " ";
-	FileStream << _itoa_s( (int)Header.Description.Version[2], szItoA, 32, 10 ) << " ";
-	FileStream << _itoa_s( (int)Header.Description.Version[3], szItoA, 32, 10 ) << std::endl;
+	FileStream << _itoa_s((int)Header.Description.Version[0], szItoA, 32, 10) << " ";
+	FileStream << _itoa_s((int)Header.Description.Version[1], szItoA, 32, 10) << " ";
+	FileStream << _itoa_s((int)Header.Description.Version[2], szItoA, 32, 10) << " ";
+	FileStream << _itoa_s((int)Header.Description.Version[3], szItoA, 32, 10) << std::endl;
 	FileStream << std::endl;
 
 	FileStream << "nName                     " << Header.Description.nName << std::endl;
@@ -950,45 +1033,65 @@ void M2Lib::M2::PrintInfo()
 }
 
 
-bool M2Lib::M2::GetFileSkin( Char16* SkinFileNameResultBuffer, const Char16* M2FileName, UInt32 SkinIndex )
+// Gets the .skin file names.
+bool M2Lib::M2::GetFileSkin(Char16* SkinFileNameResultBuffer, const Char16* M2FileName, UInt32 SkinTriangleIndex)
 {
 	// ghetto string ops
 	SInt32 LastDot = -1;
 	UInt32 Length = 0;
-	for ( ; Length < 1024; Length++ )
+	for (; Length < 1024; Length++)
 	{
-		if ( M2FileName[Length] == L'\0' )
+		if (M2FileName[Length] == L'\0')
 		{
 			break;
 		}
-		else if ( M2FileName[Length] == L'.' )
+		else if (M2FileName[Length] == L'.')
 		{
 			LastDot = Length;
 		}
 	}
-	if ( ( LastDot == -1 ) || ( LastDot > 1018 ) )
+	if ((LastDot == -1) || (LastDot > 1018))
 	{
 		return false;
 	}
 	UInt32 j = 0;
-	for ( ; j != LastDot; j++ )
+	for (; j != LastDot; j++)
 	{
 		SkinFileNameResultBuffer[j] = M2FileName[j];
 	}
-	SkinFileNameResultBuffer[j++] = L'0';
-	switch ( SkinIndex )
+	switch (SkinTriangleIndex)
 	{
 	case 0:
 		SkinFileNameResultBuffer[j++] = L'0';
+		SkinFileNameResultBuffer[j++] = L'0';
 		break;
 	case 1:
+		SkinFileNameResultBuffer[j++] = L'0';
 		SkinFileNameResultBuffer[j++] = L'1';
 		break;
 	case 2:
+		SkinFileNameResultBuffer[j++] = L'0';
 		SkinFileNameResultBuffer[j++] = L'2';
 		break;
 	case 3:
+		SkinFileNameResultBuffer[j++] = L'0';
 		SkinFileNameResultBuffer[j++] = L'3';
+		break;
+	case 4:
+		SkinFileNameResultBuffer[j++] = L'_';
+		SkinFileNameResultBuffer[j++] = L'L';
+		SkinFileNameResultBuffer[j++] = L'O';
+		SkinFileNameResultBuffer[j++] = L'D';
+		SkinFileNameResultBuffer[j++] = L'0';
+		SkinFileNameResultBuffer[j++] = L'1';
+		break;
+	case 5:
+		SkinFileNameResultBuffer[j++] = L'_';
+		SkinFileNameResultBuffer[j++] = L'L';
+		SkinFileNameResultBuffer[j++] = L'O';
+		SkinFileNameResultBuffer[j++] = L'D';
+		SkinFileNameResultBuffer[j++] = L'0';
+		SkinFileNameResultBuffer[j++] = L'2';
 		break;
 	}
 	SkinFileNameResultBuffer[j++] = L'.';
@@ -1002,38 +1105,38 @@ bool M2Lib::M2::GetFileSkin( Char16* SkinFileNameResultBuffer, const Char16* M2F
 }
 
 
-void M2Lib::M2::FixSeamsSubMesh( Float32 PositionalTolerance, Float32 AngularTolerance )
+void M2Lib::M2::FixSeamsSubMesh(Float32 PositionalTolerance, Float32 AngularTolerance)
 {
 	// gather up sub meshes
 	std::vector< std::vector< M2Lib::M2Skin::CElement_SubMesh* > > SubMeshes;
 
 	M2Lib::M2Skin::CElement_SubMesh* Subsets = (M2Lib::M2Skin::CElement_SubMesh*)Skins[0]->Elements[M2Lib::M2Skin::EElement_SubMesh].Data;
 	UInt32 SubsetCount = Skins[0]->Elements[M2Lib::M2Skin::EElement_SubMesh].Count;
-	for ( UInt32 i = 0; i < SubsetCount; i++ )
+	for (UInt32 i = 0; i < SubsetCount; i++)
 	{
-		UInt32 ThisID = Subsets[i].ID;
+		UInt16 ThisID = Subsets[i].ID;
 		bool MakeNew = true;
-		for ( UInt32 j = 0; j < SubMeshes.size(); j++ )
+		for (UInt32 j = 0; j < SubMeshes.size(); j++)
 		{
-			for ( UInt32 k = 0; k < SubMeshes[j].size(); k++ )
+			for (UInt32 k = 0; k < SubMeshes[j].size(); k++)
 			{
-				if ( SubMeshes[j][k]->ID == ThisID )
+				if (SubMeshes[j][k]->ID == ThisID)
 				{
 					MakeNew = false;
-					SubMeshes[j].push_back( &Subsets[i] );
+					SubMeshes[j].push_back(&Subsets[i]);
 					break;
 				}
 			}
-			if ( !MakeNew )
+			if (!MakeNew)
 			{
 				break;
 			}
 		}
-		if ( MakeNew )
+		if (MakeNew)
 		{
 			std::vector< M2Lib::M2Skin::CElement_SubMesh* > NewSubmeshSubsetList;
-			NewSubmeshSubsetList.push_back( &Subsets[i] );
-			SubMeshes.push_back( NewSubmeshSubsetList );
+			NewSubmeshSubsetList.push_back(&Subsets[i]);
+			SubMeshes.push_back(NewSubmeshSubsetList);
 		}
 	}
 
@@ -1041,42 +1144,42 @@ void M2Lib::M2::FixSeamsSubMesh( Float32 PositionalTolerance, Float32 AngularTol
 	UInt32 VertexListLength = GetElement_Vertex().Count;
 	M2Lib::CVertex* VertexList = (M2Lib::CVertex*)GetElement_Vertex().Data;
 	std::vector< M2Lib::CVertex* > SimilarVertices;
-	for ( UInt32 iSubMesh1 = 0; iSubMesh1 < SubMeshes.size(); iSubMesh1++ )
+	for (UInt32 iSubMesh1 = 0; iSubMesh1 < SubMeshes.size(); iSubMesh1++)
 	{
-		for ( UInt32 iSubSet1 = 0; iSubSet1 < SubMeshes[iSubMesh1].size(); iSubSet1++ )
+		for (UInt32 iSubSet1 = 0; iSubSet1 < SubMeshes[iSubMesh1].size(); iSubSet1++)
 		{
 			M2Lib::M2Skin::CElement_SubMesh* pSubSet1 = SubMeshes[iSubMesh1][iSubSet1];
 
 			UInt32 VertexAEnd = pSubSet1->VertexStart + pSubSet1->VertexCount;
-			for ( UInt32 iVertexA = pSubSet1->VertexStart; iVertexA < VertexAEnd; iVertexA++ )
+			for (UInt32 iVertexA = pSubSet1->VertexStart; iVertexA < VertexAEnd; iVertexA++)
 			{
 				bool AddedVertexA = false;
-				for ( UInt32 iSubSet2 = 0; iSubSet2 < SubMeshes[iSubMesh1].size(); iSubSet2++ )
+				for (UInt32 iSubSet2 = 0; iSubSet2 < SubMeshes[iSubMesh1].size(); iSubSet2++)
 				{
 					M2Lib::M2Skin::CElement_SubMesh* pSubSet2 = SubMeshes[iSubMesh1][iSubSet2];
 
 					UInt32 VertexBEnd = pSubSet2->VertexStart + pSubSet2->VertexCount;
-					for ( UInt32 iVertexB = pSubSet2->VertexStart; iVertexB < VertexBEnd; iVertexB++ )
+					for (UInt32 iVertexB = pSubSet2->VertexStart; iVertexB < VertexBEnd; iVertexB++)
 					{
-						if ( iVertexA == iVertexB )
+						if (iVertexA == iVertexB)
 						{
 							continue;
 						}
 
-						if ( M2Lib::CVertex::CompareSimilar( VertexList[iVertexA], VertexList[iVertexB], false, false, PositionalTolerance, AngularTolerance ) )
+						if (M2Lib::CVertex::CompareSimilar(VertexList[iVertexA], VertexList[iVertexB], false, false, PositionalTolerance, AngularTolerance))
 						{
-							if ( !AddedVertexA )
+							if (!AddedVertexA)
 							{
-								SimilarVertices.push_back( &VertexList[iVertexA] );
+								SimilarVertices.push_back(&VertexList[iVertexA]);
 								AddedVertexA = true;
 							}
 
-							SimilarVertices.push_back( &VertexList[iVertexB] );
+							SimilarVertices.push_back(&VertexList[iVertexB]);
 						}
 					}
 				}
 
-				if ( SimilarVertices.size() > 1 )
+				if (SimilarVertices.size() > 1)
 				{
 					// sum positions and normals
 					Float32 NewPosition[3];
@@ -1089,7 +1192,7 @@ void M2Lib::M2::FixSeamsSubMesh( Float32 PositionalTolerance, Float32 AngularTol
 					NewNormal[1] = 0.0f;
 					NewNormal[2] = 0.0f;
 
-					for ( UInt32 iSimilarVertex = 0; iSimilarVertex < SimilarVertices.size(); iSimilarVertex++ )
+					for (UInt32 iSimilarVertex = 0; iSimilarVertex < SimilarVertices.size(); iSimilarVertex++)
 					{
 						M2Lib::CVertex* pSimilarVertex = SimilarVertices[iSimilarVertex];
 
@@ -1126,7 +1229,7 @@ void M2Lib::M2::FixSeamsSubMesh( Float32 PositionalTolerance, Float32 AngularTol
 					NewBoneIndices[3] = SimilarVertices[0]->BoneIndices[3];
 
 					// assign new values back into similar vertices
-					for ( UInt32 iSimilarVertex = 0; iSimilarVertex < SimilarVertices.size(); iSimilarVertex++ )
+					for (UInt32 iSimilarVertex = 0; iSimilarVertex < SimilarVertices.size(); iSimilarVertex++)
 					{
 						M2Lib::CVertex* pSimilarVertex = SimilarVertices[iSimilarVertex];
 
@@ -1157,7 +1260,7 @@ void M2Lib::M2::FixSeamsSubMesh( Float32 PositionalTolerance, Float32 AngularTol
 }
 
 
-void M2Lib::M2::FixSeamsBody( Float32 PositionalTolerance, Float32 AngularTolerance )
+void M2Lib::M2::FixSeamsBody(Float32 PositionalTolerance, Float32 AngularTolerance)
 {
 	// sub meshes that are divided up accross multiple bone partitions will have multiple sub mesh entries with the same ID in the M2.
 	// we need to gather each body submesh up into a list and average normals of vertices that are similar between other sub meshes.
@@ -1169,41 +1272,41 @@ void M2Lib::M2::FixSeamsBody( Float32 PositionalTolerance, Float32 AngularTolera
 	// gather up the body submeshes
 	M2Lib::M2Skin::CElement_SubMesh* SubMeshList = (M2Lib::M2Skin::CElement_SubMesh*)Skins[0]->Elements[M2Lib::M2Skin::EElement_SubMesh].Data;
 	UInt32 SubsetCount = Skins[0]->Elements[M2Lib::M2Skin::EElement_SubMesh].Count;
-	for ( UInt32 i = 0; i < SubsetCount; i++ )
+	for (UInt32 i = 0; i < SubsetCount; i++)
 	{
 		// determine type of subset
-		UInt32 ThisID = SubMeshList[i].ID;
-		UInt32 Mod = ThisID;
-		while  ( Mod > 10 )
+		UInt16 ThisID = SubMeshList[i].ID;
+		UInt16 Mod = ThisID;
+		while (Mod > 10)
 		{
 			Mod %= 10;
 		}
-		if ( ( ThisID == 0 ) || ( ThisID > 10 && Mod == 1 ) || ( ThisID == 702 ) )
+		if ((ThisID == 0) || (ThisID > 10 && Mod == 1) || (ThisID == 702))
 		{
 			// this subset is part of the character's body
 			// add it to the list of submeshes
 			bool MakeNew = true;
-			for ( UInt32 j = 0; j < CompiledSubMeshList.size(); j++ )
+			for (UInt32 j = 0; j < CompiledSubMeshList.size(); j++)
 			{
-				for ( UInt32 k = 0; k < CompiledSubMeshList[j].size(); k++ )
+				for (UInt32 k = 0; k < CompiledSubMeshList[j].size(); k++)
 				{
-					if ( CompiledSubMeshList[j][k]->ID == ThisID )
+					if (CompiledSubMeshList[j][k]->ID == ThisID)
 					{
 						MakeNew = false;
-						CompiledSubMeshList[j].push_back( &SubMeshList[i] );
+						CompiledSubMeshList[j].push_back(&SubMeshList[i]);
 						break;
 					}
 				}
-				if ( !MakeNew )
+				if (!MakeNew)
 				{
 					break;
 				}
 			}
-			if ( MakeNew )
+			if (MakeNew)
 			{
 				std::vector< M2Lib::M2Skin::CElement_SubMesh* > NewSubmeshSubsetList;
-				NewSubmeshSubsetList.push_back( &SubMeshList[i] );
-				CompiledSubMeshList.push_back( NewSubmeshSubsetList );
+				NewSubmeshSubsetList.push_back(&SubMeshList[i]);
+				CompiledSubMeshList.push_back(NewSubmeshSubsetList);
 			}
 		}
 	}
@@ -1212,50 +1315,50 @@ void M2Lib::M2::FixSeamsBody( Float32 PositionalTolerance, Float32 AngularTolera
 	UInt32 VertexListLength = GetElement_Vertex().Count;
 	M2Lib::CVertex* VertexList = (M2Lib::CVertex*)GetElement_Vertex().Data;
 	std::vector< M2Lib::CVertex* > SimilarVertices;
-	for ( SInt32 iSubMesh1 = 0; iSubMesh1 < (SInt32)CompiledSubMeshList.size() - 1; iSubMesh1++ )
+	for (SInt32 iSubMesh1 = 0; iSubMesh1 < (SInt32)CompiledSubMeshList.size() - 1; iSubMesh1++)
 	{
-		for ( SInt32 iSubSet1 = 0; iSubSet1 < (SInt32)CompiledSubMeshList[iSubMesh1].size(); iSubSet1++ )
+		for (SInt32 iSubSet1 = 0; iSubSet1 < (SInt32)CompiledSubMeshList[iSubMesh1].size(); iSubSet1++)
 		{
 			// gather duplicate vertices
 			// for each vertex in the subset, compare it against vertices in the other subsets
 			// find duplicates and sum their normals
 			UInt32 iVertexAEnd = CompiledSubMeshList[iSubMesh1][iSubSet1]->VertexStart + CompiledSubMeshList[iSubMesh1][iSubSet1]->VertexCount;
-			for ( UInt32 iVertexA = CompiledSubMeshList[iSubMesh1][iSubSet1]->VertexStart; iVertexA < iVertexAEnd; iVertexA++ )
+			for (UInt32 iVertexA = CompiledSubMeshList[iSubMesh1][iSubSet1]->VertexStart; iVertexA < iVertexAEnd; iVertexA++)
 			{
 				// gather duplicate vertices from other submeshes
 				bool AddedVertex1 = false;
-				for ( SInt32 iSubMesh2 = iSubMesh1 + 1; iSubMesh2 < (SInt32)CompiledSubMeshList.size(); iSubMesh2++ )
+				for (SInt32 iSubMesh2 = iSubMesh1 + 1; iSubMesh2 < (SInt32)CompiledSubMeshList.size(); iSubMesh2++)
 				{
 					// check that we don't check against ourselves
-					if ( iSubMesh2 == iSubMesh1 )
+					if (iSubMesh2 == iSubMesh1)
 					{
 						// other submesh is same as this submesh
 						continue;
 					}
 					// go through subsets
-					for ( SInt32 iSubSet2 = 0; iSubSet2 < (SInt32)CompiledSubMeshList[iSubMesh2].size(); iSubSet2++ )
+					for (SInt32 iSubSet2 = 0; iSubSet2 < (SInt32)CompiledSubMeshList[iSubMesh2].size(); iSubSet2++)
 					{
 						// go through vertices in subset
 						UInt32 iVertexBEnd = CompiledSubMeshList[iSubMesh2][iSubSet2]->VertexStart + CompiledSubMeshList[iSubMesh2][iSubSet2]->VertexCount;
-						for ( UInt32 iVertexB = CompiledSubMeshList[iSubMesh2][iSubSet2]->VertexStart; iVertexB < iVertexBEnd; iVertexB++ )
+						for (UInt32 iVertexB = CompiledSubMeshList[iSubMesh2][iSubSet2]->VertexStart; iVertexB < iVertexBEnd; iVertexB++)
 						{
-							if ( M2Lib::CVertex::CompareSimilar( VertexList[iVertexA], VertexList[iVertexB], false, false, PositionalTolerance, AngularTolerance ) )
+							if (M2Lib::CVertex::CompareSimilar(VertexList[iVertexA], VertexList[iVertexB], false, false, PositionalTolerance, AngularTolerance))
 							{
 								// found a duplicate
-								if ( !AddedVertex1 )
+								if (!AddedVertex1)
 								{
-									SimilarVertices.push_back( &VertexList[iVertexA] );
+									SimilarVertices.push_back(&VertexList[iVertexA]);
 									AddedVertex1 = true;
 								}
 								// add the vertex from the other sub mesh to the list of similar vertices
-								SimilarVertices.push_back( &VertexList[iVertexB] );
+								SimilarVertices.push_back(&VertexList[iVertexB]);
 							}
 						}
 					}
 				}
 
 				// average normals of similar vertices
-				if ( SimilarVertices.size() )
+				if (SimilarVertices.size())
 				{
 					// sum positions and normals
 					Float32 NewPosition[3];
@@ -1268,7 +1371,7 @@ void M2Lib::M2::FixSeamsBody( Float32 PositionalTolerance, Float32 AngularTolera
 					NewNormal[1] = 0.0f;
 					NewNormal[2] = 0.0f;
 
-					for ( UInt32 iSimilarVertex = 0; iSimilarVertex < SimilarVertices.size(); iSimilarVertex++ )
+					for (UInt32 iSimilarVertex = 0; iSimilarVertex < SimilarVertices.size(); iSimilarVertex++)
 					{
 						M2Lib::CVertex* pSimilarVertex = SimilarVertices[iSimilarVertex];
 
@@ -1305,7 +1408,7 @@ void M2Lib::M2::FixSeamsBody( Float32 PositionalTolerance, Float32 AngularTolera
 					NewBoneIndices[3] = SimilarVertices[0]->BoneIndices[3];
 
 					// assign new values back into similar vertices
-					for ( UInt32 iSimilarVertex = 0; iSimilarVertex < SimilarVertices.size(); iSimilarVertex++ )
+					for (UInt32 iSimilarVertex = 0; iSimilarVertex < SimilarVertices.size(); iSimilarVertex++)
 					{
 						M2Lib::CVertex* pSimilarVertex = SimilarVertices[iSimilarVertex];
 
@@ -1337,7 +1440,7 @@ void M2Lib::M2::FixSeamsBody( Float32 PositionalTolerance, Float32 AngularTolera
 }
 
 
-void M2Lib::M2::FixSeamsClothing( Float32 PositionalTolerance, Float32 AngularTolerance )
+void M2Lib::M2::FixSeamsClothing(Float32 PositionalTolerance, Float32 AngularTolerance)
 {
 	M2Lib::CVertex* VertexList = (M2Lib::CVertex*)GetElement_Vertex().Data;
 
@@ -1347,22 +1450,22 @@ void M2Lib::M2::FixSeamsClothing( Float32 PositionalTolerance, Float32 AngularTo
 	std::vector< M2Lib::M2Skin::CElement_SubMesh* > SubMeshBodyList;	// gathered body sub meshes
 	std::vector< M2Lib::M2Skin::CElement_SubMesh* > SubMeshGarbList;	// gathered clothing sub meshes
 
-	for ( UInt32 i = 0; i < SubMeshListLength; i++ )
+	for (UInt32 i = 0; i < SubMeshListLength; i++)
 	{
-		UInt32 ThisID = SubMeshList[i].ID;
+		UInt16 ThisID = SubMeshList[i].ID;
 
 		// gather body sub meshes
-		UInt32 Mod = ThisID;
-		if ( Mod > 10 )
+		UInt16 Mod = ThisID;
+		if (Mod > 10)
 		{
 			Mod %= 10;
 		}
-		if ( ThisID == 0 || ( ThisID > 10 && Mod == 1 ) )
+		if (ThisID == 0 || (ThisID > 10 && Mod == 1))
 		{
-			SubMeshBodyList.push_back( &SubMeshList[i] );
+			SubMeshBodyList.push_back(&SubMeshList[i]);
 		}
 		// gather clothing sub meshes
-		else if ( 
+		else if (
 			ThisID == 402 ||	// cloth glove
 			ThisID == 403 ||	// leather glove
 			ThisID == 404 ||	// plate glove
@@ -1382,23 +1485,23 @@ void M2Lib::M2::FixSeamsClothing( Float32 PositionalTolerance, Float32 AngularTo
 			//ThisID == 1802	// plate belt
 			)
 		{
-			SubMeshGarbList.push_back( &SubMeshList[i] );
+			SubMeshGarbList.push_back(&SubMeshList[i]);
 		}
 	}
 
 	// copy vertex properties from main body vertex to duplicate clothing vertices
-	for ( UInt32 iSubMeshGarb = 0; iSubMeshGarb < SubMeshGarbList.size(); iSubMeshGarb++ )
+	for (UInt32 iSubMeshGarb = 0; iSubMeshGarb < SubMeshGarbList.size(); iSubMeshGarb++)
 	{
 		M2Lib::M2Skin::CElement_SubMesh* pSubMeshGarb = SubMeshGarbList[iSubMeshGarb];
-		for ( UInt32 iSubMeshBody = 0; iSubMeshBody < SubMeshBodyList.size(); iSubMeshBody++ )
+		for (UInt32 iSubMeshBody = 0; iSubMeshBody < SubMeshBodyList.size(); iSubMeshBody++)
 		{
 			M2Lib::M2Skin::CElement_SubMesh* pSubMeshBody = SubMeshBodyList[iSubMeshBody];
 
-			for ( SInt32 iVertexGarb = pSubMeshGarb->VertexStart; iVertexGarb < pSubMeshGarb->VertexStart + pSubMeshGarb->VertexCount; iVertexGarb++ )
+			for (SInt32 iVertexGarb = pSubMeshGarb->VertexStart; iVertexGarb < pSubMeshGarb->VertexStart + pSubMeshGarb->VertexCount; iVertexGarb++)
 			{
-				for ( SInt32 iVertexBody = pSubMeshBody->VertexStart; iVertexBody < pSubMeshBody->VertexStart + pSubMeshBody->VertexCount; iVertexBody++ )
+				for (SInt32 iVertexBody = pSubMeshBody->VertexStart; iVertexBody < pSubMeshBody->VertexStart + pSubMeshBody->VertexCount; iVertexBody++)
 				{
-					if ( M2Lib::CVertex::CompareSimilar( VertexList[iVertexGarb], VertexList[iVertexBody], false, false, PositionalTolerance, AngularTolerance ) )
+					if (M2Lib::CVertex::CompareSimilar(VertexList[iVertexGarb], VertexList[iVertexBody], false, false, PositionalTolerance, AngularTolerance))
 					{
 						// copy position, normal, and bone weights, and bone indices from body vertex to other(clothing) vertex
 						M2Lib::CVertex* pVertexOther = &VertexList[iVertexGarb];
@@ -1434,13 +1537,13 @@ void M2Lib::M2::NormalizeBoneWeights()
 }
 
 
-void M2Lib::M2::Scale( Float32 Scale )
+void M2Lib::M2::Scale(Float32 Scale)
 {
 	// vertices
 	{
 		UInt32 VertexListLength = GetElement_Vertex().Count;
 		CVertex* VertexList = (CVertex*)GetElement_Vertex().Data;
-		for ( UInt32 i = 0; i < VertexListLength; i++ )
+		for (UInt32 i = 0; i < VertexListLength; i++)
 		{
 			CVertex& Vertex = VertexList[i];
 			Vertex.Position[0] *= Scale;
@@ -1453,7 +1556,7 @@ void M2Lib::M2::Scale( Float32 Scale )
 	{
 		UInt32 BoneListLength = Elements[EElement_Bone].Count;
 		CElement_Bone* BoneList = (CElement_Bone*)Elements[EElement_Bone].Data;
-		for ( UInt32 i = 0; i < BoneListLength; i++ )
+		for (UInt32 i = 0; i < BoneListLength; i++)
 		{
 			CElement_Bone& Bone = BoneList[i];
 			Bone.Position[0] *= Scale;
@@ -1466,7 +1569,7 @@ void M2Lib::M2::Scale( Float32 Scale )
 	{
 		UInt32 AttachmentListLength = Elements[EElement_Attachment].Count;
 		CElement_Attachment* AttachmentList = (CElement_Attachment*)Elements[EElement_Attachment].Data;
-		for ( UInt32 i = 0; i < AttachmentListLength; i++ )
+		for (UInt32 i = 0; i < AttachmentListLength; i++)
 		{
 			CElement_Attachment& Attachment = AttachmentList[i];
 			Attachment.Position[0] *= Scale;
@@ -1479,7 +1582,7 @@ void M2Lib::M2::Scale( Float32 Scale )
 	{
 		UInt32 EventListLength = Elements[EElement_Event].Count;
 		CElement_Event* EventList = (CElement_Event*)Elements[EElement_Event].Data;
-		for ( UInt32 i = 0; i < EventListLength; i++ )
+		for (UInt32 i = 0; i < EventListLength; i++)
 		{
 			CElement_Event& Event = EventList[i];
 			Event.Position[0] *= Scale;
@@ -1492,7 +1595,7 @@ void M2Lib::M2::Scale( Float32 Scale )
 	{
 		UInt32 LightListLength = Elements[EElement_Light].Count;
 		CElement_Light* LightList = (CElement_Light*)Elements[EElement_Light].Data;
-		for ( UInt32 i = 0; i < LightListLength; i++ )
+		for (UInt32 i = 0; i < LightListLength; i++)
 		{
 			CElement_Light& Light = LightList[i];
 			Light.Position[0] *= Scale;
@@ -1505,7 +1608,7 @@ void M2Lib::M2::Scale( Float32 Scale )
 	{
 		UInt32 CameraListLength = Elements[EElement_Camera].Count;
 		CElement_Camera* CameraList = (CElement_Camera*)Elements[EElement_Camera].Data;
-		for ( UInt32 i = 0; i < CameraListLength; i++ )
+		for (UInt32 i = 0; i < CameraListLength; i++)
 		{
 			CElement_Camera& Camera = CameraList[i];
 			Camera.Position[0] *= Scale;
@@ -1521,7 +1624,7 @@ void M2Lib::M2::Scale( Float32 Scale )
 	{
 		UInt32 RibbonEmitterListLength = Elements[EElement_RibbonEmitter].Count;
 		CElement_RibbonEmitter* RibbonEmitterList = (CElement_RibbonEmitter*)Elements[EElement_RibbonEmitter].Data;
-		for ( UInt32 i = 0; i < RibbonEmitterListLength; i++ )
+		for (UInt32 i = 0; i < RibbonEmitterListLength; i++)
 		{
 			CElement_RibbonEmitter& RibbonEmitter = RibbonEmitterList[i];
 			RibbonEmitter.Position[0] *= Scale;
@@ -1534,7 +1637,7 @@ void M2Lib::M2::Scale( Float32 Scale )
 	{
 		UInt32 ParticleEmitterListLength = Elements[EElement_ParticleEmitter].Count;
 		CElement_ParticleEmitter* ParticleEmitterList = (CElement_ParticleEmitter*)Elements[EElement_ParticleEmitter].Data;
-		for ( UInt32 i = 0; i < ParticleEmitterListLength; i++ )
+		for (UInt32 i = 0; i < ParticleEmitterListLength; i++)
 		{
 			CElement_ParticleEmitter& ParticleEmitter = ParticleEmitterList[i];
 			ParticleEmitter.Position[0] *= Scale;
@@ -1549,16 +1652,16 @@ void M2Lib::M2::MirrorCamera()
 {
 	CElement_Camera* Cameras = (CElement_Camera*)Elements[EElement_Camera].Data;
 	UInt32 CameraCount = Elements[EElement_Camera].Count;
-	for ( UInt32 iCamera = 0; iCamera < CameraCount; iCamera++ )
+	for (UInt32 iCamera = 0; iCamera < CameraCount; iCamera++)
 	{
-		if ( Cameras->Type == 0 )
+		if (Cameras->Type == 0)
 		{
 			Cameras->Position[1] = -Cameras->Position[1];
 			Cameras->Target[1] = -Cameras->Target[1];
 			break;
 		}
 	}
-	
+
 }
 
 
@@ -1659,24 +1762,24 @@ void M2Lib::M2::m_LoadElements_CopyHeaderToElements()
 }
 
 
-void M2Lib::M2::m_LoadElements_FindSizes( UInt32 FileSize )
+void M2Lib::M2::m_LoadElements_FindSizes(UInt32 FileSize)
 {
-	for ( UInt32 i = 0; i != EElement__Count__; i++ )
+	for (UInt32 i = 0; i != EElement__Count__; i++)
 	{
 		Elements[i].OffsetOriginal = Elements[i].Offset;
 
-		if ( ( Elements[i].Count == 0 ) || ( Elements[i].Offset == 0 ) )
+		if ((Elements[i].Count == 0) || (Elements[i].Offset == 0))
 		{
 			Elements[i].DataSize = 0;
 		}
 		else
 		{
 			UInt32 NextOffset = FileSize;
-			for ( UInt32 j = 0; j < EElement__Count__; j++ )
+			for (UInt32 j = 0; j < EElement__Count__; j++)
 			{
-				if ( ( Elements[j].Count != 0 ) && ( Elements[j].Offset > Elements[i].Offset ) )
+				if ((Elements[j].Count != 0) && (Elements[j].Offset > Elements[i].Offset))
 				{
-					if ( Elements[j].Offset < NextOffset )
+					if (Elements[j].Offset < NextOffset)
 					{
 						NextOffset = Elements[j].Offset;
 					}
@@ -1696,12 +1799,12 @@ void M2Lib::M2::m_SaveElements_FindOffsets()
 	// thanks TP
 
 	// find new file size
-	UInt32 NewSize = sizeof( CM2Header );
-	if ( !( Header.Description.Flags & 0x08 ) )
+	UInt32 NewSize = sizeof(CM2Header);
+	if (!(Header.Description.Flags & 0x08))
 	{
 		NewSize -= 8;
 	}
-	for ( UInt32 i = 0; i < EElement__Count__; i++ )
+	for (UInt32 i = 0; i < EElement__Count__; i++)
 	{
 		NewSize += Elements[i].DataSize;
 	}
@@ -1712,168 +1815,168 @@ void M2Lib::M2::m_SaveElements_FindOffsets()
 
 	// fix animation offsets and find element offsets
 	SInt32 CurrentOffset = 0;
-	if ( Header.Description.Flags & 0x08 )
+	if (Header.Description.Flags & 0x08)
 	{
-		CurrentOffset = sizeof( CM2Header ) + 8;	// +8 to align data at 16 byte bounds
+		CurrentOffset = sizeof(CM2Header) + 8;	// +8 to align data at 16 byte bounds
 	}
 	else
 	{
-		CurrentOffset = sizeof( CM2Header ) - 8;	// -8 because last 2 UInt32s are not saved
+		CurrentOffset = sizeof(CM2Header) - 8;	// -8 because last 2 UInt32s are not saved
 	}
 
 	SInt32 OffsetDelta = 0;
-	for ( UInt32 iElement = 0; iElement < EElement__Count__; iElement++ )
+	for (UInt32 iElement = 0; iElement < EElement__Count__; iElement++)
 	{
 		// if this element has data...
-		if ( Elements[iElement].DataSize != 0 )
+		if (Elements[iElement].DataSize != 0)
 		{
 			// if the current element's current offset doesn't match the calculated offset, some data has resized and we need to fix...
-			if ( CurrentOffset != Elements[iElement].Offset )
+			if (CurrentOffset != Elements[iElement].Offset)
 			{
 				OffsetDelta = CurrentOffset - Elements[iElement].Offset;
 
-				switch ( iElement )
+				switch (iElement)
 				{
-					case EElement_Bone:
+				case EElement_Bone:
+				{
+					CElement_Bone* Bones = (CElement_Bone*)Elements[iElement].Data;
+					for (UInt32 j = 0; j < Elements[iElement].Count; j++)
 					{
-						CElement_Bone* Bones = (CElement_Bone*)Elements[iElement].Data;
-						for ( UInt32 j = 0; j < Elements[iElement].Count; j++ )
-						{
-							m_FixAnimationOffsets( OriginalEnd, OffsetDelta, Bones[j].AnimationBlock_Position, iElement, false );
-							m_FixAnimationOffsets( OriginalEnd, OffsetDelta, Bones[j].AnimationBlock_Rotation, iElement, false );
-							m_FixAnimationOffsets( OriginalEnd, OffsetDelta, Bones[j].AnimationBlock_Scale, iElement, false );
-						}
-						break;
+						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Bones[j].AnimationBlock_Position, iElement, false);
+						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Bones[j].AnimationBlock_Rotation, iElement, false);
+						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Bones[j].AnimationBlock_Scale, iElement, false);
 					}
+					break;
+				}
 
-					case EElement_Color:
+				case EElement_Color:
+				{
+					CElement_Color* Colors = (CElement_Color*)Elements[iElement].Data;
+					for (UInt32 j = 0; j < Elements[iElement].Count; j++)
 					{
-						CElement_Color* Colors = (CElement_Color*)Elements[iElement].Data;
-						for ( UInt32 j = 0; j < Elements[iElement].Count; j++ )
-						{
-							m_FixAnimationOffsets( OriginalEnd, OffsetDelta, Colors[j].AnimationBlock_Color, iElement, false );
-							m_FixAnimationOffsets( OriginalEnd, OffsetDelta, Colors[j].AnimationBlock_Opacity, iElement, false );
-						}
-						break;
+						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Colors[j].AnimationBlock_Color, iElement, false);
+						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Colors[j].AnimationBlock_Opacity, iElement, false);
 					}
+					break;
+				}
 
-					case EElement_Texture:
+				case EElement_Texture:
+				{
+					CElement_Texture* Textures = (CElement_Texture*)Elements[iElement].Data;
+					for (UInt32 j = 0; j < Elements[iElement].Count; j++)
 					{
-						CElement_Texture* Textures = (CElement_Texture*)Elements[iElement].Data;
-						for ( UInt32 j = 0; j < Elements[iElement].Count; j++ )
-						{
-							VERIFY_OFFSET_LOCAL( Textures[j].oTexturePath );
-							Textures[j].oTexturePath += OffsetDelta;
-						}
-						break;
+						VERIFY_OFFSET_LOCAL(Textures[j].oTexturePath);
+						Textures[j].oTexturePath += OffsetDelta;
 					}
+					break;
+				}
 
-					case EElement_Transparency:
+				case EElement_Transparency:
+				{
+					CElement_Transparency* Transparencies = (CElement_Transparency*)Elements[iElement].Data;
+					for (UInt32 j = 0; j < Elements[iElement].Count; j++)
 					{
-						CElement_Transparency* Transparencies = (CElement_Transparency*)Elements[iElement].Data;
-						for ( UInt32 j = 0; j < Elements[iElement].Count; j++ )
-						{
-							m_FixAnimationOffsets( OriginalEnd, OffsetDelta, Transparencies[j].AnimationBlock_Transparency, iElement, false );
-						}
-						break;
+						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Transparencies[j].AnimationBlock_Transparency, iElement, false);
 					}
+					break;
+				}
 
-					case EElement_Attachment:
+				case EElement_Attachment:
+				{
+					CElement_Attachment* Attachments = (CElement_Attachment*)Elements[iElement].Data;
+					for (UInt32 j = 0; j < Elements[iElement].Count; j++)
 					{
-						CElement_Attachment* Attachments = (CElement_Attachment*)Elements[iElement].Data;
-						for ( UInt32 j = 0; j < Elements[iElement].Count; j++ )
-						{
-							m_FixAnimationOffsets( OriginalEnd, OffsetDelta, Attachments[j].AnimationBlock_Visibility, iElement, false );
-						}
-						break;
+						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Attachments[j].AnimationBlock_Visibility, iElement, false);
 					}
+					break;
+				}
 
-					case EElement_Event:
+				case EElement_Event:
+				{
+					CElement_Event* Events = (CElement_Event*)Elements[iElement].Data;
+					for (UInt32 j = 0; j < Elements[iElement].Count; j++)
 					{
-						CElement_Event* Events = (CElement_Event*)Elements[iElement].Data;
-						for ( UInt32 j = 0; j < Elements[iElement].Count; j++ )
-						{
-							VERIFY_OFFSET_LOCAL( Events[j].oTimeLines );
-							Events[j].oTimeLines += OffsetDelta;
-						}
-						break;
+						VERIFY_OFFSET_LOCAL(Events[j].oTimeLines);
+						Events[j].oTimeLines += OffsetDelta;
 					}
+					break;
+				}
 
-					case EElement_Light:
+				case EElement_Light:
+				{
+					CElement_Light* Lights = (CElement_Light*)Elements[iElement].Data;
+					for (UInt32 j = 0; j < Elements[iElement].Count; j++)
 					{
-						CElement_Light* Lights = (CElement_Light*)Elements[iElement].Data;
-						for ( UInt32 j = 0; j < Elements[iElement].Count; j++ )
-						{
-							m_FixAnimationOffsets( OriginalEnd, OffsetDelta, Lights[j].AnimationBlock_AmbientColor, iElement, false );
-							m_FixAnimationOffsets( OriginalEnd, OffsetDelta, Lights[j].AnimationBlock_AmbientIntensity, iElement, false );
-							m_FixAnimationOffsets( OriginalEnd, OffsetDelta, Lights[j].AnimationBlock_DiffuseColor, iElement, false );
-							m_FixAnimationOffsets( OriginalEnd, OffsetDelta, Lights[j].AnimationBlock_DiffuseIntensity, iElement, false );
-							m_FixAnimationOffsets( OriginalEnd, OffsetDelta, Lights[j].AnimationBlock_AttenuationStart, iElement, false );
-							m_FixAnimationOffsets( OriginalEnd, OffsetDelta, Lights[j].AnimationBlock_AttenuationEnd, iElement, false );
-							m_FixAnimationOffsets( OriginalEnd, OffsetDelta, Lights[j].AnimationBlock_Visibility, iElement, false );
-						}
-						break;
+						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Lights[j].AnimationBlock_AmbientColor, iElement, false);
+						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Lights[j].AnimationBlock_AmbientIntensity, iElement, false);
+						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Lights[j].AnimationBlock_DiffuseColor, iElement, false);
+						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Lights[j].AnimationBlock_DiffuseIntensity, iElement, false);
+						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Lights[j].AnimationBlock_AttenuationStart, iElement, false);
+						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Lights[j].AnimationBlock_AttenuationEnd, iElement, false);
+						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Lights[j].AnimationBlock_Visibility, iElement, false);
 					}
+					break;
+				}
 
-					case EElement_Camera:
+				case EElement_Camera:
+				{
+					CElement_Camera* Cameras = (CElement_Camera*)Elements[iElement].Data;
+					for (UInt32 j = 0; j < Elements[iElement].Count; j++)
 					{
-						CElement_Camera* Cameras = (CElement_Camera*)Elements[iElement].Data;
-						for ( UInt32 j = 0; j < Elements[iElement].Count; j++ )
-						{
-							m_FixAnimationOffsets( OriginalEnd, OffsetDelta, Cameras[j].AnimationBlock_Position, iElement, false );
-							m_FixAnimationOffsets( OriginalEnd, OffsetDelta, Cameras[j].AnimationBlock_Target, iElement, false );
-							m_FixAnimationOffsets( OriginalEnd, OffsetDelta, Cameras[j].AnimationBlock_Roll, iElement, false );
-							m_FixAnimationOffsets( OriginalEnd, OffsetDelta, Cameras[j].AnimationBlock_FieldOfView, iElement, false );
-						}
-						break;
+						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Cameras[j].AnimationBlock_Position, iElement, false);
+						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Cameras[j].AnimationBlock_Target, iElement, false);
+						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Cameras[j].AnimationBlock_Roll, iElement, false);
+						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Cameras[j].AnimationBlock_FieldOfView, iElement, false);
 					}
+					break;
+				}
 
-					case EElement_RibbonEmitter:  
+				case EElement_RibbonEmitter:
+				{
+					// untested!
+					CElement_RibbonEmitter* RibbonEmitters = (CElement_RibbonEmitter*)Elements[iElement].Data;
+					for (UInt32 j = 0; j < Elements[iElement].Count; j++)
 					{
-						// untested!
-						CElement_RibbonEmitter* RibbonEmitters = (CElement_RibbonEmitter*)Elements[iElement].Data;
-						for ( UInt32 j = 0; j < Elements[iElement].Count; j++ )
-						{
-							VERIFY_OFFSET_LOCAL( RibbonEmitters[j].oTexture );
-							RibbonEmitters[j].oTexture += OffsetDelta;
-							VERIFY_OFFSET_LOCAL( RibbonEmitters[j].oRenderFlag );
-							RibbonEmitters[j].oRenderFlag += OffsetDelta;
+						VERIFY_OFFSET_LOCAL(RibbonEmitters[j].oTexture);
+						RibbonEmitters[j].oTexture += OffsetDelta;
+						VERIFY_OFFSET_LOCAL(RibbonEmitters[j].oRenderFlag);
+						RibbonEmitters[j].oRenderFlag += OffsetDelta;
 
-							m_FixAnimationOffsets( OriginalEnd, OffsetDelta, RibbonEmitters[j].AnimationBlock_Color, iElement, false );
-							m_FixAnimationOffsets( OriginalEnd, OffsetDelta, RibbonEmitters[j].AnimationBlock_Opacity, iElement, false );
-							m_FixAnimationOffsets( OriginalEnd, OffsetDelta, RibbonEmitters[j].AnimationBlock_Above, iElement, false );
-							m_FixAnimationOffsets( OriginalEnd, OffsetDelta, RibbonEmitters[j].AnimationBlock_Below, iElement, false );
-							m_FixAnimationOffsets( OriginalEnd, OffsetDelta, RibbonEmitters[j].AnimationBlock_Unknown1, iElement, false );
-							m_FixAnimationOffsets( OriginalEnd, OffsetDelta, RibbonEmitters[j].AnimationBlock_Visibility, iElement, false );
-						}
-						break;
+						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, RibbonEmitters[j].AnimationBlock_Color, iElement, false);
+						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, RibbonEmitters[j].AnimationBlock_Opacity, iElement, false);
+						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, RibbonEmitters[j].AnimationBlock_Above, iElement, false);
+						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, RibbonEmitters[j].AnimationBlock_Below, iElement, false);
+						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, RibbonEmitters[j].AnimationBlock_Unknown1, iElement, false);
+						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, RibbonEmitters[j].AnimationBlock_Visibility, iElement, false);
 					}
+					break;
+				}
 
-					case EElement_ParticleEmitter: 
+				case EElement_ParticleEmitter:
+				{
+					// untested!
+					CElement_ParticleEmitter* ParticleEmitters = (CElement_ParticleEmitter*)Elements[iElement].Data;
+					for (UInt32 j = 0; j < Elements[iElement].Count; j++)
 					{
-						// untested!
-						CElement_ParticleEmitter* ParticleEmitters = (CElement_ParticleEmitter*)Elements[iElement].Data;
-						for ( UInt32 j = 0; j < Elements[iElement].Count; j++ )
-						{
-							VERIFY_OFFSET_LOCAL( ParticleEmitters[j].oFileNameModel );
-							ParticleEmitters[j].oFileNameModel += OffsetDelta;
-							VERIFY_OFFSET_LOCAL( ParticleEmitters[j].oUnknown );
-							ParticleEmitters[j].oUnknown += OffsetDelta;
+						VERIFY_OFFSET_LOCAL(ParticleEmitters[j].oFileNameModel);
+						ParticleEmitters[j].oFileNameModel += OffsetDelta;
+						VERIFY_OFFSET_LOCAL(ParticleEmitters[j].oUnknown);
+						ParticleEmitters[j].oUnknown += OffsetDelta;
 
-							m_FixAnimationOffsets( OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_EmitSpeed, iElement, false );
-							m_FixAnimationOffsets( OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_SpeedVariance, iElement, false );
-							m_FixAnimationOffsets( OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_Spread, iElement, false );
-							m_FixAnimationOffsets( OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_Unknown, iElement, false );
-							m_FixAnimationOffsets( OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_Gravity, iElement, false );
-							m_FixAnimationOffsets( OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_Lifespan, iElement, false );
-							m_FixAnimationOffsets( OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_EmitRate, iElement, false );
-							m_FixAnimationOffsets( OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_EmitLength, iElement, false );
-							m_FixAnimationOffsets( OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_EmitWidth, iElement, false );
-							m_FixAnimationOffsets( OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_GravityStrong, iElement, false );
-							m_FixAnimationOffsets( OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_Visibility, iElement, false );
-						}
-						break;
+						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_EmitSpeed, iElement, false);
+						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_SpeedVariance, iElement, false);
+						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_Spread, iElement, false);
+						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_Unknown, iElement, false);
+						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_Gravity, iElement, false);
+						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_Lifespan, iElement, false);
+						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_EmitRate, iElement, false);
+						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_EmitLength, iElement, false);
+						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_EmitWidth, iElement, false);
+						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_GravityStrong, iElement, false);
+						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_Visibility, iElement, false);
 					}
+					break;
+				}
 				}
 
 				// set the element's new offset
@@ -1888,206 +1991,206 @@ void M2Lib::M2::m_SaveElements_FindOffsets()
 		CurrentOffset += Elements[iElement].DataSize;
 	}
 
-	if ( Element_NewVertex.DataSize )
+	if (Element_NewVertex.DataSize)
 	{
 		Element_NewVertex.Offset = CurrentOffset;
 	}
 
-	if ( OffsetDelta != 0 )
+	if (OffsetDelta != 0)
 	{
-		for ( UInt32 iElement = 0; iElement != EElement__Count__; iElement++ )
+		for (UInt32 iElement = 0; iElement != EElement__Count__; iElement++)
 		{
-			switch ( iElement )
+			switch (iElement)
 			{
-				case EElement_Bone:
+			case EElement_Bone:
+			{
+				CElement_Bone* Bones = (CElement_Bone*)Elements[iElement].Data;
+				for (UInt32 j = 0; j < Elements[iElement].Count; j++)
 				{
-					CElement_Bone* Bones = (CElement_Bone*)Elements[iElement].Data;
-					for ( UInt32 j = 0; j < Elements[iElement].Count; j++ )
-					{
-						m_FixAnimationOffsets( OriginalEnd, OffsetDelta, Bones[j].AnimationBlock_Position, iElement, true );
-						m_FixAnimationOffsets( OriginalEnd, OffsetDelta, Bones[j].AnimationBlock_Rotation, iElement, true );
-						m_FixAnimationOffsets( OriginalEnd, OffsetDelta, Bones[j].AnimationBlock_Scale, iElement, true );
-					}
-					break;
+					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Bones[j].AnimationBlock_Position, iElement, true);
+					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Bones[j].AnimationBlock_Rotation, iElement, true);
+					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Bones[j].AnimationBlock_Scale, iElement, true);
 				}
+				break;
+			}
 
-				case EElement_Color:
+			case EElement_Color:
+			{
+				CElement_Color* Colors = (CElement_Color*)Elements[iElement].Data;
+				for (UInt32 j = 0; j < Elements[iElement].Count; j++)
 				{
-					CElement_Color* Colors = (CElement_Color*)Elements[iElement].Data;
-					for ( UInt32 j = 0; j < Elements[iElement].Count; j++ )
-					{
-						m_FixAnimationOffsets( OriginalEnd, OffsetDelta, Colors[j].AnimationBlock_Color, iElement, true );
-						m_FixAnimationOffsets( OriginalEnd, OffsetDelta, Colors[j].AnimationBlock_Opacity, iElement, true );
-					}
-					break;
+					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Colors[j].AnimationBlock_Color, iElement, true);
+					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Colors[j].AnimationBlock_Opacity, iElement, true);
 				}
+				break;
+			}
 
-				case EElement_Transparency:
+			case EElement_Transparency:
+			{
+				CElement_Transparency* Transparencies = (CElement_Transparency*)Elements[iElement].Data;
+				for (UInt32 j = 0; j < Elements[iElement].Count; j++)
 				{
-					CElement_Transparency* Transparencies = (CElement_Transparency*)Elements[iElement].Data;
-					for ( UInt32 j = 0; j < Elements[iElement].Count; j++ )
-					{
-						m_FixAnimationOffsets( OriginalEnd, OffsetDelta, Transparencies[j].AnimationBlock_Transparency, iElement, true );
-					}
-					break;
+					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Transparencies[j].AnimationBlock_Transparency, iElement, true);
 				}
+				break;
+			}
 
-				case EElement_Attachment:
+			case EElement_Attachment:
+			{
+				CElement_Attachment* Attachments = (CElement_Attachment*)Elements[iElement].Data;
+				for (UInt32 j = 0; j < Elements[iElement].Count; j++)
 				{
-					CElement_Attachment* Attachments = (CElement_Attachment*)Elements[iElement].Data;
-					for ( UInt32 j = 0; j < Elements[iElement].Count; j++ )
-					{
-						m_FixAnimationOffsets( OriginalEnd, OffsetDelta, Attachments[j].AnimationBlock_Visibility, iElement, true );
-					}
-					break;
+					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Attachments[j].AnimationBlock_Visibility, iElement, true);
 				}
+				break;
+			}
 
-				case EElement_Event:
+			case EElement_Event:
+			{
+				UInt32 EventsEnd2 = Elements[EElement_Event].OffsetOriginal + (sizeof(CElement_Event) * Elements[EElement_Event].Count);	// where elements end.
+				UInt32 EventsEnd = Elements[EElement_Event].OffsetOriginal + Elements[EElement_Event].DataSize;	// where element's local data ends.
+				//UInt32 LocalEnd = EventsEnd - EventsEnd2;	// highest local address within the event chunk.
+				CElement_Event* Events = (CElement_Event*)Elements[iElement].Data;
+				for (UInt32 j = 0; j < Elements[iElement].Count; j++)
 				{
-					UInt32 EventsEnd2 = Elements[EElement_Event].OffsetOriginal + ( sizeof( CElement_Event ) * Elements[EElement_Event].Count );	// where elements end.
-					UInt32 EventsEnd = Elements[EElement_Event].OffsetOriginal + Elements[EElement_Event].DataSize;	// where element's local data ends.
-					//UInt32 LocalEnd = EventsEnd - EventsEnd2;	// highest local address within the event chunk.
-					CElement_Event* Events = (CElement_Event*)Elements[iElement].Data;
-					for ( UInt32 j = 0; j < Elements[iElement].Count; j++ )
+					CElement_Event::CTimeLine* TimeLines = (CElement_Event::CTimeLine*)Elements[iElement].GetLocalPointer(Events[j].oTimeLines);
+					for (UInt32 k = 0; k < Events[j].nTimeLines; k++)
 					{
-						CElement_Event::CTimeLine* TimeLines = (CElement_Event::CTimeLine*)Elements[iElement].GetLocalPointer( Events[j].oTimeLines );
-						for ( UInt32 k = 0; k < Events[j].nTimeLines; k++ )
+						CElement_Event::CTimeLine& TimeLine = TimeLines[k];
+						if (TimeLine.nTimeStamps)
 						{
-							CElement_Event::CTimeLine& TimeLine = TimeLines[k];
-							if ( TimeLine.nTimeStamps )
+							if (TimeLine.oTimeStamps > EventsEnd2)
 							{
-								if ( TimeLine.oTimeStamps > EventsEnd2 )
-								{
-									TimeLine.oTimeStamps += OffsetDelta;
-								}
+								TimeLine.oTimeStamps += OffsetDelta;
 							}
 						}
 					}
-					break;
 				}
+				break;
+			}
 
-				case EElement_Light:
+			case EElement_Light:
+			{
+				CElement_Light* Lights = (CElement_Light*)Elements[iElement].Data;
+				for (UInt32 j = 0; j < Elements[iElement].Count; j++)
 				{
-					CElement_Light* Lights = (CElement_Light*)Elements[iElement].Data;
-					for ( UInt32 j = 0; j < Elements[iElement].Count; j++ )
-					{
-						m_FixAnimationOffsets( OriginalEnd, OffsetDelta, Lights[j].AnimationBlock_AmbientColor, iElement, true );
-						m_FixAnimationOffsets( OriginalEnd, OffsetDelta, Lights[j].AnimationBlock_AmbientIntensity, iElement, true );
-						m_FixAnimationOffsets( OriginalEnd, OffsetDelta, Lights[j].AnimationBlock_DiffuseColor, iElement, true );
-						m_FixAnimationOffsets( OriginalEnd, OffsetDelta, Lights[j].AnimationBlock_DiffuseIntensity, iElement, true );
-						m_FixAnimationOffsets( OriginalEnd, OffsetDelta, Lights[j].AnimationBlock_AttenuationStart, iElement, true );
-						m_FixAnimationOffsets( OriginalEnd, OffsetDelta, Lights[j].AnimationBlock_AttenuationEnd, iElement, true );
-						m_FixAnimationOffsets( OriginalEnd, OffsetDelta, Lights[j].AnimationBlock_Visibility, iElement, true );
-					}
-					break;
+					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Lights[j].AnimationBlock_AmbientColor, iElement, true);
+					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Lights[j].AnimationBlock_AmbientIntensity, iElement, true);
+					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Lights[j].AnimationBlock_DiffuseColor, iElement, true);
+					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Lights[j].AnimationBlock_DiffuseIntensity, iElement, true);
+					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Lights[j].AnimationBlock_AttenuationStart, iElement, true);
+					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Lights[j].AnimationBlock_AttenuationEnd, iElement, true);
+					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Lights[j].AnimationBlock_Visibility, iElement, true);
 				}
+				break;
+			}
 
-				case EElement_Camera:
+			case EElement_Camera:
+			{
+				CElement_Camera* Cameras = (CElement_Camera*)Elements[iElement].Data;
+				for (UInt32 j = 0; j < Elements[iElement].Count; j++)
 				{
-					CElement_Camera* Cameras = (CElement_Camera*)Elements[iElement].Data;
-					for ( UInt32 j = 0; j < Elements[iElement].Count; j++ )
-					{
-						m_FixAnimationOffsets( OriginalEnd, OffsetDelta, Cameras[j].AnimationBlock_Position, iElement, true );
-						m_FixAnimationOffsets( OriginalEnd, OffsetDelta, Cameras[j].AnimationBlock_Target, iElement, true );
-						m_FixAnimationOffsets( OriginalEnd, OffsetDelta, Cameras[j].AnimationBlock_Roll, iElement, true );
-						m_FixAnimationOffsets( OriginalEnd, OffsetDelta, Cameras[j].AnimationBlock_FieldOfView, iElement, true );
-					}
-					break;
+					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Cameras[j].AnimationBlock_Position, iElement, true);
+					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Cameras[j].AnimationBlock_Target, iElement, true);
+					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Cameras[j].AnimationBlock_Roll, iElement, true);
+					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Cameras[j].AnimationBlock_FieldOfView, iElement, true);
 				}
+				break;
+			}
 
-				case EElement_RibbonEmitter:
+			case EElement_RibbonEmitter:
+			{
+				// untested!
+				CElement_RibbonEmitter* RibbonEmitters = (CElement_RibbonEmitter*)Elements[iElement].Data;
+				for (UInt32 j = 0; j < Elements[iElement].Count; j++)
 				{
-					// untested!
-					CElement_RibbonEmitter* RibbonEmitters = (CElement_RibbonEmitter*)Elements[iElement].Data;
-					for ( UInt32 j = 0; j < Elements[iElement].Count; j++ )
-					{
-						m_FixAnimationOffsets( OriginalEnd, OffsetDelta, RibbonEmitters[j].AnimationBlock_Color, iElement, true );
-						m_FixAnimationOffsets( OriginalEnd, OffsetDelta, RibbonEmitters[j].AnimationBlock_Opacity, iElement, true );
-						m_FixAnimationOffsets( OriginalEnd, OffsetDelta, RibbonEmitters[j].AnimationBlock_Above, iElement, true );
-						m_FixAnimationOffsets( OriginalEnd, OffsetDelta, RibbonEmitters[j].AnimationBlock_Below, iElement, true );
-						m_FixAnimationOffsets( OriginalEnd, OffsetDelta, RibbonEmitters[j].AnimationBlock_Unknown1, iElement, true );
-						m_FixAnimationOffsets( OriginalEnd, OffsetDelta, RibbonEmitters[j].AnimationBlock_Visibility, iElement, true );
-					}
-					break;
+					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, RibbonEmitters[j].AnimationBlock_Color, iElement, true);
+					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, RibbonEmitters[j].AnimationBlock_Opacity, iElement, true);
+					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, RibbonEmitters[j].AnimationBlock_Above, iElement, true);
+					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, RibbonEmitters[j].AnimationBlock_Below, iElement, true);
+					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, RibbonEmitters[j].AnimationBlock_Unknown1, iElement, true);
+					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, RibbonEmitters[j].AnimationBlock_Visibility, iElement, true);
 				}
+				break;
+			}
 
-				case EElement_ParticleEmitter:
+			case EElement_ParticleEmitter:
+			{
+				// untested!
+				CElement_ParticleEmitter* ParticleEmitters = (CElement_ParticleEmitter*)Elements[iElement].Data;
+				for (UInt32 j = 0; j < Elements[iElement].Count; j++)
 				{
-					// untested!
-					CElement_ParticleEmitter* ParticleEmitters = (CElement_ParticleEmitter*)Elements[iElement].Data;
-					for ( UInt32 j = 0; j < Elements[iElement].Count; j++ )
-					{
-						m_FixAnimationOffsets( OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_EmitSpeed, iElement, true );
-						m_FixAnimationOffsets( OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_SpeedVariance, iElement, true );
-						m_FixAnimationOffsets( OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_Spread, iElement, true );
-						m_FixAnimationOffsets( OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_Unknown, iElement, true );
-						m_FixAnimationOffsets( OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_Gravity, iElement, true );
-						m_FixAnimationOffsets( OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_Lifespan, iElement, true );
-						m_FixAnimationOffsets( OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_EmitRate, iElement, true );
-						m_FixAnimationOffsets( OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_EmitLength, iElement, true );
-						m_FixAnimationOffsets( OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_EmitWidth, iElement, true );
-						m_FixAnimationOffsets( OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_GravityStrong, iElement, true );
-						m_FixAnimationOffsets( OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_Visibility, iElement, true );
-					}
-					break;
+					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_EmitSpeed, iElement, true);
+					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_SpeedVariance, iElement, true);
+					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_Spread, iElement, true);
+					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_Unknown, iElement, true);
+					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_Gravity, iElement, true);
+					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_Lifespan, iElement, true);
+					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_EmitRate, iElement, true);
+					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_EmitLength, iElement, true);
+					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_EmitWidth, iElement, true);
+					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_GravityStrong, iElement, true);
+					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_Visibility, iElement, true);
 				}
+				break;
+			}
 			}
 		}
 	}
 }
 
 
-void M2Lib::M2::m_FixAnimationOffsets( UInt32 OriginalEnd, SInt32 OffsetDelta, CElement_AnimationBlock& AnimationBlock, SInt32 iElement, bool Post )
+void M2Lib::M2::m_FixAnimationOffsets(UInt32 OriginalEnd, SInt32 OffsetDelta, CElement_AnimationBlock& AnimationBlock, SInt32 iElement, bool Post)
 {
 	// TP is the best
-	if ( AnimationBlock.nTimes )
+	if (AnimationBlock.nTimes)
 	{
-		VERIFY_OFFSET_LOCAL( AnimationBlock.oTimes );
-		CElement_AnimationBlock::CChannel* Channels = (CElement_AnimationBlock::CChannel*)Elements[iElement].GetLocalPointer( AnimationBlock.oTimes );
-		for ( UInt32 i = 0; i < AnimationBlock.nTimes; i++ )
+		VERIFY_OFFSET_LOCAL(AnimationBlock.oTimes);
+		CElement_AnimationBlock::CChannel* Channels = (CElement_AnimationBlock::CChannel*)Elements[iElement].GetLocalPointer(AnimationBlock.oTimes);
+		for (UInt32 i = 0; i < AnimationBlock.nTimes; i++)
 		{
 			CElement_AnimationBlock::CChannel& Channel = Channels[i];
-			if ( Channel.o )
+			if (Channel.o)
 			{
-				bool bLastBlock = ( Channel.o > OriginalEnd );
-				if ( bLastBlock && Post )
+				bool bLastBlock = (Channel.o > OriginalEnd);
+				if (bLastBlock && Post)
 				{
 					Channel.o += OffsetDelta;
 				}
 			}
 		}
 
-		bool bInThisElem = ( Elements[iElement].Offset < AnimationBlock.oTimes ) && ( AnimationBlock.oTimes < ( Elements[iElement].Offset + Elements[iElement].DataSize ) );
-		assert( bInThisElem );
-		if ( !Post )
+		bool bInThisElem = (Elements[iElement].Offset < AnimationBlock.oTimes) && (AnimationBlock.oTimes < (Elements[iElement].Offset + Elements[iElement].DataSize));
+		assert(bInThisElem);
+		if (!Post)
 		{
-			VERIFY_OFFSET_LOCAL( AnimationBlock.oTimes );
+			VERIFY_OFFSET_LOCAL(AnimationBlock.oTimes);
 			AnimationBlock.oTimes += OffsetDelta;
 		}
 	}
 
-	if ( AnimationBlock.nKeys )
+	if (AnimationBlock.nKeys)
 	{
-		VERIFY_OFFSET_LOCAL( AnimationBlock.oKeys );
-		CElement_AnimationBlock::CChannel* Channels = (CElement_AnimationBlock::CChannel*)Elements[iElement].GetLocalPointer( AnimationBlock.oKeys );
-		for ( UInt32 i = 0; i < AnimationBlock.nKeys; i++ )
+		VERIFY_OFFSET_LOCAL(AnimationBlock.oKeys);
+		CElement_AnimationBlock::CChannel* Channels = (CElement_AnimationBlock::CChannel*)Elements[iElement].GetLocalPointer(AnimationBlock.oKeys);
+		for (UInt32 i = 0; i < AnimationBlock.nKeys; i++)
 		{
 			CElement_AnimationBlock::CChannel& Channel = Channels[i];
 			if (Channel.o)
 			{
 				bool bLastBlock = Channel.o > OriginalEnd;
-				if ( bLastBlock && Post )
+				if (bLastBlock && Post)
 				{
 					Channel.o += OffsetDelta;
 				}
 			}
 		}
 
-		bool bInThisElem = ( Elements[iElement].Offset < AnimationBlock.oKeys ) && ( AnimationBlock.oKeys < ( Elements[iElement].Offset + Elements[iElement].DataSize ) );
-		assert( bInThisElem );
-		if ( !Post )
+		bool bInThisElem = (Elements[iElement].Offset < AnimationBlock.oKeys) && (AnimationBlock.oKeys < (Elements[iElement].Offset + Elements[iElement].DataSize));
+		assert(bInThisElem);
+		if (!Post)
 		{
-			VERIFY_OFFSET_LOCAL( AnimationBlock.oKeys );
+			VERIFY_OFFSET_LOCAL(AnimationBlock.oKeys);
 			AnimationBlock.oKeys += OffsetDelta;
 		}
 	}
@@ -2118,7 +2221,7 @@ void M2Lib::M2::m_SaveElements_CopyElementsToHeader()
 	Header.Elements.nVertex = Elements[EElement_Vertex].Count;
 	Header.Elements.oVertex = Elements[EElement_Vertex].Offset;
 
-	if ( Element_NewVertex.Count )
+	if (Element_NewVertex.Count)
 	{
 		Header.Elements.nVertex = Element_NewVertex.Count;
 		Header.Elements.oVertex = Element_NewVertex.Offset;

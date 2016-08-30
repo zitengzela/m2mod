@@ -9,46 +9,46 @@
 
 extern int g_Verbose;
 
-M2Lib::EError M2Lib::M2Skin::Load( const Char16* FileName )
+M2Lib::EError M2Lib::M2Skin::Load(const Char16* FileName)
 {
 	// check path
 	UInt32 Length = 0;
-	while ( FileName[Length] != '\0' )
+	while (FileName[Length] != '\0')
 	{
 		Length++;
 	}
-	if ( Length >= 1024 )
+	if (Length >= 1024)
 		return M2Lib::EError_PathTooLong;
 	_FileName[Length] = '\0';
-	for ( UInt32 i = 0; i != Length; i++ )
+	for (UInt32 i = 0; i != Length; i++)
 	{
 		_FileName[i] = FileName[i];
 	}
 
 	// open file stream
 	std::fstream FileStream;
-	FileStream.open( FileName, std::ios::binary | std::ios::in );
+	FileStream.open(FileName, std::ios::binary | std::ios::in);
 
 	// find file size
-	FileStream.seekg( 0, std::ios::end );
+	FileStream.seekg(0, std::ios::end);
 	UInt32 FileSize = (UInt32)FileStream.tellg();
-	FileStream.seekg( 0, std::ios::beg );
+	FileStream.seekg(0, std::ios::beg);
 
 	// load header
-	FileStream.read( (char*)&Header, sizeof(Header) );
+	FileStream.read((char*)&Header, sizeof(Header));
 
 	// check header
-	if ( Header.ID[0] != 'S' || Header.ID[1] != 'K' || Header.ID[2] != 'I' || Header.ID[3] != 'N' )
+	if (Header.ID[0] != 'S' || Header.ID[1] != 'K' || Header.ID[2] != 'I' || Header.ID[3] != 'N')
 		return M2Lib::EError_FailedToLoadSKIN_FileMissingOrCorrupt;
 
 	// fill elements header data
 	m_LoadElements_CopyHeaderToElements();
-	m_LoadElements_FindSizes( FileSize );
+	m_LoadElements_FindSizes(FileSize);
 
 	// load elements
-	for ( UInt32 i = 0; i != EElement__Count__; i++ )
+	for (UInt32 i = 0; i != EElement__Count__; i++)
 	{
-		if ( !Elements[i].Load( FileStream ) )
+		if (!Elements[i].Load(FileStream))
 			return M2Lib::EError_FailedToLoadSKIN_FileMissingOrCorrupt;
 	}
 
@@ -62,12 +62,13 @@ M2Lib::EError M2Lib::M2Skin::Load( const Char16* FileName )
 	//}
 
 	// resolve material lists
-	for ( UInt32 iSubMesh = 0; iSubMesh < Header.nSubMesh; iSubMesh++ )
+	for (UInt32 iSubMesh = 0; iSubMesh < Header.nSubMesh; iSubMesh++)
 	{
-		SubMeshList_MaterialList.push_back( std::vector< CElement_Material* >() );
+		SubMeshList_MaterialList.push_back(std::vector< CElement_Material* >());
 	}
+
 	CElement_Material* MaterialArray = (CElement_Material*)Elements[EElement_Material].Data;
-	for ( UInt32 iMaterial = 0; iMaterial < Header.nMaterial; iMaterial++ )
+	for (UInt32 iMaterial = 0; iMaterial < Header.nMaterial; iMaterial++)
 	{
 		SubMeshList_MaterialList[MaterialArray[iMaterial].iSubMesh].push_back(&MaterialArray[iMaterial]);
 	}
@@ -80,23 +81,47 @@ M2Lib::EError M2Lib::M2Skin::Load( const Char16* FileName )
 }
 
 
-M2Lib::EError M2Lib::M2Skin::Save( const Char16* FileName )
+M2Lib::EError M2Lib::M2Skin::Save(const Char16* FileName)
 {
 	// open file stream
 	std::fstream FileStream;
-	FileStream.open( FileName, std::ios::binary | std::ios::out | std::ios::trunc );
+	FileStream.open(FileName, std::ios::binary | std::ios::out | std::ios::trunc);
 
 	// fill elements header data
 	m_SaveElements_FindOffsets();
 	m_SaveElements_CopyElementsToHeader();
 
 	// save header
-	FileStream.write( (Char8*)&Header, sizeof(Header) );
+	FileStream.write((Char8*)&Header, sizeof(Header));
+
+	// FMN 2015-02-03: changing Level, depending on TriangleIndexstart. See http://forums.darknestfantasyerotica.com/showthread.php?20446-TUTORIAL-Here-is-how-WoD-.skin-works.&p=402561
+	CElement_SubMesh* SubMeshList = (CElement_SubMesh*)Elements[EElement_SubMesh].Data;
+	UInt32 TriangleIndexStartPrevious = 0;
+	bool isOverLimit = false;
+
+	for (UInt32 i = 0; i != Elements[EElement_SubMesh].Count; i++)
+	{
+		if (SubMeshList[i].TriangleIndexStart < TriangleIndexStartPrevious)
+		{
+			isOverLimit = true;
+		}
+
+		if (!isOverLimit)
+		{
+			SubMeshList[i].Level = 0;
+		}
+		else if (isOverLimit)
+		{
+			SubMeshList[i].Level = 1;
+		}
+
+		TriangleIndexStartPrevious = SubMeshList[i].TriangleIndexStart;
+	}
 
 	// save elements
-	for ( UInt32 i = 0; i != EElement__Count__; i++ )
+	for (UInt32 i = 0; i != EElement__Count__; i++)
 	{
-		if ( !Elements[i].Save( FileStream ) )
+		if (!Elements[i].Save(FileStream))
 			return M2Lib::EError_FailedToSaveSKIN;
 	}
 
@@ -109,7 +134,7 @@ M2Lib::EError M2Lib::M2Skin::Save( const Char16* FileName )
 
 void M2Lib::M2Skin::BuildVertexBoneIndices()
 {
-	if ( !pM2 )
+	if (!pM2)
 		return;
 
 	M2Lib::CVertex* VertexList = (M2Lib::CVertex*)pM2->GetElement_Vertex().Data;
@@ -120,39 +145,39 @@ void M2Lib::M2Skin::BuildVertexBoneIndices()
 	UInt32 VertexLookupListLength = Elements[EElement_VertexLookup].Count;
 	UInt16* VertexLookupList = (UInt16*)Elements[EElement_VertexLookup].Data;
 
-	Elements[EElement_BoneIndices].SetDataSize( VertexLookupListLength, VertexLookupListLength * sizeof( UInt32 ), false );
+	Elements[EElement_BoneIndices].SetDataSize(VertexLookupListLength, VertexLookupListLength * sizeof(UInt32), false);
 	UInt32* BoneIndexList = (UInt32*)Elements[EElement_BoneIndices].Data;
 
 	UInt32 SubMeshListLength = Elements[EElement_SubMesh].Count;
 	CElement_SubMesh* SubMeshList = (CElement_SubMesh*)Elements[EElement_SubMesh].Data;
 
-	for ( UInt32 i = 0; i != VertexLookupListLength; i++ )
+	for (UInt32 i = 0; i != VertexLookupListLength; i++)
 	{
 		BoneIndexList[i] = 0;
 	}
 
-	for ( UInt32 iSubMesh = 0; iSubMesh < SubMeshListLength; iSubMesh++ )
+	for (UInt32 iSubMesh = 0; iSubMesh < SubMeshListLength; iSubMesh++)
 	{
 		CElement_SubMesh& SubMesh = SubMeshList[iSubMesh];
 
 		UInt32 MaxBonesPerVertex = 0;
 
 		std::vector< UInt16 > BonesLookupVector;
-		for ( SInt32 j = SubMesh.BoneStart; j < SubMesh.BoneStart + SubMesh.BoneCount; j++ )
+		for (SInt32 j = SubMesh.BoneStart; j < SubMesh.BoneStart + SubMesh.BoneCount; j++)
 		{
-			BonesLookupVector.push_back( BoneLookupList[j] );
+			BonesLookupVector.push_back(BoneLookupList[j]);
 		}
 
 		UInt32 SubMeshVertexEnd = SubMesh.VertexStart + SubMesh.VertexCount;
-		for ( UInt32 j = SubMesh.VertexStart; j < SubMeshVertexEnd; j++ )
+		for (UInt32 j = SubMesh.VertexStart; j < SubMeshVertexEnd; j++)
 		{
 			M2Lib::CVertex& Vertex = VertexList[VertexLookupList[j]];
 			UInt8* BoneIndices8 = (UInt8*)&BoneIndexList[j];
 
-			BoneIndices8[0] = m_ReverseBoneLookup( Vertex.BoneIndices[0], &BoneLookupList[SubMesh.BoneStart], SubMesh.BoneCount );
-			BoneIndices8[1] = m_ReverseBoneLookup( Vertex.BoneIndices[1], &BoneLookupList[SubMesh.BoneStart], SubMesh.BoneCount );
-			BoneIndices8[2] = m_ReverseBoneLookup( Vertex.BoneIndices[2], &BoneLookupList[SubMesh.BoneStart], SubMesh.BoneCount );
-			BoneIndices8[3] = m_ReverseBoneLookup( Vertex.BoneIndices[3], &BoneLookupList[SubMesh.BoneStart], SubMesh.BoneCount );
+			BoneIndices8[0] = m_ReverseBoneLookup(Vertex.BoneIndices[0], &BoneLookupList[SubMesh.BoneStart], SubMesh.BoneCount);
+			BoneIndices8[1] = m_ReverseBoneLookup(Vertex.BoneIndices[1], &BoneLookupList[SubMesh.BoneStart], SubMesh.BoneCount);
+			BoneIndices8[2] = m_ReverseBoneLookup(Vertex.BoneIndices[2], &BoneLookupList[SubMesh.BoneStart], SubMesh.BoneCount);
+			BoneIndices8[3] = m_ReverseBoneLookup(Vertex.BoneIndices[3], &BoneLookupList[SubMesh.BoneStart], SubMesh.BoneCount);
 
 			UInt32 MaxBonesPerThisVertex = 0;
 			Vertex.BoneWeights[0] > 0 ? MaxBonesPerThisVertex++ : 0;
@@ -160,7 +185,7 @@ void M2Lib::M2Skin::BuildVertexBoneIndices()
 			Vertex.BoneWeights[2] > 0 ? MaxBonesPerThisVertex++ : 0;
 			Vertex.BoneWeights[3] > 0 ? MaxBonesPerThisVertex++ : 0;
 
-			if ( MaxBonesPerThisVertex > MaxBonesPerVertex ) MaxBonesPerVertex = MaxBonesPerThisVertex;
+			if (MaxBonesPerThisVertex > MaxBonesPerVertex) MaxBonesPerVertex = MaxBonesPerThisVertex;
 		}
 
 		SubMesh.MaxBonesPerVertex = MaxBonesPerVertex;
@@ -181,20 +206,20 @@ void M2Lib::M2Skin::BuildBoundingData()
 	Float32 OurRadius = 0.0f;
 	Float32 OurCenterMass[3];
 
-	for ( UInt32 iSubMesh = 0; iSubMesh < SubMeshListLength; iSubMesh++ )
+	for (UInt32 iSubMesh = 0; iSubMesh < SubMeshListLength; iSubMesh++)
 	{
 		CElement_SubMesh& SubMesh = SubMeshList[iSubMesh];
 
-		if ( SubMesh.VertexCount )
+		if (SubMesh.VertexCount)
 		{
 			bool FirstPass = true;
 			OurCenterMass[0] = 0.0f;
 			OurCenterMass[1] = 0.0f;
 			OurCenterMass[2] = 0.0f;
 			UInt32 SubMeshVertexEnd = SubMesh.VertexStart + SubMesh.VertexCount;
-			for ( UInt32 j = SubMesh.VertexStart; j < SubMeshVertexEnd; j++ )
+			for (UInt32 j = SubMesh.VertexStart; j < SubMeshVertexEnd; j++)
 			{
-				if ( FirstPass )
+				if (FirstPass)
 				{
 					OurBoundingBox[0][0] = VertexList[VertexLookupList[j]].Position[0];
 					OurBoundingBox[0][1] = VertexList[VertexLookupList[j]].Position[1];
@@ -208,28 +233,28 @@ void M2Lib::M2Skin::BuildBoundingData()
 				}
 				else
 				{
-					if ( OurBoundingBox[0][0] > VertexList[VertexLookupList[j]].Position[0] )
+					if (OurBoundingBox[0][0] > VertexList[VertexLookupList[j]].Position[0])
 					{
 						OurBoundingBox[0][0] = VertexList[VertexLookupList[j]].Position[0];
 					}
-					if ( OurBoundingBox[0][1] > VertexList[VertexLookupList[j]].Position[1] )
+					if (OurBoundingBox[0][1] > VertexList[VertexLookupList[j]].Position[1])
 					{
 						OurBoundingBox[0][1] = VertexList[VertexLookupList[j]].Position[1];
 					}
-					if ( OurBoundingBox[0][2] > VertexList[VertexLookupList[j]].Position[2] )
+					if (OurBoundingBox[0][2] > VertexList[VertexLookupList[j]].Position[2])
 					{
 						OurBoundingBox[0][2] = VertexList[VertexLookupList[j]].Position[2];
 					}
 
-					if ( OurBoundingBox[1][0] < VertexList[VertexLookupList[j]].Position[0] )
+					if (OurBoundingBox[1][0] < VertexList[VertexLookupList[j]].Position[0])
 					{
 						OurBoundingBox[1][0] = VertexList[VertexLookupList[j]].Position[0];
 					}
-					if ( OurBoundingBox[1][1] < VertexList[VertexLookupList[j]].Position[1] )
+					if (OurBoundingBox[1][1] < VertexList[VertexLookupList[j]].Position[1])
 					{
 						OurBoundingBox[1][1] = VertexList[VertexLookupList[j]].Position[1];
 					}
-					if ( OurBoundingBox[1][2] < VertexList[VertexLookupList[j]].Position[2] )
+					if (OurBoundingBox[1][2] < VertexList[VertexLookupList[j]].Position[2])
 					{
 						OurBoundingBox[1][2] = VertexList[VertexLookupList[j]].Position[2];
 					}
@@ -240,9 +265,9 @@ void M2Lib::M2Skin::BuildBoundingData()
 				OurCenterMass[2] += VertexList[VertexLookupList[j]].Position[2];
 			}
 
-			OurBoundingBoxCenter[0] = ( OurBoundingBox[0][0] + OurBoundingBox[1][0] ) / 2.0f;
-			OurBoundingBoxCenter[1] = ( OurBoundingBox[0][1] + OurBoundingBox[1][1] ) / 2.0f;
-			OurBoundingBoxCenter[2] = ( OurBoundingBox[0][2] + OurBoundingBox[1][2] ) / 2.0f;
+			OurBoundingBoxCenter[0] = (OurBoundingBox[0][0] + OurBoundingBox[1][0]) / 2.0f;
+			OurBoundingBoxCenter[1] = (OurBoundingBox[0][1] + OurBoundingBox[1][1]) / 2.0f;
+			OurBoundingBoxCenter[2] = (OurBoundingBox[0][2] + OurBoundingBox[1][2]) / 2.0f;
 
 			OurCenterMass[0] /= (Float32)SubMesh.VertexCount;
 			OurCenterMass[1] /= (Float32)SubMesh.VertexCount;
@@ -250,7 +275,7 @@ void M2Lib::M2Skin::BuildBoundingData()
 
 			FirstPass = true;
 			OurRadius = 0.0f;
-			for ( UInt32 j = SubMesh.VertexStart; j < SubMeshVertexEnd; j++ )
+			for (UInt32 j = SubMesh.VertexStart; j < SubMeshVertexEnd; j++)
 			{
 				Float32 PositionLocal[3];
 				Float32 Distance;
@@ -259,8 +284,8 @@ void M2Lib::M2Skin::BuildBoundingData()
 				PositionLocal[1] = VertexList[VertexLookupList[j]].Position[1] - OurBoundingBoxCenter[1];
 				PositionLocal[2] = VertexList[VertexLookupList[j]].Position[2] - OurBoundingBoxCenter[2];
 
-				Distance = sqrt( ( PositionLocal[0] * PositionLocal[0] ) + ( PositionLocal[1] * PositionLocal[1] ) + ( PositionLocal[2] * PositionLocal[2] ) );
-				if ( Distance > OurRadius )
+				Distance = sqrt((PositionLocal[0] * PositionLocal[0]) + (PositionLocal[1] * PositionLocal[1]) + (PositionLocal[2] * PositionLocal[2]));
+				if (Distance > OurRadius)
 				{
 					OurRadius = Distance;
 				}
@@ -287,37 +312,37 @@ void M2Lib::M2Skin::BuildMaxBones()
 	UInt32 SubMeshListLength = Elements[EElement_SubMesh].Count;
 	CElement_SubMesh* SubMeshList = (CElement_SubMesh*)Elements[EElement_SubMesh].Data;
 
-	for ( UInt32 iSubMesh = 0; iSubMesh < SubMeshListLength; iSubMesh++ )
+	for (UInt32 iSubMesh = 0; iSubMesh < SubMeshListLength; iSubMesh++)
 	{
 		CElement_SubMesh& SubMesh = SubMeshList[iSubMesh];
 
 		SubMesh.MaxBonesPerVertex = 0;
 
 		UInt32 SubMeshVertexEnd = SubMesh.VertexStart + SubMesh.VertexCount;
-		for ( UInt32 j = SubMesh.VertexStart; j < SubMeshVertexEnd; j++ )
+		for (UInt32 j = SubMesh.VertexStart; j < SubMeshVertexEnd; j++)
 		{
 			UInt32 ThisVertexBoneCount = 0;
-			if ( VertexList[j].BoneIndices[0] != 0 )
+			if (VertexList[j].BoneIndices[0] != 0)
 			{
 				ThisVertexBoneCount++;
 			}
-			if ( VertexList[j].BoneIndices[1] != 0 )
+			if (VertexList[j].BoneIndices[1] != 0)
 			{
 				ThisVertexBoneCount++;
 			}
-			if ( VertexList[j].BoneIndices[2] != 0 )
+			if (VertexList[j].BoneIndices[2] != 0)
 			{
 				ThisVertexBoneCount++;
 			}
-			if ( VertexList[j].BoneIndices[3] != 0 )
+			if (VertexList[j].BoneIndices[3] != 0)
 			{
 				ThisVertexBoneCount++;
 			}
 
-			if ( SubMesh.MaxBonesPerVertex < ThisVertexBoneCount )
+			if (SubMesh.MaxBonesPerVertex < ThisVertexBoneCount)
 			{
 				SubMesh.MaxBonesPerVertex = ThisVertexBoneCount;
-				if ( SubMesh.MaxBonesPerVertex == 4 )
+				if (SubMesh.MaxBonesPerVertex == 4)
 				{
 					break;
 				}
@@ -327,7 +352,7 @@ void M2Lib::M2Skin::BuildMaxBones()
 }
 
 
-void M2Lib::M2Skin::CopyMaterials( M2Skin* pOther )
+void M2Lib::M2Skin::CopyMaterials(M2Skin* pOther)
 {
 	std::vector< CElement_Material > NewMaterialList;
 	std::vector< CElement_Flags > NewFlagsList;
@@ -335,54 +360,54 @@ void M2Lib::M2Skin::CopyMaterials( M2Skin* pOther )
 	UInt32 SubMeshListLength = Elements[EElement_SubMesh].Count;
 	CElement_SubMesh* SubMeshList = (CElement_SubMesh*)Elements[EElement_SubMesh].Data;
 
-	for ( UInt32 iSubMesh = 0; iSubMesh < SubMeshListLength; iSubMesh++ )
+	for (UInt32 iSubMesh = 0; iSubMesh < SubMeshListLength; iSubMesh++)
 	{
 		CElement_SubMesh& SubMesh = SubMeshList[iSubMesh];
 
-		SInt32 SubMeshOtherIndex;
-		CElement_SubMesh* SubMeshOther = pOther->GetSubMesh( SubMesh.ID, SubMesh.CenterBounds, SubMeshOtherIndex );
-		assert( SubMeshOther );
+		SInt32 SubMeshOtherTriangleIndex;
+		CElement_SubMesh* SubMeshOther = pOther->GetSubMesh(SubMesh.ID, SubMesh.CenterBounds, SubMeshOtherTriangleIndex);
+		assert(SubMeshOther);
 
-		SubMesh.SortIndex = SubMeshOther->SortIndex;
+		SubMesh.SortTriangleIndex = SubMeshOther->SortTriangleIndex;
 
-		if ( SubMeshOther )
+		if (SubMeshOther)
 		{
 			std::vector< CElement_Material* > SubMeshOtherMaterialList;
-			pOther->GetSubMeshMaterials( SubMeshOtherIndex, SubMeshOtherMaterialList );
-			for ( UInt32 iSubMeshMaterialOther = 0; iSubMeshMaterialOther < SubMeshOtherMaterialList.size(); iSubMeshMaterialOther++ )
+			pOther->GetSubMeshMaterials(SubMeshOtherTriangleIndex, SubMeshOtherMaterialList);
+			for (UInt32 iSubMeshMaterialOther = 0; iSubMeshMaterialOther < SubMeshOtherMaterialList.size(); iSubMeshMaterialOther++)
 			{
 				CElement_Material NewMaterial = *SubMeshOtherMaterialList[iSubMeshMaterialOther];
 				NewMaterial.iSubMesh = iSubMesh;
 				NewMaterial.iSubMesh2 = iSubMesh;
-				NewMaterialList.push_back( NewMaterial );
+				NewMaterialList.push_back(NewMaterial);
 			}
 
 			std::vector< CElement_Flags* > SubMeshOtherFlagsList;
-			pOther->GetSubMeshFlags( SubMeshOtherIndex, SubMeshOtherFlagsList );
-			for ( UInt32 iSubMeshFlagsOther = 0; iSubMeshFlagsOther < SubMeshOtherFlagsList.size(); iSubMeshFlagsOther++ )
+			pOther->GetSubMeshFlags(SubMeshOtherTriangleIndex, SubMeshOtherFlagsList);
+			for (UInt32 iSubMeshFlagsOther = 0; iSubMeshFlagsOther < SubMeshOtherFlagsList.size(); iSubMeshFlagsOther++)
 			{
 				CElement_Flags NewFlags = *SubMeshOtherFlagsList[iSubMeshFlagsOther];
 				NewFlags.iSubMesh = iSubMesh;
-				NewFlagsList.push_back( NewFlags );
+				NewFlagsList.push_back(NewFlags);
 			}
 		}
 	}
 
 	// copy new material list to element
-	Elements[EElement_Material].SetDataSize( NewMaterialList.size(), sizeof( CElement_Material ) * NewMaterialList.size(), false );
-	memcpy( Elements[EElement_Material].Data, &NewMaterialList[0], sizeof( CElement_Material ) * NewMaterialList.size() );
+	Elements[EElement_Material].SetDataSize(NewMaterialList.size(), sizeof(CElement_Material) * NewMaterialList.size(), false);
+	memcpy(Elements[EElement_Material].Data, &NewMaterialList[0], sizeof(CElement_Material) * NewMaterialList.size());
 
 	// copy new flags list to element
-	Elements[EElement_Flags].SetDataSize( NewFlagsList.size(), sizeof( CElement_Flags ) * NewFlagsList.size(), false );
-	memcpy( Elements[EElement_Flags].Data, &NewFlagsList[0], sizeof( CElement_Flags ) * NewFlagsList.size() );
+	Elements[EElement_Flags].SetDataSize(NewFlagsList.size(), sizeof(CElement_Flags) * NewFlagsList.size(), false);
+	memcpy(Elements[EElement_Flags].Data, &NewFlagsList[0], sizeof(CElement_Flags) * NewFlagsList.size());
 }
 
 
-bool SortSubMeshesComparisonFunction( M2Lib::M2Skin::CElement_SubMesh* A, M2Lib::M2Skin::CElement_SubMesh* B )
+bool SortSubMeshesComparisonFunction(M2Lib::M2Skin::CElement_SubMesh* A, M2Lib::M2Skin::CElement_SubMesh* B)
 {
-	Float32 ScoreA = A->ID + ( 0.999f - ( A->VertexCount / (Float32)0xFFFF ) );
-	Float32 ScoreB = B->ID + ( 0.999f - ( B->VertexCount / (Float32)0xFFFF ) );
-	return ( ScoreA < ScoreB );
+	Float32 ScoreA = A->ID + (0.999f - (A->VertexCount / (Float32)0xFFFF));
+	Float32 ScoreB = B->ID + (0.999f - (B->VertexCount / (Float32)0xFFFF));
+	return (ScoreA < ScoreB);
 }
 
 
@@ -393,31 +418,31 @@ void M2Lib::M2Skin::SortSubMeshes()
 
 	// sort the list
 	std::list< M2Lib::M2Skin::CElement_SubMesh* > SubMeshListSorted;
-	for ( UInt32 iSubMesh = 0; iSubMesh < SubMeshListLength; iSubMesh++ )
+	for (UInt32 iSubMesh = 0; iSubMesh < SubMeshListLength; iSubMesh++)
 	{
-		SubMeshListSorted.push_back( &SubMeshList[iSubMesh] );
+		SubMeshListSorted.push_back(&SubMeshList[iSubMesh]);
 	}
-	SubMeshListSorted.sort( SortSubMeshesComparisonFunction );
+	SubMeshListSorted.sort(SortSubMeshesComparisonFunction);
 
 	// build index remap list
 	UInt32* SubMeshReMapList = new UInt32[SubMeshListLength];
-	for ( UInt32 i = 0; i < SubMeshListLength; i++ )
+	for (UInt32 i = 0; i < SubMeshListLength; i++)
 	{
 		std::list< M2Lib::M2Skin::CElement_SubMesh* >::iterator it = SubMeshListSorted.begin();
-		for ( UInt32 j = 0; j < SubMeshListLength; j++ )
+		for (UInt32 j = 0; j < SubMeshListLength; j++)
 		{
-			if ( &SubMeshList[i] == *it )
+			if (&SubMeshList[i] == *it)
 			{
 				SubMeshReMapList[i] = j;
 			}
 			it++;
 		}
 	}
-	
+
 	// remap material sub mesh indices
 	UInt32 MaterialListLength = Elements[EElement_Material].Count;
 	CElement_Material* MaterialList = (CElement_Material*)Elements[EElement_Material].Data;
-	for ( UInt32 i = 0; i < MaterialListLength; i++ )
+	for (UInt32 i = 0; i < MaterialListLength; i++)
 	{
 		MaterialList[i].iSubMesh = SubMeshReMapList[MaterialList[i].iSubMesh];
 		MaterialList[i].iSubMesh2 = SubMeshReMapList[MaterialList[i].iSubMesh2];
@@ -427,35 +452,35 @@ void M2Lib::M2Skin::SortSubMeshes()
 	// copy sorted result
 	M2Lib::M2Skin::CElement_SubMesh* NewSubMeshList = new M2Lib::M2Skin::CElement_SubMesh[SubMeshListLength];
 	std::list< M2Lib::M2Skin::CElement_SubMesh* >::iterator SubMeshListSortedIterator = SubMeshListSorted.begin();
-	for ( UInt32 iSubMesh = 0; iSubMesh < SubMeshListLength; iSubMesh++ )
+	for (UInt32 iSubMesh = 0; iSubMesh < SubMeshListLength; iSubMesh++)
 	{
 		NewSubMeshList[iSubMesh] = *(*SubMeshListSortedIterator);
 		SubMeshListSortedIterator++;
 	}
-	memcpy( Elements[EElement_SubMesh].Data, NewSubMeshList, Elements[EElement_SubMesh].DataSize );
+	memcpy(Elements[EElement_SubMesh].Data, NewSubMeshList, Elements[EElement_SubMesh].DataSize);
 	delete[] NewSubMeshList;
 }
 
 
-M2Lib::M2Skin::CElement_SubMesh* M2Lib::M2Skin::GetSubMesh( UInt32 ID, Float32* CenterBounds, SInt32& SubMeshIndexOut )
+M2Lib::M2Skin::CElement_SubMesh* M2Lib::M2Skin::GetSubMesh(UInt16 ID, Float32* CenterBounds, SInt32& SubMeshTriangleIndexOut)
 {
 	UInt32 SubMeshListLength = Elements[EElement_SubMesh].Count;
 	CElement_SubMesh* SubMeshList = (CElement_SubMesh*)Elements[EElement_SubMesh].Data;
-	
+
 
 	Float32 DeltaMin = 0.0f;
 	SInt32 ClosestMatch = -1;
-	SubMeshIndexOut = -1;
+	SubMeshTriangleIndexOut = -1;
 
-	for ( UInt32 i = 0; i != SubMeshListLength; i++ )
+	for (UInt32 i = 0; i != SubMeshListLength; i++)
 	{
-		if ( SubMeshList[i].ID == ID )
+		if (SubMeshList[i].ID == ID)
 		{
 			Float32 X = SubMeshList[i].CenterBounds[0] - CenterBounds[0];
 			Float32 Y = SubMeshList[i].CenterBounds[1] - CenterBounds[1];
 			Float32 Z = SubMeshList[i].CenterBounds[2] - CenterBounds[2];
-			Float32 Delta = sqrt( ( X * X ) + ( Y * Y ) + ( Z * Z ) );
-			if ( ClosestMatch == -1 || Delta < DeltaMin )
+			Float32 Delta = sqrt((X * X) + (Y * Y) + (Z * Z));
+			if (ClosestMatch == -1 || Delta < DeltaMin)
 			{
 				DeltaMin = Delta;
 				ClosestMatch = i;
@@ -463,9 +488,9 @@ M2Lib::M2Skin::CElement_SubMesh* M2Lib::M2Skin::GetSubMesh( UInt32 ID, Float32* 
 		}
 	}
 
-	if ( ClosestMatch >= 0 )
+	if (ClosestMatch >= 0)
 	{
-		SubMeshIndexOut = ClosestMatch;
+		SubMeshTriangleIndexOut = ClosestMatch;
 		return &SubMeshList[ClosestMatch];
 	}
 
@@ -473,27 +498,27 @@ M2Lib::M2Skin::CElement_SubMesh* M2Lib::M2Skin::GetSubMesh( UInt32 ID, Float32* 
 }
 
 
-void M2Lib::M2Skin::GetSubMeshMaterials( UInt32 SubMeshIndex, std::vector< CElement_Material* >& Result )
+void M2Lib::M2Skin::GetSubMeshMaterials(UInt32 SubMeshTriangleIndex, std::vector< CElement_Material* >& Result)
 {
 	CElement_Material* MaterialList = (CElement_Material*)Elements[EElement_Material].Data;
-	for ( UInt32 iMaterial = 0; iMaterial < Header.nMaterial; iMaterial++ )
+	for (UInt32 iMaterial = 0; iMaterial < Header.nMaterial; iMaterial++)
 	{
-		if ( MaterialList[iMaterial].iSubMesh == SubMeshIndex )
+		if (MaterialList[iMaterial].iSubMesh == SubMeshTriangleIndex)
 		{
-			Result.push_back( &MaterialList[iMaterial] );
+			Result.push_back(&MaterialList[iMaterial]);
 		}
 	}
 }
 
 
-void M2Lib::M2Skin::GetSubMeshFlags( UInt32 SubMeshIndex, std::vector< CElement_Flags* >& Result )
+void M2Lib::M2Skin::GetSubMeshFlags(UInt32 SubMeshTriangleIndex, std::vector< CElement_Flags* >& Result)
 {
 	CElement_Flags* FlagsList = (CElement_Flags*)Elements[EElement_Flags].Data;
-	for ( UInt32 iFlags = 0; iFlags < Header.nFlags; iFlags++ )
+	for (UInt32 iFlags = 0; iFlags < Header.nFlags; iFlags++)
 	{
-		if ( FlagsList[iFlags].iSubMesh == SubMeshIndex )
+		if (FlagsList[iFlags].iSubMesh == SubMeshTriangleIndex)
 		{
-			Result.push_back( &FlagsList[iFlags] );
+			Result.push_back(&FlagsList[iFlags]);
 		}
 	}
 }
@@ -505,7 +530,7 @@ bool M2Lib::M2Skin::PrintInfo()
 
 	Char16 szFileOut[1024];
 	UInt32 Length = 0;
-	while ( _FileName[Length] != '\0' )
+	while (_FileName[Length] != '\0')
 	{
 		szFileOut[Length] = _FileName[Length];
 		Length++;
@@ -517,14 +542,14 @@ bool M2Lib::M2Skin::PrintInfo()
 	szFileOut[Length++] = '\0';
 
 	std::fstream FileStream;
-	FileStream.open( szFileOut, std::ios::out | std::ios::trunc );
+	FileStream.open(szFileOut, std::ios::out | std::ios::trunc);
 
 	SInt32 MaxBones = 0;
 	CElement_SubMesh* SubMeshes = (CElement_SubMesh*)Elements[EElement_SubMesh].Data;
-	for ( UInt32 i = 0; i < Header.nSubMesh; i++ )
+	for (UInt32 i = 0; i < Header.nSubMesh; i++)
 	{
 		CElement_SubMesh& Subset = SubMeshes[i];
-		if ( Subset.BoneCount > MaxBones )
+		if (Subset.BoneCount > MaxBones)
 		{
 			MaxBones = Subset.BoneCount;
 		}
@@ -536,8 +561,8 @@ bool M2Lib::M2Skin::PrintInfo()
 	FileStream << "oVertex:       " << Header.oVertex << std::endl;
 	FileStream << std::endl;
 
-	FileStream << "nIndex:        " << Header.nIndex << std::endl;
-	FileStream << "oIndex:        " << Header.oIndex << std::endl;
+	FileStream << "nTriangleIndex:        " << Header.nTriangleIndex << std::endl;
+	FileStream << "oTriangleIndex:        " << Header.oTriangleIndex << std::endl;
 	FileStream << std::endl;
 
 	FileStream << "nBoneIndices:  " << Header.nBoneIndices << std::endl;
@@ -567,19 +592,19 @@ bool M2Lib::M2Skin::PrintInfo()
 	FileStream << "// SUBSETS" << std::endl;
 	FileStream << std::endl;
 	//CElement_SubMesh* SubMeshes = (CElement_SubMesh*)Elements[EElement_SubMesh].Data;
-	for ( UInt32 i = 0; i < Header.nSubMesh; i++ )
+	for (UInt32 i = 0; i < Header.nSubMesh; i++)
 	{
 		CElement_SubMesh& Subset = SubMeshes[i];
 		FileStream << "[" << i << "]" << std::endl;
 		FileStream << "ID:           " << Subset.ID << std::endl;
 		FileStream << "VertexStart:  " << Subset.VertexStart << std::endl;
 		FileStream << "VertexCount:  " << Subset.VertexCount << std::endl;
-		FileStream << "IndexStart:   " << Subset.IndexStart << std::endl;
-		FileStream << "IndexCount:   " << Subset.IndexCount << std::endl;
+		FileStream << "TriangleIndexStart:   " << Subset.TriangleIndexStart << std::endl;
+		FileStream << "TriangleIndexCount:   " << Subset.TriangleIndexCount << std::endl;
 		FileStream << "BoneCount:    " << Subset.BoneCount << std::endl;
 		FileStream << "BoneStart:    " << Subset.BoneStart << std::endl;
 		FileStream << "MaxBonesPerVertex:     " << Subset.MaxBonesPerVertex << std::endl;
-		FileStream << "Unknown2:     " << Subset.SortIndex << std::endl;
+		FileStream << "Unknown2:     " << Subset.SortTriangleIndex << std::endl;
 		FileStream << "CenterMass:   " << "( " << Subset.CenterMass[0] << ", " << Subset.CenterMass[1] << ", " << Subset.CenterMass[2] << " ) " << std::endl;
 		FileStream << "CenterBounds: " << "( " << Subset.CenterBounds[0] << ", " << Subset.CenterBounds[1] << ", " << Subset.CenterBounds[2] << " ) " << std::endl;
 		FileStream << "Radius:       " << Subset.Radius << std::endl;
@@ -590,7 +615,7 @@ bool M2Lib::M2Skin::PrintInfo()
 	FileStream << "//" << std::endl;
 	FileStream << "// FLAGS" << std::endl;
 	FileStream << std::endl;
-	for ( UInt32 i = 0; i < Header.nFlags; i++ )
+	for (UInt32 i = 0; i < Header.nFlags; i++)
 	{
 		CElement_Flags& Flags = ((CElement_Flags*)Elements[EElement_Flags].Data)[i];
 		FileStream << "[" << i << "]    SubmeshID: " << SubMeshes[Flags.iSubMesh].ID << std::endl;
@@ -614,8 +639,8 @@ void M2Lib::M2Skin::m_LoadElements_CopyHeaderToElements()
 	Elements[EElement_VertexLookup].Count = Header.nVertex;
 	Elements[EElement_VertexLookup].Offset = Header.oVertex;
 
-	Elements[EElement_Index].Count = Header.nIndex;
-	Elements[EElement_Index].Offset = Header.oIndex;
+	Elements[EElement_TriangleIndex].Count = Header.nTriangleIndex;
+	Elements[EElement_TriangleIndex].Offset = Header.oTriangleIndex;
 
 	Elements[EElement_BoneIndices].Count = Header.nBoneIndices;
 	Elements[EElement_BoneIndices].Offset = Header.oBoneIndices;
@@ -631,22 +656,22 @@ void M2Lib::M2Skin::m_LoadElements_CopyHeaderToElements()
 }
 
 
-void M2Lib::M2Skin::m_LoadElements_FindSizes( UInt32 FileSize )
+void M2Lib::M2Skin::m_LoadElements_FindSizes(UInt32 FileSize)
 {
-	for ( UInt32 i = 0; i != EElement__Count__; i++ )
+	for (UInt32 i = 0; i != EElement__Count__; i++)
 	{
 		Elements[i].OffsetOriginal = Elements[i].Offset;
 
-		if ( ( Elements[i].Count == 0 ) || ( Elements[i].Offset == 0 ) )
+		if ((Elements[i].Count == 0) || (Elements[i].Offset == 0))
 		{
 			Elements[i].DataSize = 0;
 		}
 		else
 		{
 			UInt32 NextOffset = FileSize;
-			for ( UInt32 j = i + 1; j < EElement__Count__; j++ )
+			for (UInt32 j = i + 1; j < EElement__Count__; j++)
 			{
-				if ( Elements[j].Offset )
+				if (Elements[j].Offset)
 				{
 					NextOffset = Elements[j].Offset;
 					break;
@@ -664,9 +689,9 @@ void M2Lib::M2Skin::m_SaveElements_FindOffsets()
 	//UInt32 Remainder = CurrentOffset % 64;
 	//CurrentOffset += 64 - Remainder;
 
-	for ( UInt32 i = 0; i < EElement__Count__; i++ )
+	for (UInt32 i = 0; i < EElement__Count__; i++)
 	{
-		if ( Elements[i].DataSize )
+		if (Elements[i].DataSize)
 		{
 			Elements[i].Offset = CurrentOffset;
 			CurrentOffset += Elements[i].DataSize;
@@ -680,8 +705,8 @@ void M2Lib::M2Skin::m_SaveElements_CopyElementsToHeader()
 	Header.nVertex = Elements[EElement_VertexLookup].Count;
 	Header.oVertex = Elements[EElement_VertexLookup].Offset;
 
-	Header.nIndex = Elements[EElement_Index].Count;
-	Header.oIndex = Elements[EElement_Index].Offset;
+	Header.nTriangleIndex = Elements[EElement_TriangleIndex].Count;
+	Header.oTriangleIndex = Elements[EElement_TriangleIndex].Offset;
 
 	Header.nBoneIndices = Elements[EElement_BoneIndices].Count;
 	Header.oBoneIndices = Elements[EElement_BoneIndices].Offset;

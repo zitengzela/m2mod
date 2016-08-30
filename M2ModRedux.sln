@@ -1,11 +1,18 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual C++ Express 2010
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.40629.0
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "M2Lib", "M2Lib\M2Lib.vcxproj", "{881DD3B6-0C01-44BA-86A4-09C9ADC86ECB}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "M2ModRedux", "M2ModRedux\M2ModRedux.vcxproj", "{E0F7E43B-73C9-4537-8B78-2BC30DD50038}"
 	ProjectSection(ProjectDependencies) = postProject
 		{881DD3B6-0C01-44BA-86A4-09C9ADC86ECB} = {881DD3B6-0C01-44BA-86A4-09C9ADC86ECB}
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{CA446F65-5048-4B88-8874-19D021160247}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
 	EndProjectSection
 EndProject
 Global
