@@ -9,6 +9,14 @@
 // level of detail for output messages
 int g_Verbose = 1;
 
+struct IFFChunk
+{
+	Char8   ChunkId[4];
+	SInt32  ChunkSize;
+};
+
+const Char8* M2Lib::M2::kChunkIDs[EChunk__Count__] = { "MD21", "PFID", "SFID", "AFID", "BFID" };
+
 M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 {
 	// check path
@@ -46,14 +54,56 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 	FileStream.read((Char8*)RawData, FileSize);
 	FileStream.seekg(0, std::ios::beg);
 
+	// NEW !
+	IFFChunk * Chunk = (IFFChunk *)RawData;
+	bool ValidFile = false;
+
+	M2Element::SetFileOffset(0);
+
+	while ((UInt8*)Chunk < (RawData + FileSize) && Chunk->ChunkSize >= 0)
+	{
+		if (Chunk->ChunkId[0] == 'M' && Chunk->ChunkId[1] == 'D' && Chunk->ChunkId[2] == '2' && Chunk->ChunkId[3] == '0')
+		{
+			ValidFile = true;
+			break;
+		}
+		else
+		{
+			SInt32 ChunkIndex = m_GetChunkIndex(Chunk->ChunkId);
+
+			if (ChunkIndex >= 0)
+			{
+				Chunks[ChunkIndex].Count = 1;
+				Chunks[ChunkIndex].DataSize = Chunk->ChunkSize;
+				Chunks[ChunkIndex].Offset = ((UInt8*)Chunk) + 8 - RawData;
+
+				Chunks[ChunkIndex].Load(FileStream);
+			}
+		}
+		Chunk = (IFFChunk *)((UInt8*)Chunk + Chunk->ChunkSize + 8);
+	}
+
+	if (Chunks[EChunk_Model].DataSize)
+	{
+		SInt32 MD20Offset = Chunks[EChunk_Model].Offset;
+		FileSize = Chunks[EChunk_Model].DataSize;
+		M2Element::SetFileOffset(MD20Offset);
+
+		FileStream.seekg(MD20Offset, std::ios::beg);
+		FileStream.read((Char8*)RawData, FileSize);
+		FileStream.seekg(MD20Offset, std::ios::beg);
+
+		ValidFile = true;
+	}
+
 	// load header
 	FileStream.read((Char8*)&Header.Description, sizeof(Header.Description));
 
 	// check header
-	if (Header.Description.ID[0] != 'M' || Header.Description.ID[1] != 'D' || Header.Description.ID[2] != '2' || Header.Description.ID[3] != '0')
+	if (!ValidFile)
 		return M2Lib::EError_FailedToLoadM2_FileCorrupt;
 	UInt32 VersionInt = (UInt32&)Header.Description.Version;
-	if ((263 > VersionInt) || (VersionInt > 272))
+	if ((263 > VersionInt) || (VersionInt > 274))
 		return M2Lib::EError_FailedToLoadM2_VersionNotSupported;
 
 	// load more header
@@ -89,6 +139,8 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 
 	// close file stream
 	FileStream.close();
+
+	M2Element::SetFileOffset(0);
 
 	// load skins
 	if ((Header.Elements.nSkin == 0) || (Header.Elements.nSkin > 4))
@@ -153,7 +205,7 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 }
 
 
-M2Lib::EError M2Lib::M2::Save(const Char16* FileName, bool FixSeams)
+M2Lib::EError M2Lib::M2::Save(const Char16* FileName, bool FixSeams, bool ChunkedFormat)
 {
 	this->FixSeams = FixSeams;
 
@@ -170,6 +222,18 @@ M2Lib::EError M2Lib::M2::Save(const Char16* FileName, bool FixSeams)
 	// fill elements header data
 	m_SaveElements_FindOffsets();
 	m_SaveElements_CopyElementsToHeader();
+
+	// Reserve model chunk header
+	UInt16 Version = 0x0110;
+
+	if (ChunkedFormat)
+	{
+		M2Lib::M2Element::SetFileOffset(8);
+		FileStream.seekp(8, std::ios::beg);
+	}
+
+	Header.Description.Version[0] = Version & 0xFF;
+	Header.Description.Version[1] = (Version >> 8) & 0xFF;
 
 	// save header
 	FileStream.write((Char8*)&Header.Description, sizeof(Header.Description));
@@ -203,8 +267,29 @@ M2Lib::EError M2Lib::M2::Save(const Char16* FileName, bool FixSeams)
 			return M2Lib::EError_FailedToSaveM2;
 	}
 
+	if (ChunkedFormat)
+	{
+		UInt32 MD20Size = FileStream.tellp();
+		MD20Size -= 8;
+
+		for (UInt32 i = M2::EChunk_Model + 1; i < M2::EChunk__Count__; i++)
+		{
+			if (Chunks[i].DataSize)
+			{
+				FileStream.write(kChunkIDs[i], 4);
+				FileStream.write((Char8*)&(Chunks[i].DataSize), 4);
+				FileStream.write((Char8*)Chunks[i].Data, Chunks[i].DataSize);
+			}
+		}
+
+		FileStream.seekp(0, std::ios::beg);
+		FileStream.write(kChunkIDs[M2::EChunk_Model], 4);
+		FileStream.write((Char8*)(&MD20Size), 4);
+	}
+
 	// close file stream
 	FileStream.close();
+	M2Lib::M2Element::SetFileOffset(0);
 
 	// delete existing skin files
 	for (UInt32 i = 0; i < 6; i++)
@@ -342,15 +427,7 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate(Char16* FileName)
 		// FMN 2015-01-26: changing TriangleIndexstart, depending on ID. See http://forums.darknestfantasyerotica.com/showthread.php?20446-TUTORIAL-Here-is-how-WoD-.skin-works.&p=402561
 		UInt32 TriangleIndexStart = 0;
 
-		//if (pSubsetOut->ID > 65536)
-		if (pSubsetOut->Level == 1)
-		{
-			TriangleIndexStart = pSubsetOut->TriangleIndexStart + 65536;
-		}
-		else
-		{
-			TriangleIndexStart = pSubsetOut->TriangleIndexStart;
-		}
+		TriangleIndexStart = UInt32(pSubsetOut->TriangleIndexStart) + (pSubsetOut->Level << 16);
 
 		//UInt32 TriangleIndexEnd = pSubsetOut->TriangleIndexStart + pSubsetOut->TriangleIndexCount;
 		//for (UInt32 k = pSubsetOut->TriangleIndexStart; k < TriangleIndexEnd; k++)
@@ -1197,15 +1274,15 @@ void M2Lib::M2::FixSeamsSubMesh(Float32 PositionalTolerance, Float32 AngularTole
 					}
 
 					// average position and normalize normal
-					Float32 SimilarCount = (Float32)SimilarVertices.size();
+					Float32 invSimilarCount = 1.f / (Float32)SimilarVertices.size();
 
-					NewPosition[0] /= SimilarCount;
-					NewPosition[1] /= SimilarCount;
-					NewPosition[2] /= SimilarCount;
+					NewPosition[0] *= invSimilarCount;
+					NewPosition[1] *= invSimilarCount;
+					NewPosition[2] *= invSimilarCount;
 
-					NewNormal[0] /= SimilarCount;
-					NewNormal[1] /= SimilarCount;
-					NewNormal[2] /= SimilarCount;
+					NewNormal[0] *= invSimilarCount;
+					NewNormal[1] *= invSimilarCount;
+					NewNormal[2] *= invSimilarCount;
 
 					UInt8 NewBoneWeights[4];
 					NewBoneWeights[0] = SimilarVertices[0]->BoneWeights[0];
@@ -1376,15 +1453,15 @@ void M2Lib::M2::FixSeamsBody(Float32 PositionalTolerance, Float32 AngularToleran
 					}
 
 					// average position and normalize normal
-					Float32 SimilarCount = (Float32)SimilarVertices.size();
+					Float32 invSimilarCount = 1.0f / (Float32)SimilarVertices.size();
 
-					NewPosition[0] /= SimilarCount;
-					NewPosition[1] /= SimilarCount;
-					NewPosition[2] /= SimilarCount;
+					NewPosition[0] *= invSimilarCount;
+					NewPosition[1] *= invSimilarCount;
+					NewPosition[2] *= invSimilarCount;
 
-					NewNormal[0] /= SimilarCount;
-					NewNormal[1] /= SimilarCount;
-					NewNormal[2] /= SimilarCount;
+					NewNormal[0] *= invSimilarCount;
+					NewNormal[1] *= invSimilarCount;
+					NewNormal[2] *= invSimilarCount;
 
 					UInt8 NewBoneWeights[4];
 					NewBoneWeights[0] = SimilarVertices[0]->BoneWeights[0];
@@ -2315,4 +2392,20 @@ void M2Lib::M2::m_SaveElements_CopyElementsToHeader()
 
 	Header.Elements.nUnknown1 = Elements[EElement_Unknown1].Count;
 	Header.Elements.oUnknown1 = Elements[EElement_Unknown1].Offset;
+}
+
+SInt32  M2Lib::M2::m_GetChunkIndex(const Char8* ChunkID) const
+{
+	for (int a = 0; a < EChunk__Count__; a++)
+	{
+		bool Equal = true;
+		for (int b = 0; b < 4; b++)
+		{
+			Equal = Equal && (kChunkIDs[a][b] == ChunkID[b]);
+		}
+		if (Equal)
+			return a;
+	}
+
+	return -1;
 }

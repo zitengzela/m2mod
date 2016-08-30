@@ -158,7 +158,7 @@ bool M2Lib::CVertex::CompareSimilar(CVertex& A, CVertex& B, bool CompareTextures
 	if (AngularTolerance > 0.0f)
 	{
 		Float32 Dot = (A.Normal[0] * B.Normal[0]) + (A.Normal[1] * B.Normal[1]) + (A.Normal[2] * B.Normal[2]);
-		if (acos(Dot) > AngularTolerance)	// units are radians
+		if (acosf(Dot) > AngularTolerance)	// units are radians
 		{
 			return false;
 		}

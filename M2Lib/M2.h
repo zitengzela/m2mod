@@ -73,6 +73,18 @@ namespace M2Lib
 			EElement__Count__
 		};
 
+		// named chunks
+		enum EChunk
+		{
+			EChunk_Model = 0,
+			EChunk_Physic,
+			EChunk_Skin,
+			EChunk_Animation,
+			EChunk_Bone,
+
+			EChunk__Count__
+		};
+
 #pragma pack(push,1)
 		// memory mapped header.
 		class CM2Header
@@ -861,6 +873,8 @@ namespace M2Lib
 
 		CM2Header Header;		// used for loading and saving. not used when editing.
 		M2Element Elements[EElement__Count__];
+		M2Element Chunks[EChunk__Count__];
+		const static Char8* kChunkIDs[EChunk__Count__];
 		M2Skin* Skins[4];
 
 		UInt32 m_OriginalSize;	// size in bytes of the original M2 file when loaded.
@@ -906,7 +920,7 @@ namespace M2Lib
 		// loads an M2 from a file.
 		M2Lib::EError Load(const Char16* FileName);
 		// saves this M2 to a file.
-		M2Lib::EError Save(const Char16* FileName, bool FixSeams);
+		M2Lib::EError Save(const Char16* FileName, bool FixSeams, bool ChunkedFormat);
 
 		// exports the loaded M2 as an M2I file.
 		M2Lib::EError ExportM2Intermediate(Char16* FileName);
@@ -952,6 +966,9 @@ namespace M2Lib
 		//void m_FixAnimationOffsets( SInt32 OffsetDelta, SInt32 OffsetDeltaEnd, UInt32 OriginalEnd, CAnimationBlock& AnimationBlock, SInt32 iElement, UInt32 NewElementOffset );
 		void m_FixAnimationOffsets(UInt32 OriginalEnd, SInt32 OffsetDelta, CElement_AnimationBlock& AnimationBlock, SInt32 iElement, bool Post);
 		void m_SaveElements_CopyElementsToHeader();
+
+		// chunk index in Chunks (-1 if invalid chunk)
+		SInt32 m_GetChunkIndex(const Char8* ChunkID) const;
 
 	};
 

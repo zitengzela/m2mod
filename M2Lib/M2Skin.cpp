@@ -97,23 +97,14 @@ M2Lib::EError M2Lib::M2Skin::Save(const Char16* FileName)
 	// FMN 2015-02-03: changing Level, depending on TriangleIndexstart. See http://forums.darknestfantasyerotica.com/showthread.php?20446-TUTORIAL-Here-is-how-WoD-.skin-works.&p=402561
 	CElement_SubMesh* SubMeshList = (CElement_SubMesh*)Elements[EElement_SubMesh].Data;
 	UInt32 TriangleIndexStartPrevious = 0;
-	bool isOverLimit = false;
+	UInt16 level = 0;
 
 	for (UInt32 i = 0; i != Elements[EElement_SubMesh].Count; i++)
 	{
 		if (SubMeshList[i].TriangleIndexStart < TriangleIndexStartPrevious)
-		{
-			isOverLimit = true;
-		}
+			++level;
 
-		if (!isOverLimit)
-		{
-			SubMeshList[i].Level = 0;
-		}
-		else if (isOverLimit)
-		{
-			SubMeshList[i].Level = 1;
-		}
+		SubMeshList[i].Level = level;
 
 		TriangleIndexStartPrevious = SubMeshList[i].TriangleIndexStart;
 	}
@@ -171,7 +162,7 @@ void M2Lib::M2Skin::BuildVertexBoneIndices()
 		UInt32 SubMeshVertexEnd = SubMesh.VertexStart + SubMesh.VertexCount;
 		for (UInt32 j = SubMesh.VertexStart; j < SubMeshVertexEnd; j++)
 		{
-			M2Lib::CVertex& Vertex = VertexList[VertexLookupList[j]];
+			M2Lib::CVertex const& Vertex = VertexList[VertexLookupList[j]];
 			UInt8* BoneIndices8 = (UInt8*)&BoneIndexList[j];
 
 			BoneIndices8[0] = m_ReverseBoneLookup(Vertex.BoneIndices[0], &BoneLookupList[SubMesh.BoneStart], SubMesh.BoneCount);
@@ -219,50 +210,51 @@ void M2Lib::M2Skin::BuildBoundingData()
 			UInt32 SubMeshVertexEnd = SubMesh.VertexStart + SubMesh.VertexCount;
 			for (UInt32 j = SubMesh.VertexStart; j < SubMeshVertexEnd; j++)
 			{
+				M2Lib::CVertex const& Vertex = VertexList[VertexLookupList[j]];
 				if (FirstPass)
 				{
-					OurBoundingBox[0][0] = VertexList[VertexLookupList[j]].Position[0];
-					OurBoundingBox[0][1] = VertexList[VertexLookupList[j]].Position[1];
-					OurBoundingBox[0][2] = VertexList[VertexLookupList[j]].Position[2];
+					OurBoundingBox[0][0] = Vertex.Position[0];
+					OurBoundingBox[0][1] = Vertex.Position[1];
+					OurBoundingBox[0][2] = Vertex.Position[2];
 
-					OurBoundingBox[1][0] = VertexList[VertexLookupList[j]].Position[0];
-					OurBoundingBox[1][1] = VertexList[VertexLookupList[j]].Position[1];
-					OurBoundingBox[1][2] = VertexList[VertexLookupList[j]].Position[2];
+					OurBoundingBox[1][0] = Vertex.Position[0];
+					OurBoundingBox[1][1] = Vertex.Position[1];
+					OurBoundingBox[1][2] = Vertex.Position[2];
 
 					FirstPass = false;
 				}
 				else
 				{
-					if (OurBoundingBox[0][0] > VertexList[VertexLookupList[j]].Position[0])
+					if (OurBoundingBox[0][0] > Vertex.Position[0])
 					{
-						OurBoundingBox[0][0] = VertexList[VertexLookupList[j]].Position[0];
+						OurBoundingBox[0][0] = Vertex.Position[0];
 					}
-					if (OurBoundingBox[0][1] > VertexList[VertexLookupList[j]].Position[1])
+					if (OurBoundingBox[0][1] > Vertex.Position[1])
 					{
-						OurBoundingBox[0][1] = VertexList[VertexLookupList[j]].Position[1];
+						OurBoundingBox[0][1] = Vertex.Position[1];
 					}
-					if (OurBoundingBox[0][2] > VertexList[VertexLookupList[j]].Position[2])
+					if (OurBoundingBox[0][2] > Vertex.Position[2])
 					{
-						OurBoundingBox[0][2] = VertexList[VertexLookupList[j]].Position[2];
+						OurBoundingBox[0][2] = Vertex.Position[2];
 					}
 
-					if (OurBoundingBox[1][0] < VertexList[VertexLookupList[j]].Position[0])
+					if (OurBoundingBox[1][0] < Vertex.Position[0])
 					{
-						OurBoundingBox[1][0] = VertexList[VertexLookupList[j]].Position[0];
+						OurBoundingBox[1][0] = Vertex.Position[0];
 					}
-					if (OurBoundingBox[1][1] < VertexList[VertexLookupList[j]].Position[1])
+					if (OurBoundingBox[1][1] < Vertex.Position[1])
 					{
-						OurBoundingBox[1][1] = VertexList[VertexLookupList[j]].Position[1];
+						OurBoundingBox[1][1] = Vertex.Position[1];
 					}
-					if (OurBoundingBox[1][2] < VertexList[VertexLookupList[j]].Position[2])
+					if (OurBoundingBox[1][2] < Vertex.Position[2])
 					{
-						OurBoundingBox[1][2] = VertexList[VertexLookupList[j]].Position[2];
+						OurBoundingBox[1][2] = Vertex.Position[2];
 					}
 				}
 
-				OurCenterMass[0] += VertexList[VertexLookupList[j]].Position[0];
-				OurCenterMass[1] += VertexList[VertexLookupList[j]].Position[1];
-				OurCenterMass[2] += VertexList[VertexLookupList[j]].Position[2];
+				OurCenterMass[0] += Vertex.Position[0];
+				OurCenterMass[1] += Vertex.Position[1];
+				OurCenterMass[2] += Vertex.Position[2];
 			}
 
 			OurBoundingBoxCenter[0] = (OurBoundingBox[0][0] + OurBoundingBox[1][0]) / 2.0f;
@@ -280,9 +272,10 @@ void M2Lib::M2Skin::BuildBoundingData()
 				Float32 PositionLocal[3];
 				Float32 Distance;
 
-				PositionLocal[0] = VertexList[VertexLookupList[j]].Position[0] - OurBoundingBoxCenter[0];
-				PositionLocal[1] = VertexList[VertexLookupList[j]].Position[1] - OurBoundingBoxCenter[1];
-				PositionLocal[2] = VertexList[VertexLookupList[j]].Position[2] - OurBoundingBoxCenter[2];
+				M2Lib::CVertex const& Vertex = VertexList[VertexLookupList[j]];
+				PositionLocal[0] = Vertex.Position[0] - OurBoundingBoxCenter[0];
+				PositionLocal[1] = Vertex.Position[1] - OurBoundingBoxCenter[1];
+				PositionLocal[2] = Vertex.Position[2] - OurBoundingBoxCenter[2];
 
 				Distance = sqrt((PositionLocal[0] * PositionLocal[0]) + (PositionLocal[1] * PositionLocal[1]) + (PositionLocal[2] * PositionLocal[2]));
 				if (Distance > OurRadius)
@@ -365,7 +358,7 @@ void M2Lib::M2Skin::CopyMaterials(M2Skin* pOther)
 		CElement_SubMesh& SubMesh = SubMeshList[iSubMesh];
 
 		SInt32 SubMeshOtherTriangleIndex;
-		CElement_SubMesh* SubMeshOther = pOther->GetSubMesh(SubMesh.ID, SubMesh.CenterBounds, SubMeshOtherTriangleIndex);
+		CElement_SubMesh* SubMeshOther = pOther->GetSubMesh(&SubMesh, SubMeshOtherTriangleIndex);
 		assert(SubMeshOther);
 
 		SubMesh.SortTriangleIndex = SubMeshOther->SortTriangleIndex;
@@ -462,7 +455,7 @@ void M2Lib::M2Skin::SortSubMeshes()
 }
 
 
-M2Lib::M2Skin::CElement_SubMesh* M2Lib::M2Skin::GetSubMesh(UInt16 ID, Float32* CenterBounds, SInt32& SubMeshTriangleIndexOut)
+M2Lib::M2Skin::CElement_SubMesh* M2Lib::M2Skin::GetSubMesh(CElement_SubMesh const * TargetSubMesh, SInt32& SubMeshTriangleIndexOut)
 {
 	UInt32 SubMeshListLength = Elements[EElement_SubMesh].Count;
 	CElement_SubMesh* SubMeshList = (CElement_SubMesh*)Elements[EElement_SubMesh].Data;
@@ -472,6 +465,10 @@ M2Lib::M2Skin::CElement_SubMesh* M2Lib::M2Skin::GetSubMesh(UInt16 ID, Float32* C
 	SInt32 ClosestMatch = -1;
 	SubMeshTriangleIndexOut = -1;
 
+	UInt16 ID = TargetSubMesh->ID;
+	Float32 const* CenterBounds = TargetSubMesh->CenterBounds;
+	Float32 const* CenterMass = TargetSubMesh->CenterMass;
+
 	for (UInt32 i = 0; i != SubMeshListLength; i++)
 	{
 		if (SubMeshList[i].ID == ID)
@@ -479,7 +476,13 @@ M2Lib::M2Skin::CElement_SubMesh* M2Lib::M2Skin::GetSubMesh(UInt16 ID, Float32* C
 			Float32 X = SubMeshList[i].CenterBounds[0] - CenterBounds[0];
 			Float32 Y = SubMeshList[i].CenterBounds[1] - CenterBounds[1];
 			Float32 Z = SubMeshList[i].CenterBounds[2] - CenterBounds[2];
-			Float32 Delta = sqrt((X * X) + (Y * Y) + (Z * Z));
+			Float32 Delta = (X * X) + (Y * Y) + (Z * Z);
+
+			X = SubMeshList[i].CenterMass[0] - CenterMass[0];
+			Y = SubMeshList[i].CenterMass[1] - CenterMass[1];
+			Z = SubMeshList[i].CenterMass[2] - CenterMass[2];
+			Delta += (X * X) + (Y * Y) + (Z * Z);
+
 			if (ClosestMatch == -1 || Delta < DeltaMin)
 			{
 				DeltaMin = Delta;
@@ -688,8 +691,7 @@ void M2Lib::M2Skin::m_LoadElements_FindSizes(UInt32 FileSize)
 void M2Lib::M2Skin::m_SaveElements_FindOffsets()
 {
 	UInt32 CurrentOffset = sizeof(Header);
-	//UInt32 Remainder = CurrentOffset % 64;
-	//CurrentOffset += 64 - Remainder;
+	CurrentOffset = (CurrentOffset + 15) & ~15;
 
 	for (UInt32 i = 0; i < EElement__Count__; i++)
 	{
@@ -725,4 +727,5 @@ void M2Lib::M2Skin::m_SaveElements_CopyElementsToHeader()
 	Header.oFlags = Elements[EElement_Flags].Offset;
 
 	Header.Unknown2 = 0;
+	Header.Unknown3 = 0;
 }

@@ -38,6 +38,11 @@ namespace M2Lib
 		// clones this element from Source to Destination.
 		static void Clone(M2Element* Source, M2Element* Destination);
 
+		static void SetFileOffset(UInt32 offset);
+		static UInt32 GetFileOffset() { return FileOffset; }
+	private:
+		static UInt32 FileOffset;
+
 	};
 
 }

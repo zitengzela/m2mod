@@ -364,13 +364,15 @@ bool M2Lib::M2SkinBuilder::Build(M2Lib::M2Skin* pResult, UInt32 BoneLoD, M2Lib::
 			std::map< UInt16, UInt16 > GlobalToSkinTriangleIndexMap;
 			UInt32 VertexCount = 0;
 			UInt32 TriangleIndexCount = 0;
-			if (m_SubMeshList[i]->SubsetPartitions[j]->Triangles.size())
+
+			CSubMesh::CSubsetPartition * pSubsetPartition = m_SubMeshList[i]->SubsetPartitions[j];
+			if (pSubsetPartition->Triangles.size())
 			{
-				for (UInt32 k = 0; k < m_SubMeshList[i]->SubsetPartitions[j]->Triangles.size(); k++)
+				for (UInt32 k = 0; k < pSubsetPartition->Triangles.size(); k++)
 				{
 					for (UInt32 iVert = 0; iVert < 3; iVert++)
 					{
-						UInt16 VertexToMap = m_SubMeshList[i]->SubsetPartitions[j]->Triangles[k]->Vertices[iVert];	// this is the global vertex index
+						UInt16 VertexToMap = pSubsetPartition->Triangles[k]->Vertices[iVert];	// this is the global vertex index
 						UInt16 VertexMapped = 0;
 						if (GlobalToSkinTriangleIndexMap.find(VertexToMap) != GlobalToSkinTriangleIndexMap.end())
 						{
@@ -387,11 +389,11 @@ bool M2Lib::M2SkinBuilder::Build(M2Lib::M2Skin* pResult, UInt32 BoneLoD, M2Lib::
 						TriangleIndexCount++;
 					}
 				}
-				m_SubMeshList[i]->SubsetPartitions[j]->VertexStart = VertexStart;
-				m_SubMeshList[i]->SubsetPartitions[j]->VertexCount = VertexCount;
+				pSubsetPartition->VertexStart = VertexStart;
+				pSubsetPartition->VertexCount = VertexCount;
 				VertexStart += VertexCount;
-				m_SubMeshList[i]->SubsetPartitions[j]->TriangleIndexStart = TriangleIndexStart;
-				m_SubMeshList[i]->SubsetPartitions[j]->TriangleIndexCount = TriangleIndexCount;
+				pSubsetPartition->TriangleIndexStart = TriangleIndexStart;
+				pSubsetPartition->TriangleIndexCount = TriangleIndexCount;
 				TriangleIndexStart += TriangleIndexCount;
 			}
 		}
@@ -480,10 +482,10 @@ bool M2Lib::M2SkinBuilder::Build(M2Lib::M2Skin* pResult, UInt32 BoneLoD, M2Lib::
 				iSubsetPartition++;
 
 				pSubsetOut->ID = m_SubMeshList[i]->ID;
-				pSubsetOut->VertexStart = m_SubMeshList[i]->SubsetPartitions[j]->VertexStart;
-				pSubsetOut->VertexCount = m_SubMeshList[i]->SubsetPartitions[j]->VertexCount;
-				pSubsetOut->TriangleIndexStart = m_SubMeshList[i]->SubsetPartitions[j]->TriangleIndexStart;
-				pSubsetOut->TriangleIndexCount = m_SubMeshList[i]->SubsetPartitions[j]->TriangleIndexCount;
+				pSubsetOut->VertexStart = pSubsetPartitionIn->VertexStart;
+				pSubsetOut->VertexCount = pSubsetPartitionIn->VertexCount;
+				pSubsetOut->TriangleIndexStart = pSubsetPartitionIn->TriangleIndexStart;
+				pSubsetOut->TriangleIndexCount = pSubsetPartitionIn->TriangleIndexCount;
 				pSubsetOut->BoneStart = pSubsetPartitionIn->pBonePartition->BoneStart;
 				pSubsetOut->BoneCount = pSubsetPartitionIn->pBonePartition->Bones.size();
 

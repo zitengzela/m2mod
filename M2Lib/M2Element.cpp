@@ -1,5 +1,8 @@
 #include "M2Element.h"
 #include <assert.h>
+#include <string.h>
+
+UInt32 M2Lib::M2Element::FileOffset = 0;
 
 M2Lib::M2Element::M2Element()
 	: Count(0)
@@ -32,7 +35,7 @@ bool M2Lib::M2Element::Load(std::fstream& FileStream)
 		return true;
 
 	Data = new UInt8[DataSize];
-	FileStream.seekg(Offset, std::ios::beg);
+	FileStream.seekg(Offset + FileOffset, std::ios::beg);
 	FileStream.read((Char8*)Data, DataSize);
 
 	return true;
@@ -43,7 +46,7 @@ bool M2Lib::M2Element::Save(std::fstream& FileStream)
 	if (!DataSize)
 		return true;
 
-	FileStream.seekp(Offset);
+	FileStream.seekp(Offset + FileOffset);
 	FileStream.write((Char8*)Data, DataSize);
 
 	return true;
@@ -77,6 +80,11 @@ void M2Lib::M2Element::SetDataSize(UInt32 NewCount, UInt32 NewDataSize, bool Cop
 		}
 		delete[] Data;
 	}
+	else
+	{
+		memset(NewData, 0, NewDataSize);
+	}
+
 	Data = NewData;
 	DataSize = NewDataSize;
 	Count = NewCount;
@@ -86,4 +94,9 @@ void M2Lib::M2Element::Clone(M2Element* Source, M2Element* Destination)
 {
 	Destination->SetDataSize(Source->Count, Source->DataSize, false);
 	memcpy(Destination->Data, Source->Data, Source->DataSize);
+}
+
+void M2Lib::M2Element::SetFileOffset(UInt32 offset)
+{
+	FileOffset = offset;
 }

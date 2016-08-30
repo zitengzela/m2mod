@@ -123,7 +123,7 @@ namespace M2Lib
 				ECategory_Ear2 = 52,			// earrings
 				ECategory_Ear3 = 53,			// more earrings
 				ECategory_Ear4 = 57,			// more earrings
-				ECategory_Ear5 = 39,			// more earrings
+				ECategory_Ear5 = 59,			// more earrings
 			};
 
 		public:
@@ -197,7 +197,7 @@ namespace M2Lib
 		bool PrintInfo();
 
 		// returns sub mesh with ID using CenterBounds to narrow search. some times there are multiple sub meshes with the same ID, so we can narrow our search to whatever sub mesh lies closest to CenterBounds.
-		CElement_SubMesh* GetSubMesh(UInt16 ID, Float32* CenterBounds, SInt32& SubMeshTriangleIndexOut);
+		CElement_SubMesh* GetSubMesh(CElement_SubMesh const * TargetSubMesh, SInt32& SubMeshTriangleIndexOut);
 
 		// gathers list of materials that affect a given sub mesh within this skin.
 		void GetSubMeshMaterials(UInt32 SubMeshTriangleIndex, std::vector< CElement_Material* >& Result);
