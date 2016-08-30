@@ -221,7 +221,7 @@ M2Lib::EError M2Lib::M2::Save(const Char16* FileName)
 		Char16 FileNameSkin[1024];
 		GetFileSkin(FileNameSkin, FileName, i);
 
-		if (i > 3)
+		if (i >= 4)
 		{
 			if (M2Lib::EError Error = Skins[i - 3]->Save(FileNameSkin))
 				return Error;
@@ -233,12 +233,16 @@ M2Lib::EError M2Lib::M2::Save(const Char16* FileName)
 		}
 	}
 
-	for (int i = 0; i < 2; ++i)
+	// 0x80 = flag_has_lod_skin_files
+	if (Header.Description.Flags & 0x80)
 	{
-		Char16 FileNameSkin[1024];
-		GetFileSkin(FileNameSkin, FileName, i + 4);
-		if (M2Lib::EError Error = (Skins[(Skins[1]) ? 1 : 0])->Save(FileNameSkin))
-			return Error;
+		for (int i = 0; i < 2; ++i)
+		{
+			Char16 FileNameSkin[1024];
+			GetFileSkin(FileNameSkin, FileName, i + 4);
+			if (M2Lib::EError Error = (Skins[(Skins[1]) ? 1 : 0])->Save(FileNameSkin))
+				return Error;
+		}
 	}
 
 	return M2Lib::EError_OK;
