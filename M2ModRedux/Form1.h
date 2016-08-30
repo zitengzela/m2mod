@@ -495,7 +495,7 @@ namespace M2ModRedux
 				 this->Icon = (cli::safe_cast<System::Drawing::Icon^>(resources->GetObject(L"$this.Icon")));
 				 this->MinimumSize = System::Drawing::Size(500, 320);
 				 this->Name = L"Form1";
-				 this->Text = L"M2Mod Redux 4.6.1";
+				 this->Text = L"M2Mod Redux 4.7.1";
 				 this->tabControl1->ResumeLayout(false);
 				 this->tabExport->ResumeLayout(false);
 				 this->panelImputM2Exp->ResumeLayout(false);
