@@ -661,7 +661,7 @@ namespace M2ModRedux
 
 				// import M2I
 				StringPointer = System::Runtime::InteropServices::Marshal::StringToHGlobalUni(textBoxInputM2I->Text);
-				Error = M2->ImportM2Intermediate((Char16*)StringPointer.ToPointer(), !checkBoxMergeBones->Checked, !checkBoxMergeAttachments->Checked, !checkBoxMergeCameras->Checked);
+				Error = M2->ImportM2Intermediate((Char16*)StringPointer.ToPointer(), !checkBoxMergeBones->Checked, !checkBoxMergeAttachments->Checked, !checkBoxMergeCameras->Checked, checkBoxFixSeams->Checked);
 				System::Runtime::InteropServices::Marshal::FreeHGlobal(StringPointer);
 
 				if (Error != 0)
@@ -673,7 +673,7 @@ namespace M2ModRedux
 
 				// export M2
 				StringPointer = System::Runtime::InteropServices::Marshal::StringToHGlobalUni(textBoxOutputM2->Text);
-				Error = M2->Save((Char16*)StringPointer.ToPointer(), checkBoxFixSeams->Checked);
+				Error = M2->Save((Char16*)StringPointer.ToPointer());
 				System::Runtime::InteropServices::Marshal::FreeHGlobal(StringPointer);
 
 				if (Error != 0)

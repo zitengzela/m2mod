@@ -593,6 +593,32 @@ bool M2Lib::M2Skin::PrintInfo()
 		FileStream << std::endl;
 	}
 
+    FileStream << "//" << std::endl;
+    FileStream << "// MATERIALS" << std::endl;
+    FileStream << std::endl;
+    for (UInt32 i = 0; i < Header.nMaterial; i++)
+    {
+        CElement_Material& Material = ((CElement_Material*)Elements[EElement_Material].Data)[i];
+        FileStream << "Flags:     " << Material.Flags << std::endl;
+        //FileStream << "RenderOrder:   " << Material.RenderOrder << std::endl;
+        FileStream << "iSubMesh:    " << Material.iSubMesh << std::endl;
+        FileStream << "iSubMesh2:     " << Material.iSubMesh2 << std::endl;
+        FileStream << "iColor:   " << Material.iColor << std::endl;
+        FileStream << "iRenderFlags:   " << Material.iRenderFlags << std::endl;
+
+        FileStream << "iTexutreUnit1:   " << Material.iTexutreUnit1 << std::endl;
+        //FileStream << "iShader:   " << Material.iShader << std::endl;
+        FileStream << "iTexture:   " << Material.iTexture << std::endl;
+        FileStream << "iTexutreUnit2:   " << Material.iTexutreUnit2 << std::endl;
+
+        FileStream << "iTransparency:   " << Material.iTransparency << std::endl;
+        FileStream << "iTextureAnimation:   " << Material.iTextureAnimation << std::endl;
+        FileStream << std::endl;
+    }
+
+
+    // CElement_Material
+
 	FileStream.close();
 
 	return true;

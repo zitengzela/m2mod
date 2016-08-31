@@ -906,26 +906,22 @@ namespace M2Lib
 			m_OriginalSize = 0;
 			RawData = 0;
 			ImportedM2I = false;
-			FixSeams = false;
 		}
 
 		~M2()
 		{
 		}
 
-	protected:
-		bool FixSeams;
-
 	public:
 		// loads an M2 from a file.
 		M2Lib::EError Load(const Char16* FileName);
 		// saves this M2 to a file.
-		M2Lib::EError Save(const Char16* FileName, bool FixSeams);
+		M2Lib::EError Save(const Char16* FileName);
 
 		// exports the loaded M2 as an M2I file.
 		M2Lib::EError ExportM2Intermediate(Char16* FileName);
 		// imports an M2I file and merges it with already loaded M2.
-		M2Lib::EError ImportM2Intermediate(Char16* FileName, bool IgnoreBones, bool IgnoreAttachments, bool IgnoreCameras);
+		M2Lib::EError ImportM2Intermediate(Char16* FileName, bool IgnoreBones, bool IgnoreAttachments, bool IgnoreCameras, bool FixSeams);
 
 		// prints diagnostic information.
 		void PrintInfo();

@@ -205,10 +205,8 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 }
 
 
-M2Lib::EError M2Lib::M2::Save(const Char16* FileName, bool FixSeams)
+M2Lib::EError M2Lib::M2::Save(const Char16* FileName)
 {
-	this->FixSeams = FixSeams;
-
 	// check path
 	if (!FileName)
 		return M2Lib::EError_FailedToSaveM2_NoFileSpecified;
@@ -495,7 +493,7 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate(Char16* FileName)
 	return M2Lib::EError_OK;
 }
 
-M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16* FileName, bool IgnoreBones, bool IgnoreAttachments, bool IgnoreCameras)
+M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16* FileName, bool IgnoreBones, bool IgnoreAttachments, bool IgnoreCameras, bool FixSeams)
 {
 	Float32 SubmeshPositionalTolerance = 0.0001f;
 	Float32 SubmeshAngularTolerance = 45.0f;
@@ -1015,9 +1013,45 @@ void M2Lib::M2::PrintInfo()
 	FileStream << " DataSize                 " << Elements[EElement_Texture].DataSize << std::endl;
 	FileStream << std::endl;
 
+    for (int i = 0; i < Header.Elements.nTexture; ++i)
+    {
+        CElement_Texture* texture = (CElement_Texture*)Elements[EElement_Texture].Data;
+
+        FileStream << "\t" << i << std::endl;
+        FileStream << "\tFlags: " << texture[i].Flags << std::endl;
+        FileStream << "\tType: " << texture[i].Type << std::endl;
+        if (texture[i].nTexturePath > 1)
+            FileStream << "\tPath: " << (char*)(texture[i].oTexturePath + this->RawData + M2Element::GetFileOffset()) << std::endl;
+        else
+            FileStream << "\tPath: unk" << std::endl;
+        FileStream << std::endl;
+    }
+
 	FileStream << "nTransparencies           " << Header.Elements.nTransparency << std::endl;
 	FileStream << "oTransparencies           " << Header.Elements.oTransparency << std::endl;
 	FileStream << " DataSize                 " << Elements[EElement_Transparency].DataSize << std::endl;
+
+    CElement_Transparency* Transparencies = (CElement_Transparency*)Elements[EElement_Transparency].Data;
+    for (auto i = 0; i < Header.Elements.nTransparency; ++i)
+    {
+        auto transparency = Transparencies[i];
+        FileStream << "\t" << i << std::endl;
+        FileStream << "\t" << transparency.AnimationBlock_Transparency.InterpolationType << std::endl;
+        FileStream << "\t" << transparency.AnimationBlock_Transparency.GlobalSequenceID << std::endl;
+        FileStream << "\t" << transparency.AnimationBlock_Transparency.nTimes << std::endl;
+        FileStream << "\t" << transparency.AnimationBlock_Transparency.oTimes << std::endl;
+        FileStream << "\t" << transparency.AnimationBlock_Transparency.nKeys << std::endl;
+        FileStream << "\t" << transparency.AnimationBlock_Transparency.oKeys << std::endl;
+
+            /*
+            EInterpolationType InterpolationType;
+            SInt16 GlobalSequenceID;
+            UInt32 nTimes;
+            UInt32 oTimes;
+            UInt32 nKeys;
+            UInt32 oKeys;
+            */
+    }
 	FileStream << std::endl;
 
 	FileStream << "nTextureAnimation         " << Header.Elements.nTextureAnimation << std::endl;
@@ -1033,17 +1067,42 @@ void M2Lib::M2::PrintInfo()
 	FileStream << "nTextureFlags             " << Header.Elements.nTextureFlags << std::endl;
 	FileStream << "oTextureFlags             " << Header.Elements.oTextureFlags << std::endl;
 	FileStream << " DataSize                 " << Elements[EElement_TextureFlags].DataSize << std::endl;
+    CElement_TextureFlag* TextureFlags = (CElement_TextureFlag*)Elements[EElement_TextureFlags].Data;
+    for (auto i = 0; i < Header.Elements.nTransparency; ++i)
+    {
+        auto flag = TextureFlags[i];
+        FileStream << "\t-- " << i << std::endl;
+        FileStream << "\t" << flag.Flags << std::endl;
+        FileStream << "\t" << flag.Blend << std::endl;
+    }
 	FileStream << std::endl;
 
 	FileStream << "nSkinnedBoneLookup        " << Header.Elements.nSkinnedBoneLookup << std::endl;
 	FileStream << "oSkinnedBoneLookup        " << Header.Elements.oSkinnedBoneLookup << std::endl;
 	FileStream << " DataSize                 " << Elements[EElement_SkinnedBoneLookup].DataSize << std::endl;
+/*    EElement_SkinnedBoneLookup* SkinnedBonesLookup = (CElement_TextuEElement_SkinnedBoneLookupreFlag*)Elements[EElement_SkinnedBoneLookup].Data;
+    for (auto i = 0; i < Header.Elements.nTransparency; ++i)
+    {
+        auto flag = TextureFlags[i];
+        FileStream << "\t-- " << i << std::endl;
+        FileStream << "\t" << flag.Flags << std::endl;
+        FileStream << "\t" << flag.Blend << std::endl;
+    }*/
 	FileStream << std::endl;
 
 	FileStream << "nTexturesLookup           " << Header.Elements.nTextureLookup << std::endl;
 	FileStream << "oTexturesLookup           " << Header.Elements.oTextureLookup << std::endl;
 	FileStream << " DataSize                 " << Elements[EElement_TextureLookup].DataSize << std::endl;
 	FileStream << std::endl;
+
+    for (int i = 0; i < Header.Elements.nTexture; ++i)
+    {
+        CElement_TextureLookup* textureLookup = (CElement_TextureLookup*)Elements[EElement_TextureLookup].Data;
+
+        FileStream << "\t" << i << std::endl;
+        FileStream << "\tIndex: " << textureLookup[i].TextureIndex << std::endl;
+        FileStream << std::endl;
+    }
 
 	FileStream << "nTextureUnitsLookup       " << Header.Elements.nTextureUnitLookup << std::endl;
 	FileStream << "oTextureUnitsLookup       " << Header.Elements.oTextureUnitLookup << std::endl;
@@ -1928,7 +1987,6 @@ void M2Lib::M2::m_SaveElements_FindOffsets()
 	{
 		NewSize += Elements[i].DataSize;
 	}
-	SInt32 OffsetDeltaEnd = NewSize - m_OriginalSize;				// the delta to apply to animation offsets that lie past m_OriginalSize. if the file grew, this will be positive. if the file shrank this will be negative.
 	UInt32 OriginalEnd = Elements[EElement__Count__ - 4].Offset;	// animation offsets that lie past this point are considered to be external because they are not stored with the element that they animate, this is probably character animation data.
 	//UInt32 CameraAnimationDataSize = 0;
 	//OriginalEnd += CameraAnimationDataSize;
