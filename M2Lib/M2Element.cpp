@@ -1,6 +1,7 @@
 #include "M2Element.h"
 #include <assert.h>
 #include <string.h>
+#include <algorithm>
 
 UInt32 M2Lib::M2Element::FileOffset = 0;
 
@@ -54,9 +55,6 @@ bool M2Lib::M2Element::Save(std::fstream& FileStream)
 
 void M2Lib::M2Element::SetDataSize(UInt32 NewCount, UInt32 NewDataSize, bool CopyOldData)
 {
-	if (NewDataSize <= (UInt32)DataSize)
-		return;
-
 	if (Align != 0)
 	{
 		UInt32 Mod = NewDataSize % Align;
@@ -66,13 +64,22 @@ void M2Lib::M2Element::SetDataSize(UInt32 NewCount, UInt32 NewDataSize, bool Cop
 		}
 	}
 
+	if (NewDataSize <= (UInt32)DataSize)
+	{
+		DataSize = NewDataSize;
+		Count = NewCount;
+		memset(Data, 0, NewDataSize);
+		return;
+	}
+
 	UInt8* NewData = new UInt8[NewDataSize];
 	if (Data)
 	{
 		if (CopyOldData)
 		{
-			memset(&NewData[DataSize], 0, NewDataSize - DataSize);
-			memcpy(NewData, Data, DataSize);
+			if (NewDataSize > DataSize)
+				memset(&NewData[DataSize], 0, NewDataSize - DataSize);
+			memcpy(NewData, Data, DataSize > NewDataSize ? NewDataSize : DataSize);
 		}
 		else
 		{

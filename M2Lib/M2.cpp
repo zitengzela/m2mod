@@ -15,7 +15,7 @@ struct IFFChunk
 	SInt32  ChunkSize;
 };
 
-const Char8* M2Lib::M2::kChunkIDs[EChunk__Count__] = { "MD21", "PFID", "SFID", "AFID", "BFID" };
+const Char8* M2Lib::M2::kChunkIDs[EChunk__Count__] = { "MD21", "PFID", "AFID", "SFID", "BFID" };
 
 M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 {
@@ -225,7 +225,8 @@ M2Lib::EError M2Lib::M2::Save(const Char16* FileName)
 	M2Lib::M2Element::SetFileOffset(8);
 	FileStream.seekp(8, std::ios::beg);
 
-	*(UInt16*)Header.Description.Version = 0x0110;
+	//*(UInt16*)Header.Description.Version = 0x0110;
+	Header.Description.Flags &= ~0x80;
 
 	// save header
 	FileStream.write((Char8*)&Header.Description, sizeof(Header.Description));
@@ -250,12 +251,6 @@ M2Lib::EError M2Lib::M2::Save(const Char16* FileName)
 	for (UInt32 i = 0; i != ElementCount; i++)
 	{
 		if (!Elements[i].Save(FileStream))
-			return M2Lib::EError_FailedToSaveM2;
-	}
-
-	if (Element_NewVertex.DataSize)
-	{
-		if (!Element_NewVertex.Save(FileStream))
 			return M2Lib::EError_FailedToSaveM2;
 	}
 
@@ -506,7 +501,7 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16* FileName, bool IgnoreBones
 		return EError_FailedToImportM2I_NoFileSpecified;
 
 	// check that we have an M2 already loaded and ready to be injected
-	if (Elements[EElement_Skin].Count == 0)
+	if (!Header.Elements.nSkin)
 		return M2Lib::EError_FailedToExportM2I_M2NotLoaded;
 
 	// loaded M2I will be stored here.
@@ -809,7 +804,7 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16* FileName, bool IgnoreBones
 
 	// set skin 0 so we can begin seam fixing
 	M2Lib::M2Skin* pOriginalSkin0 = Skins[0];	// save this because we will need to copy materials from it later.
-	Elements[EElement_Skin].Count = 1;
+	Header.Elements.nSkin = 1;
 	for (UInt32 i = 0; i < 4; i++)
 	{
 		if (i != 0 && Skins[i])
@@ -883,7 +878,7 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16* FileName, bool IgnoreBones
 	}
 
 	// set skin count
-	Elements[EElement_Skin].Count = iSkin;
+	Header.Elements.nSkin = iSkin;
 	if (iSkin == 0)
 	{
 		int pause = 1;
@@ -1855,9 +1850,6 @@ void M2Lib::M2::m_LoadElements_CopyHeaderToElements()
 	Elements[EElement_Vertex].Count = Header.Elements.nVertex;
 	Elements[EElement_Vertex].Offset = Header.Elements.oVertex;
 
-	Elements[EElement_Skin].Count = Header.Elements.nSkin;
-	Elements[EElement_Skin].Offset = 0;
-
 	Elements[EElement_Color].Count = Header.Elements.nColor;
 	Elements[EElement_Color].Offset = Header.Elements.oColor;
 
@@ -1961,17 +1953,6 @@ void M2Lib::M2::m_LoadElements_FindSizes(UInt32 FileSize)
 
 #define VERIFY_OFFSET_LOCAL( offset ) assert( ( Elements[iElement].Offset <= offset ) && ( offset < ( Elements[iElement].Offset + Elements[iElement].DataSize ) ) );
 #define VERIFY_OFFSET_NOTLOCAL( offset ) assert( offset > ( Elements[iElement].OffsetOriginal + Elements[iElement].DataSize ) );
-#define FIX_FAKE_ANIMATION_BLOCK(block) \
-	if (block.oTimes) \
-	{ \
-		VERIFY_OFFSET_LOCAL(block.oTimes) \
-		block.oTimes += OffsetDelta; \
-	} \
-	if (block.oKeys) \
-	{ \
-		VERIFY_OFFSET_LOCAL(block.oKeys) \
-		block.oKeys += OffsetDelta; \
-	}
 
 void M2Lib::M2::m_SaveElements_FindOffsets()
 {
@@ -2006,213 +1987,62 @@ void M2Lib::M2::m_SaveElements_FindOffsets()
 	for (UInt32 iElement = 0; iElement < EElement__Count__; iElement++)
 	{
 		// if this element has data...
-		if (Elements[iElement].DataSize != 0)
-		{
-			// if the current element's current offset doesn't match the calculated offset, some data has resized and we need to fix...
-			if (CurrentOffset != Elements[iElement].Offset)
-			{
-				OffsetDelta = CurrentOffset - Elements[iElement].Offset;
-
-				switch (iElement)
-				{
-				case EElement_Bone:
-				{
-					CElement_Bone* Bones = (CElement_Bone*)Elements[iElement].Data;
-					for (UInt32 j = 0; j < Elements[iElement].Count; j++)
-					{
-						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Bones[j].AnimationBlock_Position, iElement, false);
-						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Bones[j].AnimationBlock_Rotation, iElement, false);
-						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Bones[j].AnimationBlock_Scale, iElement, false);
-					}
-					break;
-				}
-
-				case EElement_Color:
-				{
-					CElement_Color* Colors = (CElement_Color*)Elements[iElement].Data;
-					for (UInt32 j = 0; j < Elements[iElement].Count; j++)
-					{
-						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Colors[j].AnimationBlock_Color, iElement, false);
-						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Colors[j].AnimationBlock_Opacity, iElement, false);
-					}
-					break;
-				}
-
-				case EElement_Texture:
-				{
-					CElement_Texture* Textures = (CElement_Texture*)Elements[iElement].Data;
-					for (UInt32 j = 0; j < Elements[iElement].Count; j++)
-					{
-						VERIFY_OFFSET_LOCAL(Textures[j].oTexturePath);
-						Textures[j].oTexturePath += OffsetDelta;
-					}
-					break;
-				}
-
-				case EElement_Transparency:
-				{
-					CElement_Transparency* Transparencies = (CElement_Transparency*)Elements[iElement].Data;
-					for (UInt32 j = 0; j < Elements[iElement].Count; j++)
-					{
-						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Transparencies[j].AnimationBlock_Transparency, iElement, false);
-					}
-					break;
-				}
-
-				case EElement_Attachment:
-				{
-					CElement_Attachment* Attachments = (CElement_Attachment*)Elements[iElement].Data;
-					for (UInt32 j = 0; j < Elements[iElement].Count; j++)
-					{
-						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Attachments[j].AnimationBlock_Visibility, iElement, false);
-					}
-					break;
-				}
-
-				case EElement_Event:
-				{
-					CElement_Event* Events = (CElement_Event*)Elements[iElement].Data;
-					for (UInt32 j = 0; j < Elements[iElement].Count; j++)
-					{
-						VERIFY_OFFSET_LOCAL(Events[j].oTimeLines);
-						Events[j].oTimeLines += OffsetDelta;
-					}
-					break;
-				}
-
-				case EElement_Light:
-				{
-					CElement_Light* Lights = (CElement_Light*)Elements[iElement].Data;
-					for (UInt32 j = 0; j < Elements[iElement].Count; j++)
-					{
-						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Lights[j].AnimationBlock_AmbientColor, iElement, false);
-						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Lights[j].AnimationBlock_AmbientIntensity, iElement, false);
-						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Lights[j].AnimationBlock_DiffuseColor, iElement, false);
-						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Lights[j].AnimationBlock_DiffuseIntensity, iElement, false);
-						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Lights[j].AnimationBlock_AttenuationStart, iElement, false);
-						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Lights[j].AnimationBlock_AttenuationEnd, iElement, false);
-						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Lights[j].AnimationBlock_Visibility, iElement, false);
-					}
-					break;
-				}
-
-				case EElement_Camera:
-				{
-					CElement_Camera* Cameras = (CElement_Camera*)Elements[iElement].Data;
-					for (UInt32 j = 0; j < Elements[iElement].Count; j++)
-					{
-						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Cameras[j].AnimationBlock_Position, iElement, false);
-						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Cameras[j].AnimationBlock_Target, iElement, false);
-						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Cameras[j].AnimationBlock_Roll, iElement, false);
-						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Cameras[j].AnimationBlock_FieldOfView, iElement, false);
-					}
-					break;
-				}
-
-				case EElement_RibbonEmitter:
-				{
-					// untested!
-					CElement_RibbonEmitter* RibbonEmitters = (CElement_RibbonEmitter*)Elements[iElement].Data;
-					for (UInt32 j = 0; j < Elements[iElement].Count; j++)
-					{
-						VERIFY_OFFSET_LOCAL(RibbonEmitters[j].oTexture);
-						RibbonEmitters[j].oTexture += OffsetDelta;
-						VERIFY_OFFSET_LOCAL(RibbonEmitters[j].oRenderFlag);
-						RibbonEmitters[j].oRenderFlag += OffsetDelta;
-
-						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, RibbonEmitters[j].AnimationBlock_Color, iElement, false);
-						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, RibbonEmitters[j].AnimationBlock_Opacity, iElement, false);
-						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, RibbonEmitters[j].AnimationBlock_Above, iElement, false);
-						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, RibbonEmitters[j].AnimationBlock_Below, iElement, false);
-						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, RibbonEmitters[j].AnimationBlock_Unknown1, iElement, false);
-						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, RibbonEmitters[j].AnimationBlock_Visibility, iElement, false);
-					}
-					break;
-				}
-
-				case EElement_ParticleEmitter:
-				{
-					// untested!
-					CElement_ParticleEmitter* ParticleEmitters = (CElement_ParticleEmitter*)Elements[iElement].Data;
-					for (UInt32 j = 0; j < Elements[iElement].Count; j++)
-					{
-						VERIFY_OFFSET_LOCAL(ParticleEmitters[j].oFileNameModel);
-						ParticleEmitters[j].oFileNameModel += OffsetDelta;
-						if (ParticleEmitters[j].oChildEmitter)
-						{
-							VERIFY_OFFSET_LOCAL(ParticleEmitters[j].oChildEmitter);
-							ParticleEmitters[j].oChildEmitter += OffsetDelta;
-						}
-						if (ParticleEmitters[j].oUnk)
-						{
-							VERIFY_OFFSET_LOCAL(ParticleEmitters[j].oUnk);
-							ParticleEmitters[j].oUnk += OffsetDelta;
-						}
-
-						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_EmitSpeed, iElement, false);
-						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_SpeedVariance, iElement, false);
-						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_Spread, iElement, false);
-						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_Unknown, iElement, false);
-						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_Gravity, iElement, false);
-						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_Lifespan, iElement, false);
-						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_EmitRate, iElement, false);
-						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_EmitLength, iElement, false);
-						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_EmitWidth, iElement, false);
-						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_GravityStrong, iElement, false);
-						m_FixAnimationOffsets(OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_Visibility, iElement, false);
-
-						FIX_FAKE_ANIMATION_BLOCK(ParticleEmitters[j].colorTrack);
-						FIX_FAKE_ANIMATION_BLOCK(ParticleEmitters[j].alphaTrack);
-						FIX_FAKE_ANIMATION_BLOCK(ParticleEmitters[j].scaleTrack);
-						FIX_FAKE_ANIMATION_BLOCK(ParticleEmitters[j].headCellTrack);
-						FIX_FAKE_ANIMATION_BLOCK(ParticleEmitters[j].tailCellTrack);
-					}
-					break;
-				}
-				}
-
-				// set the element's new offset
-				Elements[iElement].Offset = CurrentOffset;
-			}
-		}
-		else
+		if (Elements[iElement].DataSize == 0)
 		{
 			Elements[iElement].Offset = 0;
+			continue;
 		}
 
-		CurrentOffset += Elements[iElement].DataSize;
-	}
-
-	if (Element_NewVertex.DataSize)
-	{
-		Element_NewVertex.Offset = CurrentOffset;
-	}
-
-	if (OffsetDelta != 0)
-	{
-		for (UInt32 iElement = 0; iElement != EElement__Count__; iElement++)
+		if (CurrentOffset == Elements[iElement].Offset)
 		{
-			switch (iElement)
-			{
+			CurrentOffset += Elements[iElement].DataSize;
+			continue;
+		}
+
+		// if the current element's current offset doesn't match the calculated offset, some data has resized and we need to fix...
+		OffsetDelta = CurrentOffset - Elements[iElement].Offset;
+
+		switch (iElement)
+		{
+			case EElement_Name:
+			case EElement_GlobalSequence:
+			case EElement_Animation:
+			case EElement_AnimationLookup:
+				break;
+
 			case EElement_Bone:
 			{
 				CElement_Bone* Bones = (CElement_Bone*)Elements[iElement].Data;
 				for (UInt32 j = 0; j < Elements[iElement].Count; j++)
 				{
-					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Bones[j].AnimationBlock_Position, iElement, true);
-					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Bones[j].AnimationBlock_Rotation, iElement, true);
-					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Bones[j].AnimationBlock_Scale, iElement, true);
+					m_FixAnimationOffsets(OffsetDelta, Bones[j].AnimationBlock_Position, iElement);
+					m_FixAnimationOffsets(OffsetDelta, Bones[j].AnimationBlock_Rotation, iElement);
+					m_FixAnimationOffsets(OffsetDelta, Bones[j].AnimationBlock_Scale, iElement);
 				}
 				break;
 			}
+			case EElement_KeyBoneLookup:
+			case EElement_Vertex:
+				break;
 
 			case EElement_Color:
 			{
 				CElement_Color* Colors = (CElement_Color*)Elements[iElement].Data;
 				for (UInt32 j = 0; j < Elements[iElement].Count; j++)
 				{
-					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Colors[j].AnimationBlock_Color, iElement, true);
-					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Colors[j].AnimationBlock_Opacity, iElement, true);
+					m_FixAnimationOffsets(OffsetDelta, Colors[j].AnimationBlock_Color, iElement);
+					m_FixAnimationOffsets(OffsetDelta, Colors[j].AnimationBlock_Opacity, iElement);
+				}
+				break;
+			}
+
+			case EElement_Texture:
+			{
+				CElement_Texture* Textures = (CElement_Texture*)Elements[iElement].Data;
+				for (UInt32 j = 0; j < Elements[iElement].Count; j++)
+				{
+					VERIFY_OFFSET_LOCAL(Textures[j].oTexturePath);
+					Textures[j].oTexturePath += OffsetDelta;
 				}
 				break;
 			}
@@ -2222,40 +2052,64 @@ void M2Lib::M2::m_SaveElements_FindOffsets()
 				CElement_Transparency* Transparencies = (CElement_Transparency*)Elements[iElement].Data;
 				for (UInt32 j = 0; j < Elements[iElement].Count; j++)
 				{
-					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Transparencies[j].AnimationBlock_Transparency, iElement, true);
+					m_FixAnimationOffsets(OffsetDelta, Transparencies[j].AnimationBlock_Transparency, iElement);
 				}
 				break;
 			}
+			case EElement_TextureAnimation:
+			{
+				CElement_UVAnimation* Animations = (CElement_UVAnimation*)Elements[iElement].Data;
+				for (UInt32 j = 0; j < Elements[iElement].Count; ++j)
+				{
+					m_FixAnimationOffsets(OffsetDelta, Animations[j].AnimationBlock_Position, iElement);
+					m_FixAnimationOffsets(OffsetDelta, Animations[j].AnimationBlock_Rotation, iElement);
+					m_FixAnimationOffsets(OffsetDelta, Animations[j].AnimationBlock_Scale, iElement);
+				}
+				break;
+			}
+
+			case EElement_TextureReplace:
+			case EElement_TextureFlags:
+			case EElement_SkinnedBoneLookup:
+			case EElement_TextureLookup:
+			case EElement_TextureUnitLookup:
+			case EElement_TransparencyLookup:
+			case EElement_TextureAnimationLookup:
+			case EElement_BoundingTriangle:
+			case EElement_BoundingVertex:
+			case EElement_BoundingNormal:
+				break;
 
 			case EElement_Attachment:
 			{
 				CElement_Attachment* Attachments = (CElement_Attachment*)Elements[iElement].Data;
 				for (UInt32 j = 0; j < Elements[iElement].Count; j++)
 				{
-					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Attachments[j].AnimationBlock_Visibility, iElement, true);
+					m_FixAnimationOffsets(OffsetDelta, Attachments[j].AnimationBlock_Visibility, iElement);
 				}
 				break;
 			}
 
+			case EElement_AttachmentLookup:
+				break;
+
 			case EElement_Event:
 			{
-				UInt32 EventsEnd2 = Elements[EElement_Event].OffsetOriginal + (sizeof(CElement_Event) * Elements[EElement_Event].Count);	// where elements end.
-				UInt32 EventsEnd = Elements[EElement_Event].OffsetOriginal + Elements[EElement_Event].DataSize;	// where element's local data ends.
-				//UInt32 LocalEnd = EventsEnd - EventsEnd2;	// highest local address within the event chunk.
 				CElement_Event* Events = (CElement_Event*)Elements[iElement].Data;
 				for (UInt32 j = 0; j < Elements[iElement].Count; j++)
 				{
-					CElement_Event::CTimeLine* TimeLines = (CElement_Event::CTimeLine*)Elements[iElement].GetLocalPointer(Events[j].oTimeLines);
-					for (UInt32 k = 0; k < Events[j].nTimeLines; k++)
+					if (Events[j].oTimeLines)
 					{
-						CElement_Event::CTimeLine& TimeLine = TimeLines[k];
-						if (TimeLine.nTimeStamps)
+						VERIFY_OFFSET_LOCAL(Events[j].oTimeLines);
+						M2Array* M2Arrays = (M2Array*)Elements[iElement].GetLocalPointer(Events[j].oTimeLines);
+						for (UInt32 i = 0; i < Events[j].nTimeLines; i++)
 						{
-							if (TimeLine.oTimeStamps > EventsEnd2)
-							{
-								TimeLine.oTimeStamps += OffsetDelta;
-							}
+							M2Array& Array = M2Arrays[i];
+							if (Array.Offset)
+								Array.Offset += OffsetDelta;
 						}
+
+						Events[j].oTimeLines += OffsetDelta;
 					}
 				}
 				break;
@@ -2266,13 +2120,13 @@ void M2Lib::M2::m_SaveElements_FindOffsets()
 				CElement_Light* Lights = (CElement_Light*)Elements[iElement].Data;
 				for (UInt32 j = 0; j < Elements[iElement].Count; j++)
 				{
-					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Lights[j].AnimationBlock_AmbientColor, iElement, true);
-					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Lights[j].AnimationBlock_AmbientIntensity, iElement, true);
-					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Lights[j].AnimationBlock_DiffuseColor, iElement, true);
-					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Lights[j].AnimationBlock_DiffuseIntensity, iElement, true);
-					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Lights[j].AnimationBlock_AttenuationStart, iElement, true);
-					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Lights[j].AnimationBlock_AttenuationEnd, iElement, true);
-					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Lights[j].AnimationBlock_Visibility, iElement, true);
+					m_FixAnimationOffsets(OffsetDelta, Lights[j].AnimationBlock_AmbientColor, iElement);
+					m_FixAnimationOffsets(OffsetDelta, Lights[j].AnimationBlock_AmbientIntensity, iElement);
+					m_FixAnimationOffsets(OffsetDelta, Lights[j].AnimationBlock_DiffuseColor, iElement);
+					m_FixAnimationOffsets(OffsetDelta, Lights[j].AnimationBlock_DiffuseIntensity, iElement);
+					m_FixAnimationOffsets(OffsetDelta, Lights[j].AnimationBlock_AttenuationStart, iElement);
+					m_FixAnimationOffsets(OffsetDelta, Lights[j].AnimationBlock_AttenuationEnd, iElement);
+					m_FixAnimationOffsets(OffsetDelta, Lights[j].AnimationBlock_Visibility, iElement);
 				}
 				break;
 			}
@@ -2282,13 +2136,16 @@ void M2Lib::M2::m_SaveElements_FindOffsets()
 				CElement_Camera* Cameras = (CElement_Camera*)Elements[iElement].Data;
 				for (UInt32 j = 0; j < Elements[iElement].Count; j++)
 				{
-					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Cameras[j].AnimationBlock_Position, iElement, true);
-					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Cameras[j].AnimationBlock_Target, iElement, true);
-					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Cameras[j].AnimationBlock_Roll, iElement, true);
-					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, Cameras[j].AnimationBlock_FieldOfView, iElement, true);
+					m_FixAnimationOffsets(OffsetDelta, Cameras[j].AnimationBlock_Position, iElement);
+					m_FixAnimationOffsets(OffsetDelta, Cameras[j].AnimationBlock_Target, iElement);
+					m_FixAnimationOffsets(OffsetDelta, Cameras[j].AnimationBlock_Roll, iElement);
+					m_FixAnimationOffsets(OffsetDelta, Cameras[j].AnimationBlock_FieldOfView, iElement);
 				}
 				break;
 			}
+
+			case EElement_CameraLookup:
+				break;
 
 			case EElement_RibbonEmitter:
 			{
@@ -2296,12 +2153,17 @@ void M2Lib::M2::m_SaveElements_FindOffsets()
 				CElement_RibbonEmitter* RibbonEmitters = (CElement_RibbonEmitter*)Elements[iElement].Data;
 				for (UInt32 j = 0; j < Elements[iElement].Count; j++)
 				{
-					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, RibbonEmitters[j].AnimationBlock_Color, iElement, true);
-					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, RibbonEmitters[j].AnimationBlock_Opacity, iElement, true);
-					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, RibbonEmitters[j].AnimationBlock_Above, iElement, true);
-					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, RibbonEmitters[j].AnimationBlock_Below, iElement, true);
-					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, RibbonEmitters[j].AnimationBlock_Unknown1, iElement, true);
-					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, RibbonEmitters[j].AnimationBlock_Visibility, iElement, true);
+					VERIFY_OFFSET_LOCAL(RibbonEmitters[j].oTexture);
+					RibbonEmitters[j].oTexture += OffsetDelta;
+					VERIFY_OFFSET_LOCAL(RibbonEmitters[j].oRenderFlag);
+					RibbonEmitters[j].oRenderFlag += OffsetDelta;
+
+					m_FixAnimationOffsets(OffsetDelta, RibbonEmitters[j].AnimationBlock_Color, iElement);
+					m_FixAnimationOffsets(OffsetDelta, RibbonEmitters[j].AnimationBlock_Opacity, iElement);
+					m_FixAnimationOffsets(OffsetDelta, RibbonEmitters[j].AnimationBlock_Above, iElement);
+					m_FixAnimationOffsets(OffsetDelta, RibbonEmitters[j].AnimationBlock_Below, iElement);
+					m_FixAnimationOffsets(OffsetDelta, RibbonEmitters[j].AnimationBlock_Unknown1, iElement);
+					m_FixAnimationOffsets(OffsetDelta, RibbonEmitters[j].AnimationBlock_Visibility, iElement);
 				}
 				break;
 			}
@@ -2312,83 +2174,111 @@ void M2Lib::M2::m_SaveElements_FindOffsets()
 				CElement_ParticleEmitter* ParticleEmitters = (CElement_ParticleEmitter*)Elements[iElement].Data;
 				for (UInt32 j = 0; j < Elements[iElement].Count; j++)
 				{
-					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_EmitSpeed, iElement, true);
-					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_SpeedVariance, iElement, true);
-					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_Spread, iElement, true);
-					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_Unknown, iElement, true);
-					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_Gravity, iElement, true);
-					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_Lifespan, iElement, true);
-					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_EmitRate, iElement, true);
-					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_EmitLength, iElement, true);
-					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_EmitWidth, iElement, true);
-					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_GravityStrong, iElement, true);
-					m_FixAnimationOffsets(OriginalEnd, OffsetDelta, ParticleEmitters[j].AnimationBlock_Visibility, iElement, true);
+					VERIFY_OFFSET_LOCAL(ParticleEmitters[j].oFileNameModel);
+					ParticleEmitters[j].oFileNameModel += OffsetDelta;
+					if (ParticleEmitters[j].oChildEmitter)
+					{
+						VERIFY_OFFSET_LOCAL(ParticleEmitters[j].oChildEmitter);
+						ParticleEmitters[j].oChildEmitter += OffsetDelta;
+					}
+					if (ParticleEmitters[j].oUnk)
+					{
+						VERIFY_OFFSET_LOCAL(ParticleEmitters[j].oUnk);
+						ParticleEmitters[j].oUnk += OffsetDelta;
+					}
+
+					m_FixAnimationOffsets(OffsetDelta, ParticleEmitters[j].AnimationBlock_EmitSpeed, iElement);
+					m_FixAnimationOffsets(OffsetDelta, ParticleEmitters[j].AnimationBlock_SpeedVariance, iElement);
+					m_FixAnimationOffsets(OffsetDelta, ParticleEmitters[j].AnimationBlock_VerticalRange, iElement);
+					m_FixAnimationOffsets(OffsetDelta, ParticleEmitters[j].AnimationBlock_HorizontalRange, iElement);
+					m_FixAnimationOffsets(OffsetDelta, ParticleEmitters[j].AnimationBlock_Gravity, iElement);
+					m_FixAnimationOffsets(OffsetDelta, ParticleEmitters[j].AnimationBlock_Lifespan, iElement);
+					m_FixAnimationOffsets(OffsetDelta, ParticleEmitters[j].AnimationBlock_EmitRate, iElement);
+					m_FixAnimationOffsets(OffsetDelta, ParticleEmitters[j].AnimationBlock_EmitLength, iElement);
+					m_FixAnimationOffsets(OffsetDelta, ParticleEmitters[j].AnimationBlock_EmitWidth, iElement);
+					m_FixAnimationOffsets(OffsetDelta, ParticleEmitters[j].AnimationBlock_GravityStrong, iElement);
+					m_FixAnimationOffsets(OffsetDelta, ParticleEmitters[j].AnimationBlock_Visibility, iElement);
+
+					m_FixFakeAnimationBlockOffsets(OffsetDelta, ParticleEmitters[j].ColorTrack, iElement);
+					m_FixFakeAnimationBlockOffsets(OffsetDelta, ParticleEmitters[j].AlphaTrack, iElement);
+					m_FixFakeAnimationBlockOffsets(OffsetDelta, ParticleEmitters[j].ScaleTrack, iElement);
+					m_FixFakeAnimationBlockOffsets(OffsetDelta, ParticleEmitters[j].HeadCellTrack, iElement);
+					m_FixFakeAnimationBlockOffsets(OffsetDelta, ParticleEmitters[j].TailCellTrack, iElement);
 				}
 				break;
 			}
-			}
 		}
+
+		// set the element's new offset
+		Elements[iElement].Offset = CurrentOffset;
+		CurrentOffset += Elements[iElement].DataSize;
 	}
 }
 
-
-void M2Lib::M2::m_FixAnimationOffsets(UInt32 OriginalEnd, SInt32 OffsetDelta, CElement_AnimationBlock& AnimationBlock, SInt32 iElement, bool Post)
+void M2Lib::M2::m_FixAnimationOffsets(SInt32 OffsetDelta, CElement_AnimationBlock& AnimationBlock, SInt32 iElement)
 {
 	// TP is the best
 	if (AnimationBlock.nTimes)
 	{
 		VERIFY_OFFSET_LOCAL(AnimationBlock.oTimes);
-		CElement_AnimationBlock::CChannel* Channels = (CElement_AnimationBlock::CChannel*)Elements[iElement].GetLocalPointer(AnimationBlock.oTimes);
+		M2Array* M2Arrays = (M2Array*)Elements[iElement].GetLocalPointer(AnimationBlock.oTimes);
 		for (UInt32 i = 0; i < AnimationBlock.nTimes; i++)
 		{
-			CElement_AnimationBlock::CChannel& Channel = Channels[i];
-			if (Channel.o)
-			{
-				bool bLastBlock = (Channel.o > OriginalEnd);
-				if (bLastBlock && Post)
-				{
-					Channel.o += OffsetDelta;
-				}
-			}
+			M2Array& Array = M2Arrays[i];
+			if (Array.Offset)
+				Array.Offset += OffsetDelta;
 		}
 
 		bool bInThisElem = (Elements[iElement].Offset < AnimationBlock.oTimes) && (AnimationBlock.oTimes < (Elements[iElement].Offset + Elements[iElement].DataSize));
 		assert(bInThisElem);
-		if (!Post)
-		{
-			VERIFY_OFFSET_LOCAL(AnimationBlock.oTimes);
-			AnimationBlock.oTimes += OffsetDelta;
-		}
+
+		VERIFY_OFFSET_LOCAL(AnimationBlock.oTimes);
+		AnimationBlock.oTimes += OffsetDelta;
 	}
 
 	if (AnimationBlock.nKeys)
 	{
 		VERIFY_OFFSET_LOCAL(AnimationBlock.oKeys);
-		CElement_AnimationBlock::CChannel* Channels = (CElement_AnimationBlock::CChannel*)Elements[iElement].GetLocalPointer(AnimationBlock.oKeys);
+		M2Array* M2Arrays = (M2Array*)Elements[iElement].GetLocalPointer(AnimationBlock.oKeys);
 		for (UInt32 i = 0; i < AnimationBlock.nKeys; i++)
 		{
-			CElement_AnimationBlock::CChannel& Channel = Channels[i];
-			if (Channel.o)
-			{
-				bool bLastBlock = Channel.o > OriginalEnd;
-				if (bLastBlock && Post)
-				{
-					Channel.o += OffsetDelta;
-				}
-			}
+			M2Array& Array = M2Arrays[i];
+			if (Array.Offset)
+				Array.Offset += OffsetDelta;
 		}
 
 		bool bInThisElem = (Elements[iElement].Offset < AnimationBlock.oKeys) && (AnimationBlock.oKeys < (Elements[iElement].Offset + Elements[iElement].DataSize));
 		assert(bInThisElem);
-		if (!Post)
-		{
-			VERIFY_OFFSET_LOCAL(AnimationBlock.oKeys);
-			AnimationBlock.oKeys += OffsetDelta;
-		}
+
+		VERIFY_OFFSET_LOCAL(AnimationBlock.oKeys);
+		AnimationBlock.oKeys += OffsetDelta;
 	}
 }
 
+void M2Lib::M2::m_FixFakeAnimationBlockOffsets(SInt32 OffsetDelta, CElement_FakeAnimationBlock& AnimationBlock, SInt32 iElement)
+{
+	// TP is the best
+	if (AnimationBlock.nTimes)
+	{
+		VERIFY_OFFSET_LOCAL(AnimationBlock.oTimes);
 
+		bool bInThisElem = (Elements[iElement].Offset < AnimationBlock.oTimes) && (AnimationBlock.oTimes < (Elements[iElement].Offset + Elements[iElement].DataSize));
+		assert(bInThisElem);
+
+		VERIFY_OFFSET_LOCAL(AnimationBlock.oTimes);
+		AnimationBlock.oTimes += OffsetDelta;
+	}
+
+	if (AnimationBlock.nKeys)
+	{
+		VERIFY_OFFSET_LOCAL(AnimationBlock.oKeys);
+		bool bInThisElem = (Elements[iElement].Offset < AnimationBlock.oKeys) && (AnimationBlock.oKeys < (Elements[iElement].Offset + Elements[iElement].DataSize));
+		assert(bInThisElem);
+
+		VERIFY_OFFSET_LOCAL(AnimationBlock.oKeys);
+		AnimationBlock.oKeys += OffsetDelta;
+	}
+}
 
 void M2Lib::M2::m_SaveElements_CopyElementsToHeader()
 {
@@ -2412,15 +2302,6 @@ void M2Lib::M2::m_SaveElements_CopyElementsToHeader()
 
 	Header.Elements.nVertex = Elements[EElement_Vertex].Count;
 	Header.Elements.oVertex = Elements[EElement_Vertex].Offset;
-
-	if (Element_NewVertex.Count)
-	{
-		Header.Elements.nVertex = Element_NewVertex.Count;
-		Header.Elements.oVertex = Element_NewVertex.Offset;
-	}
-
-	Header.Elements.nSkin = Elements[EElement_Skin].Count;
-	//Header.oViews = 0;
 
 	Header.Elements.nColor = Elements[EElement_Color].Count;
 	Header.Elements.oColor = Elements[EElement_Color].Offset;
@@ -2506,4 +2387,12 @@ SInt32  M2Lib::M2::m_GetChunkIndex(const Char8* ChunkID) const
 	}
 
 	return -1;
+}
+
+void M2Lib::M2::DoShit()
+{
+	char* newName = "Wtf_is_this_shit";
+	auto len = strlen(newName) + 1;
+	Elements[EElement_Name].SetDataSize(len, len, false);
+	memcpy(Elements[EElement_Name].Data, newName, len);
 }

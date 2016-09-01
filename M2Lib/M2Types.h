@@ -50,6 +50,12 @@ namespace M2Lib
 		Float32 Radius;
 	};
 
+	struct M2Array
+	{
+		UInt32 Count;
+		UInt32 Offset;
+	};
+
 #pragma pack(pop)
 
 	enum EError

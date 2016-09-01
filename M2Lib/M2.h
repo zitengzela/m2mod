@@ -45,7 +45,6 @@ namespace M2Lib
 			EElement_Bone,
 			EElement_KeyBoneLookup,
 			EElement_Vertex,
-			EElement_Skin,
 			EElement_Color,
 			EElement_Texture,
 			EElement_Transparency,
@@ -92,7 +91,7 @@ namespace M2Lib
 		public:
 			struct
 			{
-				Char8 ID[4];	// 'MDL0'
+				Char8 ID[4];	// 'MD20'
 				UInt8 Version[4];
 
 				UInt32 nName;
@@ -103,93 +102,93 @@ namespace M2Lib
 
 			struct
 			{
-				UInt32 nGlobalSequence;
+				UInt32 nGlobalSequence;		// 4
 				UInt32 oGlobalSequence;
 
-				UInt32 nAnimation;
+				UInt32 nAnimation;			// 64
 				UInt32 oAnimation;
 
-				UInt32 nAnimationLookup;
+				UInt32 nAnimationLookup;	// 2
 				UInt32 oAnimationLookup;
 
-				UInt32 nBone;
+				UInt32 nBone;				// 88
 				UInt32 oBone;
 
-				UInt32 nKeyBoneLookup;
+				UInt32 nKeyBoneLookup;		// 2
 				UInt32 oKeyBoneLookup;
 
-				UInt32 nVertex;
+				UInt32 nVertex;				// 48
 				UInt32 oVertex;
 
-				UInt32 nSkin;
+				UInt32 nSkin;				// 
 
-				UInt32 nColor;
+				UInt32 nColor;				// 40
 				UInt32 oColor;
 
-				UInt32 nTexture;
+				UInt32 nTexture;			// 16
 				UInt32 oTexture;
 
-				UInt32 nTransparency;
+				UInt32 nTransparency;		// 20
 				UInt32 oTransparency;
 
-				UInt32 nTextureAnimation;
+				UInt32 nTextureAnimation;	// 60
 				UInt32 oTextureAnimation;
 
-				UInt32 nTextureReplace;
+				UInt32 nTextureReplace;		// 2
 				UInt32 oTextureReplace;
 
-				UInt32 nTextureFlags;
+				UInt32 nTextureFlags;		// 4
 				UInt32 oTextureFlags;
 
-				UInt32 nSkinnedBoneLookup;
+				UInt32 nSkinnedBoneLookup;	// 2
 				UInt32 oSkinnedBoneLookup;
 
-				UInt32 nTextureLookup;
+				UInt32 nTextureLookup;		// 2
 				UInt32 oTextureLookup;
 
-				UInt32 nTextureUnitLookup;
+				UInt32 nTextureUnitLookup;	// 2
 				UInt32 oTextureUnitLookup;
 
-				UInt32 nTransparencyLookup;
+				UInt32 nTransparencyLookup;	// 2
 				UInt32 oTransparencyLookup;
 
-				UInt32 nTextureAnimationLookup;
+				UInt32 nTextureAnimationLookup;	// 2
 				UInt32 oTextureAnimationLookup;
 
 				SVolume CollisionVolume;
 				SVolume BoundingVolume;
 
-				UInt32 nBoundingTriangle;
+				UInt32 nBoundingTriangle;		// 2
 				UInt32 oBoundingTriangle;
 
-				UInt32 nBoundingVertex;
+				UInt32 nBoundingVertex;			// 12
 				UInt32 oBoundingVertex;
 
-				UInt32 nBoundingNormal;
+				UInt32 nBoundingNormal;			// 12
 				UInt32 oBoundingNormal;
 
-				UInt32 nAttachment;
+				UInt32 nAttachment;				// 40
 				UInt32 oAttachment;
 
-				UInt32 nAttachmentLookup;
+				UInt32 nAttachmentLookup;		// 2
 				UInt32 oAttachmentLookup;
 
-				UInt32 nEvent;
+				UInt32 nEvent;					// 36
 				UInt32 oEvent;
 
-				UInt32 nLight;
+				UInt32 nLight;					// 156
 				UInt32 oLight;
 
-				UInt32 nCamera;
+				UInt32 nCamera;					// 116
 				UInt32 oCamera;
 
-				UInt32 nCameraLookup;
+				UInt32 nCameraLookup;			// 2
 				UInt32 oCameraLookup;
 
-				UInt32 nRibbonEmitter;
+				UInt32 nRibbonEmitter;			// 176
 				UInt32 oRibbonEmitter;
 
-				UInt32 nParticleEmitter;
+				UInt32 nParticleEmitter;		// 492
 				UInt32 oParticleEmitter;
 
 				UInt32 nUnknown1;
@@ -792,8 +791,8 @@ namespace M2Lib
 			Float32 Resolution;
 			Float32 Length;
 			Float32 EmissionAngle;		// use arcsin(val) to get the angle in degree.
-			UInt16 s1;		// ?
-			UInt16 s2;		// ?
+			UInt16 m_rows;
+			UInt16 m_cols;
 			CElement_AnimationBlock AnimationBlock_Unknown1;	// SInt32
 			CElement_AnimationBlock AnimationBlock_Visibility;	// SInt16
 		};
@@ -829,36 +828,37 @@ namespace M2Lib
 
 			CElement_AnimationBlock AnimationBlock_EmitSpeed;		// Float32
 			CElement_AnimationBlock AnimationBlock_SpeedVariance;	// Float32
-			CElement_AnimationBlock AnimationBlock_Spread;			// Float32
-			CElement_AnimationBlock AnimationBlock_Unknown;			// Float32
+			CElement_AnimationBlock AnimationBlock_VerticalRange;	// Float32
+			CElement_AnimationBlock AnimationBlock_HorizontalRange;	// Float32
 			CElement_AnimationBlock AnimationBlock_Gravity;			// Float32
 			CElement_AnimationBlock AnimationBlock_Lifespan;		// Float32
-			UInt32 unknownPadding;
+			Float32 LifespanVary;
 			CElement_AnimationBlock AnimationBlock_EmitRate;		// Float32
-			UInt32 unknownPadding2;
+			Float32 EmissionRateVary;
 			CElement_AnimationBlock AnimationBlock_EmitLength;		// Float32
 			CElement_AnimationBlock AnimationBlock_EmitWidth;		// Float32
 			CElement_AnimationBlock AnimationBlock_GravityStrong;	// Float32
 
-			CElement_FakeAnimationBlock colorTrack;
-			CElement_FakeAnimationBlock alphaTrack;
-			CElement_FakeAnimationBlock scaleTrack;
-			float _unk[2];
-			CElement_FakeAnimationBlock headCellTrack;
-			CElement_FakeAnimationBlock tailCellTrack;
-			float _unk2;
-			float _unk3[2];
-			float _min;
-			float _max;
+			CElement_FakeAnimationBlock ColorTrack;
+			CElement_FakeAnimationBlock AlphaTrack;
+			CElement_FakeAnimationBlock ScaleTrack;
+			Float32 ScaleVary[2];
+			CElement_FakeAnimationBlock HeadCellTrack;
+			CElement_FakeAnimationBlock TailCellTrack;
+			Float32 _unk2;	// particle related
+			Float32 Spread[2];
+			Float32 twinkleScale[2];
 			UInt32 _unk4;
-			float drag;
-			float _unk5[2];
-			float rotation;
-			float _unk6[2];
-			float Rot1[3];
-			float Rot2[3];
-			float Trans[3];
-			float FollowParams[4];
+			Float32 drag;
+			Float32 BaseSpin;
+			Float32 BaseSpinVary;
+			Float32 Spin;
+			Float32 SpinVary;
+			Float32 _unk6;
+			Float32 Rotation1[3];
+			Float32 Rotation2[3];
+			Float32 Translation[3];
+			Float32 FollowParams[4];
 
 			UInt32 nUnk;	//
 			UInt32 oUnk;	//
@@ -883,17 +883,9 @@ namespace M2Lib
 
 		bool ImportedM2I;
 
-		M2Element Element_NewVertex;	//
 		M2Element& GetElement_Vertex()
 		{
-			if (Element_NewVertex.Count)
-			{
-				return Element_NewVertex;
-			}
-			else
-			{
-				return Elements[EElement_Vertex];
-			}
+			return Elements[EElement_Vertex];
 		}
 
 	public:
@@ -952,6 +944,8 @@ namespace M2Lib
 
 		void MakeShiny(const Char8* szTextureSource);
 
+		void DoShit();
+
 	public:
 		// post load header
 		void m_LoadElements_CopyHeaderToElements();
@@ -959,8 +953,8 @@ namespace M2Lib
 
 		// pre save header
 		void m_SaveElements_FindOffsets();
-		//void m_FixAnimationOffsets( SInt32 OffsetDelta, SInt32 OffsetDeltaEnd, UInt32 OriginalEnd, CAnimationBlock& AnimationBlock, SInt32 iElement, UInt32 NewElementOffset );
-		void m_FixAnimationOffsets(UInt32 OriginalEnd, SInt32 OffsetDelta, CElement_AnimationBlock& AnimationBlock, SInt32 iElement, bool Post);
+		void m_FixAnimationOffsets(SInt32 OffsetDelta, CElement_AnimationBlock& AnimationBlock, SInt32 iElement);
+		void m_FixFakeAnimationBlockOffsets(SInt32 OffsetDelta, CElement_FakeAnimationBlock& AnimationBlock, SInt32 iElement);
 		void m_SaveElements_CopyElementsToHeader();
 
 		// chunk index in Chunks (-1 if invalid chunk)
