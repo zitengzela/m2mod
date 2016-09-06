@@ -136,7 +136,7 @@ namespace M2Lib
 
 		C3Vector CenterMass;
 
-		void Calculate(std::vector<M2Lib::CVertex> const& vertices);
+		void Calculate(std::vector<CVertex> const& vertices);
 		ExtraData CalculateExtra() const;
 	};
 

@@ -21,7 +21,7 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 {
 	// check path
 	if (!FileName)
-		return M2Lib::EError_FailedToLoadM2_NoFileSpecified;
+		return EError_FailedToLoadM2_NoFileSpecified;
 	UInt32 Length = 0;
 	while (FileName[Length] != '\0')
 	{
@@ -29,7 +29,7 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 	}
 
 	if (Length >= 1024)
-		return M2Lib::EError_PathTooLong;
+		return EError_PathTooLong;
 
 	_FileName[Length] = '\0';
 	for (UInt32 i = 0; i != Length; i++)
@@ -41,7 +41,7 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 	std::fstream FileStream;
 	FileStream.open(FileName, std::ios::in | std::ios::binary);
 	if (FileStream.fail())
-		return M2Lib::EError_FailedToLoadM2_CouldNotOpenFile;
+		return EError_FailedToLoadM2_CouldNotOpenFile;
 
 	// find file size
 	FileStream.seekg(0, std::ios::end);
@@ -101,10 +101,10 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 
 	// check header
 	if (!ValidFile)
-		return M2Lib::EError_FailedToLoadM2_FileCorrupt;
+		return EError_FailedToLoadM2_FileCorrupt;
 	UInt32 VersionInt = (UInt32&)Header.Description.Version;
 	if ((263 > VersionInt) || (VersionInt > 274))
-		return M2Lib::EError_FailedToLoadM2_VersionNotSupported;
+		return EError_FailedToLoadM2_VersionNotSupported;
 
 	// load more header
 	if (Header.Description.Flags & 0x08)
@@ -134,7 +134,7 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 	{
 		Elements[i].Align = 16;
 		if (!Elements[i].Load(FileStream))
-			return M2Lib::EError_FailedToLoadM2_FileCorrupt;
+			return EError_FailedToLoadM2_FileCorrupt;
 	}
 
 	// close file stream
@@ -144,7 +144,7 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 
 	// load skins
 	if ((Header.Elements.nSkin == 0) || (Header.Elements.nSkin > 4))
-		return M2Lib::EError_FailedToLoadM2_FileCorrupt;
+		return EError_FailedToLoadM2_FileCorrupt;
 
 	for (UInt32 i = 0; i != Header.Elements.nSkin; i++)
 	{
@@ -186,14 +186,14 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 			GetFileSkin(FileNameLOD, FileName, i);
 
 			// Add the LODs after the 4 main skins.
-			Skins[i + 4] = new M2Lib::M2Skin(this);
-			if (M2Lib::EError Error = Skins[i + 4]->Load(FileNameSkin))
+			Skins[i + 4] = new M2Skin(this);
+			if (EError Error = Skins[i + 4]->Load(FileNameSkin))
 				return Error;
 		}
 		*/
 
-		Skins[i] = new M2Lib::M2Skin(this);
-		if (M2Lib::EError Error = Skins[i]->Load(FileNameSkin))
+		Skins[i] = new M2Skin(this);
+		if (EError Error = Skins[i]->Load(FileNameSkin))
 		{
 			delete Skins[i];
 			Skins[i] = NULL;
@@ -208,8 +208,8 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 			Char16 FileNameSkin[1024];
 			GetFileSkin(FileNameSkin, FileName, i);
 
-			Skins[i] = new M2Lib::M2Skin(this);
-			if (M2Lib::EError Error = Skins[i]->Load(FileNameSkin))
+			Skins[i] = new M2Skin(this);
+			if (EError Error = Skins[i]->Load(FileNameSkin))
 			{
 				delete Skins[i];
 				Skins[i] = NULL;
@@ -222,7 +222,7 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 	//PrintInfo();
 
 	// done
-	return M2Lib::EError_OK;
+	return EError_OK;
 }
 
 
@@ -230,20 +230,20 @@ M2Lib::EError M2Lib::M2::Save(const Char16* FileName)
 {
 	// check path
 	if (!FileName)
-		return M2Lib::EError_FailedToSaveM2_NoFileSpecified;
+		return EError_FailedToSaveM2_NoFileSpecified;
 
 	// open file stream
 	std::fstream FileStream;
 	FileStream.open(FileName, std::ios::out | std::ios::trunc | std::ios::binary);
 	if (FileStream.fail())
-		return M2Lib::EError_FailedToSaveM2;
+		return EError_FailedToSaveM2;
 
 	// fill elements header data
 	m_SaveElements_FindOffsets();
 	m_SaveElements_CopyElementsToHeader();
 
 	// Reserve model chunk header
-	M2Lib::M2Element::SetFileOffset(8);
+	M2Element::SetFileOffset(8);
 	FileStream.seekp(8, std::ios::beg);
 
 	*(UInt16*)Header.Description.Version = 0x0110;
@@ -258,7 +258,7 @@ M2Lib::EError M2Lib::M2::Save(const Char16* FileName)
 	for (UInt32 i = 0; i < ElementCount; ++i)
 	{
 		if (!Elements[i].Save(FileStream))
-			return M2Lib::EError_FailedToSaveM2;
+			return EError_FailedToSaveM2;
 	}
 
 	UInt32 MD20Size = FileStream.tellp();
@@ -281,7 +281,7 @@ M2Lib::EError M2Lib::M2::Save(const Char16* FileName)
 
 	// close file stream
 	FileStream.close();
-	M2Lib::M2Element::SetFileOffset(0);
+	M2Element::SetFileOffset(0);
 
 	// delete existing skin files
 	for (UInt32 i = 0; i < 6; i++)
@@ -293,7 +293,7 @@ M2Lib::EError M2Lib::M2::Save(const Char16* FileName)
 
 	// save skins
 	if ((Header.Elements.nSkin == 0) || (Header.Elements.nSkin > 4))
-		return M2Lib::EError_FailedToSaveM2;
+		return EError_FailedToSaveM2;
 
 	for (UInt32 i = 0; i < Header.Elements.nSkin; i++)
 	{
@@ -302,12 +302,12 @@ M2Lib::EError M2Lib::M2::Save(const Char16* FileName)
 
 		if (i >= 4)
 		{
-			if (M2Lib::EError Error = Skins[i - 3]->Save(FileNameSkin))
+			if (EError Error = Skins[i - 3]->Save(FileNameSkin))
 				return Error;
 		}
 		else
 		{
-			if (M2Lib::EError Error = Skins[i]->Save(FileNameSkin))
+			if (EError Error = Skins[i]->Save(FileNameSkin))
 				return Error;
 		}
 	}
@@ -319,12 +319,12 @@ M2Lib::EError M2Lib::M2::Save(const Char16* FileName)
 		{
 			Char16 FileNameSkin[1024];
 			GetFileSkin(FileNameSkin, FileName, i + 4);
-			if (M2Lib::EError Error = (Skins[(Skins[1]) ? 1 : 0])->Save(FileNameSkin))
+			if (EError Error = (Skins[(Skins[1]) ? 1 : 0])->Save(FileNameSkin))
 				return Error;
 		}
 	}
 
-	return M2Lib::EError_OK;
+	return EError_OK;
 }
 
 M2Lib::EError M2Lib::M2::ExportM2Intermediate(Char16* FileName)
@@ -333,10 +333,10 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate(Char16* FileName)
 	std::fstream FileStream;
 	FileStream.open(FileName, std::ios::out | std::ios::trunc | std::ios::binary);
 	if (FileStream.fail())
-		return M2Lib::EError_FailedToExportM2I_CouldNotOpenFile;
+		return EError_FailedToExportM2I_CouldNotOpenFile;
 
 	// open binary stream
-	M2Lib::DataBinary DataBinary(&FileStream, M2Lib::EEndianness_Little);
+	DataBinary DataBinary(&FileStream, EEndianness_Little);
 
 	// get data to save
 	M2Skin* pSkin = Skins[0];
@@ -344,7 +344,7 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate(Char16* FileName)
 	UInt32 SubsetCount = pSkin->Elements[M2Skin::EElement_SubMesh].Count;
 	M2Skin::CElement_SubMesh* Subsets = pSkin->Elements[M2Skin::EElement_SubMesh].as<M2Skin::CElement_SubMesh>();
 
-	M2Lib::CVertex* Vertices = Elements[EElement_Vertex].as<CVertex>();
+	CVertex* Vertices = Elements[EElement_Vertex].as<CVertex>();
 	UInt16* Triangles = pSkin->Elements[M2Skin::EElement_TriangleIndex].as<UInt16>();
 	UInt16* Indices = pSkin->Elements[M2Skin::EElement_VertexLookup].as<UInt16>();
 
@@ -372,7 +372,7 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate(Char16* FileName)
 	DataBinary.WriteUInt32(SubsetCount);
 	for (UInt32 i = 0; i < SubsetCount; i++)
 	{
-		M2Lib::M2Skin::CElement_SubMesh* pSubsetOut = &Subsets[i];
+		M2Skin::CElement_SubMesh* pSubsetOut = &Subsets[i];
 
 		// write subset ID
 
@@ -387,7 +387,7 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate(Char16* FileName)
 		UInt32 VertexEnd = pSubsetOut->VertexStart + pSubsetOut->VertexCount;
 		for (UInt32 k = pSubsetOut->VertexStart; k < VertexEnd; k++)
 		{
-			M2Lib::CVertex& Vertex = Vertices[Indices[k]];
+			CVertex& Vertex = Vertices[Indices[k]];
 
 			DataBinary.WriteFloat32(Vertex.Position[0]);
 			DataBinary.WriteFloat32(Vertex.Position[1]);
@@ -493,7 +493,7 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate(Char16* FileName)
 
 	FileStream.close();
 
-	return M2Lib::EError_OK;
+	return EError_OK;
 }
 
 M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16* FileName, bool IgnoreBones, bool IgnoreAttachments, bool IgnoreCameras, bool FixSeams)
@@ -510,10 +510,10 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16* FileName, bool IgnoreBones
 
 	// check that we have an M2 already loaded and ready to be injected
 	if (!Header.Elements.nSkin)
-		return M2Lib::EError_FailedToExportM2I_M2NotLoaded;
+		return EError_FailedToExportM2I_M2NotLoaded;
 
 	// loaded M2I will be stored here.
-	M2Lib::M2I InM2I;
+	M2I InM2I;
 	// loaded vertices will be stored here. this will become the new vertex list for the M2.
 	std::vector< CVertex > NewVertexList;
 
@@ -521,14 +521,14 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16* FileName, bool IgnoreBones
 	std::fstream FileStream;
 	FileStream.open(FileName, std::ios::in | std::ios::binary);
 	if (FileStream.fail())
-		return M2Lib::EError_FailedToImportM2I_CouldNotOpenFile;
-	M2Lib::DataBinary DataBinary(&FileStream, M2Lib::EEndianness_Little);
+		return EError_FailedToImportM2I_CouldNotOpenFile;
+	DataBinary DataBinary(&FileStream, EEndianness_Little);
 
 	// load signature
 	UInt32 InSignature = 0;
 	InSignature = DataBinary.ReadFourCC();
 	if (InSignature != 1 && InSignature != Signature_M2I0)
-		return M2Lib::EError_FailedToImportM2I_FileCorrupt;
+		return EError_FailedToImportM2I_FileCorrupt;
 
 	// load version
 	UInt16 VersionMajor;
@@ -549,7 +549,7 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16* FileName, bool IgnoreBones
 
 	for (UInt32 i = 0; i < InSubsetCount; i++)
 	{
-		M2Lib::M2I::CSubMesh* pNewSubMesh = new M2Lib::M2I::CSubMesh();
+		M2I::CSubMesh* pNewSubMesh = new M2I::CSubMesh();
 
 		// read id
 		pNewSubMesh->ID = DataBinary.ReadUInt16();
@@ -562,13 +562,13 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16* FileName, bool IgnoreBones
 		InVertexCount = DataBinary.ReadUInt32();
 		if (NewVertexList.size() + InVertexCount > 0xFFFF)
 		{
-			return M2Lib::EError_FailedToImportM2I_TooManyVertices;
+			return EError_FailedToImportM2I_TooManyVertices;
 		}
 
 		std::vector<CVertex> submeshVertices;
 		for (UInt32 j = 0; j < InVertexCount; j++)
 		{
-			M2Lib::CVertex InVertex;
+			CVertex InVertex;
 
 			InVertex.Position[0] = DataBinary.ReadFloat32();
 			InVertex.Position[1] = DataBinary.ReadFloat32();
@@ -612,7 +612,7 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16* FileName, bool IgnoreBones
 
 		for (UInt32 j = 0; j < InTriangleCount; j++)
 		{
-			M2Lib::CTriangle NewTriangle;
+			CTriangle NewTriangle;
 
 			NewTriangle.TriangleIndex = iTriangle;
 			iTriangle++;
@@ -806,14 +806,14 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16* FileName, bool IgnoreBones
 	// this is hacky, but we gotta fix seams first
 	// build skin 0
 	// only build skin 0 for now, so we can fix seams and then build skin for real later
-	M2Lib::M2SkinBuilder SkinBuilder;
+	M2SkinBuilder SkinBuilder;
 	std::vector< UInt16 > NewBoneLookup;
 	SInt32 BoneStart = 0;
-	M2Lib::M2Skin* pNewSkin0 = new M2Lib::M2Skin(this);
+	M2Skin* pNewSkin0 = new M2Skin(this);
 	assert(SkinBuilder.Build(pNewSkin0, 256, &InM2I, &NewVertexList[0], BoneStart));
 
 	// set skin 0 so we can begin seam fixing
-	M2Lib::M2Skin* pOriginalSkin0 = Skins[0];	// save this because we will need to copy materials from it later.
+	M2Skin* pOriginalSkin0 = Skins[0];	// save this because we will need to copy materials from it later.
 	Header.Elements.nSkin = 1;
 	for (UInt32 i = 0; i < 4; i++)
 	{
@@ -842,7 +842,7 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16* FileName, bool IgnoreBones
 	// build skins for real this time
 	// because a few bone indices might have changed during seam and gap fixing
 	// this list will store the new skins
-	M2Lib::M2Skin* NewSkinList[4];
+	M2Skin* NewSkinList[4];
 	NewSkinList[0] = 0;
 	NewSkinList[1] = 0;
 	NewSkinList[2] = 0;
@@ -862,8 +862,8 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16* FileName, bool IgnoreBones
 
 	for (UInt32 iLoD = 0; iLoD < 4; iLoD++)
 	{
-		M2Lib::M2Skin* pNewSkin = new M2Lib::M2Skin(this);
-		assert(SkinBuilder.Build(pNewSkin, MaxBoneList[iLoD], &InM2I, Elements[EElement_Vertex].as<M2Lib::CVertex>(), BoneStart));
+		M2Skin* pNewSkin = new M2Skin(this);
+		assert(SkinBuilder.Build(pNewSkin, MaxBoneList[iLoD], &InM2I, Elements[EElement_Vertex].as<CVertex>(), BoneStart));
 		// if there are more bones than the next lowest level of detail
 		if (SkinBuilder.m_Bones.size() > MaxBoneList[iLoD + 1])
 		{
@@ -930,7 +930,7 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16* FileName, bool IgnoreBones
 	}
 
 	// done, ready to be saved
-	return M2Lib::EError_OK;
+	return EError_OK;
 }
 
 
@@ -1283,8 +1283,8 @@ void M2Lib::M2::FixSeamsSubMesh(Float32 PositionalTolerance, Float32 AngularTole
 	// gather up sub meshes
 	std::vector< std::vector< M2Skin::CElement_SubMesh* > > SubMeshes;
 
-	M2Lib::M2Skin::CElement_SubMesh* Subsets = Skins[0]->Elements[M2Skin::EElement_SubMesh].as<M2Skin::CElement_SubMesh>();
-	UInt32 SubsetCount = Skins[0]->Elements[M2Lib::M2Skin::EElement_SubMesh].Count;
+	M2Skin::CElement_SubMesh* Subsets = Skins[0]->Elements[M2Skin::EElement_SubMesh].as<M2Skin::CElement_SubMesh>();
+	UInt32 SubsetCount = Skins[0]->Elements[M2Skin::EElement_SubMesh].Count;
 	for (UInt32 i = 0; i < SubsetCount; i++)
 	{
 		UInt16 ThisID = Subsets[i].ID;
@@ -1367,7 +1367,7 @@ void M2Lib::M2::FixSeamsSubMesh(Float32 PositionalTolerance, Float32 AngularTole
 
 					for (UInt32 iSimilarVertex = 0; iSimilarVertex < SimilarVertices.size(); iSimilarVertex++)
 					{
-						M2Lib::CVertex* pSimilarVertex = SimilarVertices[iSimilarVertex];
+						CVertex* pSimilarVertex = SimilarVertices[iSimilarVertex];
 
 						NewPosition[0] += pSimilarVertex->Position[0];
 						NewPosition[1] += pSimilarVertex->Position[1];
@@ -1404,7 +1404,7 @@ void M2Lib::M2::FixSeamsSubMesh(Float32 PositionalTolerance, Float32 AngularTole
 					// assign new values back into similar vertices
 					for (UInt32 iSimilarVertex = 0; iSimilarVertex < SimilarVertices.size(); iSimilarVertex++)
 					{
-						M2Lib::CVertex* pSimilarVertex = SimilarVertices[iSimilarVertex];
+						CVertex* pSimilarVertex = SimilarVertices[iSimilarVertex];
 
 						pSimilarVertex->Position[0] = NewPosition[0];
 						pSimilarVertex->Position[1] = NewPosition[1];
@@ -1440,11 +1440,11 @@ void M2Lib::M2::FixSeamsBody(Float32 PositionalTolerance, Float32 AngularToleran
 	// this function is designed to be used on character models, so it may not work on other models.
 
 	// list of submeshes that make up the body of the character
-	std::vector< std::vector< M2Lib::M2Skin::CElement_SubMesh* > > CompiledSubMeshList;
+	std::vector< std::vector< M2Skin::CElement_SubMesh* > > CompiledSubMeshList;
 
 	// gather up the body submeshes
-	M2Lib::M2Skin::CElement_SubMesh* SubMeshList = Skins[0]->Elements[M2Lib::M2Skin::EElement_SubMesh].as<M2Lib::M2Skin::CElement_SubMesh>();
-	UInt32 SubsetCount = Skins[0]->Elements[M2Lib::M2Skin::EElement_SubMesh].Count;
+	M2Skin::CElement_SubMesh* SubMeshList = Skins[0]->Elements[M2Skin::EElement_SubMesh].as<M2Skin::CElement_SubMesh>();
+	UInt32 SubsetCount = Skins[0]->Elements[M2Skin::EElement_SubMesh].Count;
 	for (UInt32 i = 0; i < SubsetCount; i++)
 	{
 		// determine type of subset
@@ -1477,7 +1477,7 @@ void M2Lib::M2::FixSeamsBody(Float32 PositionalTolerance, Float32 AngularToleran
 			}
 			if (MakeNew)
 			{
-				std::vector< M2Lib::M2Skin::CElement_SubMesh* > NewSubmeshSubsetList;
+				std::vector< M2Skin::CElement_SubMesh* > NewSubmeshSubsetList;
 				NewSubmeshSubsetList.push_back(&SubMeshList[i]);
 				CompiledSubMeshList.push_back(NewSubmeshSubsetList);
 			}
@@ -1486,8 +1486,8 @@ void M2Lib::M2::FixSeamsBody(Float32 PositionalTolerance, Float32 AngularToleran
 
 	// find and merge duplicate vertices
 	UInt32 VertexListLength = Elements[EElement_Vertex].Count;
-	M2Lib::CVertex* VertexList = Elements[EElement_Vertex].as<M2Lib::CVertex>();
-	std::vector< M2Lib::CVertex* > SimilarVertices;
+	CVertex* VertexList = Elements[EElement_Vertex].as<CVertex>();
+	std::vector< CVertex* > SimilarVertices;
 	for (SInt32 iSubMesh1 = 0; iSubMesh1 < (SInt32)CompiledSubMeshList.size() - 1; iSubMesh1++)
 	{
 		for (SInt32 iSubSet1 = 0; iSubSet1 < (SInt32)CompiledSubMeshList[iSubMesh1].size(); iSubSet1++)
@@ -1515,7 +1515,7 @@ void M2Lib::M2::FixSeamsBody(Float32 PositionalTolerance, Float32 AngularToleran
 						UInt32 iVertexBEnd = CompiledSubMeshList[iSubMesh2][iSubSet2]->VertexStart + CompiledSubMeshList[iSubMesh2][iSubSet2]->VertexCount;
 						for (UInt32 iVertexB = CompiledSubMeshList[iSubMesh2][iSubSet2]->VertexStart; iVertexB < iVertexBEnd; iVertexB++)
 						{
-							if (M2Lib::CVertex::CompareSimilar(VertexList[iVertexA], VertexList[iVertexB], false, false, PositionalTolerance, AngularTolerance))
+							if (CVertex::CompareSimilar(VertexList[iVertexA], VertexList[iVertexB], false, false, PositionalTolerance, AngularTolerance))
 							{
 								// found a duplicate
 								if (!AddedVertex1)
@@ -1546,7 +1546,7 @@ void M2Lib::M2::FixSeamsBody(Float32 PositionalTolerance, Float32 AngularToleran
 
 					for (UInt32 iSimilarVertex = 0; iSimilarVertex < SimilarVertices.size(); iSimilarVertex++)
 					{
-						M2Lib::CVertex* pSimilarVertex = SimilarVertices[iSimilarVertex];
+						CVertex* pSimilarVertex = SimilarVertices[iSimilarVertex];
 
 						NewPosition[0] += pSimilarVertex->Position[0];
 						NewPosition[1] += pSimilarVertex->Position[1];
@@ -1583,7 +1583,7 @@ void M2Lib::M2::FixSeamsBody(Float32 PositionalTolerance, Float32 AngularToleran
 					// assign new values back into similar vertices
 					for (UInt32 iSimilarVertex = 0; iSimilarVertex < SimilarVertices.size(); iSimilarVertex++)
 					{
-						M2Lib::CVertex* pSimilarVertex = SimilarVertices[iSimilarVertex];
+						CVertex* pSimilarVertex = SimilarVertices[iSimilarVertex];
 
 						pSimilarVertex->Position[0] = NewPosition[0];
 						pSimilarVertex->Position[1] = NewPosition[1];
@@ -2386,7 +2386,7 @@ void M2Lib::M2::m_SaveElements_CopyElementsToHeader()
 	Header.Elements.oUnknown1 = Elements[EElement_Unknown1].Offset;
 }
 
-SInt32  M2Lib::M2::m_GetChunkIndex(const Char8* ChunkID) const
+SInt32 M2Lib::M2::m_GetChunkIndex(const Char8* ChunkID) const
 {
 	for (int a = 0; a < EChunk__Count__; a++)
 	{

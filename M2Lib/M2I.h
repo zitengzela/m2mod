@@ -25,7 +25,7 @@ namespace M2Lib
 			// vertices that make up this subset, as indices into the global vertex list.
 			std::vector< UInt16 > Indices;
 			// triangles that make up this subset, as indices into the global vertex list.
-			std::vector< M2Lib::CTriangle > Triangles;
+			std::vector< CTriangle > Triangles;
 
 			SubmeshComparisonData ComparisonData;
 		};
@@ -33,7 +33,7 @@ namespace M2Lib
 
 	public:
 		// the global vertex list
-		std::vector< M2Lib::CVertex > VertexList;
+		std::vector< CVertex > VertexList;
 
 		// list of subsets in this M2I.
 		std::vector< CSubMesh* > SubMeshList;

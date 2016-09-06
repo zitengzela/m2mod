@@ -8,14 +8,14 @@
 
 extern int g_Verbose;
 
-bool M2Lib::M2SkinBuilder::CBonePartition::AddTriangle(M2Lib::CVertex* GlobalVertexList, M2Lib::CTriangle* pTriangle)
+bool M2Lib::M2SkinBuilder::CBonePartition::AddTriangle(CVertex* GlobalVertexList, CTriangle* pTriangle)
 {
 	// put all the bones used by the input triangle into a 1D list for easy iteration
 	UInt8 TriBones[12];
 	UInt32 TotalWeight;
 
 	UInt8* TriBonesSub;
-	M2Lib::CVertex* pTriVertex;
+	CVertex* pTriVertex;
 
 	int pause;
 	TotalWeight = 0;
@@ -188,7 +188,7 @@ M2Lib::M2SkinBuilder::CSubMesh::CSubsetPartition::CSubsetPartition(CBonePartitio
 	FlagsValue6 = 0;
 }
 
-bool M2Lib::M2SkinBuilder::CSubMesh::CSubsetPartition::AddTriangle(M2Lib::CTriangle* pTriangle)
+bool M2Lib::M2SkinBuilder::CSubMesh::CSubsetPartition::AddTriangle(CTriangle* pTriangle)
 {
 	if (pBonePartition->HasTriangle(pTriangle->TriangleIndex))
 	{
@@ -221,7 +221,7 @@ bool M2Lib::M2SkinBuilder::CSubMesh::CSubsetPartition::AddTriangle(M2Lib::CTrian
 //{
 //	for ( UInt32 i = 0; i < Triangles.size(); i++ )
 //	{
-//		M2Lib::CTriangle* pTriangle = &Triangles[i];
+//		CTriangle* pTriangle = &Triangles[i];
 //
 //		pTriangle->Vertices[0] += Delta;
 //		pTriangle->Vertices[1] += Delta;
@@ -236,7 +236,7 @@ void M2Lib::M2SkinBuilder::CSubMesh::AddSubsetPartition(CBonePartition* pBonePar
 }
 
 
-bool M2Lib::M2SkinBuilder::CSubMesh::AddTriangle(M2Lib::CTriangle* pTriangle)
+bool M2Lib::M2SkinBuilder::CSubMesh::AddTriangle(CTriangle* pTriangle)
 {
 	for (UInt32 i = 0; i < SubsetPartitions.size(); i++)
 	{
@@ -270,7 +270,7 @@ void M2Lib::M2SkinBuilder::Clear()
 }
 
 
-bool M2Lib::M2SkinBuilder::Build(M2Lib::M2Skin* pResult, UInt32 BoneLoD, M2Lib::M2I* pM2I, M2Lib::CVertex* pGlobalVertexList, UInt32 BoneStart)
+bool M2Lib::M2SkinBuilder::Build(M2Skin* pResult, UInt32 BoneLoD, M2I* pM2I, CVertex* pGlobalVertexList, UInt32 BoneStart)
 {
 	m_MaxBones = BoneLoD;
 	Clear();
@@ -342,7 +342,7 @@ bool M2Lib::M2SkinBuilder::Build(M2Lib::M2Skin* pResult, UInt32 BoneLoD, M2Lib::
 
 	for (UInt32 i = 0; i < m_SubMeshList.size(); i++)
 	{
-		M2Lib::M2I::CSubMesh* pSubMeshM2I = pM2I->SubMeshList[i];
+		M2I::CSubMesh* pSubMeshM2I = pM2I->SubMeshList[i];
 		for (UInt32 j = 0; j < pSubMeshM2I->Triangles.size(); j++)
 		{
 			assert(m_SubMeshList[i]->AddTriangle(&pSubMeshM2I->Triangles[j]));

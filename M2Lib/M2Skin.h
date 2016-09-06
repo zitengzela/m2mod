@@ -159,7 +159,7 @@ namespace M2Lib
 		std::vector< std::vector< CElement_Material* > > SubMeshList_MaterialList;	// list of material lists that apply to sub meshes.
 
 	public:
-		M2Skin(M2Lib::M2* pM2In)
+		M2Skin(M2* pM2In)
 			: pM2(pM2In)
 		{
 		}
@@ -183,9 +183,9 @@ namespace M2Lib
 
 	public:
 		// loads an M2 skin from a file.
-		M2Lib::EError Load(const Char16* FileName);
+		EError Load(const Char16* FileName);
 		// saves this M2 skin to a file.
-		M2Lib::EError Save(const Char16* FileName);
+		EError Save(const Char16* FileName);
 
 		void BuildVertexBoneIndices();
 		void BuildBoundingData();

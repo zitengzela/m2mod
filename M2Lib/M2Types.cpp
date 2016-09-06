@@ -274,7 +274,7 @@ const int M2Lib::BoundaryData::ExtraData::BoundingTriangleVertexMap[BOUNDING_TRI
 	5, 6, 7
 };
 
-void M2Lib::BoundaryData::Calculate(std::vector<M2Lib::CVertex> const& vertices)
+void M2Lib::BoundaryData::Calculate(std::vector<CVertex> const& vertices)
 {
 	CenterMass.X = 0.0f;
 	CenterMass.Y = 0.0f;
@@ -376,7 +376,7 @@ M2Lib::C3Vector& M2Lib::C3Vector::operator = (const C3Vector& Other)
 
 M2Lib::C3Vector M2Lib::C3Vector::operator + (const C3Vector& Other) const
 {
-	M2Lib::C3Vector result;
+	C3Vector result;
 	result.X = X + Other.X;
 	result.Y = Y + Other.Y;
 	result.Z = Z + Other.Z;
@@ -386,7 +386,7 @@ M2Lib::C3Vector M2Lib::C3Vector::operator + (const C3Vector& Other) const
 
 M2Lib::C3Vector M2Lib::C3Vector::operator - (const C3Vector& Other) const
 {
-	M2Lib::C3Vector result;
+	C3Vector result;
 	result.X = X - Other.X;
 	result.Y = Y - Other.Y;
 	result.Z = Z - Other.Z;
@@ -396,7 +396,7 @@ M2Lib::C3Vector M2Lib::C3Vector::operator - (const C3Vector& Other) const
 
 M2Lib::C3Vector M2Lib::C3Vector::operator * (Float32 Value) const
 {
-	M2Lib::C3Vector result;
+	C3Vector result;
 	result.X = X * Value;
 	result.Y = Y * Value;
 	result.Z = Z * Value;
@@ -406,7 +406,7 @@ M2Lib::C3Vector M2Lib::C3Vector::operator * (Float32 Value) const
 
 M2Lib::C3Vector M2Lib::C3Vector::operator / (Float32 Value) const
 {
-	M2Lib::C3Vector result;
+	C3Vector result;
 	result.X = X / Value;
 	result.Y = Y / Value;
 	result.Z = Z / Value;
@@ -439,12 +439,12 @@ void M2Lib::C3Vector::Normalize()
 	Z = std::min(Z / length, 1.0f);
 }
 
-M2Lib::C3Vector M2Lib::CalculateNormal(M2Lib::C3Vector v1, M2Lib::C3Vector v2, M2Lib::C3Vector v3)
+M2Lib::C3Vector M2Lib::CalculateNormal(C3Vector v1, C3Vector v2, C3Vector v3)
 {
-	M2Lib::C3Vector V = v2 - v1;
-	M2Lib::C3Vector W = v3 - v1;
+	C3Vector V = v2 - v1;
+	C3Vector W = v3 - v1;
 
-	M2Lib::C3Vector N = V.CrossProduct(W);
+	C3Vector N = V.CrossProduct(W);
 	N.Normalize();
 	return N;
 }

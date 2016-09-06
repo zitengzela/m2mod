@@ -33,7 +33,7 @@ namespace M2Lib
 			// list of bones in this partition, indices into the global bone list. later gets consolidated into the global bone lookup list.
 			std::vector< UInt16 > Bones;
 			// here we keep a map of triangle index to triangle for all triangles that have successfully been added to this bone partition. this is result caching to speed up building of subset partitions when dealing out subset triangles between subset partitions.
-			std::map< UInt32, M2Lib::CTriangle* > TrianglesMap;
+			std::map< UInt32, CTriangle* > TrianglesMap;
 
 			// offset from begining of skin's bone lookup list.
 			UInt32 BoneStart;
@@ -47,7 +47,7 @@ namespace M2Lib
 			}
 
 			// attemts to add all of the bones used by input triangle. returns true if bones already exist or were added and triangle was added. returns false if there is not enough room for additional bones.
-			bool AddTriangle(M2Lib::CVertex* GlobalVertexList, M2Lib::CTriangle* pTriangle);
+			bool AddTriangle(CVertex* GlobalVertexList, CTriangle* pTriangle);
 
 			// returns true if bone is contained in this bone partition. if pTriangleIndexOut is supplied and function returns true, it will be set to index of where bone was found in this partition.
 			bool HasBone(UInt16 Bone, UInt16* pTriangleIndexOut);
@@ -71,7 +71,7 @@ namespace M2Lib
 				// this subset partition's final index list. these are indices into the global vertex list. this gets consolidated into the single skin vertex list.
 				//std::vector< UInt16 > Vertices;
 				// this subset partition's final triangle list. these are indices into the above vertex index list. this gets consolidated into the single skin triangle listt
-				std::vector< M2Lib::CTriangle* > Triangles;
+				std::vector< CTriangle* > Triangles;
 
 				UInt32 VertexStart;
 				UInt32 VertexCount;
@@ -93,7 +93,7 @@ namespace M2Lib
 				CSubsetPartition(CBonePartition* pBonePartitionIn);
 
 				// attempts to add a triangle to this subset partition.
-				bool AddTriangle(M2Lib::CTriangle* pTriangle);
+				bool AddTriangle(CTriangle* pTriangle);
 
 				// adds a vertex from the global vertex list to this subset's vertex list. returns index of existing or newly added vertex.
 				//UInt32 AddVertex( UInt32 VertexTriangleIndex );
@@ -110,7 +110,7 @@ namespace M2Lib
 			//
 			std::vector< CSubsetPartition* > SubsetPartitions;
 			//
-			//std::vector< M2Lib::M2Skin::CElement_Material* > pMaterials;
+			//std::vector< M2Skin::CElement_Material* > pMaterials;
 
 			SubmeshComparisonData const* pComparisonData;
 
@@ -133,7 +133,7 @@ namespace M2Lib
 			void AddSubsetPartition(CBonePartition* pBonePartition);
 
 			// attempts to add a triangle to this subset.
-			bool AddTriangle(M2Lib::CTriangle* pTriangle);
+			bool AddTriangle(CTriangle* pTriangle);
 
 		};
 
@@ -181,7 +181,7 @@ namespace M2Lib
 		void Clear();
 
 		// builds a skin from the supplied parameters.
-		bool Build(M2Lib::M2Skin* pResult, UInt32 BoneLoD, M2Lib::M2I* pM2I, M2Lib::CVertex* pGlobalVertexList, UInt32 BoneStart);
+		bool Build(M2Skin* pResult, UInt32 BoneLoD, M2I* pM2I, CVertex* pGlobalVertexList, UInt32 BoneStart);
 
 		// returns true if the built skin with LoD is necessary to be exported, false if can be done without.
 		// this is to check for LoD that has significant room for more bones than the skin actually uses, in such case, it would not be advisable to save.

@@ -18,7 +18,7 @@ M2Lib::EError M2Lib::M2Skin::Load(const Char16* FileName)
 		Length++;
 	}
 	if (Length >= 1024)
-		return M2Lib::EError_PathTooLong;
+		return EError_PathTooLong;
 	_FileName[Length] = '\0';
 	for (UInt32 i = 0; i != Length; i++)
 	{
@@ -39,7 +39,7 @@ M2Lib::EError M2Lib::M2Skin::Load(const Char16* FileName)
 
 	// check header
 	if (Header.ID[0] != 'S' || Header.ID[1] != 'K' || Header.ID[2] != 'I' || Header.ID[3] != 'N')
-		return M2Lib::EError_FailedToLoadSKIN_FileMissingOrCorrupt;
+		return EError_FailedToLoadSKIN_FileMissingOrCorrupt;
 
 	// fill elements header data
 	m_LoadElements_CopyHeaderToElements();
@@ -49,7 +49,7 @@ M2Lib::EError M2Lib::M2Skin::Load(const Char16* FileName)
 	for (UInt32 i = 0; i != EElement__Count__; i++)
 	{
 		if (!Elements[i].Load(FileStream))
-			return M2Lib::EError_FailedToLoadSKIN_FileMissingOrCorrupt;
+			return EError_FailedToLoadSKIN_FileMissingOrCorrupt;
 	}
 
 	// close file stream
@@ -77,7 +77,7 @@ M2Lib::EError M2Lib::M2Skin::Load(const Char16* FileName)
 	//PrintInfo();
 
 	// done
-	return M2Lib::EError_OK;
+	return EError_OK;
 }
 
 
@@ -98,13 +98,13 @@ M2Lib::EError M2Lib::M2Skin::Save(const Char16* FileName)
 	for (UInt32 i = 0; i != EElement__Count__; i++)
 	{
 		if (!Elements[i].Save(FileStream))
-			return M2Lib::EError_FailedToSaveSKIN;
+			return EError_FailedToSaveSKIN;
 	}
 
 	// close file stream
 	FileStream.close();
 
-	return M2Lib::EError_OK;
+	return EError_OK;
 }
 
 
@@ -182,7 +182,7 @@ void M2Lib::M2Skin::BuildBoundingData()
 
 		if (SubMesh.VertexCount)
 		{
-			std::vector<M2Lib::CVertex> vertices;
+			std::vector<CVertex> vertices;
 			UInt32 SubMeshVertexEnd = SubMesh.VertexStart + SubMesh.VertexCount;
 			for (UInt32 j = SubMesh.VertexStart; j < SubMeshVertexEnd; j++)
 			{
@@ -322,7 +322,7 @@ void M2Lib::M2Skin::SortSubMeshes()
 	CElement_SubMesh* SubMeshList = Elements[EElement_SubMesh].as<CElement_SubMesh>();
 
 	// sort the list
-	std::list< M2Lib::M2Skin::CElement_SubMesh* > SubMeshListSorted;
+	std::list< CElement_SubMesh* > SubMeshListSorted;
 	for (UInt32 iSubMesh = 0; iSubMesh < SubMeshListLength; iSubMesh++)
 	{
 		SubMeshListSorted.push_back(&SubMeshList[iSubMesh]);
@@ -333,7 +333,7 @@ void M2Lib::M2Skin::SortSubMeshes()
 	UInt32* SubMeshReMapList = new UInt32[SubMeshListLength];
 	for (UInt32 i = 0; i < SubMeshListLength; i++)
 	{
-		std::list< M2Lib::M2Skin::CElement_SubMesh* >::iterator it = SubMeshListSorted.begin();
+		std::list< CElement_SubMesh* >::iterator it = SubMeshListSorted.begin();
 		for (UInt32 j = 0; j < SubMeshListLength; j++)
 		{
 			if (&SubMeshList[i] == *it)
@@ -355,8 +355,8 @@ void M2Lib::M2Skin::SortSubMeshes()
 	delete[] SubMeshReMapList;
 
 	// copy sorted result
-	M2Lib::M2Skin::CElement_SubMesh* NewSubMeshList = new M2Lib::M2Skin::CElement_SubMesh[SubMeshListLength];
-	std::list< M2Lib::M2Skin::CElement_SubMesh* >::iterator SubMeshListSortedIterator = SubMeshListSorted.begin();
+	CElement_SubMesh* NewSubMeshList = new CElement_SubMesh[SubMeshListLength];
+	std::list< CElement_SubMesh* >::iterator SubMeshListSortedIterator = SubMeshListSorted.begin();
 	for (UInt32 iSubMesh = 0; iSubMesh < SubMeshListLength; iSubMesh++)
 	{
 		NewSubMeshList[iSubMesh] = *(*SubMeshListSortedIterator);
