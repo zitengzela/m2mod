@@ -2,6 +2,7 @@
 
 #include "BaseTypes.h"
 #include <fstream>
+#include <vector>
 
 namespace M2Lib
 {
@@ -9,14 +10,12 @@ namespace M2Lib
 	class M2Element
 	{
 	public:
-		UInt32 Count;			// number of sub-elements contained in Data. the definition of this structure depends on this element's usage.
-		UInt32 Offset;			// offset in bytes from begining of file to where this element's data begins.
-		UInt32 OffsetOriginal;	// offset of this element as loaded from the original file.
+		UInt32 Count;				// number of sub-elements contained in Data. the definition of this structure depends on this element's usage.
+		UInt32 Offset;				// offset in bytes from begining of file to where this element's data begins.
+		UInt32 OffsetOriginal;		// offset of this element as loaded from the original file.
 
-		SInt32 DataSize;		// size in bytes of Data.
-		UInt8* Data;			// our local copy of data. note that DataSize might be greater than sizeof( DataType ) * Count if there is padding at the end.
-
-		SInt32 Align;			// byte alignment boundary. M2s pad the ends of elements with zeros data so they align on 16 byte boundaries.
+		std::vector<UInt8> Data;	// our local copy of data. note that DataSize might be greater than sizeof( DataType ) * Count if there is animation data references or padding at the end.
+		SInt32 Align;				// byte alignment boundary. M2s pad the ends of elements with zeros data so they align on 16 byte boundaries.
 
 	public:
 		M2Element();
@@ -34,6 +33,9 @@ namespace M2Lib
 		// reallocates Data, either erasing existing data or preserving it.
 		// adds padding to NewDataSize if necessary so that new size aligns with Align.
 		void SetDataSize(UInt32 NewCount, UInt32 NewDataSize, bool CopyOldData);
+
+		template <class T>
+		T* as() { return (T*)Data.data(); }
 
 		// clones this element from Source to Destination.
 		static void Clone(M2Element* Source, M2Element* Destination);

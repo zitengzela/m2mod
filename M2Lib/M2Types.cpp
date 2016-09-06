@@ -2,6 +2,7 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <assert.h>
+#include <algorithm>
 
 M2Lib::CTriangle::CTriangle()
 {
@@ -252,70 +253,198 @@ const char* M2Lib::GetErrorText(EError Error)
 	return "error: unrecognized error";
 }
 
-void M2Lib::CalculateBoundaries(std::vector<M2Lib::CVertex> const& vertices, Float32* CenterMass, Float32* BoundingCenter, Float32& BoundingRadius)
+const int M2Lib::BoundaryData::ExtraData::BoundingTriangleVertexMap[BOUNDING_TRIANGLE_COUNT * 3] =
 {
-	CenterMass[0] = 0.0f;
-	CenterMass[1] = 0.0f;
-	CenterMass[2] = 0.0f;
+	0, 1, 2,	// top
+	0, 2, 3,
+
+	6, 3, 2,	// right
+	6, 2, 7,
+
+	0, 4, 1,	// left
+	0, 5, 4,
+
+	2, 1, 7,	//	back
+	1, 4, 7,
+
+	0, 3, 5,	// front
+	3, 6, 5,
+
+	4, 5, 7,	// bottom
+	5, 6, 7
+};
+
+void M2Lib::BoundaryData::Calculate(std::vector<M2Lib::CVertex> const& vertices)
+{
+	CenterMass.X = 0.0f;
+	CenterMass.Y = 0.0f;
+	CenterMass.Z = 0.0f;
 
 	bool FirstPass = true;
-	Float32 BoundingMin[3], BoundingMax[3];
 	for (auto const& Vertex : vertices)
 	{
 		if (FirstPass)
 		{
-			BoundingMin[0] = Vertex.Position[0];
-			BoundingMin[1] = Vertex.Position[1];
-			BoundingMin[2] = Vertex.Position[2];
+			BoundingMin.X = Vertex.Position[0];
+			BoundingMin.Y = Vertex.Position[1];
+			BoundingMin.Z = Vertex.Position[2];
 
-			BoundingMax[0] = Vertex.Position[0];
-			BoundingMax[1] = Vertex.Position[1];
-			BoundingMax[2] = Vertex.Position[2];
+			BoundingMax.X = Vertex.Position[0];
+			BoundingMax.Y = Vertex.Position[1];
+			BoundingMax.Z = Vertex.Position[2];
 
 			FirstPass = false;
 		}
 		else
 		{
-			if (BoundingMin[0] > Vertex.Position[0])
-				BoundingMin[0] = Vertex.Position[0];
-			if (BoundingMin[1] > Vertex.Position[1])
-				BoundingMin[1] = Vertex.Position[1];
-			if (BoundingMin[2] > Vertex.Position[2])
-				BoundingMin[2] = Vertex.Position[2];
+			if (BoundingMin.X > Vertex.Position[0])
+				BoundingMin.X = Vertex.Position[0];
+			if (BoundingMin.Y > Vertex.Position[1])
+				BoundingMin.Y = Vertex.Position[1];
+			if (BoundingMin.Z > Vertex.Position[2])
+				BoundingMin.Z = Vertex.Position[2];
 
-			if (BoundingMax[0] < Vertex.Position[0])
-				BoundingMax[0] = Vertex.Position[0];
-			if (BoundingMax[1] < Vertex.Position[1])
-				BoundingMax[1] = Vertex.Position[1];
-			if (BoundingMax[2] < Vertex.Position[2])
-				BoundingMax[2] = Vertex.Position[2];
+			if (BoundingMax.X < Vertex.Position[0])
+				BoundingMax.X = Vertex.Position[0];
+			if (BoundingMax.Y < Vertex.Position[1])
+				BoundingMax.Y = Vertex.Position[1];
+			if (BoundingMax.Z < Vertex.Position[2])
+				BoundingMax.Z = Vertex.Position[2];
 		}
 
-		CenterMass[0] += Vertex.Position[0];
-		CenterMass[1] += Vertex.Position[1];
-		CenterMass[2] += Vertex.Position[2];
+		CenterMass.X += Vertex.Position[0];
+		CenterMass.Y += Vertex.Position[1];
+		CenterMass.Z += Vertex.Position[2];
 	}
 
-	CenterMass[0] /= (Float32)vertices.size();
-	CenterMass[1] /= (Float32)vertices.size();
-	CenterMass[2] /= (Float32)vertices.size();
+	CenterMass = CenterMass / (Float32)vertices.size();
 
-	BoundingCenter[0] = (BoundingMin[0] + BoundingMax[0]) / 2.0f;
-	BoundingCenter[1] = (BoundingMin[1] + BoundingMax[1]) / 2.0f;
-	BoundingCenter[2] = (BoundingMin[2] + BoundingMax[2]) / 2.0f;
+	BoundingCenter = (BoundingMin + BoundingMax) / 2.0f;
 
 	BoundingRadius = 0.0f;
 	for (auto const& Vertex : vertices)
 	{
-		Float32 PositionLocal[3];
+		C3Vector PositionLocal;
 		Float32 Distance;
 
-		PositionLocal[0] = Vertex.Position[0] - BoundingCenter[0];
-		PositionLocal[1] = Vertex.Position[1] - BoundingCenter[1];
-		PositionLocal[2] = Vertex.Position[2] - BoundingCenter[2];
+		PositionLocal.X = Vertex.Position[0] - BoundingCenter.X;
+		PositionLocal.Y = Vertex.Position[1] - BoundingCenter.Y;
+		PositionLocal.Z = Vertex.Position[2] - BoundingCenter.Z;
 
-		Distance = sqrt((PositionLocal[0] * PositionLocal[0]) + (PositionLocal[1] * PositionLocal[1]) + (PositionLocal[2] * PositionLocal[2]));
+		Distance = PositionLocal.Length();
 		if (Distance > BoundingRadius)
 			BoundingRadius = Distance;
 	}
+}
+
+M2Lib::BoundaryData::ExtraData M2Lib::BoundaryData::CalculateExtra() const
+{
+	ExtraData Extra;
+
+	Extra.BoundingVertices[0] = BoundingMax;
+	Extra.BoundingVertices[3] = Extra.BoundingVertices[2] = Extra.BoundingVertices[1] = Extra.BoundingVertices[0];
+	Extra.BoundingVertices[1].X *= -1.0f;
+	Extra.BoundingVertices[2].X *= -1.0f; Extra.BoundingVertices[2].Y *= -1.0f;
+	Extra.BoundingVertices[3].Y *= -1.0f;
+
+	Extra.BoundingVertices[7] = BoundingMin;
+	Extra.BoundingVertices[4] = Extra.BoundingVertices[5] = Extra.BoundingVertices[6] = Extra.BoundingVertices[7];
+	Extra.BoundingVertices[4].Y *= -1.0f;
+	Extra.BoundingVertices[6].X *= -1.0f;
+	Extra.BoundingVertices[5].X *= -1.0f; Extra.BoundingVertices[5].Y *= -1.0f;
+
+	for (int i = 0; i < BOUNDING_TRIANGLE_COUNT; ++i)
+	{
+		Extra.BoundingNormals[i] = CalculateNormal(
+			Extra.BoundingVertices[ExtraData::BoundingTriangleVertexMap[i * 3]],
+			Extra.BoundingVertices[ExtraData::BoundingTriangleVertexMap[i * 3 + 1]],
+			Extra.BoundingVertices[ExtraData::BoundingTriangleVertexMap[i * 3 + 2]]
+			);
+	}
+
+	return Extra;
+}
+
+M2Lib::C3Vector& M2Lib::C3Vector::operator = (const C3Vector& Other)
+{
+	X = Other.X;
+	Y = Other.Y;
+	Z = Other.Z;
+
+	return *this;
+}
+
+M2Lib::C3Vector M2Lib::C3Vector::operator + (const C3Vector& Other) const
+{
+	M2Lib::C3Vector result;
+	result.X = X + Other.X;
+	result.Y = Y + Other.Y;
+	result.Z = Z + Other.Z;
+
+	return result;
+}
+
+M2Lib::C3Vector M2Lib::C3Vector::operator - (const C3Vector& Other) const
+{
+	M2Lib::C3Vector result;
+	result.X = X - Other.X;
+	result.Y = Y - Other.Y;
+	result.Z = Z - Other.Z;
+
+	return result;
+}
+
+M2Lib::C3Vector M2Lib::C3Vector::operator * (Float32 Value) const
+{
+	M2Lib::C3Vector result;
+	result.X = X * Value;
+	result.Y = Y * Value;
+	result.Z = Z * Value;
+
+	return result;
+}
+
+M2Lib::C3Vector M2Lib::C3Vector::operator / (Float32 Value) const
+{
+	M2Lib::C3Vector result;
+	result.X = X / Value;
+	result.Y = Y / Value;
+	result.Z = Z / Value;
+
+	return result;
+}
+
+M2Lib::C3Vector M2Lib::C3Vector::CrossProduct(C3Vector const& other) const
+{
+	C3Vector Product;
+
+	Product.X = Y * other.Z - Z * other.Y;
+	Product.Y = Z * other.X - X * other.Z;
+	Product.Z = X * other.Y - Y * other.X;
+
+	return Product;
+}
+
+Float32 M2Lib::C3Vector::Length() const
+{
+	return sqrtf(X * X + Y * Y + Z * Z);
+}
+
+void M2Lib::C3Vector::Normalize()
+{
+	Float32 length = Length();
+
+	X = std::min(X / length, 1.0f);
+	Y = std::min(Y / length, 1.0f);
+	Z = std::min(Z / length, 1.0f);
+}
+
+M2Lib::C3Vector M2Lib::CalculateNormal(M2Lib::C3Vector v1, M2Lib::C3Vector v2, M2Lib::C3Vector v3)
+{
+	M2Lib::C3Vector V = v2 - v1;
+	M2Lib::C3Vector W = v3 - v1;
+
+	M2Lib::C3Vector N = V.CrossProduct(W);
+	N.Normalize();
+	return N;
 }

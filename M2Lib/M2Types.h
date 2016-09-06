@@ -56,6 +56,28 @@ namespace M2Lib
 		UInt32 Offset;
 	};
 
+	class C3Vector
+	{
+	public:
+		Float32 X;
+		Float32 Y;
+		Float32 Z;
+
+		C3Vector() : X(0.0f), Y(0.0f), Z(0.0f) { }
+		C3Vector(Float32 _X, Float32 _Y, Float32 _Z) : X(_X), Y(_Y), Z(_Z) {}
+		C3Vector& operator = (const C3Vector& Other);
+		C3Vector operator + (const C3Vector& Other) const;
+		C3Vector operator - (const C3Vector& Other) const;
+		C3Vector operator * (Float32 Value) const;
+		C3Vector operator / (Float32 Value) const;
+
+		C3Vector CrossProduct(C3Vector const& other) const;
+		void Normalize();
+		Float32 Length() const;
+	};
+
+	C3Vector CalculateNormal(C3Vector v1, C3Vector v2, C3Vector v3);
+
 #pragma pack(pop)
 
 	enum EError
@@ -94,5 +116,33 @@ namespace M2Lib
 
 	const char* GetErrorText(EError Error);
 
-	void CalculateBoundaries(std::vector<M2Lib::CVertex> const& vertices, Float32* CenterMass, Float32* BoundingCenter, Float32& BoundingRadius);
+	struct BoundaryData
+	{
+		struct ExtraData
+		{
+			#define BOUNDING_VERTEX_COUNT 8
+			#define BOUNDING_TRIANGLE_COUNT 12
+			
+			static const int BoundingTriangleVertexMap[BOUNDING_TRIANGLE_COUNT * 3];
+
+			C3Vector BoundingVertices[BOUNDING_VERTEX_COUNT];
+			C3Vector BoundingNormals[BOUNDING_TRIANGLE_COUNT];
+		};
+
+		C3Vector BoundingMin;
+		C3Vector BoundingMax;
+		C3Vector BoundingCenter;
+		Float32 BoundingRadius;
+
+		C3Vector CenterMass;
+
+		void Calculate(std::vector<M2Lib::CVertex> const& vertices);
+		ExtraData CalculateExtra() const;
+	};
+
+	struct SubmeshComparisonData
+	{
+		UInt32 ID;
+		BoundaryData Boundary;
+	};
 }

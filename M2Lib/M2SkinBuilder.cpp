@@ -445,8 +445,8 @@ bool M2Lib::M2SkinBuilder::Build(M2Lib::M2Skin* pResult, UInt32 BoneLoD, M2Lib::
 		std::cout << "\t\tcopying indices to element..." << std::endl;
 	}
 
-	pResult->Elements[M2Lib::M2Skin::EElement_VertexLookup].SetDataSize(m_Vertices.size(), m_Vertices.size() * sizeof(UInt16), false);
-	UInt16* Indices = (UInt16*)pResult->Elements[M2Lib::M2Skin::EElement_VertexLookup].Data;
+	pResult->Elements[M2Skin::EElement_VertexLookup].SetDataSize(m_Vertices.size(), m_Vertices.size() * sizeof(UInt16), false);
+	UInt16* Indices = pResult->Elements[M2Skin::EElement_VertexLookup].as<UInt16>();
 	UInt16* IndicesIn = (UInt16*)&m_Vertices[0];
 	memcpy(Indices, IndicesIn, m_Vertices.size() * sizeof(UInt16));
 
@@ -456,8 +456,8 @@ bool M2Lib::M2SkinBuilder::Build(M2Lib::M2Skin* pResult, UInt32 BoneLoD, M2Lib::
 		std::cout << "\t\tcopying triangles to element..." << std::endl;
 	}
 
-	pResult->Elements[M2Lib::M2Skin::EElement_TriangleIndex].SetDataSize(m_Indices.size(), m_Indices.size() * sizeof(UInt16), false);
-	UInt16* Triangles = (UInt16*)pResult->Elements[M2Lib::M2Skin::EElement_TriangleIndex].Data;
+	pResult->Elements[M2Skin::EElement_TriangleIndex].SetDataSize(m_Indices.size(), m_Indices.size() * sizeof(UInt16), false);
+	UInt16* Triangles = pResult->Elements[M2Skin::EElement_TriangleIndex].as<UInt16>();
 	UInt16* TrianglesIn = (UInt16*)&m_Indices[0];
 	memcpy(Triangles, TrianglesIn, m_Indices.size() * sizeof(UInt16));
 
@@ -467,8 +467,8 @@ bool M2Lib::M2SkinBuilder::Build(M2Lib::M2Skin* pResult, UInt32 BoneLoD, M2Lib::
 		std::cout << "\t\tcopying subsets to element..." << std::endl;
 	}
 
-	pResult->Elements[M2Lib::M2Skin::EElement_SubMesh].SetDataSize(TotalPartitionCount, TotalPartitionCount * sizeof(M2Lib::M2Skin::CElement_SubMesh), false);
-	M2Lib::M2Skin::CElement_SubMesh* SubsetsOut = (M2Lib::M2Skin::CElement_SubMesh*)pResult->Elements[M2Lib::M2Skin::EElement_SubMesh].Data;
+	pResult->Elements[M2Skin::EElement_SubMesh].SetDataSize(TotalPartitionCount, TotalPartitionCount * sizeof(M2Skin::CElement_SubMesh), false);
+	M2Skin::CElement_SubMesh* SubsetsOut = pResult->Elements[M2Skin::EElement_SubMesh].as<M2Skin::CElement_SubMesh>();
 	UInt32 iSubsetPartition = 0;
 	bool _isFirstSubmeshTrick = false;
 
@@ -479,7 +479,7 @@ bool M2Lib::M2SkinBuilder::Build(M2Lib::M2Skin* pResult, UInt32 BoneLoD, M2Lib::
 			CSubMesh::CSubsetPartition* pSubsetPartitionIn = m_SubMeshList[i]->SubsetPartitions[j];
 			if (m_SubMeshList[i]->SubsetPartitions[j]->Triangles.size())
 			{
-				M2Lib::M2Skin::CElement_SubMesh* pSubsetOut = &SubsetsOut[iSubsetPartition];
+				M2Skin::CElement_SubMesh* pSubsetOut = &SubsetsOut[iSubsetPartition];
 
 				pSubsetOut->ID = m_SubMeshList[i]->ID;
 				pSubsetOut->VertexStart = pSubsetPartitionIn->VertexStart;

@@ -12,6 +12,9 @@
 
 #define DegreesToRadians 0.0174532925f
 
+#define ASSERT_SIZE(x, y) \
+	static_assert(sizeof(x) == y, #x" size does not match client size")
+
 namespace M2Lib
 {
 
@@ -193,7 +196,10 @@ namespace M2Lib
 
 				UInt32 nUnknown1;
 				UInt32 oUnknown1;
+
 			} Elements;
+
+			bool IsLongHeader() const { return (Description.Flags & 0x08) != 0; }
 		};
 
 
@@ -234,6 +240,7 @@ namespace M2Lib
 			UInt16 AnimationID;
 		};
 
+		ASSERT_SIZE(CElement_GlobalSequence, 4);
 
 		//
 		// some sort of animation entry (without any apparent referenced animation data).
@@ -262,6 +269,7 @@ namespace M2Lib
 			UInt16 TriangleIndex;				// this animation's index in the list of animations.
 		};
 
+		ASSERT_SIZE(CElement_Animation, 64);
 
 		//
 		// generic animation block header.
@@ -356,6 +364,7 @@ namespace M2Lib
 			Float32 Position[3];		//
 		};
 
+		ASSERT_SIZE(CElement_Bone, 88);
 
 		//
 		//
@@ -406,20 +415,12 @@ namespace M2Lib
 			EBoneLookup BoneLookup;
 		};
 
+		ASSERT_SIZE(CElement_BoneLookup, 2);
 
-		//
-		//
-		class CElement_Vertex
-		{
-		public:
-			Float32 Position[3];
-			UInt8 BoneWeights[4];
-			UInt8 BoneIndices[4];
-			Float32 Normal[3];
-			Float32 Texture[2];
-			Float32 Padding[2];
-		};
 
+		typedef CVertex CElement_Vertex;
+
+		ASSERT_SIZE(CElement_Vertex, 48);
 
 		//
 		//
@@ -430,6 +431,7 @@ namespace M2Lib
 			CElement_AnimationBlock AnimationBlock_Opacity;		// UInt16
 		};
 
+		ASSERT_SIZE(CElement_Color, 40);
 
 		//
 		//
@@ -442,6 +444,7 @@ namespace M2Lib
 			UInt32 oTexturePath;	// position of name in file.
 		};
 
+		ASSERT_SIZE(CElement_Texture, 16);
 
 		//
 		//
@@ -452,6 +455,7 @@ namespace M2Lib
 
 		};
 
+		ASSERT_SIZE(CElement_Transparency, 20);
 
 		//
 		// texture coordinate animation block.
@@ -463,6 +467,7 @@ namespace M2Lib
 			CElement_AnimationBlock AnimationBlock_Scale;		// Float32x3
 		};
 
+		ASSERT_SIZE(CElement_UVAnimation, 60);
 
 		//
 		//
@@ -492,6 +497,7 @@ namespace M2Lib
 			SInt16 TextureID;
 		};
 
+		ASSERT_SIZE(CElement_TextureReplace, 2);
 
 		//
 		//
@@ -508,7 +514,7 @@ namespace M2Lib
 				EFlags_NoZBuffer = 0x10,
 			};
 
-			enum EBlend
+			enum EBlend : UInt16
 			{
 				EBlend_Opaque,
 				EBlend_Mod,
@@ -524,6 +530,7 @@ namespace M2Lib
 			EBlend Blend;
 		};
 
+		ASSERT_SIZE(CElement_TextureFlag, 4);
 
 		//
 		// each skin file has one or more bone partitions. each bone partition references into a subset of this skinned bone lookup array.
@@ -533,6 +540,7 @@ namespace M2Lib
 			UInt16 BoneIndex;			// index into the model's bone list.
 		};
 
+		ASSERT_SIZE(CElement_PartitionedBoneLookup, 2);
 
 		//
 		//
@@ -542,6 +550,7 @@ namespace M2Lib
 			UInt16 TextureIndex;
 		};
 
+		ASSERT_SIZE(CElement_TextureLookup, 2);
 
 		//
 		//
@@ -551,6 +560,7 @@ namespace M2Lib
 			UInt16 Unit;
 		};
 
+		ASSERT_SIZE(CElement_TextureUnits, 2);
 
 		//
 		//
@@ -560,6 +570,7 @@ namespace M2Lib
 			UInt16 TransparencyLookup;
 		};
 
+		ASSERT_SIZE(CElement_TransparencyLookup, 2);
 
 		//
 		//
@@ -569,14 +580,17 @@ namespace M2Lib
 			UInt16 TextureIndex;
 		};
 
+		ASSERT_SIZE(CElement_UVAnimationLookup, 2);
 
 		//
 		//
 		class CElement_BoundingTriangle
 		{
 		public:
-			UInt16 Indices[3];
+			UInt16 Indices;
 		};
+
+		ASSERT_SIZE(CElement_BoundingTriangle, 2);
 
 
 		//
@@ -587,6 +601,7 @@ namespace M2Lib
 			Float32 Position[3];
 		};
 
+		ASSERT_SIZE(CElement_BoundingVertices, 12);
 
 		//
 		//
@@ -596,6 +611,7 @@ namespace M2Lib
 			Float32 Normal[3];
 		};
 
+		ASSERT_SIZE(CElement_BoundingNormals, 12);
 
 		//
 		// an attachment to a bone defines where items and effects will anchor to the rig.
@@ -650,13 +666,14 @@ namespace M2Lib
 			CElement_AnimationBlock AnimationBlock_Visibility;	// UInt16.
 		};
 
+		ASSERT_SIZE(CElement_Attachment, 40);
 
 		//
 		//
 		class CElement_AttachmentLookup
 		{
 		public:
-			enum EAttachmentLookup
+			enum EAttachmentLookup : UInt16
 			{
 				EAttachmentLookup_Item_PalmR,
 				EAttachmentLookup_Item_PalmL,
@@ -701,6 +718,8 @@ namespace M2Lib
 
 		};
 
+		ASSERT_SIZE(CElement_AttachmentLookup, 2);
+
 
 		//
 		// events define sounds that are played during animation.
@@ -723,9 +742,9 @@ namespace M2Lib
 			SInt16 GlobalSequenceID;
 			UInt32 nTimeLines;
 			UInt32 oTimeLines;
-			//CElement_AnimationBlock AnimationBlock_Visibility;	// SKey_UInt16
 		};
 
+		ASSERT_SIZE(CElement_Event, 36);
 
 		//
 		//
@@ -744,6 +763,7 @@ namespace M2Lib
 			CElement_AnimationBlock AnimationBlock_Visibility;			// UInt16
 		};
 
+		ASSERT_SIZE(CElement_Light, 156);
 
 		//
 		//
@@ -751,7 +771,6 @@ namespace M2Lib
 		{
 		public:
 			SInt32 Type;
-			//Float32 FieldOfView;	// v3
 			Float32 ClipFar;
 			Float32 ClipNear;
 			CElement_AnimationBlock AnimationBlock_Position;		// Float32x3
@@ -762,6 +781,7 @@ namespace M2Lib
 			CElement_AnimationBlock AnimationBlock_FieldOfView;		// Float32	// v4
 		};
 
+		ASSERT_SIZE(CElement_Camera, 116);
 
 		//
 		//
@@ -771,6 +791,7 @@ namespace M2Lib
 			UInt16 TriangleIndex;
 		};
 
+		ASSERT_SIZE(CElement_CameraLookup, 2);
 
 		//
 		//
@@ -795,8 +816,10 @@ namespace M2Lib
 			UInt16 m_cols;
 			CElement_AnimationBlock AnimationBlock_Unknown1;	// SInt32
 			CElement_AnimationBlock AnimationBlock_Visibility;	// SInt16
+			UInt32 Unk;
 		};
 
+		ASSERT_SIZE(CElement_RibbonEmitter, 176);
 
 		//
 		// 492 0x1EC
@@ -860,13 +883,15 @@ namespace M2Lib
 			Float32 Translation[3];
 			Float32 FollowParams[4];
 
-			UInt32 nUnk;	//
+			UInt32 nUnk;	// 12 bytes
 			UInt32 oUnk;	//
 			CElement_AnimationBlock AnimationBlock_Visibility;		// UInt16
 			UInt32 _unk7[0x4];
 		};
-#pragma pack(pop)
 
+		ASSERT_SIZE(CElement_ParticleEmitter, 492);
+
+#pragma pack(pop)
 
 	public:
 		Char16 _FileName[1024];	// needed to create skin file names so we can load/save skins.
@@ -875,18 +900,13 @@ namespace M2Lib
 		M2Element Elements[EElement__Count__];
 		M2Element Chunks[EChunk__Count__];
 		const static Char8* kChunkIDs[EChunk__Count__];
-		M2Skin* Skins[4];
+		M2Skin* Skins[6];
 
 		UInt32 m_OriginalSize;	// size in bytes of the original M2 file when loaded.
 
 		UInt8* RawData;			// the entire file read into memory, so we can access animations.
 
 		bool ImportedM2I;
-
-		M2Element& GetElement_Vertex()
-		{
-			return Elements[EElement_Vertex];
-		}
 
 	public:
 		M2()
@@ -895,6 +915,8 @@ namespace M2Lib
 			Skins[1] = 0;
 			Skins[2] = 0;
 			Skins[3] = 0;
+			Skins[4] = 0;
+			Skins[5] = 0;
 			m_OriginalSize = 0;
 			RawData = 0;
 			ImportedM2I = false;
@@ -944,8 +966,6 @@ namespace M2Lib
 
 		void MakeShiny(const Char8* szTextureSource);
 
-		void DoShit();
-
 	public:
 		// post load header
 		void m_LoadElements_CopyHeaderToElements();
@@ -953,7 +973,7 @@ namespace M2Lib
 
 		// pre save header
 		void m_SaveElements_FindOffsets();
-		void m_FixAnimationOffsets(SInt32 OffsetDelta, CElement_AnimationBlock& AnimationBlock, SInt32 iElement);
+		void m_FixAnimationOffsets(SInt32 OffsetDelta, SInt32 TotalDiff, CElement_AnimationBlock& AnimationBlock, SInt32 iElement);
 		void m_FixFakeAnimationBlockOffsets(SInt32 OffsetDelta, CElement_FakeAnimationBlock& AnimationBlock, SInt32 iElement);
 		void m_SaveElements_CopyElementsToHeader();
 
