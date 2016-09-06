@@ -27,6 +27,8 @@ namespace M2Lib
 			EElement__Count__
 		};
 
+		typedef std::map<int, int> TextureLookupRemap;
+
 #pragma pack(push,1)
 		// memory mapped header
 		class CM2SkinHeader
@@ -141,6 +143,10 @@ namespace M2Lib
 			Float32 CenterMass[3];			// average position of all vertices in this subset. found by summing positions of all vertices and then dividing by the number of vertices.
 			Float32 CenterBounds[3];		// bounding box center. if we make a minimum axis aligned bounding box around the set of vertices in this subset and get the center of that box, this is the result.
 			Float32 Radius;					// this is the distance of the vertex farthest from CenterBoundingBox.
+
+			void MakeGlossy(M2Skin* pSkin, UInt32 GlossTextureId, TextureLookupRemap& LookupRemap);
+
+			bool Same(CElement_SubMesh const& other) const;
 		};
 
 		class CElement_Flags
@@ -207,6 +213,9 @@ namespace M2Lib
 
 		// gathers list of flags that affect a given sub mesh within this skin.
 		void GetSubMeshFlags(UInt32 SubMeshTriangleIndex, std::vector< CElement_Flags* >& Result);
+
+		void MakeGlossy(Char8 const* szGlossTexturePath, std::vector<UInt32> const& MeshIndexes, TextureLookupRemap& LookupRemap);
+		void MakeGlossy(UInt32 GlossTextureId, std::vector<UInt32> const& MeshIndexes, TextureLookupRemap& LookupRemap);
 
 	private:
 		void m_LoadElements_CopyHeaderToElements();

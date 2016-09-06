@@ -974,7 +974,8 @@ namespace M2Lib
 		void MirrorCamera();
 
 		UInt32 AddTexture(const Char8* szTextureSource, CElement_Texture::ETextureType Type, CElement_Texture::ETextureFlags Flags);
-		UInt32 AddTextureLookup(UInt16 TextureId);
+		UInt32 GetTexture(const Char8* szTextureSource);
+		UInt32 AddTextureLookup(UInt16 TextureId, bool ForceNewIndex = false);
 		UInt32 AddTextureFlags(UInt16 Blend, UInt32 Flags);
 
 		void MakeShiny(const Char8* szTextureSource);

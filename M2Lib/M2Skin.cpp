@@ -671,3 +671,61 @@ void M2Lib::M2Skin::m_SaveElements_CopyElementsToHeader()
 	Header.Unknown2 = 0;
 	Header.Unknown3 = 0;
 }
+
+bool M2Lib::M2Skin::CElement_SubMesh::Same(CElement_SubMesh const& other) const
+{
+	return &other == this || other.VertexStart == VertexStart;
+}
+
+#define GLOSS_SHADER_ID 32769
+
+void M2Lib::M2Skin::CElement_SubMesh::MakeGlossy(M2Skin* pSkin, UInt32 GlossTextureId, TextureLookupRemap& LookupRemap)
+{
+	auto Materials = pSkin->Elements[EElement_Material].as<CElement_Material>();
+	auto Submeshes = pSkin->Elements[EElement_SubMesh].as<CElement_SubMesh>();
+	auto TextureLookup = pSkin->pM2->Elements[M2::EElement_TextureLookup].as<M2::CElement_TextureLookup>();
+
+	// loop through all materials to find ones assigned to our submesh
+	for (UInt32 i = 0; i < pSkin->Elements[EElement_Material].Count; ++i)
+	{
+		auto& material = Materials[i];
+		if (!Submeshes[material.iSubMesh].Same(*this))
+			continue;
+
+		auto textureId = TextureLookup[material.iTexture].TextureIndex;
+		int newLookup;
+
+		if (LookupRemap.find(textureId) == LookupRemap.end())
+		{
+			// add two new lookups successively to use with op_count
+			newLookup = pSkin->pM2->AddTextureLookup(textureId, true);
+			pSkin->pM2->AddTextureLookup(GlossTextureId, true);
+			LookupRemap[textureId] = newLookup;
+		}
+		else
+			newLookup = LookupRemap[textureId];
+
+		material.iTexture = newLookup;
+		material.op_count = 2;
+		material.shader_id = GLOSS_SHADER_ID;
+	}
+}
+
+void M2Lib::M2Skin::MakeGlossy(UInt32 GlossTextureId, std::vector<UInt32> const& MeshIndexes, TextureLookupRemap& LookupRemap)
+{
+	auto Submeshes = Elements[EElement_SubMesh].as<CElement_SubMesh>();
+	for (auto submeshId : MeshIndexes)
+	{
+		auto& SubMesh = Submeshes[submeshId];
+		SubMesh.MakeGlossy(this, GlossTextureId, LookupRemap);
+	}
+}
+
+void M2Lib::M2Skin::MakeGlossy(Char8 const* szGlossTexturePath, std::vector<UInt32> const& MeshIndexes, TextureLookupRemap& LookupRemap)
+{
+	SInt32 GlossTextureId = pM2->GetTexture(szGlossTexturePath);
+	if (GlossTextureId == -1)
+		GlossTextureId = pM2->AddTexture(szGlossTexturePath, M2::CElement_Texture::ETextureType::Final_Hardcoded, M2::CElement_Texture::ETextureFlags::None);
+
+	MakeGlossy(GlossTextureId, MeshIndexes, LookupRemap);
+}

@@ -1019,7 +1019,7 @@ void M2Lib::M2::PrintInfo()
 	FileStream << " DataSize                 " << Elements[EElement_Texture].Data.size() << std::endl;
 	FileStream << std::endl;
 
-    for (int i = 0; i < Header.Elements.nTexture; ++i)
+    for (UInt32 i = 0; i < Header.Elements.nTexture; ++i)
     {
 		CElement_Texture* texture = Elements[EElement_Texture].as<CElement_Texture>();
 
@@ -1038,7 +1038,7 @@ void M2Lib::M2::PrintInfo()
 	FileStream << " DataSize                 " << Elements[EElement_Transparency].Data.size() << std::endl;
 
 	CElement_Transparency* Transparencies = Elements[EElement_Transparency].as<CElement_Transparency>();
-    for (auto i = 0; i < Header.Elements.nTransparency; ++i)
+    for (UInt32 i = 0; i < Header.Elements.nTransparency; ++i)
     {
         auto transparency = Transparencies[i];
         FileStream << "\t" << i << std::endl;
@@ -1074,7 +1074,7 @@ void M2Lib::M2::PrintInfo()
 	FileStream << "oTextureFlags             " << Header.Elements.oTextureFlags << std::endl;
 	FileStream << " DataSize                 " << Elements[EElement_TextureFlags].Data.size() << std::endl;
 	CElement_TextureFlag* TextureFlags = Elements[EElement_TextureFlags].as<CElement_TextureFlag>();
-    for (auto i = 0; i < Header.Elements.nTransparency; ++i)
+    for (UInt32 i = 0; i < Header.Elements.nTransparency; ++i)
     {
         auto flag = TextureFlags[i];
         FileStream << "\t-- " << i << std::endl;
@@ -1101,7 +1101,7 @@ void M2Lib::M2::PrintInfo()
 	FileStream << " DataSize                 " << Elements[EElement_TextureLookup].Data.size() << std::endl;
 	FileStream << std::endl;
 
-    for (int i = 0; i < Header.Elements.nTexture; ++i)
+    for (UInt32 i = 0; i < Header.Elements.nTexture; ++i)
     {
         CElement_TextureLookup* textureLookup = Elements[EElement_TextureLookup].as<CElement_TextureLookup>();
 
@@ -2407,14 +2407,11 @@ UInt32 M2Lib::M2::AddTexture(const Char8* szTextureSource, CElement_Texture::ETe
 	auto& Element = Elements[EElement_Texture];
 
 	// shift offsets for existing textures
-	for (auto i = 0; i < Element.Count; ++i)
+	for (UInt32 i = 0; i < Element.Count; ++i)
 	{
 		auto& texture = Element.as<CElement_Texture>()[i];
 		if (texture.oTexturePath)
-		{
-			char* ptr = (char*)Element.GetLocalPointer(texture.oTexturePath);
 			texture.oTexturePath += sizeof(CElement_Texture);
-		}
 	}
 
 	// add element placeholder for new texture
@@ -2438,15 +2435,36 @@ UInt32 M2Lib::M2::AddTexture(const Char8* szTextureSource, CElement_Texture::ETe
 	return newIndex;
 }
 
-UInt32 M2Lib::M2::AddTextureLookup(UInt16 TextureId)
+UInt32 M2Lib::M2::GetTexture(const Char8* szTextureSource)
+{
+	auto& Element = Elements[EElement_Texture];
+
+	for (UInt32 i = 0; i < Element.Count; ++i)
+	{
+		auto& texture = Element.as<CElement_Texture>()[i];
+		if (texture.oTexturePath)
+		{
+			auto pTexturePath = (Char8 const*)Element.GetLocalPointer(texture.oTexturePath);
+			if (strcmpi(pTexturePath, szTextureSource) == 0)
+				return i;
+		}
+	}
+
+	return -1;
+}
+
+UInt32 M2Lib::M2::AddTextureLookup(UInt16 TextureId, bool ForceNewIndex /*= false*/)
 {
 	auto& Element = Elements[EElement_TextureLookup];
 
-	for (int i = 0; i < Element.Count; ++i)
+	if (!ForceNewIndex)
 	{
-		auto& lookup = Element.as<CElement_TextureLookup>()[i];
-		if (lookup.TextureIndex == TextureId)
-			return i;
+		for (UInt32 i = 0; i < Element.Count; ++i)
+		{
+			auto& lookup = Element.as<CElement_TextureLookup>()[i];
+			if (lookup.TextureIndex == TextureId)
+				return i;
+		}
 	}
 
 	// add element placeholder for new lookup
