@@ -52,8 +52,8 @@ M2Lib::CVertex::CVertex()
 	Texture[0] = 0.0f;
 	Texture[1] = 0.0f;
 
-	Padding[0] = 0.0f;
-	Padding[1] = 0.0f;
+	Texture2[0] = 0.0f;
+	Texture2[1] = 0.0f;
 }
 
 M2Lib::CVertex::CVertex(const CVertex& Other)
@@ -84,8 +84,8 @@ M2Lib::CVertex& M2Lib::CVertex::operator = (const CVertex& Other)
 	Texture[0] = Other.Texture[0];
 	Texture[1] = Other.Texture[1];
 
-	Padding[0] = Other.Padding[0];
-	Padding[1] = Other.Padding[1];
+	Texture2[0] = Other.Texture2[0];
+	Texture2[1] = Other.Texture2[1];
 
 	return *this;
 }

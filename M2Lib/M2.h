@@ -17,8 +17,6 @@
 
 namespace M2Lib
 {
-
-
 	// load, export, import merge, save: M2 file.
 	class M2
 	{
@@ -438,8 +436,40 @@ namespace M2Lib
 		class CElement_Texture
 		{
 		public:
-			UInt32 Type;
-			UInt32 Flags;
+			enum class ETextureType
+				: UInt32
+			{
+				Final_Hardcoded = 0,
+				Skin = 1,
+				ObjectSkin = 2,
+				WeaponBlade = 3,
+				WeaponHandle = 4,
+				Environment = 7,
+				Hair = 6,
+				FacialHair = 7,
+				SkinExtra = 8,
+				UiSkin = 9,
+				TaurenMane = 10,
+				Monster1 = 11,
+				Monster2 = 12,
+				Monster3 = 13,
+				ItemIcon = 14,
+				GuildBackgroundColor = 15,
+				GuildEmblemColor = 16,
+				GuildBorderColor = 17,
+				GuildEmblem = 18
+			};
+
+			enum class ETextureFlags
+				: UInt32
+			{
+				None = 0,
+				WrapX = 1,
+				WrapY = 2
+			};
+
+			ETextureType Type;
+			ETextureFlags Flags;
 			UInt32 nTexturePath;	// length of name in characters.
 			UInt32 oTexturePath;	// position of name in file.
 		};
@@ -474,26 +504,6 @@ namespace M2Lib
 		class CElement_TextureReplace
 		{
 		public:
-			enum ETexture
-				: SInt16
-			{
-				ETexture_Final_Hardcoded,
-				ETexture_Body_Clothes,
-				ETexture_Unk1,
-				ETexture_Unk2,
-				ETexture_Unk3,
-				ETexture_Unk4,
-				ETexture_Hair_Beard,
-				ETexture_Unk5,
-				ETexture_TaurenFur,
-				ETexture_Unk6,
-				ETexture_Unk7,
-				ETexture_CreatureSkin1,
-				ETexture_CreatureSkin2,
-				ETexture_CreatureSkin3,
-			};
-
-		public:
 			SInt16 TextureID;
 		};
 
@@ -512,6 +522,10 @@ namespace M2Lib
 				EFlags_TwoSided = 0x04,
 				EFlags_Billboard = 0x08,
 				EFlags_NoZBuffer = 0x10,
+				EFlags_Unk6 = 0x40, // shadow batch related
+				EFlags_Unk7 = 0x80, // shadow batch related
+				EFlags_Unk8 = 0x400, // wod
+				EFlags_Unk9 = 0x800, // prevent alpha for custom elements. if set, use (fully) opaque or transparent. (litSphere, shadowMonk) (MoP+) 
 			};
 
 			enum EBlend : UInt16
@@ -954,14 +968,13 @@ namespace M2Lib
 		// closes small gaps between clothing and body and copies normals from body to clothing.
 		void FixSeamsClothing(Float32 PositionalTolerance, Float32 AngularTolerance);
 
-		// makes sure per vertex bone weigts sum up to 0 or 255.
-		void NormalizeBoneWeights();
 		// scales all positional coordinates of vertices, bones, attachments, events, lights, cameras, ribbon emitters, particle emitters.
 		void Scale(Float32 Scale);
 		// mirrors the portrait camera accross the Y axis
 		void MirrorCamera();
 
-		UInt32 AddTexture(const Char8* szTextureSource, UInt16 Type, UInt16 Flags);
+		UInt32 AddTexture(const Char8* szTextureSource, CElement_Texture::ETextureType Type, CElement_Texture::ETextureFlags Flags);
+		UInt32 AddTextureLookup(UInt16 TextureId);
 		UInt32 AddTextureFlags(UInt16 Blend, UInt32 Flags);
 
 		void MakeShiny(const Char8* szTextureSource);
@@ -979,8 +992,5 @@ namespace M2Lib
 
 		// chunk index in Chunks (-1 if invalid chunk)
 		SInt32 m_GetChunkIndex(const Char8* ChunkID) const;
-
 	};
-
-
 }

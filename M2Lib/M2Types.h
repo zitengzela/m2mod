@@ -31,7 +31,7 @@ namespace M2Lib
 		UInt8 BoneIndices[4];
 		Float32 Normal[3];
 		Float32 Texture[2];
-		Float32 Padding[2];		// make vertex 48 bytes in size, which benefits vetex caching (i think).
+		Float32 Texture2[2];
 
 
 	public:

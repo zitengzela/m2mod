@@ -94,21 +94,6 @@ M2Lib::EError M2Lib::M2Skin::Save(const Char16* FileName)
 	// save header
 	FileStream.write((Char8*)&Header, sizeof(Header));
 
-	// FMN 2015-02-03: changing Level, depending on TriangleIndexstart. See http://forums.darknestfantasyerotica.com/showthread.php?20446-TUTORIAL-Here-is-how-WoD-.skin-works.&p=402561
-	CElement_SubMesh* SubMeshList = Elements[EElement_SubMesh].as<CElement_SubMesh>();
-	UInt32 TriangleIndexStartPrevious = 0;
-	UInt16 level = 0;
-
-	for (UInt32 i = 0; i != Elements[EElement_SubMesh].Count; i++)
-	{
-		if (SubMeshList[i].TriangleIndexStart < TriangleIndexStartPrevious)
-			++level;
-
-		SubMeshList[i].Level = level;
-
-		TriangleIndexStartPrevious = SubMeshList[i].TriangleIndexStart;
-	}
-
 	// save elements
 	for (UInt32 i = 0; i != EElement__Count__; i++)
 	{
@@ -287,32 +272,31 @@ void M2Lib::M2Skin::CopyMaterials(M2Skin* pOther)
 		assert(SubMeshOther);
 
 		SubMesh.SortTriangleIndex = SubMeshOther->SortTriangleIndex;
+		// copy level from original mesh
+		SubMesh.Level = SubMeshOther->Level;
 
-		if (SubMeshOther)
+		std::vector< CElement_Material* > SubMeshOtherMaterialList;
+		pOther->GetSubMeshMaterials(SubMeshOtherTriangleIndex, SubMeshOtherMaterialList);
+		for (UInt32 iSubMeshMaterialOther = 0; iSubMeshMaterialOther < SubMeshOtherMaterialList.size(); iSubMeshMaterialOther++)
 		{
-			std::vector< CElement_Material* > SubMeshOtherMaterialList;
-			pOther->GetSubMeshMaterials(SubMeshOtherTriangleIndex, SubMeshOtherMaterialList);
-			for (UInt32 iSubMeshMaterialOther = 0; iSubMeshMaterialOther < SubMeshOtherMaterialList.size(); iSubMeshMaterialOther++)
+			CElement_Material NewMaterial = *SubMeshOtherMaterialList[iSubMeshMaterialOther];
+			NewMaterial.iSubMesh = iSubMesh;
+			NewMaterial.iSubMesh2 = iSubMesh;
+			/*for (int i = 0; i < SubMeshOtherMaterialList.size(); ++i)
 			{
-				CElement_Material NewMaterial = *SubMeshOtherMaterialList[iSubMeshMaterialOther];
-				NewMaterial.iSubMesh = iSubMesh;
-				NewMaterial.iSubMesh2 = iSubMesh;
-				/*for (int i = 0; i < SubMeshOtherMaterialList.size(); ++i)
-				{
-					if (SubMeshOtherMaterialList[i]->iSubMesh == iSubMesh)
-					NewMaterial.iSubMesh2 = SubMeshOtherMaterialList[i]->iSubMesh2;
-				}*/
-				NewMaterialList.push_back(NewMaterial);
-			}
+				if (SubMeshOtherMaterialList[i]->iSubMesh == iSubMesh)
+				NewMaterial.iSubMesh2 = SubMeshOtherMaterialList[i]->iSubMesh2;
+			}*/
+			NewMaterialList.push_back(NewMaterial);
+		}
 
-			std::vector< CElement_Flags* > SubMeshOtherFlagsList;
-			pOther->GetSubMeshFlags(SubMeshOtherTriangleIndex, SubMeshOtherFlagsList);
-			for (UInt32 iSubMeshFlagsOther = 0; iSubMeshFlagsOther < SubMeshOtherFlagsList.size(); iSubMeshFlagsOther++)
-			{
-				CElement_Flags NewFlags = *SubMeshOtherFlagsList[iSubMeshFlagsOther];
-				NewFlags.iSubMesh = iSubMesh;
-				NewFlagsList.push_back(NewFlags);
-			}
+		std::vector< CElement_Flags* > SubMeshOtherFlagsList;
+		pOther->GetSubMeshFlags(SubMeshOtherTriangleIndex, SubMeshOtherFlagsList);
+		for (UInt32 iSubMeshFlagsOther = 0; iSubMeshFlagsOther < SubMeshOtherFlagsList.size(); iSubMeshFlagsOther++)
+		{
+			CElement_Flags NewFlags = *SubMeshOtherFlagsList[iSubMeshFlagsOther];
+			NewFlags.iSubMesh = iSubMesh;
+			NewFlagsList.push_back(NewFlags);
 		}
 	}
 
@@ -572,14 +556,14 @@ bool M2Lib::M2Skin::PrintInfo()
     {
         CElement_Material& Material = Elements[EElement_Material].as<CElement_Material>()[i];
         FileStream << "Flags:     " << Material.Flags << std::endl;
-        //FileStream << "RenderOrder:   " << Material.RenderOrder << std::endl;
+        //FileStream << "shader_id:   " << Material.shader_id << std::endl;
         FileStream << "iSubMesh:    " << Material.iSubMesh << std::endl;
         FileStream << "iSubMesh2:     " << Material.iSubMesh2 << std::endl;
         FileStream << "iColor:   " << Material.iColor << std::endl;
         FileStream << "iRenderFlags:   " << Material.iRenderFlags << std::endl;
 
-        FileStream << "iTexutreUnit1:   " << Material.iTexutreUnit1 << std::endl;
-        //FileStream << "iShader:   " << Material.iShader << std::endl;
+        FileStream << "layer:   " << Material.layer << std::endl;
+        //FileStream << "op_count:   " << Material.op_count << std::endl;
         FileStream << "iTexture:   " << Material.iTexture << std::endl;
         FileStream << "iTexutreUnit2:   " << Material.iTexutreUnit2 << std::endl;
 

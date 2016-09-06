@@ -1024,8 +1024,8 @@ void M2Lib::M2::PrintInfo()
 		CElement_Texture* texture = Elements[EElement_Texture].as<CElement_Texture>();
 
         FileStream << "\t" << i << std::endl;
-        FileStream << "\tFlags: " << texture[i].Flags << std::endl;
-        FileStream << "\tType: " << texture[i].Type << std::endl;
+        FileStream << "\tFlags: " << (UInt32)texture[i].Flags << std::endl;
+        FileStream << "\tType: " << (UInt32)texture[i].Type << std::endl;
         if (texture[i].nTexturePath > 1)
             FileStream << "\tPath: " << (char*)(texture[i].oTexturePath + this->RawData + M2Element::GetFileOffset()) << std::endl;
         else
@@ -1703,12 +1703,6 @@ void M2Lib::M2::FixSeamsClothing(Float32 PositionalTolerance, Float32 AngularTol
 		}
 	}
 }
-
-
-void M2Lib::M2::NormalizeBoneWeights()
-{
-}
-
 
 void M2Lib::M2::Scale(Float32 Scale)
 {
@@ -2407,3 +2401,62 @@ SInt32  M2Lib::M2::m_GetChunkIndex(const Char8* ChunkID) const
 
 	return -1;
 }
+
+UInt32 M2Lib::M2::AddTexture(const Char8* szTextureSource, CElement_Texture::ETextureType Type, CElement_Texture::ETextureFlags Flags)
+{
+	auto& Element = Elements[EElement_Texture];
+
+	// shift offsets for existing textures
+	for (auto i = 0; i < Element.Count; ++i)
+	{
+		auto& texture = Element.as<CElement_Texture>()[i];
+		if (texture.oTexturePath)
+		{
+			char* ptr = (char*)Element.GetLocalPointer(texture.oTexturePath);
+			texture.oTexturePath += sizeof(CElement_Texture);
+		}
+	}
+
+	// add element placeholder for new texture
+	Element.Data.insert(Element.Data.begin() + Element.Count * sizeof(CElement_Texture), sizeof(CElement_Texture), 0);
+
+	auto newIndex = Element.Count;
+
+	auto insertPos = Element.Data.size();
+
+	CElement_Texture& newTexture = Element.as<CElement_Texture>()[newIndex];
+	newTexture.Type = Type;
+	newTexture.Flags = Flags;
+	newTexture.nTexturePath = strlen(szTextureSource) + 1;
+	newTexture.oTexturePath = Element.Offset + insertPos;
+
+	Element.Data.insert(Element.Data.end(), newTexture.nTexturePath, 0);
+	memcpy(&Element.Data[insertPos], szTextureSource, newTexture.nTexturePath);
+
+	++Element.Count;
+
+	return newIndex;
+}
+
+UInt32 M2Lib::M2::AddTextureLookup(UInt16 TextureId)
+{
+	auto& Element = Elements[EElement_TextureLookup];
+
+	for (int i = 0; i < Element.Count; ++i)
+	{
+		auto& lookup = Element.as<CElement_TextureLookup>()[i];
+		if (lookup.TextureIndex == TextureId)
+			return i;
+	}
+
+	// add element placeholder for new lookup
+	Element.Data.insert(Element.Data.begin() + Element.Count * sizeof(CElement_TextureLookup), sizeof(CElement_TextureLookup), 0);
+
+	auto newIndex = Element.Count;
+	CElement_TextureLookup& newLookup = Element.as<CElement_TextureLookup>()[newIndex];
+	newLookup.TextureIndex = TextureId;
+
+	++Element.Count;
+	return newIndex;
+}
+
