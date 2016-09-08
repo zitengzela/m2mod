@@ -58,7 +58,7 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 	IFFChunk * Chunk = (IFFChunk *)RawData;
 	bool ValidFile = false;
 
-	M2Element::SetFileOffset(0);
+	DataElement::SetFileOffset(0);
 
 	while ((UInt8*)Chunk < (RawData + FileSize) && Chunk->ChunkSize >= 0)
 	{
@@ -87,7 +87,7 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 	{
 		SInt32 MD20Offset = Chunks[EChunk_Model].Offset;
 		FileSize = Chunks[EChunk_Model].Data.size();
-		M2Element::SetFileOffset(MD20Offset);
+		DataElement::SetFileOffset(MD20Offset);
 
 		FileStream.seekg(MD20Offset, std::ios::beg);
 		FileStream.read((Char8*)RawData, FileSize);
@@ -140,7 +140,7 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 	// close file stream
 	FileStream.close();
 
-	M2Element::SetFileOffset(0);
+	DataElement::SetFileOffset(0);
 
 	// load skins
 	if ((Header.Elements.nSkin == 0) || (Header.Elements.nSkin > 4))
@@ -243,7 +243,7 @@ M2Lib::EError M2Lib::M2::Save(const Char16* FileName)
 	m_SaveElements_CopyElementsToHeader();
 
 	// Reserve model chunk header
-	M2Element::SetFileOffset(8);
+	DataElement::SetFileOffset(8);
 	FileStream.seekp(8, std::ios::beg);
 
 	*(UInt16*)Header.Description.Version = 0x0110;
@@ -281,7 +281,7 @@ M2Lib::EError M2Lib::M2::Save(const Char16* FileName)
 
 	// close file stream
 	FileStream.close();
-	M2Element::SetFileOffset(0);
+	DataElement::SetFileOffset(0);
 
 	// delete existing skin files
 	for (UInt32 i = 0; i < 6; i++)
@@ -1027,7 +1027,7 @@ void M2Lib::M2::PrintInfo()
         FileStream << "\tFlags: " << (UInt32)texture[i].Flags << std::endl;
         FileStream << "\tType: " << (UInt32)texture[i].Type << std::endl;
         if (texture[i].nTexturePath > 1)
-            FileStream << "\tPath: " << (char*)(texture[i].oTexturePath + this->RawData + M2Element::GetFileOffset()) << std::endl;
+            FileStream << "\tPath: " << (char*)(texture[i].oTexturePath + this->RawData + DataElement::GetFileOffset()) << std::endl;
         else
             FileStream << "\tPath: unk" << std::endl;
         FileStream << std::endl;

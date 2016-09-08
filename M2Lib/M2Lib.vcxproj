@@ -70,7 +70,7 @@
     <ClInclude Include="BaseTypes.h" />
     <ClInclude Include="DataBinary.h" />
     <ClInclude Include="M2.h" />
-    <ClInclude Include="M2Element.h" />
+    <ClInclude Include="DataElement.h" />
     <ClInclude Include="M2I.h" />
     <ClInclude Include="M2Skin.h" />
     <ClInclude Include="M2SkinBuilder.h" />
@@ -79,7 +79,7 @@
   <ItemGroup>
     <ClCompile Include="DataBinary.cpp" />
     <ClCompile Include="M2.cpp" />
-    <ClCompile Include="M2Element.cpp" />
+    <ClCompile Include="DataElement.cpp" />
     <ClCompile Include="M2Skin.cpp" />
     <ClCompile Include="M2SkinBuilder.cpp" />
     <ClCompile Include="M2Types.cpp" />

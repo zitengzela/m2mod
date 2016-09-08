@@ -1,6 +1,6 @@
 #pragma once
 
-#include "M2Element.h"
+#include "DataElement.h"
 #include "M2Types.h"
 #include <vector>
 #include <map>
@@ -179,7 +179,7 @@ namespace M2Lib
 		Char16 _FileName[1024];
 
 		CM2SkinHeader Header;
-		M2Element Elements[EElement__Count__];
+		DataElement Elements[EElement__Count__];
 
 		std::map<int, SubmeshComparisonData const*> ComparisonDataBySubmeshIndex;
 

@@ -7,7 +7,7 @@
 namespace M2Lib
 {
 
-	class M2Element
+	class DataElement
 	{
 	public:
 		UInt32 Count;				// number of sub-elements contained in Data. the definition of this structure depends on this element's usage.
@@ -18,8 +18,8 @@ namespace M2Lib
 		SInt32 Align;				// byte alignment boundary. M2s pad the ends of elements with zeros data so they align on 16 byte boundaries.
 
 	public:
-		M2Element();
-		~M2Element();
+		DataElement();
+		~DataElement();
 
 		// given a global offset, returns a pointer to the data contained in this Element.
 		// asserts if GlobalOffset lies outside of this element.
@@ -38,7 +38,7 @@ namespace M2Lib
 		T* as() { return (T*)Data.data(); }
 
 		// clones this element from Source to Destination.
-		static void Clone(M2Element* Source, M2Element* Destination);
+		static void Clone(DataElement* Source, DataElement* Destination);
 
 		static void SetFileOffset(UInt32 offset);
 		static UInt32 GetFileOffset() { return FileOffset; }

@@ -7,7 +7,7 @@
 #include "BaseTypes.h"
 #include "M2Types.h"
 #include "M2I.h"
-#include "M2Element.h"
+#include "DataElement.h"
 #include "M2Skin.h"
 
 #define DegreesToRadians 0.0174532925f
@@ -911,8 +911,8 @@ namespace M2Lib
 		Char16 _FileName[1024];	// needed to create skin file names so we can load/save skins.
 
 		CM2Header Header;		// used for loading and saving. not used when editing.
-		M2Element Elements[EElement__Count__];
-		M2Element Chunks[EChunk__Count__];
+		DataElement Elements[EElement__Count__];
+		DataElement Chunks[EChunk__Count__];
 		const static Char8* kChunkIDs[EChunk__Count__];
 		M2Skin* Skins[6];
 

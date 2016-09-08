@@ -1,22 +1,22 @@
-#include "M2Element.h"
+#include "DataElement.h"
 #include <assert.h>
 #include <string.h>
 #include <algorithm>
 
-UInt32 M2Lib::M2Element::FileOffset = 0;
+UInt32 M2Lib::DataElement::FileOffset = 0;
 
-M2Lib::M2Element::M2Element()
+M2Lib::DataElement::DataElement()
 	: Count(0)
 	, Offset(0)
 	, Align(16)
 {
 }
 
-M2Lib::M2Element::~M2Element()
+M2Lib::DataElement::~DataElement()
 {
 }
 
-void* M2Lib::M2Element::GetLocalPointer(UInt32 GlobalOffset)
+void* M2Lib::DataElement::GetLocalPointer(UInt32 GlobalOffset)
 {
 	assert(GlobalOffset >= Offset);
 	GlobalOffset -= Offset;
@@ -24,7 +24,7 @@ void* M2Lib::M2Element::GetLocalPointer(UInt32 GlobalOffset)
 	return &Data[GlobalOffset];
 }
 
-bool M2Lib::M2Element::Load(std::fstream& FileStream)
+bool M2Lib::DataElement::Load(std::fstream& FileStream)
 {
 	if (Data.empty())
 		return true;
@@ -35,7 +35,7 @@ bool M2Lib::M2Element::Load(std::fstream& FileStream)
 	return true;
 }
 
-bool M2Lib::M2Element::Save(std::fstream& FileStream)
+bool M2Lib::DataElement::Save(std::fstream& FileStream)
 {
 	if (Data.empty())
 		return true;
@@ -46,7 +46,7 @@ bool M2Lib::M2Element::Save(std::fstream& FileStream)
 	return true;
 }
 
-void M2Lib::M2Element::SetDataSize(UInt32 NewCount, UInt32 NewDataSize, bool CopyOldData)
+void M2Lib::DataElement::SetDataSize(UInt32 NewCount, UInt32 NewDataSize, bool CopyOldData)
 {
 	if (Align != 0)
 	{
@@ -63,13 +63,13 @@ void M2Lib::M2Element::SetDataSize(UInt32 NewCount, UInt32 NewDataSize, bool Cop
 	Count = NewCount;
 }
 
-void M2Lib::M2Element::Clone(M2Element* Source, M2Element* Destination)
+void M2Lib::DataElement::Clone(DataElement* Source, DataElement* Destination)
 {
 	Destination->SetDataSize(Source->Count, Source->Data.size(), false);
 	memcpy(Destination->Data.data(), Source->Data.data(), Source->Data.size());
 }
 
-void M2Lib::M2Element::SetFileOffset(UInt32 offset)
+void M2Lib::DataElement::SetFileOffset(UInt32 offset)
 {
 	FileOffset = offset;
 }
