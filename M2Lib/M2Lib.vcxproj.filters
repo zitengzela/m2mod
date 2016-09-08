@@ -68,5 +68,8 @@
     <ClCompile Include="M2SkinElement.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="M2I.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

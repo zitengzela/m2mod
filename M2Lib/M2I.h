@@ -10,6 +10,8 @@ namespace M2Lib
 	class M2I
 	{
 	public:
+		static const UInt32 Signature_M2I0 = MakeFourCC('M', '2', 'I', '0');
+
 		class CSubMesh
 		{
 		public:
@@ -33,9 +35,9 @@ namespace M2Lib
 		std::vector< CSubMesh* > SubMeshList;
 
 	public:
-		M2I()
-		{
-		}
+		M2I() { }
+
+		EError Load(Char16* FileName, M2* pM2, bool IgnoreBones, bool IgnoreAttachments, bool IgnoreCameras);
 
 		~M2I()
 		{

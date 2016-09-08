@@ -82,6 +82,7 @@
     <ClCompile Include="DataBinary.cpp" />
     <ClCompile Include="M2.cpp" />
     <ClCompile Include="DataElement.cpp" />
+    <ClCompile Include="M2I.cpp" />
     <ClCompile Include="M2Skin.cpp" />
     <ClCompile Include="M2SkinBuilder.cpp" />
     <ClCompile Include="M2SkinElement.cpp" />

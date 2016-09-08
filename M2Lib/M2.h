@@ -22,7 +22,6 @@ namespace M2Lib
 	{
 	public:
 		static const UInt8 VersionCode = 0x10;
-		static const UInt32 Signature_M2I0 = MakeFourCC('M', '2', 'I', '0');
 
 	public:
 		//
@@ -166,7 +165,7 @@ namespace M2Lib
 
 		UInt8* RawData;			// the entire file read into memory, so we can access animations.
 
-		bool ImportedM2I;
+		M2I* pInM2I;
 
 	public:
 		M2()
@@ -179,11 +178,13 @@ namespace M2Lib
 			Skins[5] = 0;
 			m_OriginalSize = 0;
 			RawData = 0;
-			ImportedM2I = false;
+			pInM2I = NULL;
 		}
 
 		~M2()
 		{
+			if (pInM2I)
+				delete pInM2I;
 		}
 
 	public:
