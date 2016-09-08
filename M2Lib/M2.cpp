@@ -95,17 +95,19 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 		FileStream.read((Char8*)RawData, FileSize);
 		FileStream.seekg(MD20Offset, std::ios::beg);
 
+		m_OriginalModelChunkSize = FileSize;
+
 		ValidFile = true;
 	}
-
-	// load header
-	FileStream.read((Char8*)&Header.Description, sizeof(Header.Description));
 
 	// check header
 	if (!ValidFile)
 		return EError_FailedToLoadM2_FileCorrupt;
-	UInt32 VersionInt = (UInt32&)Header.Description.Version;
-	if ((263 > VersionInt) || (VersionInt > 274))
+
+	// load header
+	FileStream.read((Char8*)&Header.Description, sizeof(Header.Description));
+
+	if ((263 > Header.Description.Version) || (Header.Description.Version > 274))
 		return EError_FailedToLoadM2_VersionNotSupported;
 
 	// load more header
@@ -248,7 +250,7 @@ M2Lib::EError M2Lib::M2::Save(const Char16* FileName)
 	DataElement::SetFileOffset(8);
 	FileStream.seekp(8, std::ios::beg);
 
-	*(UInt16*)Header.Description.Version = 0x0110;
+	Header.Description.Version = 0x0110;
 	Header.Description.Flags &= ~0x80;
 
 	// save header
@@ -688,11 +690,7 @@ void M2Lib::M2::PrintInfo()
 	FileStream.open(szFileOut, std::ios::out | std::ios::trunc);
 
 	FileStream << "ID       " << Header.Description.ID[0] << Header.Description.ID[1] << Header.Description.ID[2] << Header.Description.ID[3] << std::endl;		// 'MD20'
-	FileStream << "Version  ";
-	FileStream << _itoa_s((int)Header.Description.Version[0], szItoA, 32, 10) << " ";
-	FileStream << _itoa_s((int)Header.Description.Version[1], szItoA, 32, 10) << " ";
-	FileStream << _itoa_s((int)Header.Description.Version[2], szItoA, 32, 10) << " ";
-	FileStream << _itoa_s((int)Header.Description.Version[3], szItoA, 32, 10) << std::endl;
+	FileStream << "Version  " << Header.Description.Version << std::endl;
 	FileStream << std::endl;
 
 	FileStream << "nName                     " << Header.Description.nName << std::endl;
@@ -1696,7 +1694,7 @@ void M2Lib::M2::m_SaveElements_FindOffsets()
 		CurrentOffset = sizeof(CM2Header) - 8;	// -8 because last 2 UInt32s are not saved
 
 	// totaldiff needed to fix animations that are in the end of a chunk
-	SInt32 totalDiff = -(SInt32)Chunks[EChunk_Model].Data.size() + (Header.IsLongHeader() ? sizeof(Header) : sizeof(Header) - 8);
+	SInt32 totalDiff = -(SInt32)m_OriginalModelChunkSize + (Header.IsLongHeader() ? sizeof(Header) : sizeof(Header) - 8);
 	for (UInt32 iElement = 0; iElement < EElement__Count__; ++iElement)
 		totalDiff += Elements[iElement].Data.size();
 
@@ -1935,6 +1933,10 @@ void M2Lib::M2::m_SaveElements_FindOffsets()
 		Elements[iElement].Offset = CurrentOffset;
 		CurrentOffset += Elements[iElement].Data.size();
 	}
+
+	m_OriginalModelChunkSize = (Header.IsLongHeader() ? sizeof(Header) : sizeof(Header) - 8);
+	for (UInt32 iElement = 0; iElement < EElement__Count__; ++iElement)
+		m_OriginalModelChunkSize += Elements[iElement].Data.size();
 }
 
 void M2Lib::M2::m_FixAnimationOffsets(SInt32 OffsetDelta, SInt32 TotalDiff, CElement_AnimationBlock& AnimationBlock, SInt32 iElement)

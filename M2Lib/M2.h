@@ -43,7 +43,7 @@ namespace M2Lib
 			struct
 			{
 				Char8 ID[4];	// 'MD20'
-				UInt8 Version[4];
+				UInt32 Version;
 
 				UInt32 nName;
 				UInt32 oName;
@@ -164,6 +164,7 @@ namespace M2Lib
 		M2Skin* Skins[SKIN_COUNT];
 
 		UInt32 m_OriginalSize;	// size in bytes of the original M2 file when loaded.
+		UInt32 m_OriginalModelChunkSize;
 
 		UInt8* RawData;			// the entire file read into memory, so we can access animations.
 
@@ -179,6 +180,7 @@ namespace M2Lib
 			Skins[4] = 0;
 			Skins[5] = 0;
 			m_OriginalSize = 0;
+			m_OriginalModelChunkSize = 0;
 			RawData = 0;
 			pInM2I = NULL;
 		}
