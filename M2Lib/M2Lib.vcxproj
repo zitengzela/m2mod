@@ -71,9 +71,11 @@
     <ClInclude Include="DataBinary.h" />
     <ClInclude Include="M2.h" />
     <ClInclude Include="DataElement.h" />
+    <ClInclude Include="M2Element.h" />
     <ClInclude Include="M2I.h" />
     <ClInclude Include="M2Skin.h" />
     <ClInclude Include="M2SkinBuilder.h" />
+    <ClInclude Include="M2SkinElement.h" />
     <ClInclude Include="M2Types.h" />
   </ItemGroup>
   <ItemGroup>
@@ -82,6 +84,7 @@
     <ClCompile Include="DataElement.cpp" />
     <ClCompile Include="M2Skin.cpp" />
     <ClCompile Include="M2SkinBuilder.cpp" />
+    <ClCompile Include="M2SkinElement.cpp" />
     <ClCompile Include="M2Types.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

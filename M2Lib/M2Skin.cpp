@@ -1,11 +1,13 @@
 #include "M2Skin.h"
 #include "M2.h"
-#include "M2.h"
+#include "M2Element.h"
 #include <math.h>
 #include <iostream>
 #include <fstream>
 #include <list>
 #include <assert.h>
+
+using namespace M2Lib::M2SkinElement;
 
 extern int g_Verbose;
 
@@ -113,10 +115,10 @@ void M2Lib::M2Skin::BuildVertexBoneIndices()
 	if (!pM2)
 		return;
 
-	CVertex* VertexList = pM2->Elements[M2::EElement_Vertex].as<CVertex>();
+	CVertex* VertexList = pM2->Elements[M2Element::EElement_Vertex].as<CVertex>();
 
-	UInt32 BoneLookupListLength = pM2->Elements[M2::EElement_SkinnedBoneLookup].Count;
-	UInt16* BoneLookupList = pM2->Elements[M2::EElement_SkinnedBoneLookup].as<UInt16>();
+	UInt32 BoneLookupListLength = pM2->Elements[M2Element::EElement_SkinnedBoneLookup].Count;
+	UInt16* BoneLookupList = pM2->Elements[M2Element::EElement_SkinnedBoneLookup].as<UInt16>();
 
 	UInt32 VertexLookupListLength = Elements[EElement_VertexLookup].Count;
 	UInt16* VertexLookupList = Elements[EElement_VertexLookup].as<UInt16>();
@@ -170,7 +172,7 @@ void M2Lib::M2Skin::BuildVertexBoneIndices()
 
 void M2Lib::M2Skin::BuildBoundingData()
 {
-	CVertex* VertexList = pM2->Elements[M2::EElement_Vertex].as<CVertex>();
+	CVertex* VertexList = pM2->Elements[M2Element::EElement_Vertex].as<CVertex>();
 	UInt16* VertexLookupList = Elements[EElement_VertexLookup].as<UInt16>();
 
 	UInt32 SubMeshListLength = Elements[EElement_SubMesh].Count;
@@ -207,7 +209,7 @@ void M2Lib::M2Skin::BuildBoundingData()
 
 void M2Lib::M2Skin::BuildMaxBones()
 {
-	CVertex* VertexList = pM2->Elements[M2::EElement_Vertex].as<CVertex>();
+	CVertex* VertexList = pM2->Elements[M2Element::EElement_Vertex].as<CVertex>();
 
 	UInt32 SubMeshListLength = Elements[EElement_SubMesh].Count;
 	CElement_SubMesh* SubMeshList = Elements[EElement_SubMesh].as<CElement_SubMesh>();
@@ -309,7 +311,7 @@ void M2Lib::M2Skin::CopyMaterials(M2Skin* pOther)
 	memcpy(Elements[EElement_Flags].Data.data(), &NewFlagsList[0], sizeof(CElement_Flags) * NewFlagsList.size());
 }
 
-bool SortSubMeshesComparisonFunction(M2Lib::M2Skin::CElement_SubMesh* A, M2Lib::M2Skin::CElement_SubMesh* B)
+bool SortSubMeshesComparisonFunction(M2Lib::M2SkinElement::CElement_SubMesh* A, M2Lib::M2SkinElement::CElement_SubMesh* B)
 {
 	Float32 ScoreA = A->ID + (0.999f - (A->VertexCount / (Float32)0xFFFF));
 	Float32 ScoreB = B->ID + (0.999f - (B->VertexCount / (Float32)0xFFFF));
@@ -367,7 +369,7 @@ void M2Lib::M2Skin::SortSubMeshes()
 }
 
 
-M2Lib::M2Skin::CElement_SubMesh* M2Lib::M2Skin::GetSubMesh(SubmeshComparisonData const& TargetSubMeshData, SInt32& SubMeshTriangleIndexOut)
+M2Lib::M2SkinElement::CElement_SubMesh* M2Lib::M2Skin::GetSubMesh(SubmeshComparisonData const& TargetSubMeshData, SInt32& SubMeshTriangleIndexOut)
 {
 	UInt32 SubMeshListLength = Elements[EElement_SubMesh].Count;
 	CElement_SubMesh* SubMeshList = Elements[EElement_SubMesh].as<CElement_SubMesh>();
@@ -672,45 +674,6 @@ void M2Lib::M2Skin::m_SaveElements_CopyElementsToHeader()
 	Header.Unknown3 = 0;
 }
 
-bool M2Lib::M2Skin::CElement_SubMesh::Same(CElement_SubMesh const& other) const
-{
-	return &other == this || other.VertexStart == VertexStart;
-}
-
-#define GLOSS_SHADER_ID 32769
-
-void M2Lib::M2Skin::CElement_SubMesh::MakeGlossy(M2Skin* pSkin, UInt32 GlossTextureId, TextureLookupRemap& LookupRemap)
-{
-	auto Materials = pSkin->Elements[EElement_Material].as<CElement_Material>();
-	auto Submeshes = pSkin->Elements[EElement_SubMesh].as<CElement_SubMesh>();
-	auto TextureLookup = pSkin->pM2->Elements[M2::EElement_TextureLookup].as<M2::CElement_TextureLookup>();
-
-	// loop through all materials to find ones assigned to our submesh
-	for (UInt32 i = 0; i < pSkin->Elements[EElement_Material].Count; ++i)
-	{
-		auto& material = Materials[i];
-		if (!Submeshes[material.iSubMesh].Same(*this))
-			continue;
-
-		auto textureId = TextureLookup[material.iTexture].TextureIndex;
-		int newLookup;
-
-		if (LookupRemap.find(textureId) == LookupRemap.end())
-		{
-			// add two new lookups successively to use with op_count
-			newLookup = pSkin->pM2->AddTextureLookup(textureId, true);
-			pSkin->pM2->AddTextureLookup(GlossTextureId, true);
-			LookupRemap[textureId] = newLookup;
-		}
-		else
-			newLookup = LookupRemap[textureId];
-
-		material.iTexture = newLookup;
-		material.op_count = 2;
-		material.shader_id = GLOSS_SHADER_ID;
-	}
-}
-
 void M2Lib::M2Skin::MakeGlossy(UInt32 GlossTextureId, std::vector<UInt32> const& MeshIndexes, TextureLookupRemap& LookupRemap)
 {
 	auto Submeshes = Elements[EElement_SubMesh].as<CElement_SubMesh>();
@@ -725,7 +688,7 @@ void M2Lib::M2Skin::MakeGlossy(Char8 const* szGlossTexturePath, std::vector<UInt
 {
 	SInt32 GlossTextureId = pM2->GetTexture(szGlossTexturePath);
 	if (GlossTextureId == -1)
-		GlossTextureId = pM2->AddTexture(szGlossTexturePath, M2::CElement_Texture::ETextureType::Final_Hardcoded, M2::CElement_Texture::ETextureFlags::None);
+		GlossTextureId = pM2->AddTexture(szGlossTexturePath, M2Element::CElement_Texture::ETextureType::Final_Hardcoded, M2Element::CElement_Texture::ETextureFlags::None);
 
 	MakeGlossy(GlossTextureId, MeshIndexes, LookupRemap);
 }

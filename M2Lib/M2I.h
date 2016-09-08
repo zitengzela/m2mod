@@ -5,13 +5,8 @@
 #include "M2Types.h"
 #include "M2Skin.h"
 
-
 namespace M2Lib
 {
-
-
-
-
 	class M2I
 	{
 	public:
@@ -30,14 +25,12 @@ namespace M2Lib
 			SubmeshComparisonData ComparisonData;
 		};
 
-
 	public:
 		// the global vertex list
 		std::vector< CVertex > VertexList;
 
 		// list of subsets in this M2I.
 		std::vector< CSubMesh* > SubMeshList;
-
 
 	public:
 		M2I()
@@ -51,14 +44,5 @@ namespace M2Lib
 				delete SubMeshList[i];
 			}
 		}
-
-
-	public:
-
-
 	};
-
-
-
-
 }

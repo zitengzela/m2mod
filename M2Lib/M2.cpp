@@ -6,6 +6,8 @@
 #include <codecvt>
 #include <string>
 
+using namespace M2Lib::M2Element;
+
 // level of detail for output messages
 int g_Verbose = 1;
 
@@ -264,7 +266,7 @@ M2Lib::EError M2Lib::M2::Save(const Char16* FileName)
 	UInt32 MD20Size = FileStream.tellp();
 	MD20Size -= 8;
 
-	for (UInt32 i = M2::EChunk_Model + 1; i < M2::EChunk__Count__; i++)
+	for (UInt32 i = EChunk_Model + 1; i < EChunk__Count__; i++)
 	{
 		if (!Chunks[i].Data.empty())
 		{
@@ -276,7 +278,7 @@ M2Lib::EError M2Lib::M2::Save(const Char16* FileName)
 	}
 
 	FileStream.seekp(0, std::ios::beg);
-	FileStream.write(kChunkIDs[M2::EChunk_Model], 4);
+	FileStream.write(kChunkIDs[EChunk_Model], 4);
 	FileStream.write((Char8*)(&MD20Size), 4);
 
 	// close file stream
@@ -341,12 +343,12 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate(Char16* FileName)
 	// get data to save
 	M2Skin* pSkin = Skins[0];
 
-	UInt32 SubsetCount = pSkin->Elements[M2Skin::EElement_SubMesh].Count;
-	M2Skin::CElement_SubMesh* Subsets = pSkin->Elements[M2Skin::EElement_SubMesh].as<M2Skin::CElement_SubMesh>();
+	UInt32 SubsetCount = pSkin->Elements[M2SkinElement::EElement_SubMesh].Count;
+	M2SkinElement::CElement_SubMesh* Subsets = pSkin->Elements[M2SkinElement::EElement_SubMesh].as<M2SkinElement::CElement_SubMesh>();
 
 	CVertex* Vertices = Elements[EElement_Vertex].as<CVertex>();
-	UInt16* Triangles = pSkin->Elements[M2Skin::EElement_TriangleIndex].as<UInt16>();
-	UInt16* Indices = pSkin->Elements[M2Skin::EElement_VertexLookup].as<UInt16>();
+	UInt16* Triangles = pSkin->Elements[M2SkinElement::EElement_TriangleIndex].as<UInt16>();
+	UInt16* Indices = pSkin->Elements[M2SkinElement::EElement_VertexLookup].as<UInt16>();
 
 	UInt32 BonesCount = Elements[EElement_Bone].Count;
 	CElement_Bone* Bones = Elements[EElement_Bone].as<CElement_Bone>();
@@ -372,7 +374,7 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate(Char16* FileName)
 	DataBinary.WriteUInt32(SubsetCount);
 	for (UInt32 i = 0; i < SubsetCount; i++)
 	{
-		M2Skin::CElement_SubMesh* pSubsetOut = &Subsets[i];
+		M2SkinElement::CElement_SubMesh* pSubsetOut = &Subsets[i];
 
 		// write subset ID
 
@@ -1281,10 +1283,10 @@ bool M2Lib::M2::GetFileSkin(Char16* SkinFileNameResultBuffer, const Char16* M2Fi
 void M2Lib::M2::FixSeamsSubMesh(Float32 PositionalTolerance, Float32 AngularTolerance)
 {
 	// gather up sub meshes
-	std::vector< std::vector< M2Skin::CElement_SubMesh* > > SubMeshes;
+	std::vector< std::vector< M2SkinElement::CElement_SubMesh* > > SubMeshes;
 
-	M2Skin::CElement_SubMesh* Subsets = Skins[0]->Elements[M2Skin::EElement_SubMesh].as<M2Skin::CElement_SubMesh>();
-	UInt32 SubsetCount = Skins[0]->Elements[M2Skin::EElement_SubMesh].Count;
+	M2SkinElement::CElement_SubMesh* Subsets = Skins[0]->Elements[M2SkinElement::EElement_SubMesh].as<M2SkinElement::CElement_SubMesh>();
+	UInt32 SubsetCount = Skins[0]->Elements[M2SkinElement::EElement_SubMesh].Count;
 	for (UInt32 i = 0; i < SubsetCount; i++)
 	{
 		UInt16 ThisID = Subsets[i].ID;
@@ -1307,7 +1309,7 @@ void M2Lib::M2::FixSeamsSubMesh(Float32 PositionalTolerance, Float32 AngularTole
 		}
 		if (MakeNew)
 		{
-			std::vector< M2Skin::CElement_SubMesh* > NewSubmeshSubsetList;
+			std::vector< M2SkinElement::CElement_SubMesh* > NewSubmeshSubsetList;
 			NewSubmeshSubsetList.push_back(&Subsets[i]);
 			SubMeshes.push_back(NewSubmeshSubsetList);
 		}
@@ -1321,7 +1323,7 @@ void M2Lib::M2::FixSeamsSubMesh(Float32 PositionalTolerance, Float32 AngularTole
 	{
 		for (UInt32 iSubSet1 = 0; iSubSet1 < SubMeshes[iSubMesh1].size(); iSubSet1++)
 		{
-			M2Skin::CElement_SubMesh* pSubSet1 = SubMeshes[iSubMesh1][iSubSet1];
+			M2SkinElement::CElement_SubMesh* pSubSet1 = SubMeshes[iSubMesh1][iSubSet1];
 
 			UInt32 VertexAEnd = pSubSet1->VertexStart + pSubSet1->VertexCount;
 			for (UInt32 iVertexA = pSubSet1->VertexStart; iVertexA < VertexAEnd; iVertexA++)
@@ -1329,7 +1331,7 @@ void M2Lib::M2::FixSeamsSubMesh(Float32 PositionalTolerance, Float32 AngularTole
 				bool AddedVertexA = false;
 				for (UInt32 iSubSet2 = 0; iSubSet2 < SubMeshes[iSubMesh1].size(); iSubSet2++)
 				{
-					M2Skin::CElement_SubMesh* pSubSet2 = SubMeshes[iSubMesh1][iSubSet2];
+					M2SkinElement::CElement_SubMesh* pSubSet2 = SubMeshes[iSubMesh1][iSubSet2];
 
 					UInt32 VertexBEnd = pSubSet2->VertexStart + pSubSet2->VertexCount;
 					for (UInt32 iVertexB = pSubSet2->VertexStart; iVertexB < VertexBEnd; iVertexB++)
@@ -1440,11 +1442,11 @@ void M2Lib::M2::FixSeamsBody(Float32 PositionalTolerance, Float32 AngularToleran
 	// this function is designed to be used on character models, so it may not work on other models.
 
 	// list of submeshes that make up the body of the character
-	std::vector< std::vector< M2Skin::CElement_SubMesh* > > CompiledSubMeshList;
+	std::vector< std::vector< M2SkinElement::CElement_SubMesh* > > CompiledSubMeshList;
 
 	// gather up the body submeshes
-	M2Skin::CElement_SubMesh* SubMeshList = Skins[0]->Elements[M2Skin::EElement_SubMesh].as<M2Skin::CElement_SubMesh>();
-	UInt32 SubsetCount = Skins[0]->Elements[M2Skin::EElement_SubMesh].Count;
+	M2SkinElement::CElement_SubMesh* SubMeshList = Skins[0]->Elements[M2SkinElement::EElement_SubMesh].as<M2SkinElement::CElement_SubMesh>();
+	UInt32 SubsetCount = Skins[0]->Elements[M2SkinElement::EElement_SubMesh].Count;
 	for (UInt32 i = 0; i < SubsetCount; i++)
 	{
 		// determine type of subset
@@ -1477,7 +1479,7 @@ void M2Lib::M2::FixSeamsBody(Float32 PositionalTolerance, Float32 AngularToleran
 			}
 			if (MakeNew)
 			{
-				std::vector< M2Skin::CElement_SubMesh* > NewSubmeshSubsetList;
+				std::vector< M2SkinElement::CElement_SubMesh* > NewSubmeshSubsetList;
 				NewSubmeshSubsetList.push_back(&SubMeshList[i]);
 				CompiledSubMeshList.push_back(NewSubmeshSubsetList);
 			}
@@ -1617,11 +1619,11 @@ void M2Lib::M2::FixSeamsClothing(Float32 PositionalTolerance, Float32 AngularTol
 {
 	CVertex* VertexList = Elements[EElement_Vertex].as<CVertex>();
 
-	UInt32 SubMeshListLength = Skins[0]->Elements[M2Skin::EElement_SubMesh].Count;
-	M2Skin::CElement_SubMesh* SubMeshList = Skins[0]->Elements[M2Skin::EElement_SubMesh].as<M2Skin::CElement_SubMesh>();
+	UInt32 SubMeshListLength = Skins[0]->Elements[M2SkinElement::EElement_SubMesh].Count;
+	M2SkinElement::CElement_SubMesh* SubMeshList = Skins[0]->Elements[M2SkinElement::EElement_SubMesh].as<M2SkinElement::CElement_SubMesh>();
 
-	std::vector< M2Skin::CElement_SubMesh* > SubMeshBodyList;	// gathered body sub meshes
-	std::vector< M2Skin::CElement_SubMesh* > SubMeshGarbList;	// gathered clothing sub meshes
+	std::vector< M2SkinElement::CElement_SubMesh* > SubMeshBodyList;	// gathered body sub meshes
+	std::vector< M2SkinElement::CElement_SubMesh* > SubMeshGarbList;	// gathered clothing sub meshes
 
 	for (UInt32 i = 0; i < SubMeshListLength; i++)
 	{
@@ -1665,10 +1667,10 @@ void M2Lib::M2::FixSeamsClothing(Float32 PositionalTolerance, Float32 AngularTol
 	// copy vertex properties from main body vertex to duplicate clothing vertices
 	for (UInt32 iSubMeshGarb = 0; iSubMeshGarb < SubMeshGarbList.size(); iSubMeshGarb++)
 	{
-		M2Skin::CElement_SubMesh* pSubMeshGarb = SubMeshGarbList[iSubMeshGarb];
+		M2SkinElement::CElement_SubMesh* pSubMeshGarb = SubMeshGarbList[iSubMeshGarb];
 		for (UInt32 iSubMeshBody = 0; iSubMeshBody < SubMeshBodyList.size(); iSubMeshBody++)
 		{
-			M2Skin::CElement_SubMesh* pSubMeshBody = SubMeshBodyList[iSubMeshBody];
+			M2SkinElement::CElement_SubMesh* pSubMeshBody = SubMeshBodyList[iSubMeshBody];
 
 			for (SInt32 iVertexGarb = pSubMeshGarb->VertexStart; iVertexGarb < pSubMeshGarb->VertexStart + pSubMeshGarb->VertexCount; iVertexGarb++)
 			{
