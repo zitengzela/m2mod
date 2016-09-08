@@ -26,7 +26,7 @@ M2Lib::EError M2Lib::M2I::Load(Char16* FileName, M2Lib::M2* pM2, bool IgnoreBone
 	{
 		VersionMajor = DataBinary.ReadUInt16();
 		VersionMinor = DataBinary.ReadUInt16();
-		if (VersionMajor != 4 && VersionMinor != 5)
+		if (VersionMajor != 4 || VersionMinor != 5 && VersionMinor != 6)
 			return EError_FailedToImportM2I_UnsupportedVersion;
 	}
 
@@ -43,6 +43,10 @@ M2Lib::EError M2Lib::M2I::Load(Char16* FileName, M2Lib::M2* pM2, bool IgnoreBone
 		// read id
 		pNewSubMesh->ID = DataBinary.ReadUInt16();
 		pNewSubMesh->ComparisonData.ID = pNewSubMesh->ID;
+
+		if (VersionMinor == 6)
+			pNewSubMesh->ComparisonData.Description = DataBinary.ReadASCIIString();
+
 		// FMN 2015-02-13: read level
 		pNewSubMesh->Level = DataBinary.ReadUInt16();
 

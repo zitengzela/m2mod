@@ -143,6 +143,7 @@ namespace M2Lib
 	struct SubmeshComparisonData
 	{
 		UInt32 ID;
+		std::string Description;
 		BoundaryData Boundary;
 	};
 }

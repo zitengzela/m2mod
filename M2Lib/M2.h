@@ -159,7 +159,9 @@ namespace M2Lib
 		DataElement Elements[M2Element::EElement__Count__];
 		DataElement Chunks[M2Element::EChunk__Count__];
 		const static Char8* kChunkIDs[M2Element::EChunk__Count__];
-		M2Skin* Skins[6];
+
+		#define SKIN_COUNT 6
+		M2Skin* Skins[SKIN_COUNT];
 
 		UInt32 m_OriginalSize;	// size in bytes of the original M2 file when loaded.
 

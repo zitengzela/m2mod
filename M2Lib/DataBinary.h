@@ -48,6 +48,7 @@ namespace M2Lib
 		Char16 ReadChar16();
 		Char8 ReadChar8();
 		UInt32 ReadFourCC();
+		std::string ReadASCIIString();
 
 		void WriteUInt32(UInt32 Value);
 		void WriteSInt32(SInt32 Value);
@@ -59,6 +60,7 @@ namespace M2Lib
 		void WriteChar16(Char16 Value);
 		void WriteChar8(Char8 Value);
 		void WriteFourCC(UInt32 Value);
+		void WriteASCIIString(std::string const& value);
 
 	};
 

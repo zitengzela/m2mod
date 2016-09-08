@@ -205,7 +205,7 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 
 	if (Header.Description.Flags & 0x80)
 	{
-		for (int i = 4; i < 6; ++i)
+		for (int i = SKIN_COUNT - 2; i < SKIN_COUNT; ++i)
 		{
 			Char16 FileNameSkin[1024];
 			GetFileSkin(FileNameSkin, FileName, i);
@@ -286,7 +286,7 @@ M2Lib::EError M2Lib::M2::Save(const Char16* FileName)
 	DataElement::SetFileOffset(0);
 
 	// delete existing skin files
-	for (UInt32 i = 0; i < 6; i++)
+	for (UInt32 i = 0; i < SKIN_COUNT; ++i)
 	{
 		Char16 FileNameSkin[1024];
 		GetFileSkin(FileNameSkin, FileName, i);
@@ -543,14 +543,16 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16* FileName, bool IgnoreBones
 	// set skin 0 so we can begin seam fixing
 	M2Skin* pOriginalSkin0 = Skins[0];	// save this because we will need to copy materials from it later.
 	Header.Elements.nSkin = 1;
-	for (UInt32 i = 0; i < 4; i++)
+	for (UInt32 i = 1; i < SKIN_COUNT; ++i)
 	{
-		if (i != 0 && Skins[i])
+		if (Skins[i])
 		{
 			delete Skins[i];
+			Skins[i] = NULL;
 		}
-		Skins[i] = i == 0 ? pNewSkin0 : 0;
 	}
+
+	Skins[0] = pNewSkin0;
 
 	if (FixSeams)
 	{
@@ -570,11 +572,9 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16* FileName, bool IgnoreBones
 	// build skins for real this time
 	// because a few bone indices might have changed during seam and gap fixing
 	// this list will store the new skins
-	M2Skin* NewSkinList[4];
-	NewSkinList[0] = 0;
-	NewSkinList[1] = 0;
-	NewSkinList[2] = 0;
-	NewSkinList[3] = 0;
+	M2Skin* NewSkinList[SKIN_COUNT];
+	for (UInt32 i = 0; i < SKIN_COUNT; ++i)
+		NewSkinList[i] = NULL;
 
 	// for easy looping
 	UInt32 MaxBoneList[5];
@@ -588,7 +588,7 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16* FileName, bool IgnoreBones
 	BoneStart = 0;
 	UInt32 iSkin = 0;
 
-	for (UInt32 iLoD = 0; iLoD < 4; iLoD++)
+	for (UInt32 iLoD = 0; iLoD < SKIN_COUNT - 2; ++iLoD)
 	{
 		M2Skin* pNewSkin = new M2Skin(this);
 		assert(SkinBuilder.Build(pNewSkin, MaxBoneList[iLoD], pInM2I, Elements[EElement_Vertex].as<CVertex>(), BoneStart));
@@ -615,13 +615,9 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16* FileName, bool IgnoreBones
 
 	// set skin count
 	Header.Elements.nSkin = iSkin;
-	if (iSkin == 0)
-	{
-		int pause = 1;
-	}
 
 	// copy materials from old sub meshes to new sub meshes
-	for (UInt32 i = 0; i < 4; i++)
+	for (UInt32 i = 0; i < SKIN_COUNT; ++i)
 	{
 		if (NewSkinList[i])
 		{
@@ -632,15 +628,13 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16* FileName, bool IgnoreBones
 	delete pOriginalSkin0;
 
 	// replace old skins with new
-	for (UInt32 i = 0; i < 4; i++)
+	for (UInt32 i = 0; i < SKIN_COUNT; ++i)
 	{
 		if (Skins[i])
-		{
 			delete Skins[i];
-		}
+
 		Skins[i] = NewSkinList[i];
 	}
-
 
 	static_assert(sizeof(UInt16) == sizeof(CElement_BoneLookup), "");
 
@@ -649,13 +643,18 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16* FileName, bool IgnoreBones
 	memcpy(Elements[EElement_SkinnedBoneLookup].Data.data(), &NewBoneLookup[0], NewBoneLookup.size() * sizeof(UInt16));
 
 	// build vertex bone indices
-	for (UInt32 i = 0; i != Header.Elements.nSkin; i++)
+	for (UInt32 i = 0; i < Header.Elements.nSkin; ++i)
 	{
 		if (Skins[i])
 		{
 			Skins[i]->BuildVertexBoneIndices();
+			Skins[i]->m_SaveElements_FindOffsets();
+			Skins[i]->m_SaveElements_CopyElementsToHeader();
 		}
 	}
+
+	m_SaveElements_FindOffsets();
+	m_SaveElements_CopyElementsToHeader();
 
 	// done, ready to be saved
 	return EError_OK;

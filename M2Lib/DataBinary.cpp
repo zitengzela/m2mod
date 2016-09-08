@@ -159,6 +159,21 @@ UInt32 M2Lib::DataBinary::ReadFourCC()
 	return MakeFourCC(CharA, CharB, CharC, CharD);
 }
 
+std::string M2Lib::DataBinary::ReadASCIIString()
+{
+	std::string string;
+	for (;;)
+	{
+		Char8 value = ReadChar8();
+		if (!value)
+			break;
+
+		string += value;
+	}
+
+	return string;
+}
+
 void M2Lib::DataBinary::WriteUInt32(UInt32 Value)
 {
 	_Write(&Value, sizeof(Value));
@@ -214,4 +229,12 @@ void M2Lib::DataBinary::WriteFourCC(UInt32 Value)
 	_Write(&CharB, 1);
 	_Write(&CharC, 1);
 	_Write(&CharD, 1);
+}
+
+void M2Lib::DataBinary::WriteASCIIString(std::string const& value)
+{
+	for (auto c : value)
+		WriteChar8(c);
+
+	WriteChar8('\0');
 }

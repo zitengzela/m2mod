@@ -203,15 +203,21 @@ namespace M2Lib
 			enum EFlags
 				: UInt32
 			{
-				EFlags_Transform = 8,
-				EFlags_Bilboard = 512,
+				EFlags_SphericalBillboard = 0x8,
+				EFlags_BilboardLockX = 0x10,
+				EFlags_BilboardLockY = 0x20,
+				EFlags_BilboardLockZ = 0x40,
+				EFlags_Transformed = 0x200,
+				EFlags_Kinematic = 0x400,		// MoP+: allow physics to influence this bone
+				EFlags_AnimScaled = 0x1000,		// set blend_modificator to helmetAnimScalingRec.m_amount for this bone
 			};
 
 		public:
 			UInt32 BoneLookupID;		// index into BoneLookup table or -1.
 			EFlags Flags;				//
 			SInt16 ParentBone;			// index to parent bone or -1.
-			UInt16 Unknown[3];			// ?
+			UInt16 SubmeshId;			// // Mesh part ID
+			UInt16 Unknown[2];			// ?
 			CElement_AnimationBlock AnimationBlock_Position;	// Float32x3
 			CElement_AnimationBlock AnimationBlock_Rotation;	// SInt16x4
 			CElement_AnimationBlock AnimationBlock_Scale;		// Float32x3

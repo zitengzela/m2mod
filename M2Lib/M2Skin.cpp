@@ -63,18 +63,6 @@ M2Lib::EError M2Lib::M2Skin::Load(const Char16* FileName)
 	//	SubMeshList.push_back( ((CElement_SubMesh*)Elements[EElement_SubMesh].Data)[i] );
 	//}
 
-	// resolve material lists
-	for (UInt32 iSubMesh = 0; iSubMesh < Header.nSubMesh; iSubMesh++)
-	{
-		SubMeshList_MaterialList.push_back(std::vector< CElement_Material* >());
-	}
-
-	CElement_Material* MaterialArray = Elements[EElement_Material].as<CElement_Material>();
-	for (UInt32 iMaterial = 0; iMaterial < Header.nMaterial; iMaterial++)
-	{
-		SubMeshList_MaterialList[MaterialArray[iMaterial].iSubMesh].push_back(&MaterialArray[iMaterial]);
-	}
-
 	// print info
 	//PrintInfo();
 
@@ -691,4 +679,51 @@ void M2Lib::M2Skin::MakeGlossy(Char8 const* szGlossTexturePath, std::vector<UInt
 		GlossTextureId = pM2->AddTexture(szGlossTexturePath, M2Element::CElement_Texture::ETextureType::Final_Hardcoded, M2Element::CElement_Texture::ETextureFlags::None);
 
 	MakeGlossy(GlossTextureId, MeshIndexes, LookupRemap);
+}
+
+std::vector<M2Lib::M2Skin::MeshInfo> M2Lib::M2Skin::GetMeshInfo()
+{
+	std::vector<MeshInfo> Infos(Elements[EElement_SubMesh].Count);
+
+	auto Submeshes = Elements[EElement_SubMesh].as<CElement_SubMesh>();
+	auto Materials = Elements[EElement_Material].as<CElement_Material>();
+	auto& TextureElement = pM2->Elements[M2Element::EElement_Texture];
+	auto TextureLookup = pM2->Elements[M2Element::EElement_TextureLookup].as<M2Element::CElement_TextureLookup>();
+
+	for (UInt32 i = 0; i < Infos.size(); ++i)
+	{
+		auto& Info = Infos[i];
+		Info.ID = Submeshes[i].ID;
+		Info.pSubMesh = &Submeshes[i];
+
+		auto comparisonDataItr = ComparisonDataBySubmeshIndex.find(i);
+		assert(comparisonDataItr != ComparisonDataBySubmeshIndex.end());
+		Info.Description = comparisonDataItr->second->Description;
+		
+		for (UInt32 j = 0; j < Header.nMaterial; ++j)
+		{
+			if (Materials[j].iSubMesh != i)
+				continue;
+
+			Info.Materials.push_back(&Materials[j]);
+		}
+
+		for (auto Material : Info.Materials)
+		{
+			for (UInt32 k = 0; k < Material->op_count; ++k)
+			{
+				MeshInfo::TextureInfo TextureInfo;
+
+				auto& texture = TextureElement.as<M2Element::CElement_Texture>()[TextureLookup[Material->iTexture + k].TextureIndex];
+				TextureInfo.pTexture = &texture;
+
+				if (texture.Type == M2Element::CElement_Texture::ETextureType::Final_Hardcoded)
+					TextureInfo.Name = (char*)TextureElement.GetLocalPointer(texture.oTexturePath);
+
+				Info.Textures.push_back(TextureInfo);
+			}
+		}
+	}
+
+	return Infos;
 }

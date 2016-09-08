@@ -10,10 +10,17 @@ namespace M2Lib
 {
 	class M2;
 
+	namespace M2Element
+	{
+		class CElement_Texture;
+	}
+
 	//using namespace M2SkinElement;
 
 	class M2Skin
 	{
+		friend class M2;
+
 	public:
 
 #pragma pack(push,1)
@@ -103,6 +110,28 @@ namespace M2Lib
 
 		void MakeGlossy(Char8 const* szGlossTexturePath, std::vector<UInt32> const& MeshIndexes, M2SkinElement::TextureLookupRemap& LookupRemap);
 		void MakeGlossy(UInt32 GlossTextureId, std::vector<UInt32> const& MeshIndexes, M2SkinElement::TextureLookupRemap& LookupRemap);
+
+		class MeshInfo
+		{
+		public:
+			MeshInfo() : ID(0), pSubMesh(NULL)
+			{
+			}
+
+			struct TextureInfo
+			{
+				M2Element::CElement_Texture* pTexture;
+				std::string Name;
+			};
+
+			UInt32 ID;
+			std::string Description;
+
+			std::vector<M2SkinElement::CElement_Material*> Materials;
+			std::vector<TextureInfo> Textures;
+			M2SkinElement::CElement_SubMesh* pSubMesh;
+		};
+		std::vector<MeshInfo> GetMeshInfo();
 
 	private:
 		void m_LoadElements_CopyHeaderToElements();
