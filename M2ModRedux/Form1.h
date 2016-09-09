@@ -73,8 +73,6 @@ namespace M2ModRedux
 	private: System::Windows::Forms::CheckBox^  checkBoxMergeCameras;
 	private: System::Windows::Forms::CheckBox^  checkBoxMergeAttachments;
 	private: System::Windows::Forms::CheckBox^  checkBoxMergeBones;
-	private: System::Windows::Forms::Label^  label4;
-	private: System::Windows::Forms::Label^  labelSatus;
 	private: System::Windows::Forms::Button^  exportButtonGo;
 
 	private: System::Windows::Forms::CheckBox^  checkBoxFixSeams;
@@ -84,6 +82,9 @@ namespace M2ModRedux
 	private: System::Windows::Forms::Button^  importCancelButton;
 	private: System::Windows::Forms::Panel^  extraworkPanel;
 	private: System::Windows::Forms::Button^  manageMeshesButton;
+	private: System::Windows::Forms::StatusStrip^  statusStrip1;
+	private: System::Windows::Forms::ToolStripStatusLabel^  toolStripStatusLabel1;
+	private: System::Windows::Forms::Panel^  panel1;
 
 
 
@@ -136,8 +137,9 @@ namespace M2ModRedux
 				 this->textBoxOutputM2 = (gcnew System::Windows::Forms::TextBox());
 				 this->panelImportCb = (gcnew System::Windows::Forms::Panel());
 				 this->checkBoxFixSeams = (gcnew System::Windows::Forms::CheckBox());
-				 this->label4 = (gcnew System::Windows::Forms::Label());
-				 this->labelSatus = (gcnew System::Windows::Forms::Label());
+				 this->statusStrip1 = (gcnew System::Windows::Forms::StatusStrip());
+				 this->toolStripStatusLabel1 = (gcnew System::Windows::Forms::ToolStripStatusLabel());
+				 this->panel1 = (gcnew System::Windows::Forms::Panel());
 				 this->tabControl1->SuspendLayout();
 				 this->tabExport->SuspendLayout();
 				 this->panelImputM2Exp->SuspendLayout();
@@ -148,6 +150,8 @@ namespace M2ModRedux
 				 this->panelInputM2I->SuspendLayout();
 				 this->panelOutputM2->SuspendLayout();
 				 this->panelImportCb->SuspendLayout();
+				 this->statusStrip1->SuspendLayout();
+				 this->panel1->SuspendLayout();
 				 this->SuspendLayout();
 				 // 
 				 // openFileDialog1
@@ -156,13 +160,11 @@ namespace M2ModRedux
 				 // 
 				 // toolTip1
 				 // 
-				 this->toolTip1->AutoPopDelay = 5000;
+				 this->toolTip1->AutomaticDelay = 300;
 				 this->toolTip1->BackColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(38)), static_cast<System::Int32>(static_cast<System::Byte>(16)),
 					 static_cast<System::Int32>(static_cast<System::Byte>(4)));
 				 this->toolTip1->ForeColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(242)), static_cast<System::Int32>(static_cast<System::Byte>(94)),
 					 static_cast<System::Int32>(static_cast<System::Byte>(131)));
-				 this->toolTip1->InitialDelay = 1;
-				 this->toolTip1->ReshowDelay = 1;
 				 this->toolTip1->UseAnimation = false;
 				 this->toolTip1->UseFading = false;
 				 // 
@@ -265,7 +267,7 @@ namespace M2ModRedux
 				 this->checkBoxMergeCameras->Size = System::Drawing::Size(97, 17);
 				 this->checkBoxMergeCameras->TabIndex = 17;
 				 this->checkBoxMergeCameras->Text = L"MergeCameras";
-				 this->toolTip1->SetToolTip(this->checkBoxMergeCameras, L"Check to overwrite cameras from InputM2 with those from InputM2I.");
+				 this->toolTip1->SetToolTip(this->checkBoxMergeCameras, L"Check to load cameras from M2I");
 				 this->checkBoxMergeCameras->UseVisualStyleBackColor = true;
 				 // 
 				 // checkBoxMergeAttachments
@@ -278,7 +280,7 @@ namespace M2ModRedux
 				 this->checkBoxMergeAttachments->Size = System::Drawing::Size(115, 17);
 				 this->checkBoxMergeAttachments->TabIndex = 16;
 				 this->checkBoxMergeAttachments->Text = L"MergeAttachments";
-				 this->toolTip1->SetToolTip(this->checkBoxMergeAttachments, L"Check to overwrite attachments from InputM2 with those from InputM2I.");
+				 this->toolTip1->SetToolTip(this->checkBoxMergeAttachments, L"Check to load attachments from M2I");
 				 this->checkBoxMergeAttachments->UseVisualStyleBackColor = true;
 				 // 
 				 // checkBoxMergeBones
@@ -291,7 +293,7 @@ namespace M2ModRedux
 				 this->checkBoxMergeBones->Size = System::Drawing::Size(86, 17);
 				 this->checkBoxMergeBones->TabIndex = 15;
 				 this->checkBoxMergeBones->Text = L"MergeBones";
-				 this->toolTip1->SetToolTip(this->checkBoxMergeBones, L"Check to overwrite bones from InputM2 with those from InputM2I.");
+				 this->toolTip1->SetToolTip(this->checkBoxMergeBones, L"Check to load bones from M2I");
 				 this->checkBoxMergeBones->UseVisualStyleBackColor = true;
 				 // 
 				 // exportButtonGo
@@ -300,9 +302,9 @@ namespace M2ModRedux
 					 | System::Windows::Forms::AnchorStyles::Right));
 				 this->exportButtonGo->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 8.25F, System::Drawing::FontStyle::Bold, System::Drawing::GraphicsUnit::Point,
 					 static_cast<System::Byte>(0)));
-				 this->exportButtonGo->Location = System::Drawing::Point(214, 198);
+				 this->exportButtonGo->Location = System::Drawing::Point(214, 208);
 				 this->exportButtonGo->Name = L"exportButtonGo";
-				 this->exportButtonGo->Size = System::Drawing::Size(117, 38);
+				 this->exportButtonGo->Size = System::Drawing::Size(142, 38);
 				 this->exportButtonGo->TabIndex = 26;
 				 this->exportButtonGo->Text = L"Go!";
 				 this->toolTip1->SetToolTip(this->exportButtonGo, L"Click this to perform operations.");
@@ -333,59 +335,58 @@ namespace M2ModRedux
 				 // 
 				 // importButtonGo
 				 // 
-				 this->importButtonGo->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
-					 | System::Windows::Forms::AnchorStyles::Right));
+				 this->importButtonGo->Anchor = System::Windows::Forms::AnchorStyles::Top;
 				 this->importButtonGo->Enabled = false;
 				 this->importButtonGo->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 8.25F, System::Drawing::FontStyle::Bold, System::Drawing::GraphicsUnit::Point,
 					 static_cast<System::Byte>(0)));
-				 this->importButtonGo->Location = System::Drawing::Point(214, 198);
+				 this->importButtonGo->Location = System::Drawing::Point(207, 10);
 				 this->importButtonGo->Name = L"importButtonGo";
-				 this->importButtonGo->Size = System::Drawing::Size(117, 38);
+				 this->importButtonGo->Size = System::Drawing::Size(142, 38);
 				 this->importButtonGo->TabIndex = 27;
 				 this->importButtonGo->Text = L"Go!";
-				 this->toolTip1->SetToolTip(this->importButtonGo, L"Click this to perform operations.");
+				 this->toolTip1->SetToolTip(this->importButtonGo, L"Produce M2");
 				 this->importButtonGo->UseVisualStyleBackColor = true;
 				 this->importButtonGo->Click += gcnew System::EventHandler(this, &Form1::importButtonGo_Click);
 				 // 
 				 // importButtonPreload
 				 // 
-				 this->importButtonPreload->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
-					 | System::Windows::Forms::AnchorStyles::Right));
 				 this->importButtonPreload->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 8.25F, System::Drawing::FontStyle::Bold,
 					 System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(0)));
-				 this->importButtonPreload->Location = System::Drawing::Point(92, 198);
+				 this->importButtonPreload->Location = System::Drawing::Point(54, 10);
 				 this->importButtonPreload->Name = L"importButtonPreload";
-				 this->importButtonPreload->Size = System::Drawing::Size(117, 38);
+				 this->importButtonPreload->Size = System::Drawing::Size(142, 38);
 				 this->importButtonPreload->TabIndex = 28;
 				 this->importButtonPreload->Text = L"Preload";
-				 this->toolTip1->SetToolTip(this->importButtonPreload, L"Click this to perform operations.");
+				 this->toolTip1->SetToolTip(this->importButtonPreload, L"Load source M2 and import M2I");
 				 this->importButtonPreload->UseVisualStyleBackColor = true;
 				 this->importButtonPreload->Click += gcnew System::EventHandler(this, &Form1::importButtonPreload_Click);
 				 // 
 				 // importCancelButton
 				 // 
-				 this->importCancelButton->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
-					 | System::Windows::Forms::AnchorStyles::Right));
+				 this->importCancelButton->Anchor = System::Windows::Forms::AnchorStyles::Right;
 				 this->importCancelButton->Enabled = false;
 				 this->importCancelButton->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 8.25F, System::Drawing::FontStyle::Bold, System::Drawing::GraphicsUnit::Point,
 					 static_cast<System::Byte>(0)));
-				 this->importCancelButton->Location = System::Drawing::Point(337, 198);
+				 this->importCancelButton->Location = System::Drawing::Point(359, 10);
 				 this->importCancelButton->Name = L"importCancelButton";
-				 this->importCancelButton->Size = System::Drawing::Size(117, 38);
+				 this->importCancelButton->Size = System::Drawing::Size(142, 38);
 				 this->importCancelButton->TabIndex = 29;
 				 this->importCancelButton->Text = L"Cancel";
-				 this->toolTip1->SetToolTip(this->importCancelButton, L"Click this to perform operations.");
+				 this->toolTip1->SetToolTip(this->importCancelButton, L"Cancel preload");
 				 this->importCancelButton->UseVisualStyleBackColor = true;
 				 this->importCancelButton->Click += gcnew System::EventHandler(this, &Form1::importCancelButton_Click);
 				 // 
 				 // tabControl1
 				 // 
+				 this->tabControl1->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
+					 | System::Windows::Forms::AnchorStyles::Right));
 				 this->tabControl1->Controls->Add(this->tabExport);
 				 this->tabControl1->Controls->Add(this->tabImport);
-				 this->tabControl1->Location = System::Drawing::Point(12, 12);
+				 this->tabControl1->Location = System::Drawing::Point(1, 2);
 				 this->tabControl1->Name = L"tabControl1";
+				 this->tabControl1->Padding = System::Drawing::Point(10, 3);
 				 this->tabControl1->SelectedIndex = 0;
-				 this->tabControl1->Size = System::Drawing::Size(545, 269);
+				 this->tabControl1->Size = System::Drawing::Size(570, 309);
 				 this->tabControl1->TabIndex = 25;
 				 // 
 				 // tabExport
@@ -396,7 +397,7 @@ namespace M2ModRedux
 				 this->tabExport->Location = System::Drawing::Point(4, 22);
 				 this->tabExport->Name = L"tabExport";
 				 this->tabExport->Padding = System::Windows::Forms::Padding(3);
-				 this->tabExport->Size = System::Drawing::Size(537, 243);
+				 this->tabExport->Size = System::Drawing::Size(562, 283);
 				 this->tabExport->TabIndex = 0;
 				 this->tabExport->Text = L"Export";
 				 this->tabExport->UseVisualStyleBackColor = true;
@@ -441,10 +442,8 @@ namespace M2ModRedux
 				 // 
 				 // tabImport
 				 // 
+				 this->tabImport->Controls->Add(this->panel1);
 				 this->tabImport->Controls->Add(this->extraworkPanel);
-				 this->tabImport->Controls->Add(this->importCancelButton);
-				 this->tabImport->Controls->Add(this->importButtonPreload);
-				 this->tabImport->Controls->Add(this->importButtonGo);
 				 this->tabImport->Controls->Add(this->panelInputM2Import);
 				 this->tabImport->Controls->Add(this->panelInputM2I);
 				 this->tabImport->Controls->Add(this->panelOutputM2);
@@ -452,7 +451,7 @@ namespace M2ModRedux
 				 this->tabImport->Location = System::Drawing::Point(4, 22);
 				 this->tabImport->Name = L"tabImport";
 				 this->tabImport->Padding = System::Windows::Forms::Padding(3);
-				 this->tabImport->Size = System::Drawing::Size(537, 243);
+				 this->tabImport->Size = System::Drawing::Size(562, 283);
 				 this->tabImport->TabIndex = 1;
 				 this->tabImport->Text = L"Import";
 				 this->tabImport->UseVisualStyleBackColor = true;
@@ -473,11 +472,14 @@ namespace M2ModRedux
 				 this->manageMeshesButton->Size = System::Drawing::Size(107, 30);
 				 this->manageMeshesButton->TabIndex = 0;
 				 this->manageMeshesButton->Text = L"Manage Meshes";
+				 this->toolTip1->SetToolTip(this->manageMeshesButton, L"Open Mesh Management UI");
 				 this->manageMeshesButton->UseVisualStyleBackColor = true;
 				 this->manageMeshesButton->Click += gcnew System::EventHandler(this, &Form1::manageMeshesButton_Click);
 				 // 
 				 // panelInputM2Import
 				 // 
+				 this->panelInputM2Import->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
+					 | System::Windows::Forms::AnchorStyles::Right));
 				 this->panelInputM2Import->Controls->Add(this->textBoxInputM2Imp);
 				 this->panelInputM2Import->Controls->Add(this->label5);
 				 this->panelInputM2Import->Controls->Add(this->buttonInputM2ImpBrowse);
@@ -494,9 +496,12 @@ namespace M2ModRedux
 				 this->textBoxInputM2Imp->Name = L"textBoxInputM2Imp";
 				 this->textBoxInputM2Imp->Size = System::Drawing::Size(374, 20);
 				 this->textBoxInputM2Imp->TabIndex = 4;
+				 this->toolTip1->SetToolTip(this->textBoxInputM2Imp, L"Path to source M2");
 				 // 
 				 // panelInputM2I
 				 // 
+				 this->panelInputM2I->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
+					 | System::Windows::Forms::AnchorStyles::Right));
 				 this->panelInputM2I->Controls->Add(this->label3);
 				 this->panelInputM2I->Controls->Add(this->buttonInputM2IBrowse);
 				 this->panelInputM2I->Controls->Add(this->textBoxInputM2I);
@@ -513,9 +518,12 @@ namespace M2ModRedux
 				 this->textBoxInputM2I->Name = L"textBoxInputM2I";
 				 this->textBoxInputM2I->Size = System::Drawing::Size(374, 20);
 				 this->textBoxInputM2I->TabIndex = 10;
+				 this->toolTip1->SetToolTip(this->textBoxInputM2I, L"Path to M2I");
 				 // 
 				 // panelOutputM2
 				 // 
+				 this->panelOutputM2->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
+					 | System::Windows::Forms::AnchorStyles::Right));
 				 this->panelOutputM2->Controls->Add(this->textBoxOutputM2);
 				 this->panelOutputM2->Controls->Add(this->buttonOutputM2Browse);
 				 this->panelOutputM2->Controls->Add(this->label2);
@@ -533,9 +541,12 @@ namespace M2ModRedux
 				 this->textBoxOutputM2->Name = L"textBoxOutputM2";
 				 this->textBoxOutputM2->Size = System::Drawing::Size(374, 20);
 				 this->textBoxOutputM2->TabIndex = 13;
+				 this->toolTip1->SetToolTip(this->textBoxOutputM2, L"Destination path for M2");
 				 // 
 				 // panelImportCb
 				 // 
+				 this->panelImportCb->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
+					 | System::Windows::Forms::AnchorStyles::Right));
 				 this->panelImportCb->Controls->Add(this->checkBoxFixSeams);
 				 this->panelImportCb->Controls->Add(this->checkBoxMergeCameras);
 				 this->panelImportCb->Controls->Add(this->checkBoxMergeAttachments);
@@ -555,33 +566,40 @@ namespace M2ModRedux
 				 this->checkBoxFixSeams->Text = L"Fix Seams";
 				 this->checkBoxFixSeams->UseVisualStyleBackColor = true;
 				 // 
-				 // label4
+				 // statusStrip1
 				 // 
-				 this->label4->AutoSize = true;
-				 this->label4->Location = System::Drawing::Point(38, 284);
-				 this->label4->Name = L"label4";
-				 this->label4->Size = System::Drawing::Size(40, 13);
-				 this->label4->TabIndex = 30;
-				 this->label4->Text = L"Status:";
+				 this->statusStrip1->BackColor = System::Drawing::Color::Transparent;
+				 this->statusStrip1->Items->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(1) { this->toolStripStatusLabel1 });
+				 this->statusStrip1->Location = System::Drawing::Point(0, 287);
+				 this->statusStrip1->Name = L"statusStrip1";
+				 this->statusStrip1->Size = System::Drawing::Size(569, 22);
+				 this->statusStrip1->TabIndex = 31;
+				 this->statusStrip1->Text = L"statusStrip1";
 				 // 
-				 // labelSatus
+				 // toolStripStatusLabel1
 				 // 
-				 this->labelSatus->AutoSize = true;
-				 this->labelSatus->Location = System::Drawing::Point(81, 284);
-				 this->labelSatus->MinimumSize = System::Drawing::Size(450, 0);
-				 this->labelSatus->Name = L"labelSatus";
-				 this->labelSatus->Size = System::Drawing::Size(450, 13);
-				 this->labelSatus->TabIndex = 29;
-				 this->labelSatus->Text = L"Ready...";
+				 this->toolStripStatusLabel1->Name = L"toolStripStatusLabel1";
+				 this->toolStripStatusLabel1->Size = System::Drawing::Size(0, 17);
+				 // 
+				 // panel1
+				 // 
+				 this->panel1->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
+					 | System::Windows::Forms::AnchorStyles::Right));
+				 this->panel1->Controls->Add(this->importButtonGo);
+				 this->panel1->Controls->Add(this->importButtonPreload);
+				 this->panel1->Controls->Add(this->importCancelButton);
+				 this->panel1->Location = System::Drawing::Point(7, 198);
+				 this->panel1->Name = L"panel1";
+				 this->panel1->Size = System::Drawing::Size(527, 62);
+				 this->panel1->TabIndex = 31;
 				 // 
 				 // Form1
 				 // 
 				 this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 				 this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 				 this->ClientSize = System::Drawing::Size(569, 309);
+				 this->Controls->Add(this->statusStrip1);
 				 this->Controls->Add(this->tabControl1);
-				 this->Controls->Add(this->label4);
-				 this->Controls->Add(this->labelSatus);
 				 this->Icon = (cli::safe_cast<System::Drawing::Icon^>(resources->GetObject(L"$this.Icon")));
 				 this->MinimumSize = System::Drawing::Size(500, 320);
 				 this->Name = L"Form1";
@@ -602,6 +620,9 @@ namespace M2ModRedux
 				 this->panelOutputM2->PerformLayout();
 				 this->panelImportCb->ResumeLayout(false);
 				 this->panelImportCb->PerformLayout();
+				 this->statusStrip1->ResumeLayout(false);
+				 this->statusStrip1->PerformLayout();
+				 this->panel1->ResumeLayout(false);
 				 this->ResumeLayout(false);
 				 this->PerformLayout();
 
@@ -659,24 +680,30 @@ namespace M2ModRedux
 		}
 
 	private:
+		System::Void SetStatus(String^ Status)
+		{
+			toolStripStatusLabel1->Text = Status;
+			statusStrip1->Refresh();
+		}
+
+	private:
 		System::Void buttonGo_Click(System::Object^  sender, System::EventArgs^  e)
 		{
 			exportButtonGo->Enabled = false;
 			exportButtonGo->Refresh();
-			labelSatus->Text = "Working...";
-			labelSatus->Refresh();
+			SetStatus("Working...");
 
 			// Check fields.
 			if (textBoxInputM2Exp->Text->Length == 0)
 			{
-				labelSatus->Text = "Error: No input M2 file Specified.";
+				SetStatus("Error: No input M2 file Specified.");
 				exportButtonGo->Enabled = true;
 				return;
 			}
 
 			if (textBoxOutputM2I->Text->Length == 0)
 			{
-				labelSatus->Text = "Error: No output M2I file Specified.";
+				SetStatus("Error: No output M2I file Specified.");
 				exportButtonGo->Enabled = true;
 				return;
 			}
@@ -690,7 +717,7 @@ namespace M2ModRedux
 
 			if (Error != 0)
 			{
-				labelSatus->Text = gcnew System::String(M2Lib::GetErrorText(Error));
+				SetStatus(gcnew String(M2Lib::GetErrorText(Error)));
 				exportButtonGo->Enabled = true;
 				delete M2;
 				return;
@@ -703,13 +730,13 @@ namespace M2ModRedux
 
 			if (Error != 0)
 			{
-				labelSatus->Text = gcnew System::String(M2Lib::GetErrorText(Error));
+				SetStatus(gcnew System::String(M2Lib::GetErrorText(Error)));
 				exportButtonGo->Enabled = true;
 				delete M2;
 				return;
 			}
 
-			labelSatus->Text = "Export done.";
+			SetStatus("Export done.");
 
 			delete M2;
 
@@ -758,12 +785,11 @@ namespace M2ModRedux
 	private: System::Void importButtonGo_Click(System::Object^  sender, System::EventArgs^  e) {
 		importButtonPreload->Enabled = false;
 		importButtonPreload->Refresh();
-		labelSatus->Text = "Importing...";
-		labelSatus->Refresh();
+		SetStatus("Importing...");
 
 		if (!preloadM2)
 		{
-			labelSatus->Text = "Error: Model not preloaded";
+			SetStatus("Error: Model not preloaded");
 			PreloadTransition(false);
 			return;
 		}
@@ -780,70 +806,110 @@ namespace M2ModRedux
 				auto& MeshInfo = MeshInfos[i];
 				auto Control = MeshManagementForm->ElementInfoList[i];
 
-				if (Control->customTextureCheckBox->Checked && Control->customTextureTextBox->Text->Length)
+				// copy materials
+				if (Control->copyMaterialCheckBox->Checked && Control->srcMaterialComboBox->SelectedIndex>0)
 				{
-					auto StringPointer = Marshal::StringToHGlobalAnsi(Control->customTextureTextBox->Text);
-
-					auto textureId = preloadM2->GetTexture((char const*)StringPointer.ToPointer());
-					if (textureId == -1)
-						textureId = preloadM2->AddTexture((char const*)StringPointer.ToPointer(),
-						M2Lib::M2Element::CElement_Texture::ETextureType::Final_Hardcoded,
-						M2Lib::M2Element::CElement_Texture::ETextureFlags::None);
-
-					auto textureLookup = preloadM2->AddTextureLookup(textureId, false);
-
-					Marshal::FreeHGlobal(StringPointer);
-
-					for (unsigned int j = 0; j < MeshInfo.Materials.size(); ++j)
-					{
-						MeshInfo.Materials[j]->iTexture = textureLookup;
-						MeshInfo.Materials[j]->op_count = 1;
-					}
+					auto SrcMeshIndex = Control->srcMaterialComboBox->SelectedIndex - 1;
+					MainSkin->CopyMaterial(SrcMeshIndex, i);
 
 					for (unsigned int k = 1; k < preloadM2->Header.Elements.nSkin; ++k)
 					{
 						auto OtherSkin = preloadM2->Skins[k];
+						if (!OtherSkin)
+							continue;
+
+						int OtherSkinSrcIndex = -1;
+						std::vector<int> OtherDstIndexes;
+
 						for (auto& data : OtherSkin->ComparisonDataBySubmeshIndex)
 						{
-							if (data.second->M2IIndex != MainSkin->ComparisonDataBySubmeshIndex[i]->M2IIndex)
+							if (data.second->M2IIndex == MainSkin->ComparisonDataBySubmeshIndex[SrcMeshIndex]->M2IIndex)
+								OtherSkinSrcIndex = data.first;
+							if (data.second->M2IIndex == MainSkin->ComparisonDataBySubmeshIndex[i]->M2IIndex)
+								OtherDstIndexes.push_back(data.first);
+						}
+
+						if (OtherSkinSrcIndex == -1)
+							continue;
+
+						for (auto& OtherDstIndex : OtherDstIndexes)
+							OtherSkin->CopyMaterial(OtherSkinSrcIndex, OtherDstIndex);
+					}
+				}
+				else
+				{
+					// assign custom texture
+					if (Control->customTextureCheckBox->Checked && Control->customTextureTextBox->Text->Length)
+					{
+						auto StringPointer = Marshal::StringToHGlobalAnsi(Control->customTextureTextBox->Text);
+
+						auto textureId = preloadM2->GetTexture((char const*)StringPointer.ToPointer());
+						if (textureId == -1)
+							textureId = preloadM2->AddTexture((char const*)StringPointer.ToPointer(),
+							M2Lib::M2Element::CElement_Texture::ETextureType::Final_Hardcoded,
+							M2Lib::M2Element::CElement_Texture::ETextureFlags::None);
+
+						auto textureLookup = preloadM2->AddTextureLookup(textureId, false);
+
+						Marshal::FreeHGlobal(StringPointer);
+
+						for (unsigned int j = 0; j < MeshInfo.Materials.size(); ++j)
+						{
+							MeshInfo.Materials[j]->iTexture = textureLookup;
+							MeshInfo.Materials[j]->op_count = 1;
+						}
+
+						for (unsigned int k = 1; k < preloadM2->Header.Elements.nSkin; ++k)
+						{
+							auto OtherSkin = preloadM2->Skins[k];
+							if (!OtherSkin)
 								continue;
 
-							auto otherSkinSubmeshIndex = data.first;
-							auto OtherMaterials = OtherSkin->Elements[M2Lib::M2SkinElement::EElement_Material].as<M2Lib::M2SkinElement::CElement_Material>();
-							for (unsigned int j = 0; j < OtherSkin->Header.nMaterial; ++j)
+							for (auto& data : OtherSkin->ComparisonDataBySubmeshIndex)
 							{
-								if (OtherMaterials[j].iSubMesh != otherSkinSubmeshIndex)
+								if (data.second->M2IIndex != MainSkin->ComparisonDataBySubmeshIndex[i]->M2IIndex)
 									continue;
 
-								OtherMaterials[j].iTexture = textureLookup;
-								OtherMaterials[j].op_count = 1;
+								auto otherSkinSubmeshIndex = data.first;
+								auto OtherMaterials = OtherSkin->Elements[M2Lib::M2SkinElement::EElement_Material].as<M2Lib::M2SkinElement::CElement_Material>();
+								for (unsigned int j = 0; j < OtherSkin->Header.nMaterial; ++j)
+								{
+									if (OtherMaterials[j].iSubMesh != otherSkinSubmeshIndex)
+										continue;
+
+									OtherMaterials[j].iTexture = textureLookup;
+									OtherMaterials[j].op_count = 1;
+								}
 							}
 						}
 					}
-				}
-				if (Control->makeGlossyCheckBox->Checked && Control->glossTextureTextBox->Text->Length)
-				{
-					auto StringPointer = Marshal::StringToHGlobalAnsi(Control->glossTextureTextBox->Text);
-
-					std::vector<unsigned int> MeshIndexes = { i };
-					MainSkin->MakeGlossy((char const*)StringPointer.ToPointer(), MeshIndexes, textureRemap);
-
-					for (unsigned int k = 1; k < preloadM2->Header.Elements.nSkin; ++k)
+					// make glossy
+					if (Control->makeGlossyCheckBox->Checked && Control->glossTextureTextBox->Text->Length)
 					{
-						auto OtherSkin = preloadM2->Skins[k];
-						MeshIndexes.clear();
-						for (auto& data : OtherSkin->ComparisonDataBySubmeshIndex)
-						{
-							if (data.second->M2IIndex != MainSkin->ComparisonDataBySubmeshIndex[i]->M2IIndex)
-								continue;
+						auto StringPointer = Marshal::StringToHGlobalAnsi(Control->glossTextureTextBox->Text);
 
-							MeshIndexes.push_back(data.first);
+						std::vector<unsigned int> MeshIndexes = { i };
+						MainSkin->MakeGlossy((char const*)StringPointer.ToPointer(), MeshIndexes, textureRemap);
+
+						for (unsigned int k = 1; k < preloadM2->Header.Elements.nSkin; ++k)
+						{
+							auto OtherSkin = preloadM2->Skins[k];
+							if (!OtherSkin)
+								continue;
+							MeshIndexes.clear();
+							for (auto& data : OtherSkin->ComparisonDataBySubmeshIndex)
+							{
+								if (data.second->M2IIndex != MainSkin->ComparisonDataBySubmeshIndex[i]->M2IIndex)
+									continue;
+
+								MeshIndexes.push_back(data.first);
+							}
+
+							OtherSkin->MakeGlossy((char const*)StringPointer.ToPointer(), MeshIndexes, textureRemap);
 						}
 
-						OtherSkin->MakeGlossy((char const*)StringPointer.ToPointer(), MeshIndexes, textureRemap);
+						Marshal::FreeHGlobal(StringPointer);
 					}
-
-					Marshal::FreeHGlobal(StringPointer);
 				}
 			}
 		}
@@ -855,7 +921,7 @@ namespace M2ModRedux
 
 		if (Error != 0)
 		{
-			labelSatus->Text = gcnew System::String(M2Lib::GetErrorText(Error));
+			SetStatus(gcnew System::String(M2Lib::GetErrorText(Error)));
 			delete preloadM2;
 			preloadM2 = NULL;
 			PreloadTransition(false);
@@ -865,15 +931,14 @@ namespace M2ModRedux
 		delete preloadM2;
 		preloadM2 = NULL;
 
-		labelSatus->Text = "Import done.";
+		SetStatus("Import done.");
 		PreloadTransition(false);
 	}
 
 	private: System::Void importButtonPreload_Click(System::Object^  sender, System::EventArgs^  e) {
 		importButtonPreload->Enabled = false;
 		importButtonPreload->Refresh();
-		labelSatus->Text = "Preloading...";
-		labelSatus->Refresh();
+		SetStatus("Preloading...");
 
 		if (preloadM2)
 			delete preloadM2;
@@ -881,14 +946,14 @@ namespace M2ModRedux
 		// Check fields.
 		if (textBoxInputM2I->Text->Length == 0)
 		{
-			labelSatus->Text = "Error: No input M2I file Specified.";
+			SetStatus("Error: No input M2I file Specified.");
 			PreloadTransition(false);
 			return;
 		}
 
 		if (textBoxOutputM2->Text->Length == 0)
 		{
-			labelSatus->Text = "Error: No output M2 file Specified.";
+			SetStatus("Error: No output M2 file Specified.");
 			PreloadTransition(false);
 			return;
 		}
@@ -896,7 +961,7 @@ namespace M2ModRedux
 		// import M2
 		if (textBoxInputM2Imp->Text->Length == 0)
 		{
-			labelSatus->Text = "Error: No input M2 file Specified.";
+			SetStatus("Error: No input M2 file Specified.");
 			PreloadTransition(false);
 			return;
 		}
@@ -909,7 +974,7 @@ namespace M2ModRedux
 
 		if (Error != 0)
 		{
-			labelSatus->Text = gcnew System::String(M2Lib::GetErrorText(Error));
+			SetStatus(gcnew System::String(M2Lib::GetErrorText(Error)));
 			delete preloadM2;
 			preloadM2 = NULL;
 			PreloadTransition(false);
@@ -923,14 +988,14 @@ namespace M2ModRedux
 
 		if (Error != 0)
 		{
-			labelSatus->Text = gcnew System::String(M2Lib::GetErrorText(Error));
+			SetStatus(gcnew System::String(M2Lib::GetErrorText(Error)));
 			delete preloadM2;
 			preloadM2 = NULL;
 			PreloadTransition(false);
 			return;
 		}
 
-		labelSatus->Text = "Preload finished.";
+		SetStatus("Preload finished.");
 
 		PreloadTransition(true);
 	}
@@ -943,7 +1008,7 @@ namespace M2ModRedux
 			preloadM2 = NULL;
 		}
 
-		labelSatus->Text = "Cancelled preload.";
+		SetStatus("Cancelled preload.");
 	}
 
 	private: ElementManagementForm<MeshInfoControl>^ MeshManagementForm = nullptr;
@@ -960,7 +1025,7 @@ namespace M2ModRedux
 			for (unsigned int i = 0; i < MeshInfos.size(); ++i)
 			{
 				auto Control = gcnew MeshInfoControl();
-				Control->Initialize(i, MeshInfos[i]);
+				Control->Initialize(i, MeshInfos);
 				MeshManagementForm->AddElementInfo(Control);
 			}
 

@@ -111,6 +111,8 @@ namespace M2Lib
 		void MakeGlossy(Char8 const* szGlossTexturePath, std::vector<UInt32> const& MeshIndexes, M2SkinElement::TextureLookupRemap& LookupRemap);
 		void MakeGlossy(UInt32 GlossTextureId, std::vector<UInt32> const& MeshIndexes, M2SkinElement::TextureLookupRemap& LookupRemap);
 
+		void CopyMaterial(UInt32 SrcMeshIndex, UInt32 DstMeshIndex);
+
 		class MeshInfo
 		{
 		public:

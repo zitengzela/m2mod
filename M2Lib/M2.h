@@ -229,8 +229,6 @@ namespace M2Lib
 		UInt32 AddTextureLookup(UInt16 TextureId, bool ForceNewIndex = false);
 		UInt32 AddTextureFlags(UInt16 Blend, UInt32 Flags);
 
-		void MakeShiny(const Char8* szTextureSource);
-
 	public:
 		// post load header
 		void m_LoadElements_CopyHeaderToElements();

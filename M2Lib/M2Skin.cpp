@@ -742,3 +742,39 @@ std::vector<M2Lib::M2Skin::MeshInfo> M2Lib::M2Skin::GetMeshInfo()
 
 	return Infos;
 }
+
+void M2Lib::M2Skin::CopyMaterial(UInt32 SrcMeshIndex, UInt32 DstMeshIndex)
+{
+	auto Meshes = Elements[EElement_SubMesh].as<CElement_SubMesh>();
+	auto Materials = Elements[EElement_Material].as<CElement_Material>();
+	
+	CElement_Material* SrcMaterial = NULL;
+	for (UInt32 i = 0; i < Header.nMaterial; ++i)
+	{
+		if (Materials[i].iSubMesh != SrcMeshIndex)
+			continue;
+
+		SrcMaterial = &Materials[i];
+	}
+
+	if (!SrcMaterial)
+		return;
+
+	for (UInt32 i = 0; i < Header.nMaterial; ++i)
+	{
+		if (Materials[i].iSubMesh != DstMeshIndex)
+			continue;
+
+		auto& DstMaterial = Materials[i];
+		DstMaterial.Flags = SrcMaterial->Flags;
+		DstMaterial.shader_id = SrcMaterial->shader_id;
+		DstMaterial.iColor = SrcMaterial->iColor;
+		DstMaterial.iRenderFlags = SrcMaterial->iRenderFlags;
+		DstMaterial.layer = SrcMaterial->layer;
+		DstMaterial.op_count = SrcMaterial->op_count;
+		DstMaterial.iTexture = SrcMaterial->iTexture;
+		DstMaterial.iTexutreUnit2 = SrcMaterial->iTexutreUnit2;
+		DstMaterial.iTransparency = SrcMaterial->iTransparency;
+		DstMaterial.iTextureAnimation = SrcMaterial->iTextureAnimation;
+	}
+}
