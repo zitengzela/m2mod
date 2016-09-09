@@ -3,6 +3,9 @@
 #define M2Filter L"M2 Files|*.m2|All Files|*.*"
 #define M2IFilter L"M2I Files|*.m2i|All Files|*.*"
 
+#include "ElementManagementForm.h"
+#include "MeshInfoControl.h"
+
 namespace M2ModRedux
 {
 
@@ -12,6 +15,7 @@ namespace M2ModRedux
 	using namespace System::Windows::Forms;
 	using namespace System::Data;
 	using namespace System::Drawing;
+	using namespace System::Runtime::InteropServices;
 
 	/// <summary>
 	/// Summary for Form1
@@ -79,6 +83,7 @@ namespace M2ModRedux
 	private: System::Windows::Forms::Button^  importButtonPreload;
 	private: System::Windows::Forms::Button^  importCancelButton;
 	private: System::Windows::Forms::Panel^  extraworkPanel;
+	private: System::Windows::Forms::Button^  manageMeshesButton;
 
 
 
@@ -121,6 +126,8 @@ namespace M2ModRedux
 				 this->panelOutputM2I = (gcnew System::Windows::Forms::Panel());
 				 this->textBoxOutputM2I = (gcnew System::Windows::Forms::TextBox());
 				 this->tabImport = (gcnew System::Windows::Forms::TabPage());
+				 this->extraworkPanel = (gcnew System::Windows::Forms::Panel());
+				 this->manageMeshesButton = (gcnew System::Windows::Forms::Button());
 				 this->panelInputM2Import = (gcnew System::Windows::Forms::Panel());
 				 this->textBoxInputM2Imp = (gcnew System::Windows::Forms::TextBox());
 				 this->panelInputM2I = (gcnew System::Windows::Forms::Panel());
@@ -131,12 +138,12 @@ namespace M2ModRedux
 				 this->checkBoxFixSeams = (gcnew System::Windows::Forms::CheckBox());
 				 this->label4 = (gcnew System::Windows::Forms::Label());
 				 this->labelSatus = (gcnew System::Windows::Forms::Label());
-				 this->extraworkPanel = (gcnew System::Windows::Forms::Panel());
 				 this->tabControl1->SuspendLayout();
 				 this->tabExport->SuspendLayout();
 				 this->panelImputM2Exp->SuspendLayout();
 				 this->panelOutputM2I->SuspendLayout();
 				 this->tabImport->SuspendLayout();
+				 this->extraworkPanel->SuspendLayout();
 				 this->panelInputM2Import->SuspendLayout();
 				 this->panelInputM2I->SuspendLayout();
 				 this->panelOutputM2->SuspendLayout();
@@ -359,6 +366,7 @@ namespace M2ModRedux
 				 // 
 				 this->importCancelButton->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
 					 | System::Windows::Forms::AnchorStyles::Right));
+				 this->importCancelButton->Enabled = false;
 				 this->importCancelButton->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 8.25F, System::Drawing::FontStyle::Bold, System::Drawing::GraphicsUnit::Point,
 					 static_cast<System::Byte>(0)));
 				 this->importCancelButton->Location = System::Drawing::Point(337, 198);
@@ -448,6 +456,25 @@ namespace M2ModRedux
 				 this->tabImport->TabIndex = 1;
 				 this->tabImport->Text = L"Import";
 				 this->tabImport->UseVisualStyleBackColor = true;
+				 // 
+				 // extraworkPanel
+				 // 
+				 this->extraworkPanel->Controls->Add(this->manageMeshesButton);
+				 this->extraworkPanel->Enabled = false;
+				 this->extraworkPanel->Location = System::Drawing::Point(6, 124);
+				 this->extraworkPanel->Name = L"extraworkPanel";
+				 this->extraworkPanel->Size = System::Drawing::Size(528, 68);
+				 this->extraworkPanel->TabIndex = 30;
+				 // 
+				 // manageMeshesButton
+				 // 
+				 this->manageMeshesButton->Location = System::Drawing::Point(9, 4);
+				 this->manageMeshesButton->Name = L"manageMeshesButton";
+				 this->manageMeshesButton->Size = System::Drawing::Size(107, 30);
+				 this->manageMeshesButton->TabIndex = 0;
+				 this->manageMeshesButton->Text = L"Manage Meshes";
+				 this->manageMeshesButton->UseVisualStyleBackColor = true;
+				 this->manageMeshesButton->Click += gcnew System::EventHandler(this, &Form1::manageMeshesButton_Click);
 				 // 
 				 // panelInputM2Import
 				 // 
@@ -551,13 +578,6 @@ namespace M2ModRedux
 				 this->labelSatus->TabIndex = 29;
 				 this->labelSatus->Text = L"Ready...";
 				 // 
-				 // extraworkPanel
-				 // 
-				 this->extraworkPanel->Location = System::Drawing::Point(6, 124);
-				 this->extraworkPanel->Name = L"extraworkPanel";
-				 this->extraworkPanel->Size = System::Drawing::Size(528, 68);
-				 this->extraworkPanel->TabIndex = 30;
-				 // 
 				 // Form1
 				 // 
 				 this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
@@ -569,7 +589,7 @@ namespace M2ModRedux
 				 this->Icon = (cli::safe_cast<System::Drawing::Icon^>(resources->GetObject(L"$this.Icon")));
 				 this->MinimumSize = System::Drawing::Size(500, 320);
 				 this->Name = L"Form1";
-				 this->Text = L"M2Mod Redux 4.7.1";
+				 this->Text = L"M2Mod Redux 4.8.0";
 				 this->tabControl1->ResumeLayout(false);
 				 this->tabExport->ResumeLayout(false);
 				 this->panelImputM2Exp->ResumeLayout(false);
@@ -577,6 +597,7 @@ namespace M2ModRedux
 				 this->panelOutputM2I->ResumeLayout(false);
 				 this->panelOutputM2I->PerformLayout();
 				 this->tabImport->ResumeLayout(false);
+				 this->extraworkPanel->ResumeLayout(false);
 				 this->panelInputM2Import->ResumeLayout(false);
 				 this->panelInputM2Import->PerformLayout();
 				 this->panelInputM2I->ResumeLayout(false);
@@ -667,9 +688,9 @@ namespace M2ModRedux
 			M2Lib::M2* M2 = new M2Lib::M2();
 
 			// import M2
-			System::IntPtr StringPointer = System::Runtime::InteropServices::Marshal::StringToHGlobalUni(textBoxInputM2Exp->Text);
+			System::IntPtr StringPointer = Marshal::StringToHGlobalUni(textBoxInputM2Exp->Text);
 			M2Lib::EError Error = M2->Load((Char16*)StringPointer.ToPointer());
-			System::Runtime::InteropServices::Marshal::FreeHGlobal(StringPointer);
+			Marshal::FreeHGlobal(StringPointer);
 
 			if (Error != 0)
 			{
@@ -680,9 +701,9 @@ namespace M2ModRedux
 			}
 
 			// export M2I
-			StringPointer = System::Runtime::InteropServices::Marshal::StringToHGlobalUni(textBoxOutputM2I->Text);
+			StringPointer = Marshal::StringToHGlobalUni(textBoxOutputM2I->Text);
 			Error = M2->ExportM2Intermediate((Char16*)StringPointer.ToPointer());
-			System::Runtime::InteropServices::Marshal::FreeHGlobal(StringPointer);
+			Marshal::FreeHGlobal(StringPointer);
 
 			if (Error != 0)
 			{
@@ -725,6 +746,14 @@ namespace M2ModRedux
 			importButtonGo->Enabled = false;
 			extraworkPanel->Enabled = false;
 			importCancelButton->Enabled = false;
+
+			if (preloadM2)
+			{
+				delete preloadM2;
+				preloadM2 = NULL;
+			}
+
+			MeshManagementForm = nullptr;
 		}
 	}
 
@@ -743,10 +772,90 @@ namespace M2ModRedux
 			return;
 		}
 
+		if (MeshManagementForm && MeshManagementForm->DialogResult == System::Windows::Forms::DialogResult::OK)
+		{
+			auto MainSkin = preloadM2->Skins[0];
+			auto MeshInfos = MainSkin->GetMeshInfo();
+
+			M2Lib::M2SkinElement::TextureLookupRemap textureRemap;
+
+			for (unsigned int i = 0; i < MeshInfos.size(); ++i)
+			{
+				auto& MeshInfo = MeshInfos[i];
+				auto Control = MeshManagementForm->ElementInfoList[i];
+
+				if (Control->customTextureCheckBox->Checked && Control->customTextureTextBox->Text->Length)
+				{
+					auto StringPointer = Marshal::StringToHGlobalAnsi(Control->customTextureTextBox->Text);
+
+					auto textureId = preloadM2->GetTexture((char const*)StringPointer.ToPointer());
+					if (textureId == -1)
+						textureId = preloadM2->AddTexture((char const*)StringPointer.ToPointer(),
+						M2Lib::M2Element::CElement_Texture::ETextureType::Final_Hardcoded,
+						M2Lib::M2Element::CElement_Texture::ETextureFlags::None);
+
+					auto textureLookup = preloadM2->AddTextureLookup(textureId, false);
+
+					Marshal::FreeHGlobal(StringPointer);
+
+					for (unsigned int j = 0; j < MeshInfo.Materials.size(); ++j)
+					{
+						MeshInfo.Materials[j]->iTexture = textureLookup;
+						MeshInfo.Materials[j]->op_count = 1;
+					}
+
+					for (unsigned int k = 1; k < preloadM2->Header.Elements.nSkin; ++k)
+					{
+						auto OtherSkin = preloadM2->Skins[k];
+						for (auto& data : OtherSkin->ComparisonDataBySubmeshIndex)
+						{
+							if (data.second->M2IIndex != MainSkin->ComparisonDataBySubmeshIndex[i]->M2IIndex)
+								continue;
+
+							auto otherSkinSubmeshIndex = data.first;
+							auto OtherMaterials = OtherSkin->Elements[M2Lib::M2SkinElement::EElement_Material].as<M2Lib::M2SkinElement::CElement_Material>();
+							for (unsigned int j = 0; j < OtherSkin->Header.nMaterial; ++j)
+							{
+								if (OtherMaterials[j].iSubMesh != otherSkinSubmeshIndex)
+									continue;
+
+								OtherMaterials[j].iTexture = textureLookup;
+								OtherMaterials[j].op_count = 1;
+							}
+						}
+					}
+				}
+				if (Control->makeGlossyCheckBox->Checked && Control->glossTextureTextBox->Text->Length)
+				{
+					auto StringPointer = Marshal::StringToHGlobalAnsi(Control->glossTextureTextBox->Text);
+
+					std::vector<unsigned int> MeshIndexes = { i };
+					MainSkin->MakeGlossy((char const*)StringPointer.ToPointer(), MeshIndexes, textureRemap);
+
+					for (unsigned int k = 1; k < preloadM2->Header.Elements.nSkin; ++k)
+					{
+						auto OtherSkin = preloadM2->Skins[k];
+						MeshIndexes.clear();
+						for (auto& data : OtherSkin->ComparisonDataBySubmeshIndex)
+						{
+							if (data.second->M2IIndex != MainSkin->ComparisonDataBySubmeshIndex[i]->M2IIndex)
+								continue;
+
+							MeshIndexes.push_back(data.first);
+						}
+
+						OtherSkin->MakeGlossy((char const*)StringPointer.ToPointer(), MeshIndexes, textureRemap);
+					}
+
+					Marshal::FreeHGlobal(StringPointer);
+				}
+			}
+		}
+
 		// export M2
-		auto StringPointer = System::Runtime::InteropServices::Marshal::StringToHGlobalUni(textBoxOutputM2->Text);
+		auto StringPointer = Marshal::StringToHGlobalUni(textBoxOutputM2->Text);
 		auto Error = preloadM2->Save((Char16*)StringPointer.ToPointer());
-		System::Runtime::InteropServices::Marshal::FreeHGlobal(StringPointer);
+		Marshal::FreeHGlobal(StringPointer);
 
 		if (Error != 0)
 		{
@@ -798,9 +907,9 @@ namespace M2ModRedux
 
 		preloadM2 = new M2Lib::M2();
 
-		System::IntPtr StringPointer = System::Runtime::InteropServices::Marshal::StringToHGlobalUni(textBoxInputM2Imp->Text);
+		System::IntPtr StringPointer = Marshal::StringToHGlobalUni(textBoxInputM2Imp->Text);
 		M2Lib::EError Error = preloadM2->Load((Char16*)StringPointer.ToPointer());
-		System::Runtime::InteropServices::Marshal::FreeHGlobal(StringPointer);
+		Marshal::FreeHGlobal(StringPointer);
 
 		if (Error != 0)
 		{
@@ -812,9 +921,9 @@ namespace M2ModRedux
 		}
 
 		// import M2I
-		StringPointer = System::Runtime::InteropServices::Marshal::StringToHGlobalUni(textBoxInputM2I->Text);
+		StringPointer = Marshal::StringToHGlobalUni(textBoxInputM2I->Text);
 		Error = preloadM2->ImportM2Intermediate((Char16*)StringPointer.ToPointer(), !checkBoxMergeBones->Checked, !checkBoxMergeAttachments->Checked, !checkBoxMergeCameras->Checked, checkBoxFixSeams->Checked);
-		System::Runtime::InteropServices::Marshal::FreeHGlobal(StringPointer);
+		Marshal::FreeHGlobal(StringPointer);
 
 		if (Error != 0)
 		{
@@ -840,5 +949,31 @@ namespace M2ModRedux
 
 		labelSatus->Text = "Cancelled preload.";
 	}
-};
+
+	private: ElementManagementForm<MeshInfoControl>^ MeshManagementForm = nullptr;
+
+	private: System::Void manageMeshesButton_Click(System::Object^  sender, System::EventArgs^  e) {
+
+		if (!MeshManagementForm)
+		{
+			auto MeshInfos = preloadM2->Skins[0]->GetMeshInfo();
+
+			MeshManagementForm = gcnew ElementManagementForm<MeshInfoControl>();
+			MeshManagementForm->Text = "Mesh Management";
+
+			for (unsigned int i = 0; i < MeshInfos.size(); ++i)
+			{
+				auto Control = gcnew MeshInfoControl();
+				Control->Initialize(i, MeshInfos[i]);
+				MeshManagementForm->AddElementInfo(Control);
+			}
+
+			MeshManagementForm->SetupInfoPositions();
+		}
+
+		auto result = MeshManagementForm->ShowDialog();
+		if (result != Windows::Forms::DialogResult::OK)
+			MeshManagementForm = nullptr;
+	}
+	};
 }

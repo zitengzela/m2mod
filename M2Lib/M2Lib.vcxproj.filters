@@ -71,5 +71,8 @@
     <ClCompile Include="M2I.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="M2Element.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

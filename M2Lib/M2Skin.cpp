@@ -73,6 +73,21 @@ M2Lib::EError M2Lib::M2Skin::Load(const Char16* FileName)
 
 M2Lib::EError M2Lib::M2Skin::Save(const Char16* FileName)
 {
+	// FMN 2015-02-03: changing Level, depending on TriangleIndexstart. See http://forums.darknestfantasyerotica.com/showthread.php?20446-TUTORIAL-Here-is-how-WoD-.skin-works.&p=402561
+	CElement_SubMesh* SubMeshList = Elements[EElement_SubMesh].as<CElement_SubMesh>();
+	UInt32 TriangleIndexStartPrevious = 0;
+	UInt16 level = 0;
+
+	for (UInt32 i = 0; i != Elements[EElement_SubMesh].Count; i++)
+	{
+		if (SubMeshList[i].TriangleIndexStart < TriangleIndexStartPrevious)
+			++level;
+
+		SubMeshList[i].Level = level;
+
+		TriangleIndexStartPrevious = SubMeshList[i].TriangleIndexStart;
+	}
+
 	// open file stream
 	std::fstream FileStream;
 	FileStream.open(FileName, std::ios::binary | std::ios::out | std::ios::trunc);
@@ -263,7 +278,7 @@ void M2Lib::M2Skin::CopyMaterials(M2Skin* pOther)
 
 		SubMesh.SortTriangleIndex = SubMeshOther->SortTriangleIndex;
 		// copy level from original mesh
-		SubMesh.Level = SubMeshOther->Level;
+		//SubMesh.Level = SubMeshOther->Level;
 
 		std::vector< CElement_Material* > SubMeshOtherMaterialList;
 		pOther->GetSubMeshMaterials(SubMeshOtherTriangleIndex, SubMeshOtherMaterialList);

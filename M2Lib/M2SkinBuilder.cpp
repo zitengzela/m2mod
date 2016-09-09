@@ -323,6 +323,7 @@ bool M2Lib::M2SkinBuilder::Build(M2Skin* pResult, UInt32 BoneLoD, M2I* pM2I, CVe
 		CSubMesh* pNewSubset = new CSubMesh();
 		pNewSubset->ID = pM2I->SubMeshList[i]->ID;
 		pNewSubset->pComparisonData = &pM2I->SubMeshList[i]->ComparisonData;
+		pNewSubset->Level = pM2I->SubMeshList[i]->Level;
 
 		// add sub mesh partitions
 		for (UInt32 k = 0; k < m_BonePartitions.size(); k++)
@@ -482,6 +483,7 @@ bool M2Lib::M2SkinBuilder::Build(M2Skin* pResult, UInt32 BoneLoD, M2I* pM2I, CVe
 				M2SkinElement::CElement_SubMesh* pSubsetOut = &SubsetsOut[iSubsetPartition];
 
 				pSubsetOut->ID = m_SubMeshList[i]->ID;
+				pSubsetOut->Level = m_SubMeshList[i]->Level;
 				pSubsetOut->VertexStart = pSubsetPartitionIn->VertexStart;
 				pSubsetOut->VertexCount = pSubsetPartitionIn->VertexCount;
 				pSubsetOut->TriangleIndexStart = pSubsetPartitionIn->TriangleIndexStart;

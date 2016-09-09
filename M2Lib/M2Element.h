@@ -306,7 +306,7 @@ namespace M2Lib
 				ObjectSkin = 2,
 				WeaponBlade = 3,
 				WeaponHandle = 4,
-				Environment = 7,
+				Environment = 5,
 				Hair = 6,
 				FacialHair = 7,
 				SkinExtra = 8,
@@ -321,6 +321,8 @@ namespace M2Lib
 				GuildBorderColor = 17,
 				GuildEmblem = 18
 			};
+
+			static std::string GetTypeString(ETextureType Type);
 
 			enum class ETextureFlags
 				: UInt32
