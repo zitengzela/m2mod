@@ -205,7 +205,8 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 		}
 	}
 
-	if (Header.Description.Flags & 0x80)
+	// don't load, since we have no use of them
+	/*if (Header.Description.Flags & 0x80)
 	{
 		for (int i = SKIN_COUNT - 2; i < SKIN_COUNT; ++i)
 		{
@@ -220,7 +221,7 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 				return Error;
 			}
 		}
-	}
+	}*/
 
 	// print info
 	//PrintInfo();
@@ -317,7 +318,9 @@ M2Lib::EError M2Lib::M2::Save(const Char16* FileName)
 	}
 
 	// 0x80 = flag_has_lod_skin_files
-	if (Header.Description.Flags & 0x80)
+	//if (Header.Description.Flags & 0x80)
+	// HAXX
+	if (wcsstr(FileName, L"_HD"))
 	{
 		for (int i = 0; i < 2; ++i)
 		{

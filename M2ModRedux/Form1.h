@@ -494,7 +494,6 @@ namespace M2ModRedux
 				 this->textBoxInputM2Imp->Name = L"textBoxInputM2Imp";
 				 this->textBoxInputM2Imp->Size = System::Drawing::Size(374, 20);
 				 this->textBoxInputM2Imp->TabIndex = 4;
-				 this->textBoxInputM2Imp->Text = L"E:\\m2work\\legion\\Character\\Tauren\\Female\\TAURENFemale_HD.m2";
 				 // 
 				 // panelInputM2I
 				 // 
@@ -514,7 +513,6 @@ namespace M2ModRedux
 				 this->textBoxInputM2I->Name = L"textBoxInputM2I";
 				 this->textBoxInputM2I->Size = System::Drawing::Size(374, 20);
 				 this->textBoxInputM2I->TabIndex = 10;
-				 this->textBoxInputM2I->Text = L"E:\\m2work\\legion\\tauren\\tauren_mod.m2i";
 				 // 
 				 // panelOutputM2
 				 // 
@@ -535,8 +533,6 @@ namespace M2ModRedux
 				 this->textBoxOutputM2->Name = L"textBoxOutputM2";
 				 this->textBoxOutputM2->Size = System::Drawing::Size(374, 20);
 				 this->textBoxOutputM2->TabIndex = 13;
-				 this->textBoxOutputM2->Text = L"C:\\Program Files\\World of Warcraft WotLK 4.0.1\\Character\\Tauren\\Female\\TAURENFema"
-					 L"le_HD.m2";
 				 // 
 				 // panelImportCb
 				 // 
