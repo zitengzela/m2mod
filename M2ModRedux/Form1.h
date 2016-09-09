@@ -713,7 +713,7 @@ namespace M2ModRedux
 
 			delete M2;
 
-			importButtonGo->Enabled = true;
+			exportButtonGo->Enabled = true;
 		}
 
 
