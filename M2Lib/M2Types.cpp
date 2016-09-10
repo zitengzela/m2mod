@@ -253,6 +253,13 @@ const char* M2Lib::GetErrorText(EError Error)
 	return "error: unrecognized error";
 }
 
+M2Lib::SubmeshExtraData::SubmeshExtraData()
+{
+	ID = 0;
+	M2IIndex = -1;
+	MaterialOverride = -1;
+}
+
 const int M2Lib::BoundaryData::ExtraData::BoundingTriangleVertexMap[BOUNDING_TRIANGLE_COUNT * 3] =
 {
 	0, 1, 2,	// top

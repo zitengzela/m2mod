@@ -186,14 +186,14 @@ namespace M2ModRedux {
 		}
 #pragma endregion
 	private: System::Void makeGlossyCheckBox_CheckedChanged(System::Object^  sender, System::EventArgs^  e) {
-		glossTextureTextBox->Enabled = makeGlossyCheckBox->Checked;
+		glossTextureTextBox->Enabled = makeGlossyCheckBox->Checked && !copyMaterialCheckBox->Checked;
 	}
 
 	private: System::Void customTextureCheckBox_CheckedChanged(System::Object^  sender, System::EventArgs^  e) {
-		customTextureTextBox->Enabled = customTextureCheckBox->Checked;
+		customTextureTextBox->Enabled = customTextureCheckBox->Checked && !copyMaterialCheckBox->Checked;
 	}
 
-	public: System::Void Initialize(int index, std::vector<M2Lib::M2Skin::MeshInfo> const& infos)
+	public: System::Void Initialize(M2Lib::M2 const* pM2, int index, std::vector<M2Lib::M2Skin::MeshInfo> const& infos)
 	{
 		auto const& info = infos[index];
 
@@ -233,6 +233,23 @@ namespace M2ModRedux {
 		}
 
 		srcMaterialComboBox->Items->AddRange(SrcMaterials.ToArray());
+
+		auto& SubmeshExtraData = pM2->Skins[0]->ExtraDataBySubmeshIndex[index];
+		if (SubmeshExtraData->MaterialOverride >= 0)
+		{
+			copyMaterialCheckBox->Checked = true;
+			srcMaterialComboBox->SelectedIndex = SubmeshExtraData->MaterialOverride + 1;
+		}
+		if (!SubmeshExtraData->CustomTextureName.empty())
+		{
+			customTextureCheckBox->Checked = true;
+			customTextureTextBox->Text = gcnew String(SubmeshExtraData->CustomTextureName.c_str());
+		}
+		if (!SubmeshExtraData->GlossTextureName.empty())
+		{
+			makeGlossyCheckBox->Checked = true;
+			glossTextureTextBox->Text = gcnew String(SubmeshExtraData->GlossTextureName.c_str());
+		}
 	}
 
 	public: System::Boolean Fits(String^ SearchString)

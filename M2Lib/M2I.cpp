@@ -26,9 +26,11 @@ M2Lib::EError M2Lib::M2I::Load(Char16* FileName, M2Lib::M2* pM2, bool IgnoreBone
 	{
 		VersionMajor = DataBinary.ReadUInt16();
 		VersionMinor = DataBinary.ReadUInt16();
-		if (VersionMajor != 4 || VersionMinor != 5 && VersionMinor != 6)
+		if (VersionMajor != 4 || VersionMinor < 5 && VersionMinor > 7)
 			return EError_FailedToImportM2I_UnsupportedVersion;
 	}
+
+	UInt32 Version = MAKE_VERSION(VersionMajor, VersionMinor);
 
 	// load sub meshes, build new vertex list
 	UInt32 VertexStart = 0;
@@ -42,11 +44,17 @@ M2Lib::EError M2Lib::M2I::Load(Char16* FileName, M2Lib::M2* pM2, bool IgnoreBone
 
 		// read id
 		pNewSubMesh->ID = DataBinary.ReadUInt16();
-		pNewSubMesh->ComparisonData.ID = pNewSubMesh->ID;
-		pNewSubMesh->ComparisonData.M2IIndex = i;
+		pNewSubMesh->ExtraData.ID = pNewSubMesh->ID;
+		pNewSubMesh->ExtraData.M2IIndex = i;
 
-		if (VersionMinor == 6)
-			pNewSubMesh->ComparisonData.Description = DataBinary.ReadASCIIString();
+		if (Version >= MAKE_VERSION(4, 6))
+			pNewSubMesh->ExtraData.Description = DataBinary.ReadASCIIString();
+		if (Version >= MAKE_VERSION(4, 7))
+		{
+			pNewSubMesh->ExtraData.MaterialOverride = DataBinary.ReadSInt16();
+			pNewSubMesh->ExtraData.CustomTextureName = DataBinary.ReadASCIIString();
+			pNewSubMesh->ExtraData.GlossTextureName = DataBinary.ReadASCIIString();
+		}
 
 		// FMN 2015-02-13: read level
 		pNewSubMesh->Level = DataBinary.ReadUInt16();
@@ -98,7 +106,7 @@ M2Lib::EError M2Lib::M2I::Load(Char16* FileName, M2Lib::M2* pM2, bool IgnoreBone
 			submeshVertices.push_back(InVertex);
 		}
 
-		pNewSubMesh->ComparisonData.Boundary.Calculate(submeshVertices);
+		pNewSubMesh->ExtraData.Boundary.Calculate(submeshVertices);
 
 		// read triangles
 		UInt32 InTriangleCount = 0;

@@ -269,8 +269,8 @@ void M2Lib::M2Skin::CopyMaterials(M2Skin* pOther)
 	{
 		CElement_SubMesh& SubMesh = SubMeshList[iSubMesh];
 
-		auto comparisonDataItr = ComparisonDataBySubmeshIndex.find(iSubMesh);
-		assert(comparisonDataItr != ComparisonDataBySubmeshIndex.end());
+		auto comparisonDataItr = ExtraDataBySubmeshIndex.find(iSubMesh);
+		assert(comparisonDataItr != ExtraDataBySubmeshIndex.end());
 
 		SInt32 SubMeshOtherTriangleIndex;
 		CElement_SubMesh* SubMeshOther = pOther->GetSubMesh(*comparisonDataItr->second, SubMeshOtherTriangleIndex);
@@ -372,7 +372,7 @@ void M2Lib::M2Skin::SortSubMeshes()
 }
 
 
-M2Lib::M2SkinElement::CElement_SubMesh* M2Lib::M2Skin::GetSubMesh(SubmeshComparisonData const& TargetSubMeshData, SInt32& SubMeshTriangleIndexOut)
+M2Lib::M2SkinElement::CElement_SubMesh* M2Lib::M2Skin::GetSubMesh(SubmeshExtraData const& TargetSubMeshData, SInt32& SubMeshTriangleIndexOut)
 {
 	UInt32 SubMeshListLength = Elements[EElement_SubMesh].Count;
 	CElement_SubMesh* SubMeshList = Elements[EElement_SubMesh].as<CElement_SubMesh>();
@@ -711,8 +711,8 @@ std::vector<M2Lib::M2Skin::MeshInfo> M2Lib::M2Skin::GetMeshInfo()
 		Info.ID = Submeshes[i].ID;
 		Info.pSubMesh = &Submeshes[i];
 
-		auto comparisonDataItr = ComparisonDataBySubmeshIndex.find(i);
-		assert(comparisonDataItr != ComparisonDataBySubmeshIndex.end());
+		auto comparisonDataItr = ExtraDataBySubmeshIndex.find(i);
+		assert(comparisonDataItr != ExtraDataBySubmeshIndex.end());
 		Info.Description = comparisonDataItr->second->Description;
 		
 		for (UInt32 j = 0; j < Header.nMaterial; ++j)

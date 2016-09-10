@@ -75,7 +75,7 @@ namespace M2Lib
 		CM2SkinHeader Header;
 		DataElement Elements[M2SkinElement::EElement__Count__];
 
-		std::map<int, SubmeshComparisonData const*> ComparisonDataBySubmeshIndex;
+		std::map<int, SubmeshExtraData const*> ExtraDataBySubmeshIndex;
 
 		// pointer to M2 that this skin belongs to.
 		M2* pM2;
@@ -100,7 +100,7 @@ namespace M2Lib
 		bool PrintInfo();
 
 		// returns sub mesh with ID using CenterBounds to narrow search. some times there are multiple sub meshes with the same ID, so we can narrow our search to whatever sub mesh lies closest to CenterBounds.
-		M2SkinElement::CElement_SubMesh* GetSubMesh(SubmeshComparisonData const& TargetSubMeshData, SInt32& SubMeshTriangleIndexOut);
+		M2SkinElement::CElement_SubMesh* GetSubMesh(SubmeshExtraData const& TargetSubMeshData, SInt32& SubMeshTriangleIndexOut);
 
 		// gathers list of materials that affect a given sub mesh within this skin.
 		void GetSubMeshMaterials(UInt32 SubMeshTriangleIndex, std::vector< M2SkinElement::CElement_Material* >& Result);

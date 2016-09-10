@@ -17,4 +17,6 @@ typedef wchar_t Char16;
 #define ASSERT_SIZE(x, y) \
 	static_assert(sizeof(x) == y, #x" size does not match client size")
 
+#define MAKE_VERSION(major, minor) (major << 16 | minor)
+
 #endif

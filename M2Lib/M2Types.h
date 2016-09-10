@@ -140,11 +140,17 @@ namespace M2Lib
 		ExtraData CalculateExtra() const;
 	};
 
-	struct SubmeshComparisonData
+	struct SubmeshExtraData
 	{
+		SubmeshExtraData();
+
 		UInt32 ID;
 		UInt32 M2IIndex;
 		std::string Description;
 		BoundaryData Boundary;
+
+		std::string GlossTextureName;
+		std::string CustomTextureName;
+		int MaterialOverride;
 	};
 }

@@ -24,7 +24,7 @@ namespace M2Lib
 			// triangles that make up this subset, as indices into the global vertex list.
 			std::vector< CTriangle > Triangles;
 
-			SubmeshComparisonData ComparisonData;
+			SubmeshExtraData ExtraData;
 		};
 
 	public:

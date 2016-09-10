@@ -112,11 +112,11 @@ namespace M2Lib
 			//
 			//std::vector< M2Skin::CElement_Material* > pMaterials;
 
-			SubmeshComparisonData const* pComparisonData;
+			SubmeshExtraData const* pExtraData;
 
 		public:
 			CSubMesh()
-				: ID(0), pComparisonData(NULL)
+				: ID(0), pExtraData(NULL)
 			{
 			}
 
