@@ -47,6 +47,9 @@
     <ClInclude Include="MeshInfoControl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="RegistryStore.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="app.rc">
@@ -55,6 +58,12 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Form1.resX">
+      <Filter>Resource Files</Filter>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ElementManagementForm.resx">
+      <Filter>Resource Files</Filter>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MeshInfoControl.resx">
       <Filter>Resource Files</Filter>
     </EmbeddedResource>
   </ItemGroup>

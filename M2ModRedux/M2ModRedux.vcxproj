@@ -107,6 +107,7 @@
     <ClInclude Include="MeshInfoControl.h">
       <FileType>CppControl</FileType>
     </ClInclude>
+    <ClInclude Include="RegistryStore.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>

@@ -5,6 +5,7 @@
 
 #include "ElementManagementForm.h"
 #include "MeshInfoControl.h"
+#include "RegistryStore.h"
 
 namespace M2ModRedux
 {
@@ -22,14 +23,63 @@ namespace M2ModRedux
 	/// </summary>
 	public ref class Form1 : public System::Windows::Forms::Form
 	{
+	private: RegistyStore^ Store = nullptr;
+
 	public:
 		Form1(void)
 		{
 			InitializeComponent();
-			//
-			//TODO: Add the constructor code here
-			//
+			
+			Console::WriteLine(RegistyStore::Value::ExportM2.ToString());
+
+			Store = gcnew RegistyStore();
+
+			try
+			{
+				if (auto value = Store->GetValue(RegistyStore::Value::ExportM2))
+					this->textBoxInputM2Exp->Text = (String^)value;
+
+				if (auto value = Store->GetValue(RegistyStore::Value::ExportM2I))
+					this->textBoxOutputM2I->Text = (String^)value;
+
+				if (auto value = Store->GetValue(RegistyStore::Value::ImportInM2))
+					this->textBoxInputM2Imp->Text = (String^)value;
+				if (auto value = Store->GetValue(RegistyStore::Value::ImportM2I))
+					this->textBoxInputM2I->Text = (String^)value;
+				if (auto value = Store->GetValue(RegistyStore::Value::ImportOutM2))
+					this->textBoxOutputM2->Text = (String^)value;
+
+				if (auto value = Store->GetValue(RegistyStore::Value::MergeAttachments))
+					this->checkBoxMergeAttachments->Checked = Boolean::Parse(value->ToString());
+				if (auto value = Store->GetValue(RegistyStore::Value::MergeBones))
+					this->checkBoxMergeBones->Checked = Boolean::Parse(value->ToString());
+				if (auto value = Store->GetValue(RegistyStore::Value::MergeCameras))
+					this->checkBoxMergeCameras->Checked = Boolean::Parse(value->ToString());
+				if (auto value = Store->GetValue(RegistyStore::Value::FixSeams))
+					this->checkBoxFixSeams->Checked = Boolean::Parse(value->ToString());
+			}
+			catch (...)
+			{
+
+			}
 		}
+
+	private: System::Void Form1_FormClosing(System::Object^  sender, System::Windows::Forms::FormClosingEventArgs^  e) {
+
+		Store->SetValue(RegistyStore::Value::ExportM2, textBoxInputM2Exp->Text);
+
+		Store->SetValue(RegistyStore::Value::ExportM2I, this->textBoxOutputM2I->Text);
+
+		Store->SetValue(RegistyStore::Value::ImportInM2, this->textBoxInputM2Imp->Text);
+		Store->SetValue(RegistyStore::Value::ImportM2I, this->textBoxInputM2I->Text);
+		Store->SetValue(RegistyStore::Value::ImportOutM2, this->textBoxOutputM2->Text);
+
+		Store->SetValue(RegistyStore::Value::MergeAttachments, this->checkBoxMergeAttachments->Checked);
+		Store->SetValue(RegistyStore::Value::MergeBones, this->checkBoxMergeBones->Checked);
+		Store->SetValue(RegistyStore::Value::MergeCameras, this->checkBoxMergeCameras->Checked);
+		Store->SetValue(RegistyStore::Value::FixSeams, this->checkBoxFixSeams->Checked);
+
+	}
 
 	protected:
 		/// <summary>
@@ -120,6 +170,10 @@ namespace M2ModRedux
 				 this->importButtonGo = (gcnew System::Windows::Forms::Button());
 				 this->importButtonPreload = (gcnew System::Windows::Forms::Button());
 				 this->importCancelButton = (gcnew System::Windows::Forms::Button());
+				 this->manageMeshesButton = (gcnew System::Windows::Forms::Button());
+				 this->textBoxInputM2Imp = (gcnew System::Windows::Forms::TextBox());
+				 this->textBoxInputM2I = (gcnew System::Windows::Forms::TextBox());
+				 this->textBoxOutputM2 = (gcnew System::Windows::Forms::TextBox());
 				 this->tabControl1 = (gcnew System::Windows::Forms::TabControl());
 				 this->tabExport = (gcnew System::Windows::Forms::TabPage());
 				 this->panelImputM2Exp = (gcnew System::Windows::Forms::Panel());
@@ -127,31 +181,27 @@ namespace M2ModRedux
 				 this->panelOutputM2I = (gcnew System::Windows::Forms::Panel());
 				 this->textBoxOutputM2I = (gcnew System::Windows::Forms::TextBox());
 				 this->tabImport = (gcnew System::Windows::Forms::TabPage());
+				 this->panel1 = (gcnew System::Windows::Forms::Panel());
 				 this->extraworkPanel = (gcnew System::Windows::Forms::Panel());
-				 this->manageMeshesButton = (gcnew System::Windows::Forms::Button());
 				 this->panelInputM2Import = (gcnew System::Windows::Forms::Panel());
-				 this->textBoxInputM2Imp = (gcnew System::Windows::Forms::TextBox());
 				 this->panelInputM2I = (gcnew System::Windows::Forms::Panel());
-				 this->textBoxInputM2I = (gcnew System::Windows::Forms::TextBox());
 				 this->panelOutputM2 = (gcnew System::Windows::Forms::Panel());
-				 this->textBoxOutputM2 = (gcnew System::Windows::Forms::TextBox());
 				 this->panelImportCb = (gcnew System::Windows::Forms::Panel());
 				 this->checkBoxFixSeams = (gcnew System::Windows::Forms::CheckBox());
 				 this->statusStrip1 = (gcnew System::Windows::Forms::StatusStrip());
 				 this->toolStripStatusLabel1 = (gcnew System::Windows::Forms::ToolStripStatusLabel());
-				 this->panel1 = (gcnew System::Windows::Forms::Panel());
 				 this->tabControl1->SuspendLayout();
 				 this->tabExport->SuspendLayout();
 				 this->panelImputM2Exp->SuspendLayout();
 				 this->panelOutputM2I->SuspendLayout();
 				 this->tabImport->SuspendLayout();
+				 this->panel1->SuspendLayout();
 				 this->extraworkPanel->SuspendLayout();
 				 this->panelInputM2Import->SuspendLayout();
 				 this->panelInputM2I->SuspendLayout();
 				 this->panelOutputM2->SuspendLayout();
 				 this->panelImportCb->SuspendLayout();
 				 this->statusStrip1->SuspendLayout();
-				 this->panel1->SuspendLayout();
 				 this->SuspendLayout();
 				 // 
 				 // openFileDialog1
@@ -376,6 +426,47 @@ namespace M2ModRedux
 				 this->importCancelButton->UseVisualStyleBackColor = true;
 				 this->importCancelButton->Click += gcnew System::EventHandler(this, &Form1::importCancelButton_Click);
 				 // 
+				 // manageMeshesButton
+				 // 
+				 this->manageMeshesButton->Location = System::Drawing::Point(9, 4);
+				 this->manageMeshesButton->Name = L"manageMeshesButton";
+				 this->manageMeshesButton->Size = System::Drawing::Size(107, 30);
+				 this->manageMeshesButton->TabIndex = 0;
+				 this->manageMeshesButton->Text = L"Manage Meshes";
+				 this->toolTip1->SetToolTip(this->manageMeshesButton, L"Open Mesh Management UI");
+				 this->manageMeshesButton->UseVisualStyleBackColor = true;
+				 this->manageMeshesButton->Click += gcnew System::EventHandler(this, &Form1::manageMeshesButton_Click);
+				 // 
+				 // textBoxInputM2Imp
+				 // 
+				 this->textBoxInputM2Imp->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
+					 | System::Windows::Forms::AnchorStyles::Right));
+				 this->textBoxInputM2Imp->Location = System::Drawing::Point(72, 3);
+				 this->textBoxInputM2Imp->Name = L"textBoxInputM2Imp";
+				 this->textBoxInputM2Imp->Size = System::Drawing::Size(374, 20);
+				 this->textBoxInputM2Imp->TabIndex = 4;
+				 this->toolTip1->SetToolTip(this->textBoxInputM2Imp, L"Path to source M2");
+				 // 
+				 // textBoxInputM2I
+				 // 
+				 this->textBoxInputM2I->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
+					 | System::Windows::Forms::AnchorStyles::Right));
+				 this->textBoxInputM2I->Location = System::Drawing::Point(72, 5);
+				 this->textBoxInputM2I->Name = L"textBoxInputM2I";
+				 this->textBoxInputM2I->Size = System::Drawing::Size(374, 20);
+				 this->textBoxInputM2I->TabIndex = 10;
+				 this->toolTip1->SetToolTip(this->textBoxInputM2I, L"Path to M2I");
+				 // 
+				 // textBoxOutputM2
+				 // 
+				 this->textBoxOutputM2->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
+					 | System::Windows::Forms::AnchorStyles::Right));
+				 this->textBoxOutputM2->Location = System::Drawing::Point(72, 2);
+				 this->textBoxOutputM2->Name = L"textBoxOutputM2";
+				 this->textBoxOutputM2->Size = System::Drawing::Size(374, 20);
+				 this->textBoxOutputM2->TabIndex = 13;
+				 this->toolTip1->SetToolTip(this->textBoxOutputM2, L"Destination path for M2");
+				 // 
 				 // tabControl1
 				 // 
 				 this->tabControl1->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
@@ -456,6 +547,18 @@ namespace M2ModRedux
 				 this->tabImport->Text = L"Import";
 				 this->tabImport->UseVisualStyleBackColor = true;
 				 // 
+				 // panel1
+				 // 
+				 this->panel1->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
+					 | System::Windows::Forms::AnchorStyles::Right));
+				 this->panel1->Controls->Add(this->importButtonGo);
+				 this->panel1->Controls->Add(this->importButtonPreload);
+				 this->panel1->Controls->Add(this->importCancelButton);
+				 this->panel1->Location = System::Drawing::Point(7, 198);
+				 this->panel1->Name = L"panel1";
+				 this->panel1->Size = System::Drawing::Size(527, 62);
+				 this->panel1->TabIndex = 31;
+				 // 
 				 // extraworkPanel
 				 // 
 				 this->extraworkPanel->Controls->Add(this->manageMeshesButton);
@@ -464,17 +567,6 @@ namespace M2ModRedux
 				 this->extraworkPanel->Name = L"extraworkPanel";
 				 this->extraworkPanel->Size = System::Drawing::Size(528, 68);
 				 this->extraworkPanel->TabIndex = 30;
-				 // 
-				 // manageMeshesButton
-				 // 
-				 this->manageMeshesButton->Location = System::Drawing::Point(9, 4);
-				 this->manageMeshesButton->Name = L"manageMeshesButton";
-				 this->manageMeshesButton->Size = System::Drawing::Size(107, 30);
-				 this->manageMeshesButton->TabIndex = 0;
-				 this->manageMeshesButton->Text = L"Manage Meshes";
-				 this->toolTip1->SetToolTip(this->manageMeshesButton, L"Open Mesh Management UI");
-				 this->manageMeshesButton->UseVisualStyleBackColor = true;
-				 this->manageMeshesButton->Click += gcnew System::EventHandler(this, &Form1::manageMeshesButton_Click);
 				 // 
 				 // panelInputM2Import
 				 // 
@@ -488,16 +580,6 @@ namespace M2ModRedux
 				 this->panelInputM2Import->Size = System::Drawing::Size(531, 24);
 				 this->panelInputM2Import->TabIndex = 26;
 				 // 
-				 // textBoxInputM2Imp
-				 // 
-				 this->textBoxInputM2Imp->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
-					 | System::Windows::Forms::AnchorStyles::Right));
-				 this->textBoxInputM2Imp->Location = System::Drawing::Point(72, 3);
-				 this->textBoxInputM2Imp->Name = L"textBoxInputM2Imp";
-				 this->textBoxInputM2Imp->Size = System::Drawing::Size(374, 20);
-				 this->textBoxInputM2Imp->TabIndex = 4;
-				 this->toolTip1->SetToolTip(this->textBoxInputM2Imp, L"Path to source M2");
-				 // 
 				 // panelInputM2I
 				 // 
 				 this->panelInputM2I->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
@@ -509,16 +591,6 @@ namespace M2ModRedux
 				 this->panelInputM2I->Name = L"panelInputM2I";
 				 this->panelInputM2I->Size = System::Drawing::Size(531, 30);
 				 this->panelInputM2I->TabIndex = 23;
-				 // 
-				 // textBoxInputM2I
-				 // 
-				 this->textBoxInputM2I->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
-					 | System::Windows::Forms::AnchorStyles::Right));
-				 this->textBoxInputM2I->Location = System::Drawing::Point(72, 5);
-				 this->textBoxInputM2I->Name = L"textBoxInputM2I";
-				 this->textBoxInputM2I->Size = System::Drawing::Size(374, 20);
-				 this->textBoxInputM2I->TabIndex = 10;
-				 this->toolTip1->SetToolTip(this->textBoxInputM2I, L"Path to M2I");
 				 // 
 				 // panelOutputM2
 				 // 
@@ -532,16 +604,6 @@ namespace M2ModRedux
 				 this->panelOutputM2->Name = L"panelOutputM2";
 				 this->panelOutputM2->Size = System::Drawing::Size(531, 24);
 				 this->panelOutputM2->TabIndex = 24;
-				 // 
-				 // textBoxOutputM2
-				 // 
-				 this->textBoxOutputM2->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
-					 | System::Windows::Forms::AnchorStyles::Right));
-				 this->textBoxOutputM2->Location = System::Drawing::Point(72, 2);
-				 this->textBoxOutputM2->Name = L"textBoxOutputM2";
-				 this->textBoxOutputM2->Size = System::Drawing::Size(374, 20);
-				 this->textBoxOutputM2->TabIndex = 13;
-				 this->toolTip1->SetToolTip(this->textBoxOutputM2, L"Destination path for M2");
 				 // 
 				 // panelImportCb
 				 // 
@@ -581,18 +643,6 @@ namespace M2ModRedux
 				 this->toolStripStatusLabel1->Name = L"toolStripStatusLabel1";
 				 this->toolStripStatusLabel1->Size = System::Drawing::Size(0, 17);
 				 // 
-				 // panel1
-				 // 
-				 this->panel1->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
-					 | System::Windows::Forms::AnchorStyles::Right));
-				 this->panel1->Controls->Add(this->importButtonGo);
-				 this->panel1->Controls->Add(this->importButtonPreload);
-				 this->panel1->Controls->Add(this->importCancelButton);
-				 this->panel1->Location = System::Drawing::Point(7, 198);
-				 this->panel1->Name = L"panel1";
-				 this->panel1->Size = System::Drawing::Size(527, 62);
-				 this->panel1->TabIndex = 31;
-				 // 
 				 // Form1
 				 // 
 				 this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
@@ -604,6 +654,7 @@ namespace M2ModRedux
 				 this->MinimumSize = System::Drawing::Size(500, 320);
 				 this->Name = L"Form1";
 				 this->Text = L"M2Mod Redux 4.8.0";
+				 this->FormClosing += gcnew System::Windows::Forms::FormClosingEventHandler(this, &Form1::Form1_FormClosing);
 				 this->tabControl1->ResumeLayout(false);
 				 this->tabExport->ResumeLayout(false);
 				 this->panelImputM2Exp->ResumeLayout(false);
@@ -611,6 +662,7 @@ namespace M2ModRedux
 				 this->panelOutputM2I->ResumeLayout(false);
 				 this->panelOutputM2I->PerformLayout();
 				 this->tabImport->ResumeLayout(false);
+				 this->panel1->ResumeLayout(false);
 				 this->extraworkPanel->ResumeLayout(false);
 				 this->panelInputM2Import->ResumeLayout(false);
 				 this->panelInputM2Import->PerformLayout();
@@ -622,7 +674,6 @@ namespace M2ModRedux
 				 this->panelImportCb->PerformLayout();
 				 this->statusStrip1->ResumeLayout(false);
 				 this->statusStrip1->PerformLayout();
-				 this->panel1->ResumeLayout(false);
 				 this->ResumeLayout(false);
 				 this->PerformLayout();
 
@@ -1036,5 +1087,5 @@ namespace M2ModRedux
 		if (result != Windows::Forms::DialogResult::OK)
 			MeshManagementForm = nullptr;
 	}
-	};
+};
 }
