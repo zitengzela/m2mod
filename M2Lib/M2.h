@@ -23,18 +23,6 @@ namespace M2Lib
 	public:
 		static const UInt8 VersionCode = 0x10;
 
-	public:
-		//
-		// points to an animation located outside of the element.
-		struct SExternalAnimation
-		{
-		public:
-			UInt32 Count;	// number of timestamps or keys.
-			UInt32 Offset;	// global offset in bytes from start of file to where actual animation data begins.
-			//UInt32 Unknown1;
-			//UInt32 Unknown2;
-		};
-
 #pragma pack(push,1)
 		// memory mapped header.
 		class CM2Header
@@ -160,6 +148,8 @@ namespace M2Lib
 		DataElement Chunks[M2Element::EChunk__Count__];
 		const static Char8* kChunkIDs[M2Element::EChunk__Count__];
 
+		DataElement* GetLastElement();
+
 		#define SKIN_COUNT 6
 		M2Skin* Skins[SKIN_COUNT];
 
@@ -173,12 +163,7 @@ namespace M2Lib
 	public:
 		M2()
 		{
-			Skins[0] = 0;
-			Skins[1] = 0;
-			Skins[2] = 0;
-			Skins[3] = 0;
-			Skins[4] = 0;
-			Skins[5] = 0;
+			memset(Skins, 0, sizeof(Skins));
 			m_OriginalSize = 0;
 			m_OriginalModelChunkSize = 0;
 			RawData = 0;
@@ -189,6 +174,8 @@ namespace M2Lib
 		{
 			if (pInM2I)
 				delete pInM2I;
+			if (RawData)
+				delete RawData;
 		}
 
 	public:

@@ -216,12 +216,10 @@ M2Lib::EError M2Lib::M2I::Load(Char16* FileName, M2Lib::M2* pM2, bool IgnoreBone
 		// read cameras, overwrite existing
 		UInt32 CameraCount = pM2->Elements[M2Element::EElement_Camera].Count;
 		auto Cameras = pM2->Elements[M2Element::EElement_Camera].as<M2Element::CElement_Camera>();
-		UInt32 CameraCountIn;
-		CameraCountIn = DataBinary.ReadUInt32();
+		UInt32 CameraCountIn = DataBinary.ReadUInt32();
 		for (UInt32 i = 0; i < CameraCountIn; i++)
 		{
-			SInt32 InType;
-			InType = DataBinary.ReadSInt32();
+			auto InType = (M2Element::CElement_Camera::ECameraType)DataBinary.ReadSInt32();
 
 			M2Element::CElement_Camera* pCameraToMod = NULL;
 			for (UInt32 j = 0; j < CameraCount; j++)
@@ -238,11 +236,15 @@ M2Lib::EError M2Lib::M2I::Load(Char16* FileName, M2Lib::M2* pM2, bool IgnoreBone
 
 				if (pCameraToMod->AnimationBlock_FieldOfView.nKeys > 0)
 				{
-					auto ExternalAnimations = (M2::SExternalAnimation*)pM2->Elements[M2Element::EElement_Camera].GetLocalPointer(pCameraToMod->AnimationBlock_FieldOfView.oKeys);
-					Float32* FieldOfView_Keys = (Float32*)(&pM2->RawData[ExternalAnimations[0].Offset]);
-					Float32 InFoV;
-					InFoV = DataBinary.ReadFloat32();	// we are writing to RawData in memory, this change will not be saved to the M2 because it lies out of bounds of any elements.
-					FieldOfView_Keys[0] = InFoV;
+					auto ExternalAnimations = (M2Array*)pM2->Elements[M2Element::EElement_Camera].GetLocalPointer(pCameraToMod->AnimationBlock_FieldOfView.oKeys);
+
+					auto LastElement = pM2->GetLastElement();
+					assert(LastElement != NULL);
+					assert(ExternalAnimations[0].Offset >= LastElement->Offset && ExternalAnimations[0].Offset < LastElement->Offset + LastElement->Data.size());
+
+					Float32* FieldOfView_Keys = (Float32*)LastElement->GetLocalPointer(ExternalAnimations[0].Offset);
+					auto value = DataBinary.ReadFloat32();
+					FieldOfView_Keys[0] = value;
 				}
 				else
 				{

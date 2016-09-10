@@ -19,6 +19,17 @@ struct IFFChunk
 
 const Char8* M2Lib::M2::kChunkIDs[EChunk__Count__] = { "MD21", "PFID", "AFID", "SFID", "BFID" };
 
+M2Lib::DataElement* M2Lib::M2::GetLastElement()
+{
+	for (int i = M2Element::EElement__Count__ - 1; i >= 0; --i)
+	{
+		if (!Elements[i].Data.empty())
+			return &Elements[i];
+	}
+
+	return NULL;
+}
+
 M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 {
 	// check path
@@ -478,8 +489,12 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate(Char16* FileName)
 		// extract field of view of camera from animation block
 		if (Camera.AnimationBlock_FieldOfView.nKeys > 0)
 		{
-			SExternalAnimation* ExternalAnimations = (SExternalAnimation*)Elements[EElement_Camera].GetLocalPointer(Camera.AnimationBlock_FieldOfView.oKeys);
-			Float32* FieldOfView_Keys = (Float32*)(&RawData[ExternalAnimations[0].Offset]);
+			auto ExternalAnimations = (M2Array*)Elements[EElement_Camera].GetLocalPointer(Camera.AnimationBlock_FieldOfView.oKeys);
+			auto LastElement = GetLastElement();
+			assert(LastElement != NULL);
+			assert(ExternalAnimations[0].Offset >= LastElement->Offset && ExternalAnimations[0].Offset < LastElement->Offset + LastElement->Data.size());
+
+			Float32* FieldOfView_Keys = (Float32*)LastElement->GetLocalPointer(ExternalAnimations[0].Offset);
 			DataBinary.WriteFloat32(FieldOfView_Keys[0]);
 		}
 		else

@@ -648,7 +648,14 @@ namespace M2Lib
 		class CElement_Camera
 		{
 		public:
-			SInt32 Type;
+			enum ECameraType : SInt32
+			{
+				FlyBy = -1,
+				Portrait = 1,
+				PaperDoll = 2
+			};
+
+			ECameraType Type;
 			Float32 ClipFar;
 			Float32 ClipNear;
 			CElement_AnimationBlock AnimationBlock_Position;		// Float32x3
