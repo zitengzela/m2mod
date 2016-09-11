@@ -225,7 +225,7 @@ namespace M2ModRedux {
 		{
 			auto const& info = infos[i];
 
-			auto Element = gcnew String("# " + i + " ID = " + info.ID);
+			auto Element = gcnew String("# " + (i + 1) + " ID = " + info.ID);
 			if (!info.Description.empty())
 				Element += " \"" + gcnew String(info.Description.c_str()) + "\"";
 
