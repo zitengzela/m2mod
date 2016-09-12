@@ -483,9 +483,9 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate(Char16* FileName)
 		DataBinary.WriteSInt32(Camera.Type);
 
 		// extract field of view of camera from animation block
-		if (Camera.AnimationBlock_FieldOfView.nKeys > 0)
+		if (Camera.AnimationBlock_FieldOfView.Keys.Count > 0)
 		{
-			auto ExternalAnimations = (M2Array*)Elements[EElement_Camera].GetLocalPointer(Camera.AnimationBlock_FieldOfView.oKeys);
+			auto ExternalAnimations = (M2Array*)Elements[EElement_Camera].GetLocalPointer(Camera.AnimationBlock_FieldOfView.Keys.Offset);
 			auto LastElement = GetLastElement();
 			assert(LastElement != NULL);
 			assert(ExternalAnimations[0].Offset >= LastElement->Offset && ExternalAnimations[0].Offset < LastElement->Offset + LastElement->Data.size());
@@ -765,8 +765,8 @@ void M2Lib::M2::PrintInfo()
         FileStream << "\t" << i << std::endl;
         FileStream << "\tFlags: " << (UInt32)texture[i].Flags << std::endl;
         FileStream << "\tType: " << (UInt32)texture[i].Type << std::endl;
-        if (texture[i].nTexturePath > 1)
-            FileStream << "\tPath: " << (char*)(texture[i].oTexturePath + this->RawData + DataElement::GetFileOffset()) << std::endl;
+        if (texture[i].TexturePath.Count > 1)
+            FileStream << "\tPath: " << (char*)(texture[i].TexturePath.Offset + this->RawData + DataElement::GetFileOffset()) << std::endl;
         else
             FileStream << "\tPath: unk" << std::endl;
         FileStream << std::endl;
@@ -783,10 +783,10 @@ void M2Lib::M2::PrintInfo()
         FileStream << "\t" << i << std::endl;
         FileStream << "\t" << transparency.AnimationBlock_Transparency.InterpolationType << std::endl;
         FileStream << "\t" << transparency.AnimationBlock_Transparency.GlobalSequenceID << std::endl;
-        FileStream << "\t" << transparency.AnimationBlock_Transparency.nTimes << std::endl;
-        FileStream << "\t" << transparency.AnimationBlock_Transparency.oTimes << std::endl;
-        FileStream << "\t" << transparency.AnimationBlock_Transparency.nKeys << std::endl;
-        FileStream << "\t" << transparency.AnimationBlock_Transparency.oKeys << std::endl;
+        FileStream << "\t" << transparency.AnimationBlock_Transparency.Times.Count << std::endl;
+        FileStream << "\t" << transparency.AnimationBlock_Transparency.Times.Offset << std::endl;
+        FileStream << "\t" << transparency.AnimationBlock_Transparency.Keys.Count << std::endl;
+        FileStream << "\t" << transparency.AnimationBlock_Transparency.Keys.Offset << std::endl;
 
             /*
             EInterpolationType InterpolationType;
@@ -1764,8 +1764,8 @@ void M2Lib::M2::m_SaveElements_FindOffsets()
 				CElement_Texture* Textures = Elements[iElement].as<CElement_Texture>();
 				for (UInt32 j = 0; j < Elements[iElement].Count; ++j)
 				{
-					VERIFY_OFFSET_LOCAL(Textures[j].oTexturePath);
-					Textures[j].oTexturePath += OffsetDelta;
+					VERIFY_OFFSET_LOCAL(Textures[j].TexturePath.Offset);
+					Textures[j].TexturePath.Offset += OffsetDelta;
 				}
 				break;
 			}
@@ -1822,11 +1822,11 @@ void M2Lib::M2::m_SaveElements_FindOffsets()
 				auto animations = Elements[EElement_Animation].as<CElement_Animation>();
 				for (UInt32 j = 0; j < Elements[iElement].Count; j++)
 				{
-					if (Events[j].oTimeLines)
+					if (Events[j].TimeLines.Offset)
 					{
-						VERIFY_OFFSET_LOCAL(Events[j].oTimeLines);
-						M2Array* M2Arrays = (M2Array*)Elements[iElement].GetLocalPointer(Events[j].oTimeLines);
-						for (UInt32 i = 0; i < Events[j].nTimeLines; i++)
+						VERIFY_OFFSET_LOCAL(Events[j].TimeLines.Offset);
+						M2Array* M2Arrays = (M2Array*)Elements[iElement].GetLocalPointer(Events[j].TimeLines.Offset);
+						for (UInt32 i = 0; i < Events[j].TimeLines.Count; i++)
 						{
 							if (Events[j].GlobalSequenceID == -1 && (animations[i].Flags & 0x20) == 0)
 								continue;
@@ -1839,7 +1839,7 @@ void M2Lib::M2::m_SaveElements_FindOffsets()
 								Array.Offset = 0;
 						}
 
-						Events[j].oTimeLines += OffsetDelta;
+						Events[j].TimeLines.Offset += OffsetDelta;
 					}
 				}
 				break;
@@ -1883,10 +1883,10 @@ void M2Lib::M2::m_SaveElements_FindOffsets()
 				CElement_RibbonEmitter* RibbonEmitters = Elements[iElement].as<CElement_RibbonEmitter>();
 				for (UInt32 j = 0; j < Elements[iElement].Count; j++)
 				{
-					VERIFY_OFFSET_LOCAL(RibbonEmitters[j].oTexture);
-					RibbonEmitters[j].oTexture += OffsetDelta;
-					VERIFY_OFFSET_LOCAL(RibbonEmitters[j].oRenderFlag);
-					RibbonEmitters[j].oRenderFlag += OffsetDelta;
+					VERIFY_OFFSET_LOCAL(RibbonEmitters[j].Texture.Offset);
+					RibbonEmitters[j].Texture.Offset += OffsetDelta;
+					VERIFY_OFFSET_LOCAL(RibbonEmitters[j].RenderFlag.Offset);
+					RibbonEmitters[j].RenderFlag.Offset += OffsetDelta;
 
 					m_FixAnimationOffsets(OffsetDelta, totalDiff, RibbonEmitters[j].AnimationBlock_Color, iElement);
 					m_FixAnimationOffsets(OffsetDelta, totalDiff, RibbonEmitters[j].AnimationBlock_Opacity, iElement);
@@ -1903,23 +1903,29 @@ void M2Lib::M2::m_SaveElements_FindOffsets()
 				CElement_ParticleEmitter* ParticleEmitters = Elements[iElement].as<CElement_ParticleEmitter>();
 				for (UInt32 j = 0; j < Elements[iElement].Count; j++)
 				{
-					VERIFY_OFFSET_LOCAL(ParticleEmitters[j].oFileNameModel);
-					ParticleEmitters[j].oFileNameModel += OffsetDelta;
+					if (ParticleEmitters[j].FileNameModel.Count)
+					{
+						VERIFY_OFFSET_LOCAL(ParticleEmitters[j].FileNameModel.Offset);
+						ParticleEmitters[j].FileNameModel.Offset += OffsetDelta;
+					}
+					else
+						ParticleEmitters[j].FileNameModel.Offset = 0;
 
-					if (ParticleEmitters[j].nChildEmitter)
+					if (ParticleEmitters[j].ChildEmitter.Count)
 					{
-						VERIFY_OFFSET_LOCAL(ParticleEmitters[j].oChildEmitter);
-						ParticleEmitters[j].oChildEmitter += OffsetDelta;
+						VERIFY_OFFSET_LOCAL(ParticleEmitters[j].ChildEmitter.Offset);
+						ParticleEmitters[j].ChildEmitter.Offset += OffsetDelta;
 					}
 					else
-						ParticleEmitters[j].oChildEmitter = 0;
-					if (ParticleEmitters[j].nUnk)
+						ParticleEmitters[j].ChildEmitter.Offset = 0;
+
+					if (ParticleEmitters[j].Unk.Count)
 					{
-						VERIFY_OFFSET_LOCAL(ParticleEmitters[j].oUnk);
-						ParticleEmitters[j].oUnk += OffsetDelta;
+						VERIFY_OFFSET_LOCAL(ParticleEmitters[j].Unk.Offset);
+						ParticleEmitters[j].Unk.Offset += OffsetDelta;
 					}
 					else
-						ParticleEmitters[j].oUnk = 0;
+						ParticleEmitters[j].Unk.Offset = 0;
 
 					m_FixAnimationOffsets(OffsetDelta, totalDiff, ParticleEmitters[j].AnimationBlock_EmitSpeed, iElement);
 					m_FixAnimationOffsets(OffsetDelta, totalDiff, ParticleEmitters[j].AnimationBlock_SpeedVariance, iElement);
@@ -1959,11 +1965,11 @@ void M2Lib::M2::m_FixAnimationOffsets(SInt32 OffsetDelta, SInt32 TotalDiff, CEle
 	auto animations = Elements[EElement_Animation].as<CElement_Animation>();
 
 	// TP is the best
-	if (AnimationBlock.nTimes)
+	if (AnimationBlock.Times.Count)
 	{
-		VERIFY_OFFSET_LOCAL(AnimationBlock.oTimes);
-		M2Array* M2Arrays = (M2Array*)Elements[iElement].GetLocalPointer(AnimationBlock.oTimes);
-		for (UInt32 i = 0; i < AnimationBlock.nTimes; i++)
+		VERIFY_OFFSET_LOCAL(AnimationBlock.Times.Offset);
+		M2Array* M2Arrays = (M2Array*)Elements[iElement].GetLocalPointer(AnimationBlock.Times.Offset);
+		for (UInt32 i = 0; i < AnimationBlock.Times.Count; i++)
 		{
 			if (AnimationBlock.GlobalSequenceID == -1 && (animations[i].Flags & 0x20) == 0)
 				continue;
@@ -1976,19 +1982,19 @@ void M2Lib::M2::m_FixAnimationOffsets(SInt32 OffsetDelta, SInt32 TotalDiff, CEle
 				Array.Offset = 0;
 		}
 
-		bool bInThisElem = (Elements[iElement].Offset < AnimationBlock.oTimes) && (AnimationBlock.oTimes < (Elements[iElement].Offset + Elements[iElement].Data.size()));
+		bool bInThisElem = (Elements[iElement].Offset < AnimationBlock.Times.Offset) && (AnimationBlock.Times.Offset < (Elements[iElement].Offset + Elements[iElement].Data.size()));
 		assert(bInThisElem);
 
-		VERIFY_OFFSET_LOCAL(AnimationBlock.oTimes);
-		assert(AnimationBlock.oTimes > 0);
-		AnimationBlock.oTimes += OffsetDelta;
+		VERIFY_OFFSET_LOCAL(AnimationBlock.Times.Offset);
+		assert(AnimationBlock.Times.Offset > 0);
+		AnimationBlock.Times.Offset += OffsetDelta;
 	}
 
-	if (AnimationBlock.nKeys)
+	if (AnimationBlock.Keys.Count)
 	{
-		VERIFY_OFFSET_LOCAL(AnimationBlock.oKeys);
-		M2Array* M2Arrays = (M2Array*)Elements[iElement].GetLocalPointer(AnimationBlock.oKeys);
-		for (UInt32 i = 0; i < AnimationBlock.nKeys; i++)
+		VERIFY_OFFSET_LOCAL(AnimationBlock.Keys.Offset);
+		M2Array* M2Arrays = (M2Array*)Elements[iElement].GetLocalPointer(AnimationBlock.Keys.Offset);
+		for (UInt32 i = 0; i < AnimationBlock.Keys.Count; i++)
 		{
 			if (AnimationBlock.GlobalSequenceID == -1 && (animations[i].Flags & 0x20) == 0)
 				continue;
@@ -2001,39 +2007,39 @@ void M2Lib::M2::m_FixAnimationOffsets(SInt32 OffsetDelta, SInt32 TotalDiff, CEle
 				Array.Offset = 0;
 		}
 
-		bool bInThisElem = (Elements[iElement].Offset < AnimationBlock.oKeys) && (AnimationBlock.oKeys < (Elements[iElement].Offset + Elements[iElement].Data.size()));
+		bool bInThisElem = (Elements[iElement].Offset < AnimationBlock.Keys.Offset) && (AnimationBlock.Keys.Offset < (Elements[iElement].Offset + Elements[iElement].Data.size()));
 		assert(bInThisElem);
 
-		VERIFY_OFFSET_LOCAL(AnimationBlock.oKeys);
-		assert(AnimationBlock.oKeys > 0);
-		AnimationBlock.oKeys += OffsetDelta;
+		VERIFY_OFFSET_LOCAL(AnimationBlock.Keys.Offset);
+		assert(AnimationBlock.Keys.Offset > 0);
+		AnimationBlock.Keys.Offset += OffsetDelta;
 	}
 }
 
 void M2Lib::M2::m_FixFakeAnimationBlockOffsets(SInt32 OffsetDelta, CElement_FakeAnimationBlock& AnimationBlock, SInt32 iElement)
 {
 	// TP is the best
-	if (AnimationBlock.nTimes)
+	if (AnimationBlock.Times.Count)
 	{
-		VERIFY_OFFSET_LOCAL(AnimationBlock.oTimes);
+		VERIFY_OFFSET_LOCAL(AnimationBlock.Times.Offset);
 
-		bool bInThisElem = (Elements[iElement].Offset < AnimationBlock.oTimes) && (AnimationBlock.oTimes < (Elements[iElement].Offset + Elements[iElement].Data.size()));
+		bool bInThisElem = (Elements[iElement].Offset < AnimationBlock.Times.Offset) && (AnimationBlock.Times.Offset < (Elements[iElement].Offset + Elements[iElement].Data.size()));
 		assert(bInThisElem);
 
-		VERIFY_OFFSET_LOCAL(AnimationBlock.oTimes);
-		assert(AnimationBlock.oTimes > 0);
-		AnimationBlock.oTimes += OffsetDelta;
+		VERIFY_OFFSET_LOCAL(AnimationBlock.Times.Offset);
+		assert(AnimationBlock.Times.Offset > 0);
+		AnimationBlock.Times.Offset += OffsetDelta;
 	}
 
-	if (AnimationBlock.nKeys)
+	if (AnimationBlock.Keys.Count)
 	{
-		VERIFY_OFFSET_LOCAL(AnimationBlock.oKeys);
-		bool bInThisElem = (Elements[iElement].Offset < AnimationBlock.oKeys) && (AnimationBlock.oKeys < (Elements[iElement].Offset + Elements[iElement].Data.size()));
+		VERIFY_OFFSET_LOCAL(AnimationBlock.Keys.Offset);
+		bool bInThisElem = (Elements[iElement].Offset < AnimationBlock.Keys.Offset) && (AnimationBlock.Keys.Offset < (Elements[iElement].Offset + Elements[iElement].Data.size()));
 		assert(bInThisElem);
 
-		VERIFY_OFFSET_LOCAL(AnimationBlock.oKeys);
-		assert(AnimationBlock.oKeys > 0);
-		AnimationBlock.oKeys += OffsetDelta;
+		VERIFY_OFFSET_LOCAL(AnimationBlock.Keys.Offset);
+		assert(AnimationBlock.Keys.Offset > 0);
+		AnimationBlock.Keys.Offset += OffsetDelta;
 	}
 }
 
@@ -2154,8 +2160,8 @@ UInt32 M2Lib::M2::AddTexture(const Char8* szTextureSource, CElement_Texture::ETe
 	for (UInt32 i = 0; i < Element.Count; ++i)
 	{
 		auto& texture = Element.as<CElement_Texture>()[i];
-		if (texture.oTexturePath)
-			texture.oTexturePath += sizeof(CElement_Texture);
+		if (texture.TexturePath.Offset)
+			texture.TexturePath.Offset += sizeof(CElement_Texture);
 	}
 
 	// add element placeholder for new texture
@@ -2168,11 +2174,11 @@ UInt32 M2Lib::M2::AddTexture(const Char8* szTextureSource, CElement_Texture::ETe
 	CElement_Texture& newTexture = Element.as<CElement_Texture>()[newIndex];
 	newTexture.Type = Type;
 	newTexture.Flags = Flags;
-	newTexture.nTexturePath = strlen(szTextureSource) + 1;
-	newTexture.oTexturePath = Element.Offset + insertPos;
+	newTexture.TexturePath.Count = strlen(szTextureSource) + 1;
+	newTexture.TexturePath.Offset = Element.Offset + insertPos;
 
-	Element.Data.insert(Element.Data.end(), newTexture.nTexturePath, 0);
-	memcpy(&Element.Data[insertPos], szTextureSource, newTexture.nTexturePath);
+	Element.Data.insert(Element.Data.end(), newTexture.TexturePath.Count, 0);
+	memcpy(&Element.Data[insertPos], szTextureSource, newTexture.TexturePath.Count);
 
 	++Element.Count;
 
@@ -2186,9 +2192,9 @@ UInt32 M2Lib::M2::GetTexture(const Char8* szTextureSource)
 	for (UInt32 i = 0; i < Element.Count; ++i)
 	{
 		auto& texture = Element.as<CElement_Texture>()[i];
-		if (texture.oTexturePath)
+		if (texture.TexturePath.Offset)
 		{
-			auto pTexturePath = (Char8 const*)Element.GetLocalPointer(texture.oTexturePath);
+			auto pTexturePath = (Char8 const*)Element.GetLocalPointer(texture.TexturePath.Offset);
 			if (strcmpi(pTexturePath, szTextureSource) == 0)
 				return i;
 		}

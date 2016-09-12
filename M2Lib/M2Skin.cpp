@@ -733,7 +733,7 @@ std::vector<M2Lib::M2Skin::MeshInfo> M2Lib::M2Skin::GetMeshInfo()
 				TextureInfo.pTexture = &texture;
 
 				if (texture.Type == M2Element::CElement_Texture::ETextureType::Final_Hardcoded)
-					TextureInfo.Name = (char*)TextureElement.GetLocalPointer(texture.oTexturePath);
+					TextureInfo.Name = (char*)TextureElement.GetLocalPointer(texture.TexturePath.Offset);
 
 				Info.Textures.push_back(TextureInfo);
 			}

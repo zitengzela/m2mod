@@ -242,9 +242,9 @@ M2Lib::EError M2Lib::M2I::Load(Char16* FileName, M2Lib::M2* pM2, bool IgnoreBone
 			{
 				pCameraToMod->Type = InType;
 
-				if (pCameraToMod->AnimationBlock_FieldOfView.nKeys > 0)
+				if (pCameraToMod->AnimationBlock_FieldOfView.Keys.Count > 0)
 				{
-					auto ExternalAnimations = (M2Array*)pM2->Elements[M2Element::EElement_Camera].GetLocalPointer(pCameraToMod->AnimationBlock_FieldOfView.oKeys);
+					auto ExternalAnimations = (M2Array*)pM2->Elements[M2Element::EElement_Camera].GetLocalPointer(pCameraToMod->AnimationBlock_FieldOfView.Keys.Offset);
 
 					auto LastElement = pM2->GetLastElement();
 					assert(LastElement != NULL);

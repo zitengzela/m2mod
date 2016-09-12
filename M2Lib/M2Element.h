@@ -179,21 +179,20 @@ namespace M2Lib
 		public:
 			EInterpolationType InterpolationType;
 			SInt16 GlobalSequenceID;
-			UInt32 nTimes;
-			UInt32 oTimes;
-			UInt32 nKeys;
-			UInt32 oKeys;
-
+			M2Array Times;
+			M2Array Keys;
 		};
+
+		ASSERT_SIZE(CElement_AnimationBlock, 20);
 
 		class CElement_FakeAnimationBlock
 		{
 		public:
-			UInt32 nTimes;
-			UInt32 oTimes;
-			UInt32 nKeys;
-			UInt32 oKeys;
+			M2Array Times;
+			M2Array Keys;
 		};
+
+		ASSERT_SIZE(CElement_FakeAnimationBlock, 16);
 
 		//
 		// a list of these makes up a skeleton.
@@ -277,7 +276,6 @@ namespace M2Lib
 
 		ASSERT_SIZE(CElement_BoneLookup, 2);
 
-
 		typedef CVertex CElement_Vertex;
 
 		ASSERT_SIZE(CElement_Vertex, 48);
@@ -334,8 +332,7 @@ namespace M2Lib
 
 			ETextureType Type;
 			ETextureFlags Flags;
-			UInt32 nTexturePath;	// length of name in characters.
-			UInt32 oTexturePath;	// position of name in file.
+			M2Array TexturePath;	// texture
 		};
 
 		ASSERT_SIZE(CElement_Texture, 16);
@@ -638,8 +635,7 @@ namespace M2Lib
 			Float32 Position[3];	// position relative to parent bone.
 			UInt16 InterpolationType;
 			SInt16 GlobalSequenceID;
-			UInt32 nTimeLines;
-			UInt32 oTimeLines;
+			M2Array TimeLines;
 		};
 
 		ASSERT_SIZE(CElement_Event, 36);
@@ -706,10 +702,8 @@ namespace M2Lib
 			SInt32 ID;
 			SInt32 ParentBone;
 			Float32 Position[3];
-			UInt32 nTexture;
-			UInt32 oTexture;
-			UInt32 nRenderFlag;
-			UInt32 oRenderFlag;
+			M2Array Texture;
+			M2Array RenderFlag;
 			CElement_AnimationBlock AnimationBlock_Color;		// Float32x3
 			CElement_AnimationBlock AnimationBlock_Opacity;		// UInt16
 			CElement_AnimationBlock AnimationBlock_Above;		// Float32, position of point A of ribbon leading edge.
@@ -736,11 +730,9 @@ namespace M2Lib
 			Float32 Position[3];	// position relative to parent bone.
 			UInt16 ParentBone;
 			UInt16 Texture;
-			UInt32 nFileNameModel;	//
-			UInt32 oFileNameModel;	// name of model to spawn *.mdx.
+			M2Array FileNameModel;	// name of model to spawn *.mdx.
 
-			UInt32 nChildEmitter;	//
-			UInt32 oChildEmitter;	//
+			M2Array ChildEmitter;
 
 			UInt8 BlendingType;
 			UInt8 EmitterType;
@@ -752,7 +744,6 @@ namespace M2Lib
 			UInt16 Rotation;
 			UInt16 Rows;
 			UInt16 Columns;
-
 
 			CElement_AnimationBlock AnimationBlock_EmitSpeed;		// Float32
 			CElement_AnimationBlock AnimationBlock_SpeedVariance;	// Float32
@@ -788,8 +779,7 @@ namespace M2Lib
 			Float32 Translation[3];
 			Float32 FollowParams[4];
 
-			UInt32 nUnk;	// 12 bytes
-			UInt32 oUnk;	//
+			M2Array Unk;	// 12 bytes
 			CElement_AnimationBlock AnimationBlock_Visibility;		// UInt16
 			UInt32 _unk7[0x4];
 		};

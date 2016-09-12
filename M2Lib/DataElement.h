@@ -41,6 +41,18 @@ namespace M2Lib
 		template <class T>
 		T* as() { return (T*)Data.data(); }
 
+		template <class T>
+		std::vector<T> asVector()
+		{
+			//assert(sizeof(T) * Count == Data.size());
+
+			std::vector<T> ret(Count);
+			if (!Data.empty())
+				memcpy(ret.data(), Data.data(), Data.size());
+
+			return ret;
+		}
+
 		// clones this element from Source to Destination.
 		static void Clone(DataElement* Source, DataElement* Destination);
 
