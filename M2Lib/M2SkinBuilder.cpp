@@ -142,16 +142,16 @@ bool M2Lib::M2SkinBuilder::CBonePartition::AddTriangle(CVertex* GlobalVertexList
 }
 
 
-bool M2Lib::M2SkinBuilder::CBonePartition::HasBone(UInt16 BoneIndex, UInt16* pTriangleIndexOut)
+bool M2Lib::M2SkinBuilder::CBonePartition::HasBone(UInt16 BoneIndex, UInt16* pIndexOut)
 {
 	UInt32 Count = Bones.size();
 	for (UInt32 i = 0; i < Count; i++)
 	{
 		if (Bones[i] == BoneIndex)
 		{
-			if (pTriangleIndexOut)
+			if (pIndexOut)
 			{
-				*pTriangleIndexOut = i;
+				*pIndexOut = i;
 			}
 			return true;
 		}
@@ -363,7 +363,7 @@ bool M2Lib::M2SkinBuilder::Build(M2Skin* pResult, UInt32 BoneLoD, M2I* pM2I, CVe
 	{
 		for (UInt32 j = 0; j < m_SubMeshList[i]->SubsetPartitions.size(); j++)
 		{
-			std::map< UInt16, UInt16 > GlobalToSkinTriangleIndexMap;
+			std::map< UInt16, UInt16 > GlobalToSkinIndexMap;
 			UInt32 VertexCount = 0;
 			UInt32 TriangleIndexCount = 0;
 
@@ -376,15 +376,15 @@ bool M2Lib::M2SkinBuilder::Build(M2Skin* pResult, UInt32 BoneLoD, M2I* pM2I, CVe
 					{
 						UInt16 VertexToMap = pSubsetPartition->Triangles[k]->Vertices[iVert];	// this is the global vertex index
 						UInt16 VertexMapped = 0;
-						if (GlobalToSkinTriangleIndexMap.find(VertexToMap) != GlobalToSkinTriangleIndexMap.end())
+						if (GlobalToSkinIndexMap.find(VertexToMap) != GlobalToSkinIndexMap.end())
 						{
-							VertexMapped = GlobalToSkinTriangleIndexMap[VertexToMap];
+							VertexMapped = GlobalToSkinIndexMap[VertexToMap];
 						}
 						else
 						{
 							VertexMapped = m_Vertices.size();
 							m_Vertices.push_back(VertexToMap);
-							GlobalToSkinTriangleIndexMap[VertexToMap] = VertexMapped;
+							GlobalToSkinIndexMap[VertexToMap] = VertexMapped;
 							VertexCount++;
 						}
 						m_Indices.push_back(VertexMapped);

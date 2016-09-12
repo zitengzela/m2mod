@@ -28,7 +28,7 @@ namespace M2Lib
 		class CElement_Vertex
 		{
 		public:
-			UInt16 GlobalVertexTriangleIndex;		// index into M2's global vertex list.
+			UInt16 GlobalVertexIndex;		// index into M2's global vertex list.
 		};
 
 		class CElement_TriangleIndex
@@ -104,7 +104,7 @@ namespace M2Lib
 			UInt16 BoneCount;				// number of bones to upload to GPU shader constant registers.
 			UInt16 BoneStart;				// first bone in bone lookup list to begin upload to GPU shader constant registers.
 			UInt16 MaxBonesPerVertex;		// always set from 0 to 4. maximum number of bones referenced by any one vertex in this sub mesh.
-			UInt16 SortTriangleIndex;		// appers to be some sort of draw order sort index or z-depth bias value.
+			UInt16 SortIndex;				// appers to be some sort of draw order sort index or z-depth bias value.
 			Float32 CenterMass[3];			// average position of all vertices in this subset. found by summing positions of all vertices and then dividing by the number of vertices.
 			Float32 CenterBounds[3];		// bounding box center. if we make a minimum axis aligned bounding box around the set of vertices in this subset and get the center of that box, this is the result.
 			Float32 Radius;					// this is the distance of the vertex farthest from CenterBoundingBox.

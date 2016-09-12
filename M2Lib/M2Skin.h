@@ -100,13 +100,13 @@ namespace M2Lib
 		bool PrintInfo();
 
 		// returns sub mesh with ID using CenterBounds to narrow search. some times there are multiple sub meshes with the same ID, so we can narrow our search to whatever sub mesh lies closest to CenterBounds.
-		M2SkinElement::CElement_SubMesh* GetSubMesh(SubmeshExtraData const& TargetSubMeshData, SInt32& SubMeshTriangleIndexOut);
+		M2SkinElement::CElement_SubMesh* GetSubMesh(SubmeshExtraData const& TargetSubMeshData, SInt32& SubMeshIndexOut);
 
 		// gathers list of materials that affect a given sub mesh within this skin.
-		void GetSubMeshMaterials(UInt32 SubMeshTriangleIndex, std::vector< M2SkinElement::CElement_Material* >& Result);
+		void GetSubMeshMaterials(UInt32 SubMeshIndex, std::vector< M2SkinElement::CElement_Material* >& Result);
 
 		// gathers list of flags that affect a given sub mesh within this skin.
-		void GetSubMeshFlags(UInt32 SubMeshTriangleIndex, std::vector< M2SkinElement::CElement_Flags* >& Result);
+		void GetSubMeshFlags(UInt32 SubMeshIndex, std::vector< M2SkinElement::CElement_Flags* >& Result);
 
 		void MakeGlossy(Char8 const* szGlossTexturePath, std::vector<UInt32> const& MeshIndexes, M2SkinElement::TextureLookupRemap& LookupRemap);
 		void MakeGlossy(UInt32 GlossTextureId, std::vector<UInt32> const& MeshIndexes, M2SkinElement::TextureLookupRemap& LookupRemap);

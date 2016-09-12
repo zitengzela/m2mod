@@ -193,7 +193,7 @@ namespace M2Lib
 		void PrintInfo();
 
 		// szResult is a buffer large enough to store result, which on windows means it should be at least MAX_PATH long, which is 260.
-		bool GetFileSkin(Char16* SkinFileNameResultBuffer, const Char16* M2FileName, UInt32 SkinTriangleIndex);
+		bool GetFileSkin(Char16* SkinFileNameResultBuffer, const Char16* M2FileName, UInt32 SkinIndex);
 
 
 	public:

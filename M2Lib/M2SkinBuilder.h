@@ -50,7 +50,7 @@ namespace M2Lib
 			bool AddTriangle(CVertex* GlobalVertexList, CTriangle* pTriangle);
 
 			// returns true if bone is contained in this bone partition. if pTriangleIndexOut is supplied and function returns true, it will be set to index of where bone was found in this partition.
-			bool HasBone(UInt16 Bone, UInt16* pTriangleIndexOut);
+			bool HasBone(UInt16 Bone, UInt16* pIndexOut);
 
 			// returns true if a triangle has been associated with this bone partition.
 			bool HasTriangle(UInt32 TriangleIndex);
@@ -96,7 +96,7 @@ namespace M2Lib
 				bool AddTriangle(CTriangle* pTriangle);
 
 				// adds a vertex from the global vertex list to this subset's vertex list. returns index of existing or newly added vertex.
-				//UInt32 AddVertex( UInt32 VertexTriangleIndex );
+				//UInt32 AddVertex( UInt32 VertexIndex );
 				//
 				//void FixVertexOffsets( SInt32 Delta );
 

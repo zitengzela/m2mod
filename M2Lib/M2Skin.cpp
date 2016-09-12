@@ -272,16 +272,16 @@ void M2Lib::M2Skin::CopyMaterials(M2Skin* pOther)
 		auto comparisonDataItr = ExtraDataBySubmeshIndex.find(iSubMesh);
 		assert(comparisonDataItr != ExtraDataBySubmeshIndex.end());
 
-		SInt32 SubMeshOtherTriangleIndex;
-		CElement_SubMesh* SubMeshOther = pOther->GetSubMesh(*comparisonDataItr->second, SubMeshOtherTriangleIndex);
+		SInt32 SubMeshOtherIndex;
+		CElement_SubMesh* SubMeshOther = pOther->GetSubMesh(*comparisonDataItr->second, SubMeshOtherIndex);
 		assert(SubMeshOther);
 
-		SubMesh.SortTriangleIndex = SubMeshOther->SortTriangleIndex;
+		SubMesh.SortIndex = SubMeshOther->SortIndex;
 		// copy level from original mesh
 		//SubMesh.Level = SubMeshOther->Level;
 
 		std::vector< CElement_Material* > SubMeshOtherMaterialList;
-		pOther->GetSubMeshMaterials(SubMeshOtherTriangleIndex, SubMeshOtherMaterialList);
+		pOther->GetSubMeshMaterials(SubMeshOtherIndex, SubMeshOtherMaterialList);
 		for (UInt32 iSubMeshMaterialOther = 0; iSubMeshMaterialOther < SubMeshOtherMaterialList.size(); iSubMeshMaterialOther++)
 		{
 			CElement_Material NewMaterial = *SubMeshOtherMaterialList[iSubMeshMaterialOther];
@@ -296,7 +296,7 @@ void M2Lib::M2Skin::CopyMaterials(M2Skin* pOther)
 		}
 
 		std::vector< CElement_Flags* > SubMeshOtherFlagsList;
-		pOther->GetSubMeshFlags(SubMeshOtherTriangleIndex, SubMeshOtherFlagsList);
+		pOther->GetSubMeshFlags(SubMeshOtherIndex, SubMeshOtherFlagsList);
 		for (UInt32 iSubMeshFlagsOther = 0; iSubMeshFlagsOther < SubMeshOtherFlagsList.size(); iSubMeshFlagsOther++)
 		{
 			CElement_Flags NewFlags = *SubMeshOtherFlagsList[iSubMeshFlagsOther];
@@ -372,14 +372,14 @@ void M2Lib::M2Skin::SortSubMeshes()
 }
 
 
-M2Lib::M2SkinElement::CElement_SubMesh* M2Lib::M2Skin::GetSubMesh(SubmeshExtraData const& TargetSubMeshData, SInt32& SubMeshTriangleIndexOut)
+M2Lib::M2SkinElement::CElement_SubMesh* M2Lib::M2Skin::GetSubMesh(SubmeshExtraData const& TargetSubMeshData, SInt32& SubMeshIndexOut)
 {
 	UInt32 SubMeshListLength = Elements[EElement_SubMesh].Count;
 	CElement_SubMesh* SubMeshList = Elements[EElement_SubMesh].as<CElement_SubMesh>();
 
 	Float32 DeltaMin = 0.0f;
 	SInt32 ClosestMatch = -1;
-	SubMeshTriangleIndexOut = -1;
+	SubMeshIndexOut = -1;
 
 	UInt16 ID = TargetSubMeshData.ID;
 	C3Vector const& CenterBounds = TargetSubMeshData.Boundary.BoundingCenter;
@@ -414,7 +414,7 @@ M2Lib::M2SkinElement::CElement_SubMesh* M2Lib::M2Skin::GetSubMesh(SubmeshExtraDa
 
 	if (ClosestMatch >= 0)
 	{
-		SubMeshTriangleIndexOut = ClosestMatch;
+		SubMeshIndexOut = ClosestMatch;
 		return &SubMeshList[ClosestMatch];
 	}
 
@@ -422,12 +422,12 @@ M2Lib::M2SkinElement::CElement_SubMesh* M2Lib::M2Skin::GetSubMesh(SubmeshExtraDa
 }
 
 
-void M2Lib::M2Skin::GetSubMeshMaterials(UInt32 SubMeshTriangleIndex, std::vector< CElement_Material* >& Result)
+void M2Lib::M2Skin::GetSubMeshMaterials(UInt32 SubMeshIndex, std::vector< CElement_Material* >& Result)
 {
 	CElement_Material* MaterialList = Elements[EElement_Material].as<CElement_Material>();
 	for (UInt32 iMaterial = 0; iMaterial < Header.nMaterial; iMaterial++)
 	{
-		if (MaterialList[iMaterial].iSubMesh == SubMeshTriangleIndex)
+		if (MaterialList[iMaterial].iSubMesh == SubMeshIndex)
 		{
 			Result.push_back(&MaterialList[iMaterial]);
 		}
@@ -435,12 +435,12 @@ void M2Lib::M2Skin::GetSubMeshMaterials(UInt32 SubMeshTriangleIndex, std::vector
 }
 
 
-void M2Lib::M2Skin::GetSubMeshFlags(UInt32 SubMeshTriangleIndex, std::vector< CElement_Flags* >& Result)
+void M2Lib::M2Skin::GetSubMeshFlags(UInt32 SubMeshIndex, std::vector< CElement_Flags* >& Result)
 {
 	CElement_Flags* FlagsList = Elements[EElement_Flags].as<CElement_Flags>();
 	for (UInt32 iFlags = 0; iFlags < Header.nFlags; iFlags++)
 	{
-		if (FlagsList[iFlags].iSubMesh == SubMeshTriangleIndex)
+		if (FlagsList[iFlags].iSubMesh == SubMeshIndex)
 		{
 			Result.push_back(&FlagsList[iFlags]);
 		}
@@ -530,7 +530,7 @@ bool M2Lib::M2Skin::PrintInfo()
 		FileStream << "BoneCount:    " << Subset.BoneCount << std::endl;
 		FileStream << "BoneStart:    " << Subset.BoneStart << std::endl;
 		FileStream << "MaxBonesPerVertex:     " << Subset.MaxBonesPerVertex << std::endl;
-		FileStream << "SortTriangleIndex:     " << Subset.SortTriangleIndex << std::endl;
+		FileStream << "SortTriangleIndex:     " << Subset.SortIndex << std::endl;
 		FileStream << "CenterMass:   " << "( " << Subset.CenterMass[0] << ", " << Subset.CenterMass[1] << ", " << Subset.CenterMass[2] << " ) " << std::endl;
 		FileStream << "CenterBounds: " << "( " << Subset.CenterBounds[0] << ", " << Subset.CenterBounds[1] << ", " << Subset.CenterBounds[2] << " ) " << std::endl;
 		FileStream << "Radius:       " << Subset.Radius << std::endl;

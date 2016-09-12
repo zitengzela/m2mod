@@ -27,12 +27,16 @@ namespace M2Lib
 
 		// loads this element's data from a file stream. assumes that Offset and DataSize have already been set.
 		bool Load(std::fstream& FileStream);
+		// loads this element's data from memory. assumes that Offset and DataSize have already been set.
+		bool Load(UInt8 const* RawData);
 		// saves this element's data to a file stream. assumes that Offset and DataSize have already been set.
 		bool Save(std::fstream& FileStream);
 
 		// reallocates Data, either erasing existing data or preserving it.
 		// adds padding to NewDataSize if necessary so that new size aligns with Align.
 		void SetDataSize(UInt32 NewCount, UInt32 NewDataSize, bool CopyOldData);
+		// clears element
+		void Clear();
 
 		template <class T>
 		T* as() { return (T*)Data.data(); }

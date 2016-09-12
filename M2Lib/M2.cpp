@@ -385,8 +385,6 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate(Char16* FileName)
 	DataBinary.WriteUInt16(VersionMinor);
 
 	// save subsets
-	UInt32 TotalVertexCount = 0;
-	UInt32 TotalTriangleCount = 0;
 	DataBinary.WriteUInt32(SubsetCount);
 	for (UInt32 i = 0; i < SubsetCount; i++)
 	{
@@ -428,7 +426,6 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate(Char16* FileName)
 			DataBinary.WriteFloat32(Vertex.Texture[0]);
 			DataBinary.WriteFloat32(Vertex.Texture[1]);
 		}
-		TotalVertexCount += pSubsetOut->VertexCount;
 
 		// write triangles
 		UInt32 SubsetTriangleCountOut = pSubsetOut->TriangleIndexCount / 3;
@@ -448,7 +445,6 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate(Char16* FileName)
 			assert(TriangleIndexOut < pSubsetOut->VertexCount);
 			DataBinary.WriteUInt16(TriangleIndexOut);
 		}
-		TotalTriangleCount += pSubsetOut->TriangleIndexCount;
 	}
 
 	// write bones
@@ -950,7 +946,7 @@ void M2Lib::M2::PrintInfo()
 
 
 // Gets the .skin file names.
-bool M2Lib::M2::GetFileSkin(Char16* SkinFileNameResultBuffer, const Char16* M2FileName, UInt32 SkinTriangleIndex)
+bool M2Lib::M2::GetFileSkin(Char16* SkinFileNameResultBuffer, const Char16* M2FileName, UInt32 SkinIndex)
 {
 	// ghetto string ops
 	SInt32 LastDot = -1;
@@ -975,7 +971,7 @@ bool M2Lib::M2::GetFileSkin(Char16* SkinFileNameResultBuffer, const Char16* M2Fi
 	{
 		SkinFileNameResultBuffer[j] = M2FileName[j];
 	}
-	switch (SkinTriangleIndex)
+	switch (SkinIndex)
 	{
 	case 0:
 		SkinFileNameResultBuffer[j++] = L'0';
@@ -1959,6 +1955,7 @@ void M2Lib::M2::m_SaveElements_FindOffsets()
 
 void M2Lib::M2::m_FixAnimationOffsets(SInt32 OffsetDelta, SInt32 TotalDiff, CElement_AnimationBlock& AnimationBlock, SInt32 iElement)
 {
+	assert(Elements[EElement_Animation].Count != 0);
 	auto animations = Elements[EElement_Animation].as<CElement_Animation>();
 
 	// TP is the best

@@ -120,7 +120,7 @@ namespace M2Lib
 			SVolume BoundingVolume;
 
 			SInt16 NextAnimation;		// index to next animation with same AnimationID, -1 if there are no more.
-			UInt16 TriangleIndex;				// this animation's index in the list of animations.
+			UInt16 NextIndex;			// this animation's index in the list of animations.
 		};
 
 		ASSERT_SIZE(CElement_Animation, 64);
@@ -242,12 +242,12 @@ namespace M2Lib
 				EBoneLookup_Waist,
 				EBoneLookup_Head,
 				EBoneLookup_Jaw,
-				EBoneLookup_TriangleIndexFingerR,
+				EBoneLookup_IndexFingerR,
 				EBoneLookup_MiddleFingerR,
 				EBoneLookup_PinkyFingerR,
 				EBoneLookup_RingFingerR,
 				EBoneLookup_ThumbR,
-				EBoneLookup_TriangleIndexFingerL,
+				EBoneLookup_IndexFingerL,
 				EBoneLookup_MiddleFingerL,
 				EBoneLookup_PinkyFingerL,
 				EBoneLookup_RingFingerL,
@@ -255,9 +255,9 @@ namespace M2Lib
 				EBoneLookup_Event_BTH,
 				EBoneLookup_Event_CSR,
 				EBoneLookup_Event_CSL,
-				EBoneLookup__Breath,
-				EBoneLookup__Name,
-				EBoneLookup__NameMount,
+				EBoneLookup_Breath,
+				EBoneLookup_Name,
+				EBoneLookup_NameMount,
 				EBoneLookup_Event_CHD,
 				EBoneLookup_Event_CCH,
 				EBoneLookup_Root,
@@ -693,7 +693,7 @@ namespace M2Lib
 		class CElement_CameraLookup
 		{
 		public:
-			UInt16 TriangleIndex;
+			UInt16 Index;
 		};
 
 		ASSERT_SIZE(CElement_CameraLookup, 2);

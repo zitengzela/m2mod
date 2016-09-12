@@ -35,6 +35,15 @@ bool M2Lib::DataElement::Load(std::fstream& FileStream)
 	return true;
 }
 
+bool M2Lib::DataElement::Load(UInt8 const* RawData)
+{
+	if (Data.empty())
+		return true;
+
+	memcpy(Data.data(), RawData + Offset + FileOffset, Data.size());
+	return true;
+}
+
 bool M2Lib::DataElement::Save(std::fstream& FileStream)
 {
 	if (Data.empty())
@@ -44,6 +53,11 @@ bool M2Lib::DataElement::Save(std::fstream& FileStream)
 	FileStream.write((Char8*)Data.data(), Data.size());
 
 	return true;
+}
+void M2Lib::DataElement::Clear()
+{
+	Data.clear();
+	Count = 0;
 }
 
 void M2Lib::DataElement::SetDataSize(UInt32 NewCount, UInt32 NewDataSize, bool CopyOldData)
