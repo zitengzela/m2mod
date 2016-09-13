@@ -3,6 +3,7 @@
 #include "BaseTypes.h"
 #include <fstream>
 #include <vector>
+#include <assert.h>
 
 namespace M2Lib
 {
@@ -12,7 +13,9 @@ namespace M2Lib
 	public:
 		UInt32 Count;				// number of sub-elements contained in Data. the definition of this structure depends on this element's usage.
 		UInt32 Offset;				// offset in bytes from begining of file to where this element's data begins.
+
 		UInt32 OffsetOriginal;		// offset of this element as loaded from the original file.
+		UInt32 SizeOriginal;		// size of this element as loaded from the original file.
 
 		std::vector<UInt8> Data;	// our local copy of data. note that DataSize might be greater than sizeof( DataType ) * Count if there is animation data references or padding at the end.
 		SInt32 Align;				// byte alignment boundary. M2s pad the ends of elements with zeros data so they align on 16 byte boundaries.
@@ -44,11 +47,11 @@ namespace M2Lib
 		template <class T>
 		std::vector<T> asVector()
 		{
-			//assert(sizeof(T) * Count == Data.size());
+			assert(sizeof(T) * Count <= Data.size());
 
 			std::vector<T> ret(Count);
 			if (!Data.empty())
-				memcpy(ret.data(), Data.data(), Data.size());
+				memcpy(ret.data(), Data.data(), sizeof(T) * Count);
 
 			return ret;
 		}

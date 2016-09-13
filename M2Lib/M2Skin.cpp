@@ -120,7 +120,6 @@ void M2Lib::M2Skin::BuildVertexBoneIndices()
 
 	CVertex* VertexList = pM2->Elements[M2Element::EElement_Vertex].as<CVertex>();
 
-	UInt32 BoneLookupListLength = pM2->Elements[M2Element::EElement_SkinnedBoneLookup].Count;
 	UInt16* BoneLookupList = pM2->Elements[M2Element::EElement_SkinnedBoneLookup].as<UInt16>();
 
 	UInt32 VertexLookupListLength = Elements[EElement_VertexLookup].Count;
@@ -132,10 +131,8 @@ void M2Lib::M2Skin::BuildVertexBoneIndices()
 	UInt32 SubMeshListLength = Elements[EElement_SubMesh].Count;
 	CElement_SubMesh* SubMeshList = Elements[EElement_SubMesh].as<CElement_SubMesh>();
 
-	for (UInt32 i = 0; i != VertexLookupListLength; i++)
-	{
+	for (UInt32 i = 0; i < VertexLookupListLength; ++i)
 		BoneIndexList[i] = 0;
-	}
 
 	for (UInt32 iSubMesh = 0; iSubMesh < SubMeshListLength; iSubMesh++)
 	{
@@ -143,30 +140,22 @@ void M2Lib::M2Skin::BuildVertexBoneIndices()
 
 		UInt32 MaxBonesPerVertex = 0;
 
-		std::vector< UInt16 > BonesLookupVector;
-		for (SInt32 j = SubMesh.BoneStart; j < SubMesh.BoneStart + SubMesh.BoneCount; j++)
-		{
-			BonesLookupVector.push_back(BoneLookupList[j]);
-		}
-
 		UInt32 SubMeshVertexEnd = SubMesh.VertexStart + SubMesh.VertexCount;
 		for (UInt32 j = SubMesh.VertexStart; j < SubMeshVertexEnd; j++)
 		{
 			CVertex const& Vertex = VertexList[VertexLookupList[j]];
 			UInt8* BoneIndices8 = (UInt8*)&BoneIndexList[j];
 
-			BoneIndices8[0] = m_ReverseBoneLookup(Vertex.BoneIndices[0], &BoneLookupList[SubMesh.BoneStart], SubMesh.BoneCount);
-			BoneIndices8[1] = m_ReverseBoneLookup(Vertex.BoneIndices[1], &BoneLookupList[SubMesh.BoneStart], SubMesh.BoneCount);
-			BoneIndices8[2] = m_ReverseBoneLookup(Vertex.BoneIndices[2], &BoneLookupList[SubMesh.BoneStart], SubMesh.BoneCount);
-			BoneIndices8[3] = m_ReverseBoneLookup(Vertex.BoneIndices[3], &BoneLookupList[SubMesh.BoneStart], SubMesh.BoneCount);
+			for (int i = 0; i < BONES_PER_VERTEX; ++i)
+				BoneIndices8[i] = Vertex.BoneWeights[i] ? m_ReverseBoneLookup(Vertex.BoneIndices[i], &BoneLookupList[SubMesh.BoneStart], SubMesh.BoneCount) : i;
 
 			UInt32 MaxBonesPerThisVertex = 0;
-			Vertex.BoneWeights[0] > 0 ? MaxBonesPerThisVertex++ : 0;
-			Vertex.BoneWeights[1] > 0 ? MaxBonesPerThisVertex++ : 0;
-			Vertex.BoneWeights[2] > 0 ? MaxBonesPerThisVertex++ : 0;
-			Vertex.BoneWeights[3] > 0 ? MaxBonesPerThisVertex++ : 0;
+			for (int i = 0; i < BONES_PER_VERTEX; ++i)
+				if (Vertex.BoneWeights[i] > 0)
+					++MaxBonesPerThisVertex;
 
-			if (MaxBonesPerThisVertex > MaxBonesPerVertex) MaxBonesPerVertex = MaxBonesPerThisVertex;
+			if (MaxBonesPerThisVertex > MaxBonesPerVertex)
+				MaxBonesPerVertex = MaxBonesPerThisVertex;
 		}
 
 		SubMesh.MaxBonesPerVertex = MaxBonesPerVertex;
@@ -610,27 +599,31 @@ void M2Lib::M2Skin::m_LoadElements_CopyHeaderToElements()
 
 void M2Lib::M2Skin::m_LoadElements_FindSizes(UInt32 FileSize)
 {
-	for (UInt32 i = 0; i != EElement__Count__; i++)
+	for (UInt32 i = 0; i < EElement__Count__; ++i)
 	{
-		Elements[i].OffsetOriginal = Elements[i].Offset;
+		auto& Element = Elements[i];
 
-		if ((Elements[i].Count == 0) || (Elements[i].Offset == 0))
+		Element.OffsetOriginal = Element.Offset;
+
+		if (!Element.Count || !Element.Offset)
 		{
-			Elements[i].Data.clear();
+			Element.Data.clear();
+			Element.SizeOriginal = 0;
+			continue;
 		}
-		else
+
+		UInt32 NextOffset = FileSize;
+		for (UInt32 j = i + 1; j < EElement__Count__; ++j)
 		{
-			UInt32 NextOffset = FileSize;
-			for (UInt32 j = i + 1; j < EElement__Count__; j++)
+			if (Elements[j].Offset)
 			{
-				if (Elements[j].Offset)
-				{
-					NextOffset = Elements[j].Offset;
-					break;
-				}
+				NextOffset = Elements[j].Offset;
+				break;
 			}
-			Elements[i].Data.resize(NextOffset - Elements[i].Offset);
 		}
+
+		Element.Data.resize(NextOffset - Element.Offset);
+		Element.SizeOriginal = Element.Data.size();
 	}
 }
 
@@ -645,6 +638,9 @@ void M2Lib::M2Skin::m_SaveElements_FindOffsets()
 		if (!Elements[i].Data.empty())
 		{
 			Elements[i].Offset = CurrentOffset;
+			Elements[i].SizeOriginal = Elements[i].Data.size();
+			Elements[i].OffsetOriginal = CurrentOffset;
+
 			CurrentOffset += Elements[i].Data.size();
 		}
 	}

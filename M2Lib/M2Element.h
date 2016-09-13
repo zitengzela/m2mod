@@ -121,6 +121,8 @@ namespace M2Lib
 
 			SInt16 NextAnimation;		// index to next animation with same AnimationID, -1 if there are no more.
 			UInt16 NextIndex;			// this animation's index in the list of animations.
+
+			bool IsInternal() const { return (Flags & 0x20) != 0; }
 		};
 
 		ASSERT_SIZE(CElement_Animation, 64);

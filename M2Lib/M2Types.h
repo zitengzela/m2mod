@@ -2,6 +2,7 @@
 
 #include "BaseTypes.h"
 #include <vector>
+#include <assert.h>
 
 namespace M2Lib
 {
@@ -52,8 +53,19 @@ namespace M2Lib
 
 	struct M2Array
 	{
-		UInt32 Count;
+		SInt32 Count;
 		UInt32 Offset;
+
+		void Shift(SInt32 Delta)
+		{
+			if (Count/* && Offset*/)
+			{
+				//assert(Offset > 0);
+				Offset += Delta;
+			}
+			else
+				Offset = 0;
+		}
 	};
 
 	class C3Vector

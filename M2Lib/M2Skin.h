@@ -6,6 +6,10 @@
 #include <vector>
 #include <map>
 
+#define VERTEX_PER_TRIANGLE 3
+#define BONES_PER_VERTEX 4
+#define BONES_PER_TRIANGLE (VERTEX_PER_TRIANGLE * BONES_PER_VERTEX)
+
 namespace M2Lib
 {
 	class M2;
@@ -55,8 +59,6 @@ namespace M2Lib
 		};
 
 #pragma pack(pop)
-
-		std::vector< std::vector< M2SkinElement::CElement_Material* > > SubMeshList_MaterialList;	// list of material lists that apply to sub meshes.
 
 	public:
 		M2Skin(M2* pM2In)
@@ -143,15 +145,13 @@ namespace M2Lib
 
 		static SInt32 m_ReverseBoneLookup(UInt8 BoneID, UInt16* BoneLookupTable, UInt32 BoneLookupTableLength)
 		{
-			if (BoneID == 0)
-				return 0;
-
 			for (UInt32 i = 0; i < BoneLookupTableLength; i++)
 			{
 				if (BoneLookupTable[i] == BoneID)
 					return i;
 			}
 
+			assert(false && "Bone lookup failed");
 			return 0;
 		}
 

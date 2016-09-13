@@ -161,7 +161,7 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 	if ((Header.Elements.nSkin == 0) || (Header.Elements.nSkin > 4))
 		return EError_FailedToLoadM2_FileCorrupt;
 
-	for (UInt32 i = 0; i != Header.Elements.nSkin; i++)
+	for (UInt32 i = 0; i < Header.Elements.nSkin; ++i)
 	{
 		Char16 FileNameSkin[1024];
 		GetFileSkin(FileNameSkin, FileName, i);
@@ -552,9 +552,8 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16* FileName, bool IgnoreBones
 	// only build skin 0 for now, so we can fix seams and then build skin for real later
 	M2SkinBuilder SkinBuilder;
 	std::vector< UInt16 > NewBoneLookup;
-	SInt32 BoneStart = 0;
 	M2Skin* pNewSkin0 = new M2Skin(this);
-	assert(SkinBuilder.Build(pNewSkin0, 256, pInM2I, &NewVertexList[0], BoneStart));
+	assert(SkinBuilder.Build(pNewSkin0, 256, pInM2I, &NewVertexList[0], 0));
 
 	// set skin 0 so we can begin seam fixing
 	M2Skin* pOriginalSkin0 = Skins[0];	// save this because we will need to copy materials from it later.
@@ -601,7 +600,7 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16* FileName, bool IgnoreBones
 	MaxBoneList[4] = 0;		// extra entry needed for LoD check
 
 	NewBoneLookup.clear();
-	BoneStart = 0;
+	SInt32 BoneStart = 0;
 	UInt32 iSkin = 0;
 
 	for (UInt32 iLoD = 0; iLoD < SKIN_COUNT - 2; ++iLoD)
@@ -652,8 +651,6 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16* FileName, bool IgnoreBones
 		Skins[i] = NewSkinList[i];
 	}
 
-	static_assert(sizeof(UInt16) == sizeof(CElement_BoneLookup), "");
-
 	// copy new bone lookup
 	Elements[EElement_SkinnedBoneLookup].SetDataSize(NewBoneLookup.size(), NewBoneLookup.size() * sizeof(UInt16), false);
 	memcpy(Elements[EElement_SkinnedBoneLookup].Data.data(), &NewBoneLookup[0], NewBoneLookup.size() * sizeof(UInt16));
@@ -661,12 +658,12 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16* FileName, bool IgnoreBones
 	// build vertex bone indices
 	for (UInt32 i = 0; i < Header.Elements.nSkin; ++i)
 	{
-		if (Skins[i])
-		{
-			Skins[i]->BuildVertexBoneIndices();
-			Skins[i]->m_SaveElements_FindOffsets();
-			Skins[i]->m_SaveElements_CopyElementsToHeader();
-		}
+		if (!Skins[i])
+			continue;
+
+		Skins[i]->BuildVertexBoneIndices();
+		Skins[i]->m_SaveElements_FindOffsets();
+		Skins[i]->m_SaveElements_CopyElementsToHeader();
 	}
 
 	m_SaveElements_FindOffsets();
@@ -684,8 +681,6 @@ void M2Lib::M2::PrintInfo()
 	// just print out any sort of data that we want to analize when troubleshooting
 
 	UInt32 Count = 0;
-
-	Char8 szItoA[32];
 
 	Char16 szFileOut[1024];
 	UInt32 Length = 0;
@@ -1667,36 +1662,39 @@ void M2Lib::M2::m_LoadElements_CopyHeaderToElements()
 
 void M2Lib::M2::m_LoadElements_FindSizes(UInt32 FileSize)
 {
-	for (UInt32 i = 0; i != EElement__Count__; i++)
+	for (UInt32 i = 0; i < EElement__Count__; ++i)
 	{
-		Elements[i].OffsetOriginal = Elements[i].Offset;
+		auto& Element = Elements[i];
 
-		if ((Elements[i].Count == 0) || (Elements[i].Offset == 0))
+		Element.OffsetOriginal = Elements[i].Offset;
+
+		if (!Element.Count || !Element.Offset)
 		{
-			Elements[i].Data.clear();
+			Element.Data.clear();
+			Element.SizeOriginal = 0;
+			continue;
 		}
-		else
+
+		UInt32 NextOffset = FileSize;
+		for (UInt32 j = 0; j < EElement__Count__; ++j)
 		{
-			UInt32 NextOffset = FileSize;
-			for (UInt32 j = 0; j < EElement__Count__; j++)
+			if (Elements[j].Count && Elements[j].Offset > Element.Offset)
 			{
-				if ((Elements[j].Count != 0) && (Elements[j].Offset > Elements[i].Offset))
-				{
-					if (Elements[j].Offset < NextOffset)
-					{
-						NextOffset = Elements[j].Offset;
-					}
-					break;
-				}
+				if (Elements[j].Offset < NextOffset)
+					NextOffset = Elements[j].Offset;
+				break;
 			}
-			Elements[i].Data.resize(NextOffset - Elements[i].Offset);
 		}
+		Element.Data.resize(NextOffset - Element.Offset);
+		Element.SizeOriginal = Element.Data.size();
 	}
 }
 
 
-#define VERIFY_OFFSET_LOCAL( offset ) assert( ( Elements[iElement].Offset <= offset ) && ( offset < ( Elements[iElement].Offset + Elements[iElement].Data.size() ) ) );
-#define VERIFY_OFFSET_NOTLOCAL( offset ) assert( offset > ( Elements[iElement].OffsetOriginal + Elements[iElement].Data.size() ) );
+#define VERIFY_OFFSET_LOCAL( offset ) \
+	assert( !offset || Elements[iElement].Offset <= offset && offset < Elements[iElement].OffsetOriginal + Elements[iElement].SizeOriginal );
+#define VERIFY_OFFSET_NOTLOCAL( offset ) \
+	assert( !offset || offset >= Elements[iElement].OffsetOriginal + Elements[iElement].SizeOriginal );
 
 void M2Lib::M2::m_SaveElements_FindOffsets()
 {
@@ -1821,27 +1819,8 @@ void M2Lib::M2::m_SaveElements_FindOffsets()
 				CElement_Event* Events = Elements[iElement].as<CElement_Event>();
 				auto animations = Elements[EElement_Animation].as<CElement_Animation>();
 				for (UInt32 j = 0; j < Elements[iElement].Count; j++)
-				{
-					if (Events[j].TimeLines.Offset)
-					{
-						VERIFY_OFFSET_LOCAL(Events[j].TimeLines.Offset);
-						M2Array* M2Arrays = (M2Array*)Elements[iElement].GetLocalPointer(Events[j].TimeLines.Offset);
-						for (UInt32 i = 0; i < Events[j].TimeLines.Count; i++)
-						{
-							if (Events[j].GlobalSequenceID == -1 && (animations[i].Flags & 0x20) == 0)
-								continue;
+					m_FixAnimationM2Array(OffsetDelta, totalDiff, Events[j].GlobalSequenceID, Events[j].TimeLines, iElement);
 
-							M2Array& Array = M2Arrays[i];
-							if (Array.Count && Array.Offset)
-								Array.Offset += Events[j].GlobalSequenceID != -1 && (animations[i].Flags & 0x20) == 0 ?
-									OffsetDelta : totalDiff;
-							else
-								Array.Offset = 0;
-						}
-
-						Events[j].TimeLines.Offset += OffsetDelta;
-					}
-				}
 				break;
 			}
 
@@ -1951,6 +1930,8 @@ void M2Lib::M2::m_SaveElements_FindOffsets()
 
 		// set the element's new offset
 		Elements[iElement].Offset = CurrentOffset;
+		Elements[iElement].SizeOriginal = Elements[iElement].Data.size();
+		Elements[iElement].OffsetOriginal = CurrentOffset;
 		CurrentOffset += Elements[iElement].Data.size();
 	}
 
@@ -1959,61 +1940,52 @@ void M2Lib::M2::m_SaveElements_FindOffsets()
 		m_OriginalModelChunkSize += Elements[iElement].Data.size();
 }
 
-void M2Lib::M2::m_FixAnimationOffsets(SInt32 OffsetDelta, SInt32 TotalDiff, CElement_AnimationBlock& AnimationBlock, SInt32 iElement)
+void M2Lib::M2::m_FixAnimationM2Array(SInt32 OffsetDelta, SInt32 TotalDelta, SInt16 GlobalSequenceID, M2Array& Array, SInt32 iElement)
 {
-	assert(Elements[EElement_Animation].Count != 0);
+#define IS_LOCAL_ANIMATION(Offset) \
+	(Offset >= Elements[iElement].OffsetOriginal && (Offset < Elements[iElement].OffsetOriginal + Elements[iElement].SizeOriginal))
+
 	auto animations = Elements[EElement_Animation].as<CElement_Animation>();
 
-	// TP is the best
-	if (AnimationBlock.Times.Count)
-	{
-		VERIFY_OFFSET_LOCAL(AnimationBlock.Times.Offset);
-		M2Array* M2Arrays = (M2Array*)Elements[iElement].GetLocalPointer(AnimationBlock.Times.Offset);
-		for (UInt32 i = 0; i < AnimationBlock.Times.Count; i++)
-		{
-			if (AnimationBlock.GlobalSequenceID == -1 && (animations[i].Flags & 0x20) == 0)
-				continue;
+	VERIFY_OFFSET_LOCAL(Array.Offset);
 
-			M2Array& Array = M2Arrays[i];
-			if (Array.Count && Array.Offset)
-				Array.Offset += AnimationBlock.GlobalSequenceID != -1 && (animations[i].Flags & 0x20) == 0 ?
-					OffsetDelta : TotalDiff;
-			else
-				Array.Offset = 0;
+	if (GlobalSequenceID == -1)
+	{
+		if (Array.Count)
+		{
+			auto SubArrays = (M2Array*)Elements[iElement].GetLocalPointer(Array.Offset);
+				//(RawData + 8 + Array.Offset);
+
+			assert(Elements[EElement_Animation].Count != 0);
+			for (UInt32 i = 0; i < Array.Count; ++i)
+			{
+				if (!animations[i].IsInternal())
+					continue;
+
+				//SubArrays[i].Shift(IS_LOCAL_ANIMATION(SubArrays[i].Offset) ? OffsetDelta : TotalDelta);
+				if (SubArrays[i].Offset >= Elements[iElement].OffsetOriginal && (SubArrays[i].Offset < Elements[iElement].OffsetOriginal + Elements[iElement].SizeOriginal))
+					SubArrays[i].Shift(OffsetDelta);
+				else
+					SubArrays[i].Shift(TotalDelta);
+			}
 		}
 
-		bool bInThisElem = (Elements[iElement].Offset < AnimationBlock.Times.Offset) && (AnimationBlock.Times.Offset < (Elements[iElement].Offset + Elements[iElement].Data.size()));
-		assert(bInThisElem);
-
-		VERIFY_OFFSET_LOCAL(AnimationBlock.Times.Offset);
-		assert(AnimationBlock.Times.Offset > 0);
-		AnimationBlock.Times.Offset += OffsetDelta;
+		Array.Shift(IS_LOCAL_ANIMATION(Array.Offset) ? OffsetDelta : TotalDelta);
 	}
-
-	if (AnimationBlock.Keys.Count)
+	else
 	{
-		VERIFY_OFFSET_LOCAL(AnimationBlock.Keys.Offset);
-		M2Array* M2Arrays = (M2Array*)Elements[iElement].GetLocalPointer(AnimationBlock.Keys.Offset);
-		for (UInt32 i = 0; i < AnimationBlock.Keys.Count; i++)
-		{
-			if (AnimationBlock.GlobalSequenceID == -1 && (animations[i].Flags & 0x20) == 0)
-				continue;
+		auto SubArrays = (M2Array*)Elements[iElement].GetLocalPointer(Array.Offset);
+		for (UInt32 i = 0; i < Array.Count; ++i)
+			SubArrays[i].Shift(IS_LOCAL_ANIMATION(SubArrays[i].Offset) ? OffsetDelta : TotalDelta);
 
-			M2Array& Array = M2Arrays[i];
-			if (Array.Count && Array.Offset)
-				Array.Offset += AnimationBlock.GlobalSequenceID != -1 && (animations[i].Flags & 0x20) == 0 ?
-					OffsetDelta : TotalDiff;
-			else
-				Array.Offset = 0;
-		}
-
-		bool bInThisElem = (Elements[iElement].Offset < AnimationBlock.Keys.Offset) && (AnimationBlock.Keys.Offset < (Elements[iElement].Offset + Elements[iElement].Data.size()));
-		assert(bInThisElem);
-
-		VERIFY_OFFSET_LOCAL(AnimationBlock.Keys.Offset);
-		assert(AnimationBlock.Keys.Offset > 0);
-		AnimationBlock.Keys.Offset += OffsetDelta;
+		Array.Shift(IS_LOCAL_ANIMATION(Array.Offset) ? OffsetDelta : TotalDelta);
 	}
+}
+
+void M2Lib::M2::m_FixAnimationOffsets(SInt32 OffsetDelta, SInt32 TotalDelta, CElement_AnimationBlock& AnimationBlock, SInt32 iElement)
+{
+	m_FixAnimationM2Array(OffsetDelta, TotalDelta, AnimationBlock.GlobalSequenceID, AnimationBlock.Times, iElement);
+	m_FixAnimationM2Array(OffsetDelta, TotalDelta, AnimationBlock.GlobalSequenceID, AnimationBlock.Keys, iElement);
 }
 
 void M2Lib::M2::m_FixFakeAnimationBlockOffsets(SInt32 OffsetDelta, CElement_FakeAnimationBlock& AnimationBlock, SInt32 iElement)

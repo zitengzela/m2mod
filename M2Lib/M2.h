@@ -223,7 +223,8 @@ namespace M2Lib
 
 		// pre save header
 		void m_SaveElements_FindOffsets();
-		void m_FixAnimationOffsets(SInt32 OffsetDelta, SInt32 TotalDiff, M2Element::CElement_AnimationBlock& AnimationBlock, SInt32 iElement);
+		void m_FixAnimationOffsets(SInt32 OffsetDelta, SInt32 TotalDelta, M2Element::CElement_AnimationBlock& AnimationBlock, SInt32 iElement);
+		void m_FixAnimationM2Array(SInt32 OffsetDelta, SInt32 TotalDelta, SInt16 GlobalSequenceID, M2Array& Array, SInt32 iElement);
 		void m_FixFakeAnimationBlockOffsets(SInt32 OffsetDelta, M2Element::CElement_FakeAnimationBlock& AnimationBlock, SInt32 iElement);
 		void m_SaveElements_CopyElementsToHeader();
 
