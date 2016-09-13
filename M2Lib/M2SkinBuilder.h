@@ -8,17 +8,11 @@
 #include <map>
 #include <assert.h>
 
-
 namespace M2Lib
 {
-	// maximum number of bone partitions, just used to compile fixed lenth arrays because memory management is easier that way
-#define M2SKINBUILDER_MAX_BONE_PARTITION_COUNT 8
-
-
 	class M2I;		// forward declaration.
 	class M2;		// forward declaration.
 	class M2Skin;	// forward declaration.
-
 
 	// does the main heavy lifting of building new .skins for the M2.
 	class M2SkinBuilder
@@ -38,7 +32,6 @@ namespace M2Lib
 			// offset from begining of skin's bone lookup list.
 			UInt32 BoneStart;
 
-
 		public:
 			CBonePartition(UInt32* pBoneLoDIn)
 				: pBoneLoD(pBoneLoDIn)
@@ -54,9 +47,7 @@ namespace M2Lib
 
 			// returns true if a triangle has been associated with this bone partition.
 			bool HasTriangle(UInt32 TriangleIndex);
-
 		};
-
 
 		//
 		class CSubMesh
@@ -128,15 +119,12 @@ namespace M2Lib
 				}
 			}
 
-
 			// adds a subset partition to the list of subset partitions in this subset. this is done in preparation for when we deal out triangles and vertices to between the various subset partitions.
 			void AddSubsetPartition(CBonePartition* pBonePartition);
 
 			// attempts to add a triangle to this subset.
 			bool AddTriangle(CTriangle* pTriangle);
-
 		};
-
 
 	public:
 		// bone partition level of detail, this is the maximum number of bones allowed to be used per subset partition per draw call. it is a limitation imposed by the number of shader constant registers available on the GPU.
@@ -176,7 +164,6 @@ namespace M2Lib
 			}
 		}
 
-
 	public:
 		void Clear();
 
@@ -185,12 +172,5 @@ namespace M2Lib
 
 		// returns true if the built skin with LoD is necessary to be exported, false if can be done without.
 		// this is to check for LoD that has significant room for more bones than the skin actually uses, in such case, it would not be advisable to save.
-		bool IsNecessary();
-
-
 	};
-
-
-
-
 }
