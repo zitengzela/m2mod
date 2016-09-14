@@ -598,6 +598,9 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16* FileName, bool IgnoreBones
 	MaxBoneList[2] = 53;
 	MaxBoneList[3] = 21;
 	MaxBoneList[4] = 0;		// extra entry needed for LoD check
+	//MaxBoneList[4] = 64;	// extracted from client
+	//MaxBoneList[5] = 64;
+	//MaxBoneList[6] = 64;
 
 	NewBoneLookup.clear();
 	SInt32 BoneStart = 0;
@@ -1692,9 +1695,9 @@ void M2Lib::M2::m_LoadElements_FindSizes(UInt32 FileSize)
 
 
 #define VERIFY_OFFSET_LOCAL( offset ) \
-	assert( !offset || Elements[iElement].Offset <= offset && offset < Elements[iElement].OffsetOriginal + Elements[iElement].SizeOriginal );
+	assert( !offset || Elements[iElement].Offset <= offset && offset < Elements[iElement].OffsetOriginal + Elements[iElement].Data.size() );
 #define VERIFY_OFFSET_NOTLOCAL( offset ) \
-	assert( !offset || offset >= Elements[iElement].OffsetOriginal + Elements[iElement].SizeOriginal );
+	assert( !offset || offset >= Elements[iElement].OffsetOriginal + Elements[iElement].Data.size() );
 
 void M2Lib::M2::m_SaveElements_FindOffsets()
 {
@@ -1943,7 +1946,7 @@ void M2Lib::M2::m_SaveElements_FindOffsets()
 void M2Lib::M2::m_FixAnimationM2Array(SInt32 OffsetDelta, SInt32 TotalDelta, SInt16 GlobalSequenceID, M2Array& Array, SInt32 iElement)
 {
 #define IS_LOCAL_ANIMATION(Offset) \
-	(Offset >= Elements[iElement].OffsetOriginal && (Offset < Elements[iElement].OffsetOriginal + Elements[iElement].SizeOriginal))
+	(Offset >= Elements[iElement].OffsetOriginal && (Offset < Elements[iElement].OffsetOriginal + Elements[iElement].Data.size()))
 
 	auto animations = Elements[EElement_Animation].as<CElement_Animation>();
 
@@ -1963,7 +1966,7 @@ void M2Lib::M2::m_FixAnimationM2Array(SInt32 OffsetDelta, SInt32 TotalDelta, SIn
 					continue;
 
 				//SubArrays[i].Shift(IS_LOCAL_ANIMATION(SubArrays[i].Offset) ? OffsetDelta : TotalDelta);
-				if (SubArrays[i].Offset >= Elements[iElement].OffsetOriginal && (SubArrays[i].Offset < Elements[iElement].OffsetOriginal + Elements[iElement].SizeOriginal))
+				if (SubArrays[i].Offset >= Elements[iElement].OffsetOriginal && (SubArrays[i].Offset < Elements[iElement].OffsetOriginal + Elements[iElement].Data.size()))
 					SubArrays[i].Shift(OffsetDelta);
 				else
 					SubArrays[i].Shift(TotalDelta);
