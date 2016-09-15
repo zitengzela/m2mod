@@ -47,6 +47,7 @@ M2Lib::EError M2Lib::M2Skin::Load(const Char16* FileName)
 	m_LoadElements_CopyHeaderToElements();
 	m_LoadElements_FindSizes(FileSize);
 
+	DataElement::SetFileOffset(0);
 	// load elements
 	for (UInt32 i = 0; i != EElement__Count__; i++)
 	{
@@ -99,6 +100,7 @@ M2Lib::EError M2Lib::M2Skin::Save(const Char16* FileName)
 	// save header
 	FileStream.write((Char8*)&Header, sizeof(Header));
 
+	DataElement::SetFileOffset(0);
 	// save elements
 	for (UInt32 i = 0; i != EElement__Count__; i++)
 	{

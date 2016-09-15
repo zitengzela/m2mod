@@ -11,13 +11,16 @@ using namespace M2Lib::M2Element;
 // level of detail for output messages
 int g_Verbose = 1;
 
+#define REVERSE_CC(x) \
+	 ((x & 0xFF) << 24 | ((x >> 8) & 0xFF) << 16 | ((x >> 16) & 0xFF) << 8 | (x >> 24) & 0xFF)
+
 struct IFFChunk
 {
-	Char8   ChunkId[4];
+	UInt32 ChunkId;
 	SInt32  ChunkSize;
 };
 
-const Char8* M2Lib::M2::kChunkIDs[EChunk__Count__] = { "MD21", "PFID", "AFID", "SFID", "BFID" };
+const UInt32 M2Lib::M2::kChunkIDs[EChunk__Count__] = { 'MD21', 'PFID', 'AFID', 'SFID', 'BFID' };
 
 M2Lib::DataElement* M2Lib::M2::GetLastElement()
 {
@@ -59,36 +62,42 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 	// find file size
 	FileStream.seekg(0, std::ios::end);
 	UInt32 FileSize = (UInt32)FileStream.tellg();
-	m_OriginalSize = FileSize;
 	FileStream.seekg(0, std::ios::beg);
 
 	// load entire thing
-	RawData = new UInt8[FileSize];
+	auto RawData = new UInt8[FileSize];
 	FileStream.read((Char8*)RawData, FileSize);
 	FileStream.seekg(0, std::ios::beg);
 
 	// NEW !
 	IFFChunk * Chunk = (IFFChunk *)RawData;
-	bool ValidFile = false;
 
 	DataElement::SetFileOffset(0);
 
 	while ((UInt8*)Chunk < (RawData + FileSize) && Chunk->ChunkSize >= 0)
 	{
-		if (Chunk->ChunkId[0] == 'M' && Chunk->ChunkId[1] == 'D' && Chunk->ChunkId[2] == '2' && Chunk->ChunkId[3] == '0')
+		// support pre-legion M2
+		if (REVERSE_CC(Chunk->ChunkId) == 'MD20')
 		{
-			ValidFile = true;
+			SInt32 ChunkIndex = m_GetChunkIndex('MD21');
+
+			Chunks[ChunkIndex].Count = 1;
+			Chunks[ChunkIndex].Data.resize(FileSize);
+			Chunks[ChunkIndex].Offset = 0;
+			FileStream.seekg(0, std::ios::beg);
+
+			Chunks[ChunkIndex].Load(FileStream);
 			break;
 		}
 		else
 		{
-			SInt32 ChunkIndex = m_GetChunkIndex(Chunk->ChunkId);
+			SInt32 ChunkIndex = m_GetChunkIndex(REVERSE_CC(Chunk->ChunkId));
 
 			if (ChunkIndex >= 0)
 			{
 				Chunks[ChunkIndex].Count = 1;
 				Chunks[ChunkIndex].Data.resize(Chunk->ChunkSize);
-				Chunks[ChunkIndex].Offset = ((UInt8*)Chunk) + 8 - RawData;
+				Chunks[ChunkIndex].Offset = ((UInt8*)Chunk) - RawData + 8;
 
 				Chunks[ChunkIndex].Load(FileStream);
 			}
@@ -96,23 +105,17 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 		Chunk = (IFFChunk *)((UInt8*)Chunk + Chunk->ChunkSize + 8);
 	}
 
+	delete RawData;
+
 	if (!Chunks[EChunk_Model].Data.empty())
 	{
 		SInt32 MD20Offset = Chunks[EChunk_Model].Offset;
-		FileSize = Chunks[EChunk_Model].Data.size();
+		m_OriginalModelChunkSize = Chunks[EChunk_Model].Data.size();
 		DataElement::SetFileOffset(MD20Offset);
 
 		FileStream.seekg(MD20Offset, std::ios::beg);
-		FileStream.read((Char8*)RawData, FileSize);
-		FileStream.seekg(MD20Offset, std::ios::beg);
-
-		m_OriginalModelChunkSize = FileSize;
-
-		ValidFile = true;
 	}
-
-	// check header
-	if (!ValidFile)
+	else
 		return EError_FailedToLoadM2_FileCorrupt;
 
 	// load header
@@ -137,7 +140,7 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 
 	// fill elements header data
 	m_LoadElements_CopyHeaderToElements();
-	m_LoadElements_FindSizes(FileSize);
+	m_LoadElements_FindSizes(m_OriginalModelChunkSize);
 
 	// load elements
 	UInt32 ElementCount = EElement__Count__;
@@ -145,7 +148,7 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 	{
 		ElementCount--;
 	}
-	for (UInt32 i = 0; i != ElementCount; i++)
+	for (UInt32 i = 0; i < ElementCount; i++)
 	{
 		Elements[i].Align = 16;
 		if (!Elements[i].Load(FileStream))
@@ -154,8 +157,6 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 
 	// close file stream
 	FileStream.close();
-
-	DataElement::SetFileOffset(0);
 
 	// load skins
 	if ((Header.Elements.nSkin == 0) || (Header.Elements.nSkin > 4))
@@ -284,7 +285,8 @@ M2Lib::EError M2Lib::M2::Save(const Char16* FileName)
 	{
 		if (!Chunks[i].Data.empty())
 		{
-			FileStream.write(kChunkIDs[i], 4);
+			UInt32 ChunkId = REVERSE_CC(kChunkIDs[i]);
+			FileStream.write((Char8*)&ChunkId, 4);
 			UInt32 size = Chunks[i].Data.size();
 			FileStream.write((Char8*)&size, 4);
 			FileStream.write((Char8*)Chunks[i].Data.data(), Chunks[i].Data.size());
@@ -292,12 +294,12 @@ M2Lib::EError M2Lib::M2::Save(const Char16* FileName)
 	}
 
 	FileStream.seekp(0, std::ios::beg);
-	FileStream.write(kChunkIDs[EChunk_Model], 4);
+	UInt32 ChunkId = REVERSE_CC(kChunkIDs[EChunk_Model]);
+	FileStream.write((Char8*)&ChunkId, 4);
 	FileStream.write((Char8*)(&MD20Size), 4);
 
 	// close file stream
 	FileStream.close();
-	DataElement::SetFileOffset(0);
 
 	// delete existing skin files
 	for (UInt32 i = 0; i < SKIN_COUNT; ++i)
@@ -764,7 +766,7 @@ void M2Lib::M2::PrintInfo()
         FileStream << "\tFlags: " << (UInt32)texture[i].Flags << std::endl;
         FileStream << "\tType: " << (UInt32)texture[i].Type << std::endl;
         if (texture[i].TexturePath.Count > 1)
-            FileStream << "\tPath: " << (char*)(texture[i].TexturePath.Offset + this->RawData + DataElement::GetFileOffset()) << std::endl;
+			FileStream << "\tPath: " << (char*)Elements[EElement_Texture].GetLocalPointer(texture[i].TexturePath.Offset) << std::endl;
         else
             FileStream << "\tPath: unk" << std::endl;
         FileStream << std::endl;
@@ -1663,7 +1665,7 @@ void M2Lib::M2::m_LoadElements_CopyHeaderToElements()
 }
 
 
-void M2Lib::M2::m_LoadElements_FindSizes(UInt32 FileSize)
+void M2Lib::M2::m_LoadElements_FindSizes(UInt32 ChunkSize)
 {
 	for (UInt32 i = 0; i < EElement__Count__; ++i)
 	{
@@ -1678,7 +1680,7 @@ void M2Lib::M2::m_LoadElements_FindSizes(UInt32 FileSize)
 			continue;
 		}
 
-		UInt32 NextOffset = FileSize;
+		UInt32 NextOffset = ChunkSize;
 		for (UInt32 j = 0; j < EElement__Count__; ++j)
 		{
 			if (Elements[j].Count && Elements[j].Offset > Element.Offset)
@@ -1957,7 +1959,6 @@ void M2Lib::M2::m_FixAnimationM2Array(SInt32 OffsetDelta, SInt32 TotalDelta, SIn
 		if (Array.Count)
 		{
 			auto SubArrays = (M2Array*)Elements[iElement].GetLocalPointer(Array.Offset);
-				//(RawData + 8 + Array.Offset);
 
 			assert(Elements[EElement_Animation].Count != 0);
 			for (UInt32 i = 0; i < Array.Count; ++i)
@@ -2111,16 +2112,11 @@ void M2Lib::M2::m_SaveElements_CopyElementsToHeader()
 	Header.Elements.oUnknown1 = Elements[EElement_Unknown1].Offset;
 }
 
-SInt32 M2Lib::M2::m_GetChunkIndex(const Char8* ChunkID) const
+SInt32 M2Lib::M2::m_GetChunkIndex(UInt32 ChunkID) const
 {
-	for (int a = 0; a < EChunk__Count__; a++)
+	for (int a = 0; a < EChunk__Count__; ++a)
 	{
-		bool Equal = true;
-		for (int b = 0; b < 4; b++)
-		{
-			Equal = Equal && (kChunkIDs[a][b] == ChunkID[b]);
-		}
-		if (Equal)
+		if (kChunkIDs[a] == ChunkID)
 			return a;
 	}
 

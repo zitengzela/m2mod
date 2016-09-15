@@ -49,8 +49,8 @@ namespace M2Lib
 		{
 			EChunk_Model = 0,
 			EChunk_Physic,
-			EChunk_Skin,
 			EChunk_Animation,
+			EChunk_Skin,
 			EChunk_Bone,
 
 			EChunk__Count__

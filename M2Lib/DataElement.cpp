@@ -82,8 +82,3 @@ void M2Lib::DataElement::Clone(DataElement* Source, DataElement* Destination)
 	Destination->SetDataSize(Source->Count, Source->Data.size(), false);
 	memcpy(Destination->Data.data(), Source->Data.data(), Source->Data.size());
 }
-
-void M2Lib::DataElement::SetFileOffset(UInt32 offset)
-{
-	FileOffset = offset;
-}

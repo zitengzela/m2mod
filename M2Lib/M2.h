@@ -146,17 +146,14 @@ namespace M2Lib
 		CM2Header Header;		// used for loading and saving. not used when editing.
 		DataElement Elements[M2Element::EElement__Count__];
 		DataElement Chunks[M2Element::EChunk__Count__];
-		const static Char8* kChunkIDs[M2Element::EChunk__Count__];
+		const static UInt32 kChunkIDs[M2Element::EChunk__Count__];
 
 		DataElement* GetLastElement();
 
 		#define SKIN_COUNT 6
 		M2Skin* Skins[SKIN_COUNT];
 
-		UInt32 m_OriginalSize;	// size in bytes of the original M2 file when loaded.
 		UInt32 m_OriginalModelChunkSize;
-
-		UInt8* RawData;			// the entire file read into memory, so we can access animations.
 
 		M2I* pInM2I;
 
@@ -164,9 +161,7 @@ namespace M2Lib
 		M2()
 		{
 			memset(Skins, 0, sizeof(Skins));
-			m_OriginalSize = 0;
 			m_OriginalModelChunkSize = 0;
-			RawData = 0;
 			pInM2I = NULL;
 		}
 
@@ -174,8 +169,6 @@ namespace M2Lib
 		{
 			if (pInM2I)
 				delete pInM2I;
-			if (RawData)
-				delete RawData;
 		}
 
 	public:
@@ -219,7 +212,7 @@ namespace M2Lib
 	public:
 		// post load header
 		void m_LoadElements_CopyHeaderToElements();
-		void m_LoadElements_FindSizes(UInt32 FileSize);
+		void m_LoadElements_FindSizes(UInt32 ChunkSize);
 
 		// pre save header
 		void m_SaveElements_FindOffsets();
@@ -229,6 +222,6 @@ namespace M2Lib
 		void m_SaveElements_CopyElementsToHeader();
 
 		// chunk index in Chunks (-1 if invalid chunk)
-		SInt32 m_GetChunkIndex(const Char8* ChunkID) const;
+		SInt32 m_GetChunkIndex(UInt32 ChunkID) const;
 	};
 }
