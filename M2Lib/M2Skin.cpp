@@ -49,7 +49,7 @@ M2Lib::EError M2Lib::M2Skin::Load(const Char16* FileName)
 
 	DataElement::SetFileOffset(0);
 	// load elements
-	for (UInt32 i = 0; i != EElement__Count__; i++)
+	for (UInt32 i = 0; i < EElement__Count__; ++i)
 	{
 		if (!Elements[i].Load(FileStream))
 			return EError_FailedToLoadSKIN_FileMissingOrCorrupt;
@@ -58,19 +58,12 @@ M2Lib::EError M2Lib::M2Skin::Load(const Char16* FileName)
 	// close file stream
 	FileStream.close();
 
-	//std::vector< CElement_SubMesh > SubMeshList;
-	//for ( UInt32 i = 0; i < Elements[EElement_SubMesh].Count; i++ )
-	//{
-	//	SubMeshList.push_back( ((CElement_SubMesh*)Elements[EElement_SubMesh].Data)[i] );
-	//}
-
 	// print info
 	//PrintInfo();
 
 	// done
 	return EError_OK;
 }
-
 
 M2Lib::EError M2Lib::M2Skin::Save(const Char16* FileName)
 {
@@ -629,13 +622,12 @@ void M2Lib::M2Skin::m_LoadElements_FindSizes(UInt32 FileSize)
 	}
 }
 
-
 void M2Lib::M2Skin::m_SaveElements_FindOffsets()
 {
 	UInt32 CurrentOffset = sizeof(Header);
 	CurrentOffset = (CurrentOffset + 15) & ~15;
 
-	for (UInt32 i = 0; i < EElement__Count__; i++)
+	for (UInt32 i = 0; i < EElement__Count__; ++i)
 	{
 		if (!Elements[i].Data.empty())
 		{

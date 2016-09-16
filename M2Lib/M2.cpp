@@ -14,12 +14,6 @@ int g_Verbose = 1;
 #define REVERSE_CC(x) \
 	 ((x & 0xFF) << 24 | ((x >> 8) & 0xFF) << 16 | ((x >> 16) & 0xFF) << 8 | (x >> 24) & 0xFF)
 
-struct IFFChunk
-{
-	UInt32 ChunkId;
-	SInt32  ChunkSize;
-};
-
 const UInt32 M2Lib::M2::kChunkIDs[EChunk__Count__] = { 'MD21', 'PFID', 'AFID', 'SFID', 'BFID' };
 
 M2Lib::DataElement* M2Lib::M2::GetLastElement()
@@ -64,76 +58,63 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 	UInt32 FileSize = (UInt32)FileStream.tellg();
 	FileStream.seekg(0, std::ios::beg);
 
-	// load entire thing
-	auto RawData = new UInt8[FileSize];
-	FileStream.read((Char8*)RawData, FileSize);
-	FileStream.seekg(0, std::ios::beg);
-
-	// NEW !
-	IFFChunk * Chunk = (IFFChunk *)RawData;
-
 	DataElement::SetFileOffset(0);
 
-	while ((UInt8*)Chunk < (RawData + FileSize) && Chunk->ChunkSize >= 0)
+	while (FileStream.tellg() < FileSize)
 	{
+		UInt32 ChunkId;
+		UInt32 ChunkSize;
+
+		FileStream.read((char*)&ChunkId, sizeof(ChunkId));
+		FileStream.read((char*)&ChunkSize, sizeof(ChunkSize));
+
 		// support pre-legion M2
-		if (REVERSE_CC(Chunk->ChunkId) == 'MD20')
+		if (REVERSE_CC(ChunkId) == 'MD20')
 		{
 			SInt32 ChunkIndex = m_GetChunkIndex('MD21');
 
-			Chunks[ChunkIndex].Count = 1;
-			Chunks[ChunkIndex].Data.resize(FileSize);
-			Chunks[ChunkIndex].Offset = 0;
-			FileStream.seekg(0, std::ios::beg);
+			auto& Chunk = Chunks[ChunkIndex];
 
-			Chunks[ChunkIndex].Load(FileStream);
+			Chunk.Count = 1;
+			Chunk.Data.resize(FileSize);
+			Chunk.Offset = 0;
+			FileStream.seekg(0, std::ios::beg);
+			FileStream.read((char*)Chunk.Data.data(), Chunk.Data.size());
 			break;
 		}
 		else
 		{
-			SInt32 ChunkIndex = m_GetChunkIndex(REVERSE_CC(Chunk->ChunkId));
-
+			SInt32 ChunkIndex = m_GetChunkIndex(REVERSE_CC(ChunkId));
 			if (ChunkIndex >= 0)
 			{
-				Chunks[ChunkIndex].Count = 1;
-				Chunks[ChunkIndex].Data.resize(Chunk->ChunkSize);
-				Chunks[ChunkIndex].Offset = ((UInt8*)Chunk) - RawData + 8;
-
-				Chunks[ChunkIndex].Load(FileStream);
+				auto& Chunk = Chunks[ChunkIndex];
+				Chunk.Count = 1;
+				Chunk.Data.resize(ChunkSize);
+				Chunk.Offset = (UInt32)FileStream.tellg();
+				FileStream.read((char*)Chunk.Data.data(), Chunk.Data.size());
 			}
+			else
+				FileStream.seekg(ChunkSize, std::ios::cur);
 		}
-		Chunk = (IFFChunk *)((UInt8*)Chunk + Chunk->ChunkSize + 8);
 	}
 
-	delete RawData;
+	// close file stream
+	FileStream.close();
 
-	if (!Chunks[EChunk_Model].Data.empty())
-	{
-		SInt32 MD20Offset = Chunks[EChunk_Model].Offset;
-		m_OriginalModelChunkSize = Chunks[EChunk_Model].Data.size();
-		DataElement::SetFileOffset(MD20Offset);
-
-		FileStream.seekg(MD20Offset, std::ios::beg);
-	}
-	else
+	auto& ModelChunk = Chunks[EChunk_Model];
+	if (ModelChunk.Data.empty())
 		return EError_FailedToLoadM2_FileCorrupt;
 
+	m_OriginalModelChunkSize = ModelChunk.Data.size();
+
 	// load header
-	FileStream.read((Char8*)&Header.Description, sizeof(Header.Description));
+	memcpy(&Header, ModelChunk.Data.data(), sizeof(Header));
 
 	if ((263 > Header.Description.Version) || (Header.Description.Version > 274))
 		return EError_FailedToLoadM2_VersionNotSupported;
 
-	// load more header
-	if (Header.Description.Flags & 0x08)
+	if (!Header.IsLongHeader())
 	{
-		// special long header
-		FileStream.read((Char8*)&Header.Elements, sizeof(Header.Elements));
-	}
-	else
-	{
-		// normal header
-		FileStream.read((Char8*)&Header.Elements, sizeof(Header.Elements) - 8);
 		Header.Elements.nUnknown1 = 0;
 		Header.Elements.oUnknown1 = 0;
 	}
@@ -145,18 +126,14 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 	// load elements
 	UInt32 ElementCount = EElement__Count__;
 	if (!(Header.Description.Flags & 0x08))
-	{
-		ElementCount--;
-	}
-	for (UInt32 i = 0; i < ElementCount; i++)
+		--ElementCount;
+
+	for (UInt32 i = 0; i < ElementCount; ++i)
 	{
 		Elements[i].Align = 16;
-		if (!Elements[i].Load(FileStream))
+		if (!Elements[i].Load(ModelChunk.Data.data()))
 			return EError_FailedToLoadM2_FileCorrupt;
 	}
-
-	// close file stream
-	FileStream.close();
 
 	// load skins
 	if ((Header.Elements.nSkin == 0) || (Header.Elements.nSkin > 4))
@@ -2137,19 +2114,19 @@ UInt32 M2Lib::M2::AddTexture(const Char8* szTextureSource, CElement_Texture::ETe
 
 	// add element placeholder for new texture
 	Element.Data.insert(Element.Data.begin() + Element.Count * sizeof(CElement_Texture), sizeof(CElement_Texture), 0);
+	auto texturePathPos = Element.Data.size();
+	// add placeholder for texture path
+	Element.Data.insert(Element.Data.end(), strlen(szTextureSource) + 1, 0);
 
 	auto newIndex = Element.Count;
-
-	auto insertPos = Element.Data.size();
 
 	CElement_Texture& newTexture = Element.as<CElement_Texture>()[newIndex];
 	newTexture.Type = Type;
 	newTexture.Flags = Flags;
 	newTexture.TexturePath.Count = strlen(szTextureSource) + 1;
-	newTexture.TexturePath.Offset = Element.Offset + insertPos;
+	newTexture.TexturePath.Offset = Element.Offset + texturePathPos;
 
-	Element.Data.insert(Element.Data.end(), newTexture.TexturePath.Count, 0);
-	memcpy(&Element.Data[insertPos], szTextureSource, newTexture.TexturePath.Count);
+	memcpy(&Element.Data[texturePathPos], szTextureSource, newTexture.TexturePath.Count);
 
 	++Element.Count;
 
