@@ -6,6 +6,8 @@
 #include "ElementManagementForm.h"
 #include "MeshInfoControl.h"
 #include "RegistryStore.h"
+#include "Version.h"
+#include "Updater.h"
 
 namespace M2ModRedux
 {
@@ -17,67 +19,68 @@ namespace M2ModRedux
 	using namespace System::Data;
 	using namespace System::Drawing;
 	using namespace System::Runtime::InteropServices;
+	using namespace System::Threading::Tasks;
 
 	/// <summary>
 	/// Summary for Form1
 	/// </summary>
 	public ref class Form1 : public System::Windows::Forms::Form
 	{
-	private: RegistyStore^ Store = nullptr;
-
 	public:
 		Form1(void)
 		{
 			InitializeComponent();
 			
-			Console::WriteLine(RegistyStore::Value::ExportM2.ToString());
-
-			Store = gcnew RegistyStore();
+			this->Text = String::Format(L"M2Mod Redux {0}.{1}.{2}", VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH);
 
 			try
 			{
-				if (auto value = Store->GetValue(RegistyStore::Value::ExportM2))
+				if (auto value = RegistyStore::GetValue(RegistyStore::Value::ExportM2))
 					this->textBoxInputM2Exp->Text = (String^)value;
 
-				if (auto value = Store->GetValue(RegistyStore::Value::ExportM2I))
+				if (auto value = RegistyStore::GetValue(RegistyStore::Value::ExportM2I))
 					this->textBoxOutputM2I->Text = (String^)value;
 
-				if (auto value = Store->GetValue(RegistyStore::Value::ImportInM2))
+				if (auto value = RegistyStore::GetValue(RegistyStore::Value::ImportInM2))
 					this->textBoxInputM2Imp->Text = (String^)value;
-				if (auto value = Store->GetValue(RegistyStore::Value::ImportM2I))
+				if (auto value = RegistyStore::GetValue(RegistyStore::Value::ImportM2I))
 					this->textBoxInputM2I->Text = (String^)value;
-				if (auto value = Store->GetValue(RegistyStore::Value::ImportOutM2))
+				if (auto value = RegistyStore::GetValue(RegistyStore::Value::ImportOutM2))
 					this->textBoxOutputM2->Text = (String^)value;
 
-				if (auto value = Store->GetValue(RegistyStore::Value::MergeAttachments))
+				if (auto value = RegistyStore::GetValue(RegistyStore::Value::MergeAttachments))
 					this->checkBoxMergeAttachments->Checked = Boolean::Parse(value->ToString());
-				if (auto value = Store->GetValue(RegistyStore::Value::MergeBones))
+				if (auto value = RegistyStore::GetValue(RegistyStore::Value::MergeBones))
 					this->checkBoxMergeBones->Checked = Boolean::Parse(value->ToString());
-				if (auto value = Store->GetValue(RegistyStore::Value::MergeCameras))
+				if (auto value = RegistyStore::GetValue(RegistyStore::Value::MergeCameras))
 					this->checkBoxMergeCameras->Checked = Boolean::Parse(value->ToString());
-				if (auto value = Store->GetValue(RegistyStore::Value::FixSeams))
+				if (auto value = RegistyStore::GetValue(RegistyStore::Value::FixSeams))
 					this->checkBoxFixSeams->Checked = Boolean::Parse(value->ToString());
 			}
 			catch (...)
 			{
 
 			}
+
+			auto updater = gcnew Updater();
+			auto func = gcnew Func<int>(updater, &Updater::Update);
+			Task::Run(func);
 		}
 
 	private: System::Void Form1_FormClosing(System::Object^  sender, System::Windows::Forms::FormClosingEventArgs^  e) {
 
-		Store->SetValue(RegistyStore::Value::ExportM2, textBoxInputM2Exp->Text);
+		RegistyStore::SetValue(RegistyStore::Value::ExportM2, textBoxInputM2Exp->Text);
 
-		Store->SetValue(RegistyStore::Value::ExportM2I, this->textBoxOutputM2I->Text);
+		RegistyStore::SetValue(RegistyStore::Value::ExportM2I, this->textBoxOutputM2I->Text);
 
-		Store->SetValue(RegistyStore::Value::ImportInM2, this->textBoxInputM2Imp->Text);
-		Store->SetValue(RegistyStore::Value::ImportM2I, this->textBoxInputM2I->Text);
-		Store->SetValue(RegistyStore::Value::ImportOutM2, this->textBoxOutputM2->Text);
+		RegistyStore::SetValue(RegistyStore::Value::ImportInM2, this->textBoxInputM2Imp->Text);
+		RegistyStore::SetValue(RegistyStore::Value::ImportM2I, this->textBoxInputM2I->Text);
+		RegistyStore::SetValue(RegistyStore::Value::ImportOutM2, this->textBoxOutputM2->Text);
 
-		Store->SetValue(RegistyStore::Value::MergeAttachments, this->checkBoxMergeAttachments->Checked);
-		Store->SetValue(RegistyStore::Value::MergeBones, this->checkBoxMergeBones->Checked);
-		Store->SetValue(RegistyStore::Value::MergeCameras, this->checkBoxMergeCameras->Checked);
-		Store->SetValue(RegistyStore::Value::FixSeams, this->checkBoxFixSeams->Checked);
+		RegistyStore::SetValue(RegistyStore::Value::MergeAttachments, this->checkBoxMergeAttachments->Checked);
+		RegistyStore::SetValue(RegistyStore::Value::MergeBones, this->checkBoxMergeBones->Checked);
+		RegistyStore::SetValue(RegistyStore::Value::MergeCameras, this->checkBoxMergeCameras->Checked);
+		RegistyStore::SetValue(RegistyStore::Value::FixSeams, this->checkBoxFixSeams->Checked);
 
 	}
 
@@ -653,7 +656,7 @@ namespace M2ModRedux
 				 this->Icon = (cli::safe_cast<System::Drawing::Icon^>(resources->GetObject(L"$this.Icon")));
 				 this->MinimumSize = System::Drawing::Size(500, 320);
 				 this->Name = L"Form1";
-				 this->Text = L"M2Mod Redux 4.8.3";
+				 this->Text = L"M2Mod Redux";
 				 this->FormClosing += gcnew System::Windows::Forms::FormClosingEventHandler(this, &Form1::Form1_FormClosing);
 				 this->tabControl1->ResumeLayout(false);
 				 this->tabExport->ResumeLayout(false);

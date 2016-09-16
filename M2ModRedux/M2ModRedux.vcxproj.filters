@@ -50,6 +50,12 @@
     <ClInclude Include="RegistryStore.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="UpdateForm.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Updater.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="app.rc">

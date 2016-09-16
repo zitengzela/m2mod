@@ -207,7 +207,7 @@ namespace M2ModRedux {
 		for (auto& material : info.Materials)
 			text += "Material: op_count = " + material->op_count + "\n";
 
-		for (int i = 0; i < info.Textures.size(); ++i)
+		for (unsigned int i = 0; i < info.Textures.size(); ++i)
 		{
 			auto& texture = info.Textures[i];
 			text += "Texture #" + (i + 1) + " Type: " + gcnew String(M2Lib::M2Element::CElement_Texture::GetTypeString(texture.pTexture->Type).c_str());

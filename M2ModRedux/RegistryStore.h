@@ -4,7 +4,7 @@ using namespace System;
 
 ref class RegistyStore
 {
-	Microsoft::Win32::RegistryKey^ Root = nullptr;
+	static Microsoft::Win32::RegistryKey^ Root = nullptr;
 public:
 
 	enum class Value
@@ -19,10 +19,13 @@ public:
 		MergeBones,
 		MergeAttachments,
 		MergeCameras,
-		FixSeams
+		FixSeams,
+
+		NotShowAutoUpdate,
+		ActualVersion,
 	};
 
-	RegistyStore()
+	static RegistyStore()
 	{
 		Root = Microsoft::Win32::Registry::CurrentUser->CreateSubKey("M2Mod");
 	}
@@ -32,6 +35,6 @@ public:
 		Root->Close();
 	}
 
-	Object^ GetValue(Value Key) { return Root->GetValue(Key.ToString()); }
-	System::Void SetValue(Value Key, Object^ Value) { Root->SetValue(Key.ToString(), Value); }
+	static Object^ GetValue(Value Key) { return Root->GetValue(Key.ToString()); }
+	static System::Void SetValue(Value Key, Object^ Value) { Root->SetValue(Key.ToString(), Value); }
 };
