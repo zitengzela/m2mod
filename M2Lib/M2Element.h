@@ -464,7 +464,7 @@ namespace M2Lib
 		class CElement_BoundingTriangle
 		{
 		public:
-			UInt16 Indices;
+			UInt16 Index;
 		};
 
 		ASSERT_SIZE(CElement_BoundingTriangle, 2);

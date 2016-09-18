@@ -270,7 +270,7 @@ void M2Lib::M2Skin::CopyMaterials(M2Skin* pOther)
 		{
 			CElement_Material NewMaterial = *SubMeshOtherMaterialList[iSubMeshMaterialOther];
 			NewMaterial.iSubMesh = iSubMesh;
-			NewMaterial.iSubMesh2 = iSubMesh;
+			NewMaterial.iSubMesh2 = 0;
 			/*for (int i = 0; i < SubMeshOtherMaterialList.size(); ++i)
 			{
 				if (SubMeshOtherMaterialList[i]->iSubMesh == iSubMesh)

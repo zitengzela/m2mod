@@ -240,8 +240,8 @@ M2Lib::EError M2Lib::M2::Save(const Char16* FileName)
 	DataElement::SetFileOffset(8);
 	FileStream.seekp(8, std::ios::beg);
 
-	Header.Description.Version = 0x0110;
-	Header.Description.Flags &= ~0x80;
+	//Header.Description.Version = 0x0110;
+	//Header.Description.Flags &= ~0x80;
 
 	// save header
 	FileStream.write((Char8*)&Header.Description, sizeof(Header.Description));
@@ -524,6 +524,7 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16* FileName, bool IgnoreBones
 
 	BoundaryData GlobalBoundary;
 	GlobalBoundary.Calculate(NewVertexList);
+	//SetGlobalBoundingData(GlobalBoundary);
 
 	// fix seams
 	// this is hacky, but we gotta fix seams first
@@ -537,11 +538,12 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16* FileName, bool IgnoreBones
 	// set skin 0 so we can begin seam fixing
 	M2Skin* pOriginalSkin0 = Skins[0];	// save this because we will need to copy materials from it later.
 	Header.Elements.nSkin = 1;
-	for (UInt32 i = 1; i < SKIN_COUNT; ++i)
+	for (UInt32 i = 0; i < SKIN_COUNT; ++i)
 	{
 		if (Skins[i])
 		{
-			delete Skins[i];
+			if (i != 0)
+				delete Skins[i];
 			Skins[i] = NULL;
 		}
 	}
@@ -655,6 +657,35 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16* FileName, bool IgnoreBones
 	return EError_OK;
 }
 
+void M2Lib::M2::SetGlobalBoundingData(BoundaryData& Data)
+{
+	auto ExtraData = Data.CalculateExtra();
+
+	Elements[EElement_BoundingVertex].SetDataSize(BOUNDING_VERTEX_COUNT, sizeof(CElement_BoundingVertices) * BOUNDING_VERTEX_COUNT, false);
+	auto boundingVertices = Elements[EElement_BoundingVertex].as<CElement_BoundingVertices>();
+	for (UInt32 i = 0; i < BOUNDING_VERTEX_COUNT; ++i)
+	{
+		boundingVertices[i].Position[0] = ExtraData.BoundingVertices[i].X;
+		boundingVertices[i].Position[1] = ExtraData.BoundingVertices[i].Y;
+		boundingVertices[i].Position[2] = ExtraData.BoundingVertices[i].Z;
+	}
+
+	Elements[EElement_BoundingNormal].SetDataSize(BOUNDING_TRIANGLE_COUNT, sizeof(CElement_BoundingNormals) * BOUNDING_TRIANGLE_COUNT, false);
+	auto boundingNormals = Elements[EElement_BoundingNormal].as<CElement_BoundingNormals>();
+	for (UInt32 i = 0; i < BOUNDING_TRIANGLE_COUNT; ++i)
+	{
+		boundingNormals[i].Normal[0] = ExtraData.BoundingNormals[i].X;
+		boundingNormals[i].Normal[1] = ExtraData.BoundingNormals[i].Y;
+		boundingNormals[i].Normal[2] = ExtraData.BoundingNormals[i].Z;
+	}
+
+	Elements[EElement_BoundingTriangle].SetDataSize(BOUNDING_TRIANGLE_COUNT * 3, sizeof(CElement_BoundingTriangle) * BOUNDING_TRIANGLE_COUNT * 3, false);
+	auto boundingTriangles = Elements[EElement_BoundingTriangle].as<CElement_BoundingTriangle>();
+	for (UInt32 i = 0; i < BOUNDING_TRIANGLE_COUNT * 3; ++i)
+	{
+		boundingTriangles[i].Index = BoundaryData::ExtraData::BoundingTriangleVertexMap[i];
+	}
+}
 
 void M2Lib::M2::PrintInfo()
 {

@@ -204,6 +204,8 @@ namespace M2Lib
 		// mirrors the portrait camera accross the Y axis
 		void MirrorCamera();
 
+		void SetGlobalBoundingData(BoundaryData& Data);
+
 		UInt32 AddTexture(const Char8* szTextureSource, M2Element::CElement_Texture::ETextureType Type, M2Element::CElement_Texture::ETextureFlags Flags);
 		UInt32 GetTexture(const Char8* szTextureSource);
 		UInt32 AddTextureLookup(UInt16 TextureId, bool ForceNewIndex = false);
