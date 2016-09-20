@@ -26,7 +26,7 @@ M2Lib::EError M2Lib::M2I::Load(Char16* FileName, M2Lib::M2* pM2, bool IgnoreBone
 	{
 		VersionMajor = DataBinary.ReadUInt16();
 		VersionMinor = DataBinary.ReadUInt16();
-		if (VersionMajor != 4 || VersionMinor < 5 && VersionMinor > 7)
+		if (VersionMajor != 4 || VersionMinor < 5 && VersionMinor > 8)
 			return EError_FailedToImportM2I_UnsupportedVersion;
 	}
 
@@ -55,6 +55,8 @@ M2Lib::EError M2Lib::M2I::Load(Char16* FileName, M2Lib::M2* pM2, bool IgnoreBone
 			pNewSubMesh->ExtraData.CustomTextureName = DataBinary.ReadASCIIString();
 			pNewSubMesh->ExtraData.GlossTextureName = DataBinary.ReadASCIIString();
 		}
+		if (Version >= MAKE_VERSION(4, 8))
+			pNewSubMesh->ExtraData.SourceMaterialIndex = DataBinary.ReadSInt16();
 
 		// FMN 2015-02-13: read level
 		pNewSubMesh->Level = DataBinary.ReadUInt16();
@@ -81,12 +83,6 @@ M2Lib::EError M2Lib::M2I::Load(Char16* FileName, M2Lib::M2* pM2, bool IgnoreBone
 			InVertex.BoneWeights[2] = DataBinary.ReadUInt8();
 			InVertex.BoneWeights[3] = DataBinary.ReadUInt8();
 
-			int WeightSum = InVertex.BoneWeights[0] + InVertex.BoneWeights[1] + InVertex.BoneWeights[2] + InVertex.BoneWeights[3];
-			if (WeightSum < 255)
-			{
-				int pause = 1;
-			}
-
 			InVertex.BoneIndices[0] = DataBinary.ReadUInt8();
 			InVertex.BoneIndices[1] = DataBinary.ReadUInt8();
 			InVertex.BoneIndices[2] = DataBinary.ReadUInt8();
@@ -99,9 +95,9 @@ M2Lib::EError M2Lib::M2I::Load(Char16* FileName, M2Lib::M2* pM2, bool IgnoreBone
 			InVertex.Texture[0] = DataBinary.ReadFloat32();
 			InVertex.Texture[1] = DataBinary.ReadFloat32();
 
-			UInt16 VertexTriangleIndex = VertexList.size();
+			UInt16 VertexIndex = VertexList.size();
 			VertexList.push_back(InVertex);
-			pNewSubMesh->Indices.push_back(VertexTriangleIndex);
+			pNewSubMesh->Indices.push_back(VertexIndex);
 
 			submeshVertices.push_back(InVertex);
 		}

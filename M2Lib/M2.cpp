@@ -341,6 +341,9 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate(Char16* FileName)
 	UInt32 SubsetCount = pSkin->Elements[M2SkinElement::EElement_SubMesh].Count;
 	M2SkinElement::CElement_SubMesh* Subsets = pSkin->Elements[M2SkinElement::EElement_SubMesh].as<M2SkinElement::CElement_SubMesh>();
 
+	UInt32 MaterialCount = pSkin->Elements[M2SkinElement::EElement_Material].Count;
+	auto materials = pSkin->Elements[M2SkinElement::EElement_Material].as<M2SkinElement::CElement_Material>();
+
 	CVertex* Vertices = Elements[EElement_Vertex].as<CVertex>();
 	UInt16* Triangles = pSkin->Elements[M2SkinElement::EElement_TriangleIndex].as<UInt16>();
 	UInt16* Indices = pSkin->Elements[M2SkinElement::EElement_VertexLookup].as<UInt16>();
@@ -358,10 +361,8 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate(Char16* FileName)
 	DataBinary.WriteFourCC(M2I::Signature_M2I0);
 
 	// save version
-	UInt16 VersionMajor = 4;
-	UInt16 VersionMinor = 5;
-	DataBinary.WriteUInt16(VersionMajor);
-	DataBinary.WriteUInt16(VersionMinor);
+	DataBinary.WriteUInt16(4);	// VersionMajor
+	DataBinary.WriteUInt16(8);	// VersionMinor
 
 	// save subsets
 	DataBinary.WriteUInt32(SubsetCount);
@@ -375,6 +376,24 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate(Char16* FileName)
 		UInt16 SubsetLevel = pSubsetOut->Level;
 
 		DataBinary.WriteUInt16(SubsetID);
+		DataBinary.WriteASCIIString("mesh #" + std::to_string(i));	// description
+		DataBinary.WriteSInt16(-1);			// material override
+		DataBinary.WriteASCIIString("");	// custom texture
+		DataBinary.WriteASCIIString("");	// gloss texture
+		auto found = false;
+		for (UInt32 j = 0; j < MaterialCount; ++j)
+		{
+			if (materials[j].iSubMesh == i)
+			{
+				found = true;
+				DataBinary.WriteSInt16(j);
+				break;
+			}
+		}
+
+		if (!found)
+			DataBinary.WriteSInt16(-1);
+
 		DataBinary.WriteUInt16(SubsetLevel);
 
 		// write vertices

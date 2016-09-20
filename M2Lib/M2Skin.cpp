@@ -361,6 +361,16 @@ M2Lib::M2SkinElement::CElement_SubMesh* M2Lib::M2Skin::GetSubMesh(SubmeshExtraDa
 	UInt32 SubMeshListLength = Elements[EElement_SubMesh].Count;
 	CElement_SubMesh* SubMeshList = Elements[EElement_SubMesh].as<CElement_SubMesh>();
 
+	if (TargetSubMeshData.SourceMaterialIndex >= 0 && TargetSubMeshData.SourceMaterialIndex < Header.nMaterial)
+	{
+		auto& material = Elements[EElement_Material].as<CElement_Material>()[TargetSubMeshData.SourceMaterialIndex];
+		if (material.iSubMesh < Header.nSubMesh)
+		{
+			SubMeshIndexOut = material.iSubMesh;
+			return &SubMeshList[material.iSubMesh];
+		}
+	}
+
 	Float32 DeltaMin = 0.0f;
 	SInt32 ClosestMatch = -1;
 	SubMeshIndexOut = -1;

@@ -217,7 +217,7 @@ namespace M2Lib
 			UInt32 BoneLookupID;		// index into BoneLookup table or -1.
 			EFlags Flags;				//
 			SInt16 ParentBone;			// index to parent bone or -1.
-			UInt16 SubmeshId;			// // Mesh part ID
+			UInt16 GeosetId;			// // Mesh part ID
 			UInt16 Unknown[2];			// ?
 			CElement_AnimationBlock AnimationBlock_Position;	// Float32x3
 			CElement_AnimationBlock AnimationBlock_Rotation;	// SInt16x4
