@@ -8,8 +8,6 @@ bool M2Lib::M2SkinElement::CElement_SubMesh::Same(CElement_SubMesh const& other)
 	return &other == this || other.VertexStart == VertexStart;
 }
 
-#define GLOSS_SHADER_ID 32769
-
 void M2Lib::M2SkinElement::CElement_SubMesh::MakeGlossy(M2Skin* pSkin, UInt32 GlossTextureId, TextureLookupRemap& LookupRemap)
 {
 	auto Materials = pSkin->Elements[EElement_Material].as<CElement_Material>();

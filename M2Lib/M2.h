@@ -209,7 +209,7 @@ namespace M2Lib
 		UInt32 AddTexture(const Char8* szTextureSource, M2Element::CElement_Texture::ETextureType Type, M2Element::CElement_Texture::ETextureFlags Flags);
 		UInt32 GetTexture(const Char8* szTextureSource);
 		UInt32 AddTextureLookup(UInt16 TextureId, bool ForceNewIndex = false);
-		UInt32 AddTextureFlags(UInt16 Blend, UInt32 Flags);
+		UInt32 AddTextureFlags(M2Element::CElement_TextureFlag::EFlags Flags, M2Element::CElement_TextureFlag::EBlend Blend);
 
 	public:
 		// post load header

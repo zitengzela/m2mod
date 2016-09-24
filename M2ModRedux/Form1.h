@@ -856,6 +856,7 @@ namespace M2ModRedux
 
 			M2Lib::M2SkinElement::TextureLookupRemap textureRemap;
 
+			auto transparentRenderFlag = -1;
 			// first assing textures and gloss
 			for (unsigned int i = 0; i < MeshInfos.size(); ++i)
 			{
@@ -878,6 +879,11 @@ namespace M2ModRedux
 						M2Lib::M2Element::CElement_Texture::ETextureFlags::None);
 
 					auto textureLookup = preloadM2->AddTextureLookup(textureId, false);
+					if (!Control->makeGlossyCheckBox->Checked && transparentRenderFlag == -1)
+					{
+						transparentRenderFlag = preloadM2->AddTextureFlags(M2Lib::M2Element::CElement_TextureFlag::EFlags_TwoSided,
+							M2Lib::M2Element::CElement_TextureFlag::EBlend_Mod);
+					}
 
 					Marshal::FreeHGlobal(StringPointer);
 
@@ -885,6 +891,11 @@ namespace M2ModRedux
 					{
 						MeshInfo.Materials[j]->iTexture = textureLookup;
 						MeshInfo.Materials[j]->op_count = 1;
+						if (!Control->makeGlossyCheckBox->Checked)
+						{
+							MeshInfo.Materials[j]->shader_id = TRANSPARENT_SHADER_ID;
+							MeshInfo.Materials[j]->iRenderFlags = transparentRenderFlag;
+						}
 					}
 
 					for (unsigned int k = 1; k < preloadM2->Header.Elements.nSkin; ++k)
@@ -907,6 +918,11 @@ namespace M2ModRedux
 
 								OtherMaterials[j].iTexture = textureLookup;
 								OtherMaterials[j].op_count = 1;
+								if (!Control->makeGlossyCheckBox->Checked)
+								{
+									OtherMaterials[j].shader_id = TRANSPARENT_SHADER_ID;
+									OtherMaterials[j].iRenderFlags = transparentRenderFlag;
+								}
 							}
 						}
 					}

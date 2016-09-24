@@ -68,6 +68,13 @@ namespace M2Lib
 		}
 	};
 
+	class C2Vector
+	{
+	public:
+		Float32 X;
+		Float32 Y;
+	};
+
 	class C3Vector
 	{
 	public:

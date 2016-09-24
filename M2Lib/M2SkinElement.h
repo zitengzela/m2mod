@@ -50,6 +50,9 @@ namespace M2Lib
 		// each subset has at least one of these, defines a texture, shader, render flags, etc. basically a render state and texture stage/unit state to use when drawing the subset. multiple instances of these can be defined per subset, enabling multi-texturing.
 		class CElement_Material
 		{
+			#define GLOSS_SHADER_ID 32769
+			#define TRANSPARENT_SHADER_ID 16
+
 		public:
 			UInt16 Flags;					//
 			UInt16 shader_id;				//
@@ -121,7 +124,7 @@ namespace M2Lib
 			UInt16 Unknown1;		// always 0.
 			UInt16 iSubMesh;		// index of a sub mesh within this skin.
 			UInt16 Flags2;			// 0 when Flags1 is set to 272, 1 when Flags 1 is set to 528, 4 when Flags1 is set to 784 or 912.
-			UInt16 Unknown2;		// always set to 0 for first flags entry in file, always set to 65535/0xFFFF/-1 for subsequent entries after first.
+			SInt16 Unknown2;		// always set to 0 for first flags entry in file, always set to 65535/0xFFFF/-1 for subsequent entries after first.
 			UInt16 Unknown3;		// always set to 0.
 		};
 	}

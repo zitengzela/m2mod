@@ -2164,6 +2164,20 @@ UInt32 M2Lib::M2::AddTexture(const Char8* szTextureSource, CElement_Texture::ETe
 	return newIndex;
 }
 
+UInt32 M2Lib::M2::AddTextureFlags(CElement_TextureFlag::EFlags Flags, CElement_TextureFlag::EBlend Blend)
+{
+	auto& Element = Elements[EElement_TextureFlags];
+	auto newIndex = Element.Count;
+
+	Element.Data.insert(Element.Data.end(), sizeof(CElement_TextureFlag), 0);
+	CElement_TextureFlag& newFlags = Element.as<CElement_TextureFlag>()[newIndex];
+	newFlags.Flags = Flags;
+	newFlags.Blend = Blend;
+
+	++Element.Count;
+	return newIndex;
+}
+
 UInt32 M2Lib::M2::GetTexture(const Char8* szTextureSource)
 {
 	auto& Element = Elements[EElement_Texture];
