@@ -45,7 +45,6 @@ M2Lib::EError M2Lib::M2I::Load(Char16* FileName, M2Lib::M2* pM2, bool IgnoreBone
 		// read id
 		pNewSubMesh->ID = DataBinary.ReadUInt16();
 		pNewSubMesh->ExtraData.ID = pNewSubMesh->ID;
-		pNewSubMesh->ExtraData.M2IIndex = i;
 
 		if (Version >= MAKE_VERSION(4, 6))
 			pNewSubMesh->ExtraData.Description = DataBinary.ReadASCIIString();

@@ -164,7 +164,7 @@ namespace M2Lib
 		SubmeshExtraData();
 
 		UInt32 ID;
-		UInt32 M2IIndex;
+		UInt32 FirstLODMeshIndex;
 		std::string Description;
 		BoundaryData Boundary;
 

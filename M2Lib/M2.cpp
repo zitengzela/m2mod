@@ -219,12 +219,106 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 	return EError_OK;
 }
 
+void M2Lib::M2::DoExtraWork()
+{
+	M2SkinElement::TextureLookupRemap textureRemap;
+
+	auto transparentRenderFlag = -1;
+	// first assign textures and gloss
+	for (UInt32 i = 0; i < SKIN_COUNT; ++i)
+	{
+		auto Skin = Skins[i];
+		if (!Skin)
+			continue;
+
+		for (auto ExtraDataItr : Skin->ExtraDataBySubmeshIndex)
+		{
+			auto MeshIndex = ExtraDataItr.first;
+			auto ExtraData = ExtraDataItr.second;
+
+			// copy materials will be done later
+			if (ExtraData->MaterialOverride >= 0)
+				continue;
+
+			// assign custom texture
+			if (ExtraData->CustomTextureName.length() > 0)
+			{
+				auto textureId = GetTexture(ExtraData->CustomTextureName.c_str());
+				if (textureId == -1)
+					textureId = AddTexture(ExtraData->CustomTextureName.c_str(),
+					CElement_Texture::ETextureType::Final_Hardcoded,
+					CElement_Texture::ETextureFlags::None);
+
+				auto textureLookup = AddTextureLookup(textureId, false);
+				if (ExtraData->GlossTextureName.empty() && transparentRenderFlag == -1)
+				{
+					transparentRenderFlag = AddTextureFlags(CElement_TextureFlag::EFlags_TwoSided,
+						CElement_TextureFlag::EBlend_Decal);
+				}
+
+				auto Materials = Skin->Elements[M2SkinElement::EElement_Material].as<M2SkinElement::CElement_Material>();
+				for (UInt32 j = 0; j < Skin->Header.nMaterial; ++j)
+				{
+					if (Materials[j].iSubMesh != MeshIndex)
+						continue;
+
+					Materials[j].iTexture = textureLookup;
+					Materials[j].op_count = 1;
+					if (ExtraData->GlossTextureName.empty())
+					{
+						Materials[j].shader_id = TRANSPARENT_SHADER_ID;
+						Materials[j].iRenderFlags = transparentRenderFlag;
+					}
+				}
+			}
+
+			// make glossy
+			if (!ExtraData->GlossTextureName.empty())
+			{
+				std::vector<UInt32> MeshIndexes = { MeshIndex };
+				Skin->MakeGlossy(ExtraData->GlossTextureName.c_str(), MeshIndexes, textureRemap);
+			}
+		}
+	}
+
+	for (UInt32 i = 0; i < SKIN_COUNT; ++i)
+	{
+		auto Skin = Skins[i];
+		if (!Skin)
+			continue;
+
+		// copy materials
+		for (auto ExtraDataItr : Skin->ExtraDataBySubmeshIndex)
+		{
+			auto MeshIndex = ExtraDataItr.first;
+			auto ExtraData = ExtraDataItr.second;
+
+			if (ExtraData->MaterialOverride < 0)
+				continue;
+
+			if (i == 0)
+				Skin->CopyMaterial(ExtraData->MaterialOverride, MeshIndex);
+			else
+			{
+				// translate index from zero skin to current skin
+				for (auto LocalExtraDataItr : Skin->ExtraDataBySubmeshIndex)
+					if (LocalExtraDataItr.second->FirstLODMeshIndex == ExtraData->MaterialOverride)
+					{
+						Skin->CopyMaterial(LocalExtraDataItr.first, MeshIndex);
+						break;
+					}
+			}
+		}
+	}
+}
 
 M2Lib::EError M2Lib::M2::Save(const Char16* FileName)
 {
 	// check path
 	if (!FileName)
 		return EError_FailedToSaveM2_NoFileSpecified;
+
+	DoExtraWork();
 
 	// open file stream
 	std::fstream FileStream;
@@ -591,6 +685,13 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16* FileName, bool IgnoreBones
 	{
 		M2Skin* pNewSkin = new M2Skin(this);
 		assert(SkinBuilder.Build(pNewSkin, MaxBoneList[iLoD], pInM2I, Elements[EElement_Vertex].as<CVertex>(), BoneStart));
+		if (iLoD == 0)
+		{
+			// fill extra data with indexes from zero skin
+			for (auto data : pNewSkin->ExtraDataBySubmeshIndex)
+				const_cast<SubmeshExtraData*>(data.second)->FirstLODMeshIndex = data.first;
+		}
+
 		// if there are more bones than the next lowest level of detail
 		if (SkinBuilder.m_Bones.size() > MaxBoneList[iLoD + 1])
 		{

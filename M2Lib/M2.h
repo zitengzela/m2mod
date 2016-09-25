@@ -21,7 +21,6 @@ namespace M2Lib
 	class M2
 	{
 	public:
-		static const UInt8 VersionCode = 0x10;
 
 #pragma pack(push,1)
 		// memory mapped header.
@@ -198,6 +197,8 @@ namespace M2Lib
 		void FixSeamsBody(Float32 PositionalTolerance, Float32 AngularTolerance);
 		// closes small gaps between clothing and body and copies normals from body to clothing.
 		void FixSeamsClothing(Float32 PositionalTolerance, Float32 AngularTolerance);
+
+		void DoExtraWork();
 
 		// scales all positional coordinates of vertices, bones, attachments, events, lights, cameras, ribbon emitters, particle emitters.
 		void Scale(Float32 Scale);

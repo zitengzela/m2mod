@@ -256,7 +256,7 @@ const char* M2Lib::GetErrorText(EError Error)
 M2Lib::SubmeshExtraData::SubmeshExtraData()
 {
 	ID = 0;
-	M2IIndex = -1;
+	FirstLODMeshIndex = -1;
 	MaterialOverride = -1;
 }
 

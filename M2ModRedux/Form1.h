@@ -852,144 +852,28 @@ namespace M2ModRedux
 			GetOrCreateMeshManagementForm()->DialogResult == System::Windows::Forms::DialogResult::None)
 		{
 			auto MainSkin = preloadM2->Skins[0];
-			auto MeshInfos = MainSkin->GetMeshInfo();
-
-			M2Lib::M2SkinElement::TextureLookupRemap textureRemap;
 
 			auto transparentRenderFlag = -1;
 			// first assing textures and gloss
-			for (unsigned int i = 0; i < MeshInfos.size(); ++i)
+			for (unsigned int i = 0; i < MeshManagementForm->ElementInfoList.Count; ++i)
 			{
-				auto& MeshInfo = MeshInfos[i];
 				auto Control = MeshManagementForm->ElementInfoList[i];
 
-				// copy materials will be done later
 				if (Control->copyMaterialCheckBox->Checked && Control->srcMaterialComboBox->SelectedIndex > 0)
-					continue;
+					const_cast<M2Lib::SubmeshExtraData*>(MainSkin->ExtraDataBySubmeshIndex[i])->MaterialOverride = Control->srcMaterialComboBox->SelectedIndex - 1;
 
-				// assign custom texture
 				if (Control->customTextureCheckBox->Checked && Control->customTextureTextBox->Text->Length)
 				{
 					auto StringPointer = Marshal::StringToHGlobalAnsi(Control->customTextureTextBox->Text);
-
-					auto textureId = preloadM2->GetTexture((char const*)StringPointer.ToPointer());
-					if (textureId == -1)
-						textureId = preloadM2->AddTexture((char const*)StringPointer.ToPointer(),
-						M2Lib::M2Element::CElement_Texture::ETextureType::Final_Hardcoded,
-						M2Lib::M2Element::CElement_Texture::ETextureFlags::None);
-
-					auto textureLookup = preloadM2->AddTextureLookup(textureId, false);
-					if (!Control->makeGlossyCheckBox->Checked && transparentRenderFlag == -1)
-					{
-						transparentRenderFlag = preloadM2->AddTextureFlags(M2Lib::M2Element::CElement_TextureFlag::EFlags_TwoSided,
-							M2Lib::M2Element::CElement_TextureFlag::EBlend_Mod);
-					}
-
+					const_cast<M2Lib::SubmeshExtraData*>(MainSkin->ExtraDataBySubmeshIndex[i])->CustomTextureName = (char const*)StringPointer.ToPointer();
 					Marshal::FreeHGlobal(StringPointer);
-
-					for (unsigned int j = 0; j < MeshInfo.Materials.size(); ++j)
-					{
-						MeshInfo.Materials[j]->iTexture = textureLookup;
-						MeshInfo.Materials[j]->op_count = 1;
-						if (!Control->makeGlossyCheckBox->Checked)
-						{
-							MeshInfo.Materials[j]->shader_id = TRANSPARENT_SHADER_ID;
-							MeshInfo.Materials[j]->iRenderFlags = transparentRenderFlag;
-						}
-					}
-
-					for (unsigned int k = 1; k < preloadM2->Header.Elements.nSkin; ++k)
-					{
-						auto OtherSkin = preloadM2->Skins[k];
-						if (!OtherSkin)
-							continue;
-
-						for (auto& data : OtherSkin->ExtraDataBySubmeshIndex)
-						{
-							if (data.second->M2IIndex != MainSkin->ExtraDataBySubmeshIndex[i]->M2IIndex)
-								continue;
-
-							auto otherSkinSubmeshIndex = data.first;
-							auto OtherMaterials = OtherSkin->Elements[M2Lib::M2SkinElement::EElement_Material].as<M2Lib::M2SkinElement::CElement_Material>();
-							for (unsigned int j = 0; j < OtherSkin->Header.nMaterial; ++j)
-							{
-								if (OtherMaterials[j].iSubMesh != otherSkinSubmeshIndex)
-									continue;
-
-								OtherMaterials[j].iTexture = textureLookup;
-								OtherMaterials[j].op_count = 1;
-								if (!Control->makeGlossyCheckBox->Checked)
-								{
-									OtherMaterials[j].shader_id = TRANSPARENT_SHADER_ID;
-									OtherMaterials[j].iRenderFlags = transparentRenderFlag;
-								}
-							}
-						}
-					}
 				}
-				// make glossy
+
 				if (Control->makeGlossyCheckBox->Checked && Control->glossTextureTextBox->Text->Length)
 				{
 					auto StringPointer = Marshal::StringToHGlobalAnsi(Control->glossTextureTextBox->Text);
-
-					std::vector<unsigned int> MeshIndexes = { i };
-					MainSkin->MakeGlossy((char const*)StringPointer.ToPointer(), MeshIndexes, textureRemap);
-
-					for (unsigned int k = 1; k < preloadM2->Header.Elements.nSkin; ++k)
-					{
-						auto OtherSkin = preloadM2->Skins[k];
-						if (!OtherSkin)
-							continue;
-						MeshIndexes.clear();
-						for (auto& data : OtherSkin->ExtraDataBySubmeshIndex)
-						{
-							if (data.second->M2IIndex != MainSkin->ExtraDataBySubmeshIndex[i]->M2IIndex)
-								continue;
-
-							MeshIndexes.push_back(data.first);
-						}
-
-						OtherSkin->MakeGlossy((char const*)StringPointer.ToPointer(), MeshIndexes, textureRemap);
-					}
-
+					const_cast<M2Lib::SubmeshExtraData*>(MainSkin->ExtraDataBySubmeshIndex[i])->GlossTextureName = (char const*)StringPointer.ToPointer();
 					Marshal::FreeHGlobal(StringPointer);
-				}
-			}
-
-			// then copy materials
-			for (unsigned int i = 0; i < MeshInfos.size(); ++i)
-			{
-				auto& MeshInfo = MeshInfos[i];
-				auto Control = MeshManagementForm->ElementInfoList[i];
-
-				// copy materials
-				if (!Control->copyMaterialCheckBox->Checked || Control->srcMaterialComboBox->SelectedIndex <= 0)
-					continue;
-				auto SrcMeshIndex = Control->srcMaterialComboBox->SelectedIndex - 1;
-				MainSkin->CopyMaterial(SrcMeshIndex, i);
-
-				for (unsigned int k = 1; k < preloadM2->Header.Elements.nSkin; ++k)
-				{
-					auto OtherSkin = preloadM2->Skins[k];
-					if (!OtherSkin)
-						continue;
-
-					int OtherSkinSrcIndex = -1;
-					std::vector<int> OtherDstIndexes;
-
-					for (auto& data : OtherSkin->ExtraDataBySubmeshIndex)
-					{
-						if (data.second->M2IIndex == MainSkin->ExtraDataBySubmeshIndex[SrcMeshIndex]->M2IIndex)
-							OtherSkinSrcIndex = data.first;
-						if (data.second->M2IIndex == MainSkin->ExtraDataBySubmeshIndex[i]->M2IIndex)
-							OtherDstIndexes.push_back(data.first);
-					}
-
-					if (OtherSkinSrcIndex == -1)
-						continue;
-
-					for (auto& OtherDstIndex : OtherDstIndexes)
-						OtherSkin->CopyMaterial(OtherSkinSrcIndex, OtherDstIndex);
 				}
 			}
 		}
