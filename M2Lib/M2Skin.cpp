@@ -30,6 +30,8 @@ M2Lib::EError M2Lib::M2Skin::Load(const Char16* FileName)
 	// open file stream
 	std::fstream FileStream;
 	FileStream.open(FileName, std::ios::binary | std::ios::in);
+	if (FileStream.fail())
+		return EError_FailedToLoadSKIN_CouldNotOpenFile;
 
 	// find file size
 	FileStream.seekg(0, std::ios::end);

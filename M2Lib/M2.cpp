@@ -194,23 +194,23 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 		}
 	}
 
-	// don't load, since we have no use of them
-	/*if (Header.Description.Flags & 0x80)
+	for (int i = 0; i < LOD_SKIN_COUNT; ++i)
 	{
-		for (int i = SKIN_COUNT - 2; i < SKIN_COUNT; ++i)
-		{
-			Char16 FileNameSkin[1024];
-			GetFileSkin(FileNameSkin, FileName, i);
+		Char16 FileNameSkin[1024];
+		GetFileSkin(FileNameSkin, FileName, 4 + i);
 
-			Skins[i] = new M2Skin(this);
-			if (EError Error = Skins[i]->Load(FileNameSkin))
-			{
-				delete Skins[i];
-				Skins[i] = NULL;
-				return Error;
-			}
+		auto newSkin = new M2Skin(this);
+		if (EError Error = newSkin->Load(FileNameSkin))
+		{
+			delete newSkin;
+			if (Error = EError_FailedToLoadSKIN_CouldNotOpenFile)
+				continue;
+			return Error;
 		}
-	}*/
+
+		hasLODSkins = true;
+		break;
+	}
 
 	// print info
 	//PrintInfo();
@@ -384,33 +384,24 @@ M2Lib::EError M2Lib::M2::Save(const Char16* FileName)
 	if ((Header.Elements.nSkin == 0) || (Header.Elements.nSkin > 4))
 		return EError_FailedToSaveM2;
 
-	for (UInt32 i = 0; i < Header.Elements.nSkin; i++)
+	for (UInt32 i = 0; i < Header.Elements.nSkin; ++i)
 	{
 		Char16 FileNameSkin[1024];
 		GetFileSkin(FileNameSkin, FileName, i);
 
-		if (i >= 4)
-		{
-			if (EError Error = Skins[i - 3]->Save(FileNameSkin))
-				return Error;
-		}
-		else
-		{
-			if (EError Error = Skins[i]->Save(FileNameSkin))
-				return Error;
-		}
+		if (EError Error = Skins[i]->Save(FileNameSkin))
+			return Error;
 	}
 
-	// 0x80 = flag_has_lod_skin_files
+	// 0x80 = flag_has_lod_skin_files - wrong
 	//if (Header.Description.Flags & 0x80)
-	// HAXX
-	if (wcsstr(FileName, L"_HD"))
+	if (HasLODSkins())
 	{
-		for (int i = 0; i < 2; ++i)
+		for (int i = 0; i < LOD_SKIN_COUNT; ++i)
 		{
 			Char16 FileNameSkin[1024];
 			GetFileSkin(FileNameSkin, FileName, i + 4);
-			if (EError Error = (Skins[(Skins[1]) ? 1 : 0])->Save(FileNameSkin))
+			if (EError Error = (Skins[1] ? Skins[1] : Skins[0])->Save(FileNameSkin))
 				return Error;
 		}
 	}
