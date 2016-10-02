@@ -123,9 +123,9 @@ namespace M2Lib
 			UInt16 Flags1;			// set to 528 (common), 272 (common), 784 (uncommon), 912 (rare).
 			UInt16 Unknown1;		// always 0.
 			UInt16 iSubMesh;		// index of a sub mesh within this skin.
-			UInt16 Flags2;			// 0 when Flags1 is set to 272, 1 when Flags 1 is set to 528, 4 when Flags1 is set to 784 or 912.
-			SInt16 Unknown2;		// always set to 0 for first flags entry in file, always set to 65535/0xFFFF/-1 for subsequent entries after first.
-			UInt16 Unknown3;		// always set to 0.
+			UInt16 TextureId;		// 0 when Flags1 is set to 272, 1 when Flags 1 is set to 528, 4 when Flags1 is set to 784 or 912.
+			SInt16 ColorId;			// always set to 0 for first flags entry in file, always set to 65535/0xFFFF/-1 for subsequent entries after first.
+			UInt16 TransparencyId;	// always set to 0.
 		};
 	}
 #pragma pack(pop)

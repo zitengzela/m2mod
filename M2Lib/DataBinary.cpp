@@ -238,3 +238,33 @@ void M2Lib::DataBinary::WriteASCIIString(std::string const& value)
 
 	WriteChar8('\0');
 }
+
+M2Lib::C2Vector M2Lib::DataBinary::ReadC2Vector()
+{
+	C2Vector out;
+	out.X = ReadFloat32();
+	out.Y = ReadFloat32();
+	return out;
+}
+
+M2Lib::C3Vector M2Lib::DataBinary::ReadC3Vector()
+{
+	C3Vector out;
+	out.X = ReadFloat32();
+	out.Y = ReadFloat32();
+	out.Z = ReadFloat32();
+	return out;
+}
+
+void M2Lib::DataBinary::WriteC2Vector(C2Vector const& Vector)
+{
+	WriteFloat32(Vector.X);
+	WriteFloat32(Vector.Y);
+}
+
+void M2Lib::DataBinary::WriteC3Vector(C3Vector const& Vector)
+{
+	WriteFloat32(Vector.X);
+	WriteFloat32(Vector.Y);
+	WriteFloat32(Vector.Z);
+}

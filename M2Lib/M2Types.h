@@ -53,6 +53,11 @@ namespace M2Lib
 
 	struct M2Array
 	{
+		M2Array()
+		{
+			Count = Offset = 0;
+		}
+
 		SInt32 Count;
 		UInt32 Offset;
 
@@ -168,8 +173,10 @@ namespace M2Lib
 		std::string Description;
 		BoundaryData Boundary;
 
-		std::string GlossTextureName;
+		UInt16 TextureStyle;
 		std::string CustomTextureName;
+		std::string GlossTextureName;
+
 		int MaterialOverride;
 	};
 }

@@ -217,6 +217,8 @@ namespace M2Lib
 		UInt32 AddTextureLookup(UInt16 TextureId, bool ForceNewIndex = false);
 		UInt32 AddTextureFlags(M2Element::CElement_TextureFlag::EFlags Flags, M2Element::CElement_TextureFlag::EBlend Blend);
 
+		UInt32 AddBone(M2Element::CElement_Bone const& Bone);
+
 	public:
 		// post load header
 		void m_LoadElements_CopyHeaderToElements();
@@ -227,6 +229,7 @@ namespace M2Lib
 		void m_FixAnimationOffsets(SInt32 OffsetDelta, SInt32 TotalDelta, M2Element::CElement_AnimationBlock& AnimationBlock, SInt32 iElement);
 		void m_FixAnimationM2Array(SInt32 OffsetDelta, SInt32 TotalDelta, SInt16 GlobalSequenceID, M2Array& Array, SInt32 iElement);
 		void m_FixFakeAnimationBlockOffsets(SInt32 OffsetDelta, M2Element::CElement_FakeAnimationBlock& AnimationBlock, SInt32 iElement);
+
 		void m_SaveElements_CopyElementsToHeader();
 
 		// chunk index in Chunks (-1 if invalid chunk)

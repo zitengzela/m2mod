@@ -534,9 +534,9 @@ bool M2Lib::M2Skin::PrintInfo()
 		FileStream << "Flags1:     " << Flags.Flags1 << std::endl;
 		FileStream << "Unknown1:   " << Flags.Unknown1 << std::endl;
 		FileStream << "iSubMesh:    " << Flags.iSubMesh << std::endl;
-		FileStream << "Flags2:     " << Flags.Flags2 << std::endl;
-		FileStream << "Unknown2:   " << Flags.Unknown2 << std::endl;
-		FileStream << "Unknown3:   " << Flags.Unknown3 << std::endl;
+		FileStream << "TextureId:     " << Flags.TextureId << std::endl;
+		FileStream << "ColorId:   " << Flags.ColorId << std::endl;
+		FileStream << "TransparencyId:   " << Flags.TransparencyId << std::endl;
 		FileStream << std::endl;
 	}
 

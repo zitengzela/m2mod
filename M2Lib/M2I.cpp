@@ -26,7 +26,7 @@ M2Lib::EError M2Lib::M2I::Load(Char16* FileName, M2Lib::M2* pM2, bool IgnoreBone
 	{
 		VersionMajor = DataBinary.ReadUInt16();
 		VersionMinor = DataBinary.ReadUInt16();
-		if (VersionMajor != 4 || VersionMinor < 5 && VersionMinor > 7)
+		if (VersionMajor != 4 || VersionMinor < 5 || VersionMinor > 9)
 			return EError_FailedToImportM2I_UnsupportedVersion;
 	}
 
@@ -51,8 +51,29 @@ M2Lib::EError M2Lib::M2I::Load(Char16* FileName, M2Lib::M2* pM2, bool IgnoreBone
 		if (Version >= MAKE_VERSION(4, 7))
 		{
 			pNewSubMesh->ExtraData.MaterialOverride = DataBinary.ReadSInt16();
-			pNewSubMesh->ExtraData.CustomTextureName = DataBinary.ReadASCIIString();
-			pNewSubMesh->ExtraData.GlossTextureName = DataBinary.ReadASCIIString();
+			
+			if (Version >= MAKE_VERSION(4, 9))
+			{
+				if (DataBinary.ReadUInt8() != 0)
+				{
+					pNewSubMesh->ExtraData.CustomTextureName = DataBinary.ReadASCIIString();
+					pNewSubMesh->ExtraData.TextureStyle = DataBinary.ReadUInt16();
+				}
+				else
+				{
+					DataBinary.ReadASCIIString();
+					DataBinary.ReadUInt16();
+				}
+				if (DataBinary.ReadUInt8() != 0)
+					pNewSubMesh->ExtraData.GlossTextureName = DataBinary.ReadASCIIString();
+				else
+					DataBinary.ReadASCIIString();
+			}
+			else
+			{
+				pNewSubMesh->ExtraData.CustomTextureName = DataBinary.ReadASCIIString();
+				pNewSubMesh->ExtraData.GlossTextureName = DataBinary.ReadASCIIString();
+			}
 		}
 
 		// FMN 2015-02-13: read level
@@ -130,25 +151,63 @@ M2Lib::EError M2Lib::M2I::Load(Char16* FileName, M2Lib::M2* pM2, bool IgnoreBone
 		SubMeshList.push_back(pNewSubMesh);
 	}
 
+	std::map<UInt16, UInt16> BoneRemap;
+
 	if (!IgnoreBones)
 	{
 		// read bones, overwrite existing
 		UInt32 BoneCount = pM2->Elements[M2Element::EElement_Bone].Count;
-		auto Bones = pM2->Elements[M2Element::EElement_Bone].as<M2Element::CElement_Bone>();
-		UInt32 BoneCountIn;
-		BoneCountIn = DataBinary.ReadUInt32();
-		for (UInt32 i = 0; i < BoneCountIn; i++)
+		UInt32 BoneCountIn = DataBinary.ReadUInt32();
+		for (UInt32 i = 0; i < BoneCountIn; ++i)
 		{
-			UInt16 InBoneIndex = 0;
-			InBoneIndex = DataBinary.ReadUInt16();
-			assert(InBoneIndex < BoneCount);
-			auto& BoneToMod = Bones[InBoneIndex];
+			UInt16 InBoneIndex = DataBinary.ReadUInt16();
+			SInt16 ParentBone = DataBinary.ReadSInt16();
+			C3Vector Position = DataBinary.ReadC3Vector();
+			bool HasExtraData = false;
+			UInt32 Flags;
+			UInt16 SubmeshId;
+			UInt16 Unknown[2];
 
-			BoneToMod.ParentBone = DataBinary.ReadSInt16();
+			if (Version >= MAKE_VERSION(4, 8))
+			{
+				HasExtraData = DataBinary.ReadUInt8() != 0;
+				Flags = DataBinary.ReadUInt32();
+				SubmeshId = DataBinary.ReadUInt16();
+				Unknown[0] = DataBinary.ReadUInt16();
+				Unknown[1] = DataBinary.ReadUInt16();
+			}
 
-			BoneToMod.Position[0] = DataBinary.ReadFloat32();
-			BoneToMod.Position[1] = DataBinary.ReadFloat32();
-			BoneToMod.Position[2] = DataBinary.ReadFloat32();
+			UInt16 ModBoneIndex = -1;
+			if (InBoneIndex < BoneCount)
+			{
+				ModBoneIndex = InBoneIndex;
+			}
+			else if (HasExtraData)
+			{
+				M2Element::CElement_Bone newBone;
+				newBone.BoneLookupID = -1;
+				ModBoneIndex = pM2->AddBone(newBone);
+				BoneRemap[InBoneIndex] = ModBoneIndex;
+			}
+
+			if (ModBoneIndex == -1)
+				continue;
+
+			auto Bones = pM2->Elements[M2Element::EElement_Bone].as<M2Element::CElement_Bone>();
+			auto& BoneToMod = Bones[ModBoneIndex];
+
+			BoneToMod.ParentBone = ParentBone;
+			BoneToMod.Position[0] = Position.X;
+			BoneToMod.Position[1] = Position.Y;
+			BoneToMod.Position[2] = Position.Z;
+
+			if (HasExtraData)
+			{
+				BoneToMod.Flags = (M2Element::CElement_Bone::EFlags)Flags;
+				BoneToMod.SubmeshId = SubmeshId;
+				BoneToMod.Unknown[0] = Unknown[0];
+				BoneToMod.Unknown[1] = Unknown[1];
+			}
 		}
 	}
 	else
@@ -161,6 +220,40 @@ M2Lib::EError M2Lib::M2I::Load(Char16* FileName, M2Lib::M2* pM2, bool IgnoreBone
 			DataBinary.ReadFloat32();
 			DataBinary.ReadFloat32();
 			DataBinary.ReadFloat32();
+
+			if (Version >= MAKE_VERSION(4, 8))
+			{
+				DataBinary.ReadUInt8();
+				DataBinary.ReadUInt32();
+				DataBinary.ReadUInt16();
+				DataBinary.ReadUInt16();
+				DataBinary.ReadUInt16();
+			}
+		}
+	}
+
+	if (!BoneRemap.empty())
+	{
+		UInt32 BoneCount = pM2->Elements[M2Element::EElement_Bone].Count;
+		auto Bones = pM2->Elements[M2Element::EElement_Bone].as<M2Element::CElement_Bone>();
+		for (UInt32 i = 0; i < BoneCount; ++i)
+		{
+			auto& Bone = Bones[i];
+			if (BoneRemap.find(Bone.ParentBone) == BoneRemap.end())
+				continue;
+
+			Bone.ParentBone = BoneRemap[Bone.ParentBone];
+		}
+
+		for (auto& Vertex : VertexList)
+		{
+			for (UInt32 i = 0; i < BONES_PER_VERTEX; ++i)
+			{
+				if (BoneRemap.find(Vertex.BoneIndices[i]) == BoneRemap.end())
+					continue;
+
+				Vertex.BoneIndices[i] = BoneRemap[Vertex.BoneIndices[i]];
+			}
 		}
 	}
 
@@ -187,6 +280,8 @@ M2Lib::EError M2Lib::M2I::Load(Char16* FileName, M2Lib::M2* pM2, bool IgnoreBone
 			if (pAttachmentToMod)
 			{
 				pAttachmentToMod->ParentBone = DataBinary.ReadSInt16();
+				if (BoneRemap.find(pAttachmentToMod->ParentBone) != BoneRemap.end())
+					pAttachmentToMod->ParentBone = BoneRemap[pAttachmentToMod->ParentBone];
 
 				pAttachmentToMod->Position[0] = DataBinary.ReadFloat32();
 				pAttachmentToMod->Position[1] = DataBinary.ReadFloat32();
@@ -226,21 +321,25 @@ M2Lib::EError M2Lib::M2I::Load(Char16* FileName, M2Lib::M2* pM2, bool IgnoreBone
 		UInt32 CameraCountIn = DataBinary.ReadUInt32();
 		for (UInt32 i = 0; i < CameraCountIn; i++)
 		{
-			auto InType = (M2Element::CElement_Camera::ECameraType)DataBinary.ReadSInt32();
+			auto hasData = true;
+			if (Version >= MAKE_VERSION(4, 9))
+				hasData = DataBinary.ReadUInt8() != 0;
 
 			M2Element::CElement_Camera* pCameraToMod = NULL;
-			for (UInt32 j = 0; j < CameraCount; j++)
+			if (hasData)
 			{
-				if (Cameras[j].Type == InType)
+				auto InType = (M2Element::CElement_Camera::ECameraType)DataBinary.ReadSInt32();
+				for (UInt32 j = 0; j < CameraCount; j++)
 				{
-					pCameraToMod = &Cameras[j];
-					break;
+					if (Cameras[j].Type == InType)
+					{
+						pCameraToMod = &Cameras[j];
+						break;
+					}
 				}
 			}
 			if (pCameraToMod)
 			{
-				pCameraToMod->Type = InType;
-
 				if (pCameraToMod->AnimationBlock_FieldOfView.Keys.Count > 0)
 				{
 					auto ExternalAnimations = (M2Array*)pM2->Elements[M2Element::EElement_Camera].GetLocalPointer(pCameraToMod->AnimationBlock_FieldOfView.Keys.Offset);
@@ -285,6 +384,8 @@ M2Lib::EError M2Lib::M2I::Load(Char16* FileName, M2Lib::M2* pM2, bool IgnoreBone
 		UInt32 CameraCountIn = DataBinary.ReadUInt32();
 		for (UInt32 i = 0; i < CameraCountIn; ++i)
 		{
+			if (Version >= MAKE_VERSION(4, 9))
+				DataBinary.ReadUInt8();
 			DataBinary.ReadSInt32();
 			DataBinary.ReadFloat32();
 			DataBinary.ReadFloat32();

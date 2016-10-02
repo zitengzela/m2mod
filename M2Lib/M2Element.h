@@ -179,6 +179,13 @@ namespace M2Lib
 			};
 
 		public:
+
+			CElement_AnimationBlock()
+			{
+				InterpolationType = EInterpolationType_None;
+				GlobalSequenceID = -1;
+			}
+
 			EInterpolationType InterpolationType;
 			SInt16 GlobalSequenceID;
 			M2Array Times;
@@ -214,7 +221,7 @@ namespace M2Lib
 			};
 
 		public:
-			UInt32 BoneLookupID;		// index into BoneLookup table or -1.
+			SInt32 BoneLookupID;		// index into BoneLookup table or -1.
 			EFlags Flags;				//
 			SInt16 ParentBone;			// index to parent bone or -1.
 			UInt16 SubmeshId;			// // Mesh part ID
@@ -399,7 +406,8 @@ namespace M2Lib
 				EBlend_Add,
 				EBlend_Mod2x,
 				EBlend_Fade,
-				EBlend_Unknown7,
+				EBlend_Unknown6,
+				EBlend_Unknown7
 			};
 
 		public:
@@ -669,8 +677,8 @@ namespace M2Lib
 			enum ECameraType : SInt32
 			{
 				FlyBy = -1,
-				Portrait = 1,
-				PaperDoll = 2
+				Portrait = 0,
+				PaperDoll = 1
 			};
 
 			ECameraType Type;

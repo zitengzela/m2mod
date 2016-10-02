@@ -1,6 +1,7 @@
 #pragma once
 
 #include "BaseTypes.h"
+#include "M2Types.h"
 #include <fstream>
 
 namespace M2Lib
@@ -49,6 +50,8 @@ namespace M2Lib
 		Char8 ReadChar8();
 		UInt32 ReadFourCC();
 		std::string ReadASCIIString();
+		C2Vector ReadC2Vector();
+		C3Vector ReadC3Vector();
 
 		void WriteUInt32(UInt32 Value);
 		void WriteSInt32(SInt32 Value);
@@ -61,8 +64,7 @@ namespace M2Lib
 		void WriteChar8(Char8 Value);
 		void WriteFourCC(UInt32 Value);
 		void WriteASCIIString(std::string const& value);
-
+		void WriteC2Vector(C2Vector const& Vector);
+		void WriteC3Vector(C3Vector const& Vector);
 	};
-
-
 }

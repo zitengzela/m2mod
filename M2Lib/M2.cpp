@@ -223,7 +223,7 @@ void M2Lib::M2::DoExtraWork()
 {
 	M2SkinElement::TextureLookupRemap textureRemap;
 
-	auto transparentRenderFlag = -1;
+	std::map<int, int> renderFlagsByStyle;
 	// first assign textures and gloss
 	for (UInt32 i = 0; i < SKIN_COUNT; ++i)
 	{
@@ -250,10 +250,10 @@ void M2Lib::M2::DoExtraWork()
 					CElement_Texture::ETextureFlags::None);
 
 				auto textureLookup = AddTextureLookup(textureId, false);
-				if (ExtraData->GlossTextureName.empty() && transparentRenderFlag == -1)
+				if (ExtraData->GlossTextureName.empty() && renderFlagsByStyle.find(ExtraData->TextureStyle) == renderFlagsByStyle.end())
 				{
-					transparentRenderFlag = AddTextureFlags(CElement_TextureFlag::EFlags_TwoSided,
-						CElement_TextureFlag::EBlend_Decal);
+					renderFlagsByStyle[ExtraData->TextureStyle] = AddTextureFlags(CElement_TextureFlag::EFlags_TwoSided,
+						(CElement_TextureFlag::EBlend)ExtraData->TextureStyle);
 				}
 
 				auto Materials = Skin->Elements[M2SkinElement::EElement_Material].as<M2SkinElement::CElement_Material>();
@@ -267,8 +267,18 @@ void M2Lib::M2::DoExtraWork()
 					if (ExtraData->GlossTextureName.empty())
 					{
 						Materials[j].shader_id = TRANSPARENT_SHADER_ID;
-						Materials[j].iRenderFlags = transparentRenderFlag;
+						Materials[j].iRenderFlags = renderFlagsByStyle[ExtraData->TextureStyle];
 					}
+				}
+
+				auto Batches = Skin->Elements[M2SkinElement::EElement_Flags].as<M2SkinElement::CElement_Flags>();
+				for (UInt32 j = 0; j < Skin->Header.nFlags; ++j)
+				{
+					if (Batches[j].iSubMesh != MeshIndex)
+						continue;
+
+					if (Batches[j].TextureId >= 0)
+						Batches[j].TextureId = textureId;
 				}
 			}
 
@@ -443,10 +453,8 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate(Char16* FileName)
 	DataBinary.WriteFourCC(M2I::Signature_M2I0);
 
 	// save version
-	UInt16 VersionMajor = 4;
-	UInt16 VersionMinor = 5;
-	DataBinary.WriteUInt16(VersionMajor);
-	DataBinary.WriteUInt16(VersionMinor);
+	DataBinary.WriteUInt16(4);
+	DataBinary.WriteUInt16(9);
 
 	// save subsets
 	DataBinary.WriteUInt32(SubsetCount);
@@ -460,12 +468,20 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate(Char16* FileName)
 		UInt16 SubsetLevel = pSubsetOut->Level;
 
 		DataBinary.WriteUInt16(SubsetID);
+		DataBinary.WriteASCIIString("");	// description
+		DataBinary.WriteSInt16(-1);			// material override
+		DataBinary.WriteUInt8(0);			// no custom texture
+		DataBinary.WriteASCIIString("");	// custom texture
+		DataBinary.WriteUInt16(0);			// texture style
+		DataBinary.WriteUInt8(0);			// no gloss texture
+		DataBinary.WriteASCIIString("");	// gloss texture
+
 		DataBinary.WriteUInt16(SubsetLevel);
 
 		// write vertices
 		DataBinary.WriteUInt32(pSubsetOut->VertexCount);
 		UInt32 VertexEnd = pSubsetOut->VertexStart + pSubsetOut->VertexCount;
-		for (UInt32 k = pSubsetOut->VertexStart; k < VertexEnd; k++)
+		for (UInt32 k = pSubsetOut->VertexStart; k < VertexEnd; ++k)
 		{
 			CVertex& Vertex = Vertices[Indices[k]];
 
@@ -522,6 +538,11 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate(Char16* FileName)
 		DataBinary.WriteFloat32(Bone.Position[0]);
 		DataBinary.WriteFloat32(Bone.Position[1]);
 		DataBinary.WriteFloat32(Bone.Position[2]);
+		DataBinary.WriteUInt8(1);	// has data
+		DataBinary.WriteUInt32(Bone.Flags);
+		DataBinary.WriteUInt16(Bone.SubmeshId);
+		DataBinary.WriteUInt16(Bone.Unknown[0]);
+		DataBinary.WriteUInt16(Bone.Unknown[1]);
 	}
 
 	// write attachments
@@ -544,6 +565,7 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate(Char16* FileName)
 	{
 		CElement_Camera& Camera = Cameras[i];
 
+		DataBinary.WriteUInt8(1);	// has data
 		DataBinary.WriteSInt32(Camera.Type);
 
 		// extract field of view of camera from animation block
@@ -2313,3 +2335,23 @@ UInt32 M2Lib::M2::AddTextureLookup(UInt16 TextureId, bool ForceNewIndex /*= fals
 	return newIndex;
 }
 
+UInt32 M2Lib::M2::AddBone(CElement_Bone const& Bone)
+{
+	auto& BoneElement = Elements[M2Element::EElement_Bone];
+	auto newBoneId = BoneElement.Count;
+
+	auto Bones = Elements[M2Element::EElement_Bone].as<CElement_Bone>();
+	for (UInt32 i = 0; i < BoneElement.Count; ++i)
+	{
+		m_FixAnimationOffsets(sizeof(CElement_Bone), 0, Bones[i].AnimationBlock_Position, EElement_Bone);
+		m_FixAnimationOffsets(sizeof(CElement_Bone), 0, Bones[i].AnimationBlock_Rotation, EElement_Bone);
+		m_FixAnimationOffsets(sizeof(CElement_Bone), 0, Bones[i].AnimationBlock_Scale, EElement_Bone);
+	}
+
+	BoneElement.Data.insert(BoneElement.Data.begin() + BoneElement.Count * sizeof(CElement_Bone), sizeof(CElement_Bone), 0);
+	Elements[M2Element::EElement_Bone].as<CElement_Bone>()[newBoneId] = Bone;
+
+	++BoneElement.Count;
+
+	return newBoneId;
+}
