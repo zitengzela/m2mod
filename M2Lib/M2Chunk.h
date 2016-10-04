@@ -7,20 +7,14 @@ namespace M2Lib
 {
 	namespace M2Chunk
 	{
-		// named chunks
-		enum EChunk
+		enum class EChunk : UInt32
 		{
-			EChunk_Model = 0,
-			EChunk_Physic,
-			EChunk_Animation,
-			EChunk_Skin,
-			EChunk_Bone,
-
-			EChunk__Count__
+			Model = 'MD21',
+			Physic = 'PFID',
+			Animation = 'AFID',
+			Skin = 'SFID',
+			Bone = 'BFID',
 		};
-
-		const static UInt32 kChunkIDs[EChunk__Count__] = { 'MD21', 'PFID', 'AFID', 'SFID', 'BFID' };
-
 
 		class ChunkBase
 		{

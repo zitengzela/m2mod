@@ -145,7 +145,7 @@ namespace M2Lib
 
 		CM2Header Header;		// used for loading and saving. not used when editing.
 		DataElement Elements[M2Element::EElement__Count__];
-		std::map<UInt32, M2Chunk::ChunkBase*> Chunks;
+		std::map<M2Chunk::EChunk, M2Chunk::ChunkBase*> Chunks;
 
 		DataElement* GetLastElement();
 
@@ -195,7 +195,7 @@ namespace M2Lib
 
 		bool HasLODSkins() const { return hasLODSkins; }
 
-		M2Chunk::ChunkBase* GetChunk(UInt32 ChunkId);
+		M2Chunk::ChunkBase* GetChunk(M2Chunk::EChunk ChunkId);
 
 		void CopySFIDChunk(M2* Other);
 

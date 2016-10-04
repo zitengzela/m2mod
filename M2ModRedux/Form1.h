@@ -325,7 +325,7 @@ namespace M2ModRedux
 				 this->checkBoxMergeCameras->AutoSize = true;
 				 this->checkBoxMergeCameras->Checked = true;
 				 this->checkBoxMergeCameras->CheckState = System::Windows::Forms::CheckState::Checked;
-				 this->checkBoxMergeCameras->Location = System::Drawing::Point(222, 0);
+				 this->checkBoxMergeCameras->Location = System::Drawing::Point(217, 0);
 				 this->checkBoxMergeCameras->Name = L"checkBoxMergeCameras";
 				 this->checkBoxMergeCameras->Size = System::Drawing::Size(97, 17);
 				 this->checkBoxMergeCameras->TabIndex = 17;
@@ -338,7 +338,7 @@ namespace M2ModRedux
 				 this->checkBoxMergeAttachments->AutoSize = true;
 				 this->checkBoxMergeAttachments->Checked = true;
 				 this->checkBoxMergeAttachments->CheckState = System::Windows::Forms::CheckState::Checked;
-				 this->checkBoxMergeAttachments->Location = System::Drawing::Point(101, 0);
+				 this->checkBoxMergeAttachments->Location = System::Drawing::Point(95, 0);
 				 this->checkBoxMergeAttachments->Name = L"checkBoxMergeAttachments";
 				 this->checkBoxMergeAttachments->Size = System::Drawing::Size(115, 17);
 				 this->checkBoxMergeAttachments->TabIndex = 16;
@@ -351,7 +351,7 @@ namespace M2ModRedux
 				 this->checkBoxMergeBones->AutoSize = true;
 				 this->checkBoxMergeBones->Checked = true;
 				 this->checkBoxMergeBones->CheckState = System::Windows::Forms::CheckState::Checked;
-				 this->checkBoxMergeBones->Location = System::Drawing::Point(9, 0);
+				 this->checkBoxMergeBones->Location = System::Drawing::Point(2, 0);
 				 this->checkBoxMergeBones->Name = L"checkBoxMergeBones";
 				 this->checkBoxMergeBones->Size = System::Drawing::Size(86, 17);
 				 this->checkBoxMergeBones->TabIndex = 15;
@@ -506,7 +506,7 @@ namespace M2ModRedux
 				 // 
 				 this->checkBoxReplaceM2->AutoSize = true;
 				 this->checkBoxReplaceM2->Enabled = false;
-				 this->checkBoxReplaceM2->Location = System::Drawing::Point(7, 129);
+				 this->checkBoxReplaceM2->Location = System::Drawing::Point(8, 129);
 				 this->checkBoxReplaceM2->Name = L"checkBoxReplaceM2";
 				 this->checkBoxReplaceM2->Size = System::Drawing::Size(81, 17);
 				 this->checkBoxReplaceM2->TabIndex = 15;
@@ -683,7 +683,7 @@ namespace M2ModRedux
 				 // checkBoxFixSeams
 				 // 
 				 this->checkBoxFixSeams->AutoSize = true;
-				 this->checkBoxFixSeams->Location = System::Drawing::Point(325, 0);
+				 this->checkBoxFixSeams->Location = System::Drawing::Point(320, 0);
 				 this->checkBoxFixSeams->Name = L"checkBoxFixSeams";
 				 this->checkBoxFixSeams->Size = System::Drawing::Size(74, 17);
 				 this->checkBoxFixSeams->TabIndex = 18;
