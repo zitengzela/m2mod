@@ -15,6 +15,7 @@ public:
 		ImportInM2,
 		ImportM2I,
 		ImportOutM2,
+		ImportReplaceM2,
 
 		MergeBones,
 		MergeAttachments,

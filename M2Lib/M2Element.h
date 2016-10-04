@@ -44,18 +44,6 @@ namespace M2Lib
 			EElement__Count__
 		};
 
-		// named chunks
-		enum EChunk
-		{
-			EChunk_Model = 0,
-			EChunk_Physic,
-			EChunk_Animation,
-			EChunk_Skin,
-			EChunk_Bone,
-
-			EChunk__Count__
-		};
-
 #pragma pack(push, 1)
 		//
 		//

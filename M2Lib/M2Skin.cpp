@@ -619,6 +619,7 @@ void M2Lib::M2Skin::m_LoadElements_FindSizes(UInt32 FileSize)
 			}
 		}
 
+		assert(NextOffset >= Element.Offset && "SKIN Elements are in wrong order");
 		Element.Data.resize(NextOffset - Element.Offset);
 		Element.SizeOriginal = Element.Data.size();
 	}

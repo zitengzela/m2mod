@@ -14,8 +14,6 @@ int g_Verbose = 1;
 #define REVERSE_CC(x) \
 	 ((x & 0xFF) << 24 | ((x >> 8) & 0xFF) << 16 | ((x >> 16) & 0xFF) << 8 | (x >> 24) & 0xFF)
 
-const UInt32 M2Lib::M2::kChunkIDs[EChunk__Count__] = { 'MD21', 'PFID', 'AFID', 'SFID', 'BFID' };
-
 M2Lib::DataElement* M2Lib::M2::GetLastElement()
 {
 	for (int i = M2Element::EElement__Count__ - 1; i >= 0; --i)
@@ -26,6 +24,21 @@ M2Lib::DataElement* M2Lib::M2::GetLastElement()
 
 	return NULL;
 }
+
+class SteamCloser
+{
+	std::fstream* stream;
+public:
+	SteamCloser(std::fstream& stream)
+	{
+		this->stream = &stream;
+	}
+
+	~SteamCloser()
+	{
+		this->stream->close();
+	}
+};
 
 M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 {
@@ -53,12 +66,29 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 	if (FileStream.fail())
 		return EError_FailedToLoadM2_CouldNotOpenFile;
 
+	SteamCloser _fsCloser(FileStream);
+
 	// find file size
 	FileStream.seekg(0, std::ios::end);
 	UInt32 FileSize = (UInt32)FileStream.tellg();
 	FileStream.seekg(0, std::ios::beg);
 
 	DataElement::SetFileOffset(0);
+
+	struct PostChunkInfo
+	{
+		PostChunkInfo() { }
+		PostChunkInfo(UInt32 Offs, UInt32 Size)
+		{
+			this->Offs = Offs;
+			this->Size = Size;
+		}
+
+		UInt32 Offs;
+		UInt32 Size;
+	};
+
+	std::map<UInt32, PostChunkInfo> PostProcessChunks;
 
 	while (FileStream.tellg() < FileSize)
 	{
@@ -71,44 +101,50 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 		// support pre-legion M2
 		if (REVERSE_CC(ChunkId) == 'MD20')
 		{
-			SInt32 ChunkIndex = m_GetChunkIndex('MD21');
-
-			auto& Chunk = Chunks[ChunkIndex];
-
-			Chunk.Count = 1;
-			Chunk.Data.resize(FileSize);
-			Chunk.Offset = 0;
+			auto Chunk = new M2Chunk::MD21Chunk();
 			FileStream.seekg(0, std::ios::beg);
-			FileStream.read((char*)Chunk.Data.data(), Chunk.Data.size());
+			Chunk->Load(FileStream, FileSize);
+			Chunks['MD21'] = Chunk;
 			break;
 		}
 		else
 		{
-			SInt32 ChunkIndex = m_GetChunkIndex(REVERSE_CC(ChunkId));
-			if (ChunkIndex >= 0)
+			M2Chunk::ChunkBase* Chunk = NULL;
+			switch (REVERSE_CC(ChunkId))
 			{
-				auto& Chunk = Chunks[ChunkIndex];
-				Chunk.Count = 1;
-				Chunk.Data.resize(ChunkSize);
-				Chunk.Offset = (UInt32)FileStream.tellg();
-				FileStream.read((char*)Chunk.Data.data(), Chunk.Data.size());
+				case 'MD21': Chunk = new M2Chunk::MD21Chunk(); break;
+				case 'PFID': Chunk = new M2Chunk::PFIDChunk(); break;
+				case 'AFID': Chunk = new M2Chunk::AFIDChunk(); break;
+				case 'BFID': Chunk = new M2Chunk::BFIDChunk(); break;
+				case 'SFID':
+				{
+					PostProcessChunks['SFID'] = PostChunkInfo(FileStream.tellg(), ChunkSize);
+					FileStream.seekg(ChunkSize, std::ios::cur);
+					continue;
+				}
+				default:
+					Chunk = new M2Chunk::RawChunk();
+					break;
 			}
-			else
-				FileStream.seekg(ChunkSize, std::ios::cur);
+
+			UInt32 savePos = FileStream.tellg();
+			Chunk->Load(FileStream, ChunkSize);
+			FileStream.seekg(savePos + ChunkSize, std::ios::beg);
+
+			Chunks[REVERSE_CC(ChunkId)] = Chunk;
+			continue;
 		}
 	}
 
-	// close file stream
-	FileStream.close();
-
-	auto& ModelChunk = Chunks[EChunk_Model];
-	if (ModelChunk.Data.empty())
+	if (Chunks.find('MD21') == Chunks.end())
 		return EError_FailedToLoadM2_FileCorrupt;
 
-	m_OriginalModelChunkSize = ModelChunk.Data.size();
+	auto ModelChunk = (M2Chunk::MD21Chunk*)Chunks['MD21'];
+
+	m_OriginalModelChunkSize = ModelChunk->RawData.size();
 
 	// load header
-	memcpy(&Header, ModelChunk.Data.data(), sizeof(Header));
+	memcpy(&Header, ModelChunk->RawData.data(), sizeof(Header));
 
 	if ((263 > Header.Description.Version) || (Header.Description.Version > 274))
 		return EError_FailedToLoadM2_VersionNotSupported;
@@ -131,7 +167,7 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 	for (UInt32 i = 0; i < ElementCount; ++i)
 	{
 		Elements[i].Align = 16;
-		if (!Elements[i].Load(ModelChunk.Data.data()))
+		if (!Elements[i].Load(ModelChunk->RawData.data()))
 			return EError_FailedToLoadM2_FileCorrupt;
 	}
 
@@ -205,11 +241,35 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 			delete newSkin;
 			if (Error = EError_FailedToLoadSKIN_CouldNotOpenFile)
 				continue;
+
 			return Error;
 		}
 
 		hasLODSkins = true;
 		break;
+	}
+
+	for (auto& PostChunk : PostProcessChunks)
+	{
+		FileStream.seekg(PostChunk.second.Offs, std::ios::beg);
+		M2Chunk::ChunkBase* Chunk = NULL;
+		switch (PostChunk.first)
+		{
+			case 'SFID':
+			{
+				Chunk = new M2Chunk::SFIDChunk(Header.Elements.nSkin, hasLODSkins ? 2 : 0);
+				Chunk->Load(FileStream, PostChunk.second.Size);
+				break;
+			}
+			default:
+			{
+				Chunk = new M2Chunk::RawChunk();
+				Chunk->Load(FileStream, PostChunk.second.Size);
+				break;
+			}
+		}
+
+		Chunks[PostChunk.first] = Chunk;
 	}
 
 	// print info
@@ -322,6 +382,27 @@ void M2Lib::M2::DoExtraWork()
 	}
 }
 
+M2Lib::M2Chunk::ChunkBase* M2Lib::M2::GetChunk(UInt32 ChunkId)
+{
+	if (Chunks.find(ChunkId) == Chunks.end())
+		return NULL;
+
+	return Chunks[ChunkId];
+}
+
+void M2Lib::M2::PrepareChunks()
+{
+	if (auto SkinChunk = (M2Chunk::SFIDChunk*)GetChunk('SFID'))
+	{
+		if (Header.Elements.nSkin < SkinChunk->SkinsFileDataIds.size())
+			SkinChunk->SkinsFileDataIds.resize(Header.Elements.nSkin);
+		else
+			Header.Elements.nSkin = SkinChunk->SkinsFileDataIds.size();
+		if (!hasLODSkins)
+			SkinChunk->Lod_SkinsFileDataIds.clear();
+	}
+}
+
 M2Lib::EError M2Lib::M2::Save(const Char16* FileName)
 {
 	// check path
@@ -342,7 +423,10 @@ M2Lib::EError M2Lib::M2::Save(const Char16* FileName)
 
 	// Reserve model chunk header
 	DataElement::SetFileOffset(8);
-	FileStream.seekp(8, std::ios::beg);
+
+	UInt32 ChunkId = REVERSE_CC('MD21');
+	FileStream.write((Char8*)&ChunkId, 4);
+	FileStream.seekp(4, std::ios::cur);		// reserve bytes for chunk size
 
 	//Header.Description.Version = 0x0110;
 	//Header.Description.Flags &= ~0x80;
@@ -362,22 +446,30 @@ M2Lib::EError M2Lib::M2::Save(const Char16* FileName)
 	UInt32 MD20Size = FileStream.tellp();
 	MD20Size -= 8;
 
-	for (UInt32 i = EChunk_Model + 1; i < EChunk__Count__; i++)
-	{
-		if (!Chunks[i].Data.empty())
-		{
-			UInt32 ChunkId = REVERSE_CC(kChunkIDs[i]);
-			FileStream.write((Char8*)&ChunkId, 4);
-			UInt32 size = Chunks[i].Data.size();
-			FileStream.write((Char8*)&size, 4);
-			FileStream.write((Char8*)Chunks[i].Data.data(), Chunks[i].Data.size());
-		}
-	}
-
-	FileStream.seekp(0, std::ios::beg);
-	UInt32 ChunkId = REVERSE_CC(kChunkIDs[EChunk_Model]);
-	FileStream.write((Char8*)&ChunkId, 4);
+	FileStream.seekp(4, std::ios::beg);
 	FileStream.write((Char8*)(&MD20Size), 4);
+
+	FileStream.seekp(0, std::ios::end);
+
+	for (auto chunk : Chunks)
+	{
+		if (chunk.first == 'MD21')
+			continue;
+
+		//if (chunk.first == 'SFID')
+		//	continue;
+
+		UInt32 ChunkId = REVERSE_CC(chunk.first);
+
+		FileStream.write((char*)&ChunkId, 4);
+		FileStream.seekp(4, std::ios::cur);		// reserve space for chunk size
+		UInt32 savePos = FileStream.tellp();
+		chunk.second->Save(FileStream);
+		UInt32 ChunkSize = (UInt32)FileStream.tellp() - savePos;
+		FileStream.seekp(savePos - 4, std::ios::beg);
+		FileStream.write((char*)&ChunkSize, 4);
+		FileStream.seekp(0, std::ios::end);
+	}
 
 	// close file stream
 	FileStream.close();
@@ -1812,6 +1904,8 @@ void M2Lib::M2::m_LoadElements_FindSizes(UInt32 ChunkSize)
 				break;
 			}
 		}
+
+		assert(NextOffset >= Element.Offset && "SKIN Elements are in wrong order");
 		Element.Data.resize(NextOffset - Element.Offset);
 		Element.SizeOriginal = Element.Data.size();
 	}
@@ -2234,17 +2328,6 @@ void M2Lib::M2::m_SaveElements_CopyElementsToHeader()
 	Header.Elements.oUnknown1 = Elements[EElement_Unknown1].Offset;
 }
 
-SInt32 M2Lib::M2::m_GetChunkIndex(UInt32 ChunkID) const
-{
-	for (int a = 0; a < EChunk__Count__; ++a)
-	{
-		if (kChunkIDs[a] == ChunkID)
-			return a;
-	}
-
-	return -1;
-}
-
 UInt32 M2Lib::M2::AddTexture(const Char8* szTextureSource, CElement_Texture::ETextureType Type, CElement_Texture::ETextureFlags Flags)
 {
 	auto& Element = Elements[EElement_Texture];
@@ -2354,4 +2437,21 @@ UInt32 M2Lib::M2::AddBone(CElement_Bone const& Bone)
 	++BoneElement.Count;
 
 	return newBoneId;
+}
+
+void M2Lib::M2::CopySFIDChunk(M2* Other)
+{
+	auto thisChunk = (M2Chunk::SFIDChunk*)GetChunk('SFID');
+	if (!thisChunk)
+		return;
+
+	auto otherChunk = (M2Chunk::SFIDChunk*)Other->GetChunk('SFID');
+	if (!otherChunk)
+	{
+		delete thisChunk;
+		Chunks.erase('SFID');
+		return;
+	}
+
+	*thisChunk = *otherChunk;
 }

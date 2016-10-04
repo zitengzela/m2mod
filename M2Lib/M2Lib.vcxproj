@@ -71,6 +71,7 @@
     <ClInclude Include="DataBinary.h" />
     <ClInclude Include="M2.h" />
     <ClInclude Include="DataElement.h" />
+    <ClInclude Include="M2Chunk.h" />
     <ClInclude Include="M2Element.h" />
     <ClInclude Include="M2I.h" />
     <ClInclude Include="M2Skin.h" />
@@ -83,6 +84,7 @@
     <ClCompile Include="DataBinary.cpp" />
     <ClCompile Include="M2.cpp" />
     <ClCompile Include="DataElement.cpp" />
+    <ClCompile Include="M2Chunk.cpp" />
     <ClCompile Include="M2Element.cpp" />
     <ClCompile Include="M2I.cpp" />
     <ClCompile Include="M2Skin.cpp" />

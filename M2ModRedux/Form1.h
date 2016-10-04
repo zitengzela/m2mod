@@ -47,6 +47,8 @@ namespace M2ModRedux
 					this->textBoxInputM2I->Text = (String^)value;
 				if (auto value = RegistyStore::GetValue(RegistyStore::Value::ImportOutM2))
 					this->textBoxOutputM2->Text = (String^)value;
+				if (auto value = RegistyStore::GetValue(RegistyStore::Value::ImportReplaceM2))
+					this->textBoxReplaceM2->Text = (String^)value;
 
 				if (auto value = RegistyStore::GetValue(RegistyStore::Value::MergeAttachments))
 					this->checkBoxMergeAttachments->Checked = Boolean::Parse(value->ToString());
@@ -76,6 +78,7 @@ namespace M2ModRedux
 		RegistyStore::SetValue(RegistyStore::Value::ImportInM2, this->textBoxInputM2Imp->Text);
 		RegistyStore::SetValue(RegistyStore::Value::ImportM2I, this->textBoxInputM2I->Text);
 		RegistyStore::SetValue(RegistyStore::Value::ImportOutM2, this->textBoxOutputM2->Text);
+		RegistyStore::SetValue(RegistyStore::Value::ImportReplaceM2, this->textBoxReplaceM2->Text);
 
 		RegistyStore::SetValue(RegistyStore::Value::MergeAttachments, this->checkBoxMergeAttachments->Checked);
 		RegistyStore::SetValue(RegistyStore::Value::MergeBones, this->checkBoxMergeBones->Checked);
@@ -138,11 +141,13 @@ namespace M2ModRedux
 	private: System::Windows::Forms::StatusStrip^  statusStrip1;
 	private: System::Windows::Forms::ToolStripStatusLabel^  toolStripStatusLabel1;
 	private: System::Windows::Forms::Panel^  panel1;
+	private: System::Windows::Forms::CheckBox^  checkBoxReplaceM2;
 
-
+	private: System::Windows::Forms::Panel^  panelReplaceM2;
+	private: System::Windows::Forms::TextBox^  textBoxReplaceM2;
+	private: System::Windows::Forms::Button^  buttonReplaceM2Browse;
 
 	private: System::ComponentModel::IContainer^  components;
-
 
 #pragma region Windows Form Designer generated code
 			 /// <summary>
@@ -177,6 +182,9 @@ namespace M2ModRedux
 				 this->textBoxInputM2Imp = (gcnew System::Windows::Forms::TextBox());
 				 this->textBoxInputM2I = (gcnew System::Windows::Forms::TextBox());
 				 this->textBoxOutputM2 = (gcnew System::Windows::Forms::TextBox());
+				 this->textBoxReplaceM2 = (gcnew System::Windows::Forms::TextBox());
+				 this->buttonReplaceM2Browse = (gcnew System::Windows::Forms::Button());
+				 this->checkBoxReplaceM2 = (gcnew System::Windows::Forms::CheckBox());
 				 this->tabControl1 = (gcnew System::Windows::Forms::TabControl());
 				 this->tabExport = (gcnew System::Windows::Forms::TabPage());
 				 this->panelImputM2Exp = (gcnew System::Windows::Forms::Panel());
@@ -184,6 +192,7 @@ namespace M2ModRedux
 				 this->panelOutputM2I = (gcnew System::Windows::Forms::Panel());
 				 this->textBoxOutputM2I = (gcnew System::Windows::Forms::TextBox());
 				 this->tabImport = (gcnew System::Windows::Forms::TabPage());
+				 this->panelReplaceM2 = (gcnew System::Windows::Forms::Panel());
 				 this->panel1 = (gcnew System::Windows::Forms::Panel());
 				 this->extraworkPanel = (gcnew System::Windows::Forms::Panel());
 				 this->panelInputM2Import = (gcnew System::Windows::Forms::Panel());
@@ -198,6 +207,7 @@ namespace M2ModRedux
 				 this->panelImputM2Exp->SuspendLayout();
 				 this->panelOutputM2I->SuspendLayout();
 				 this->tabImport->SuspendLayout();
+				 this->panelReplaceM2->SuspendLayout();
 				 this->panel1->SuspendLayout();
 				 this->extraworkPanel->SuspendLayout();
 				 this->panelInputM2Import->SuspendLayout();
@@ -234,9 +244,9 @@ namespace M2ModRedux
 				 // buttonInputM2ExpBrowse
 				 // 
 				 this->buttonInputM2ExpBrowse->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Right));
-				 this->buttonInputM2ExpBrowse->Location = System::Drawing::Point(452, 3);
+				 this->buttonInputM2ExpBrowse->Location = System::Drawing::Point(472, 3);
 				 this->buttonInputM2ExpBrowse->Name = L"buttonInputM2ExpBrowse";
-				 this->buttonInputM2ExpBrowse->Size = System::Drawing::Size(75, 20);
+				 this->buttonInputM2ExpBrowse->Size = System::Drawing::Size(55, 20);
 				 this->buttonInputM2ExpBrowse->TabIndex = 5;
 				 this->buttonInputM2ExpBrowse->Text = L"...";
 				 this->toolTip1->SetToolTip(this->buttonInputM2ExpBrowse, L"Browse...");
@@ -246,9 +256,9 @@ namespace M2ModRedux
 				 // buttonOutputM2IBrowse
 				 // 
 				 this->buttonOutputM2IBrowse->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Right));
-				 this->buttonOutputM2IBrowse->Location = System::Drawing::Point(453, 3);
+				 this->buttonOutputM2IBrowse->Location = System::Drawing::Point(473, 3);
 				 this->buttonOutputM2IBrowse->Name = L"buttonOutputM2IBrowse";
-				 this->buttonOutputM2IBrowse->Size = System::Drawing::Size(75, 20);
+				 this->buttonOutputM2IBrowse->Size = System::Drawing::Size(55, 20);
 				 this->buttonOutputM2IBrowse->TabIndex = 8;
 				 this->buttonOutputM2IBrowse->Text = L"...";
 				 this->toolTip1->SetToolTip(this->buttonOutputM2IBrowse, L"Browse...");
@@ -279,9 +289,9 @@ namespace M2ModRedux
 				 // buttonInputM2IBrowse
 				 // 
 				 this->buttonInputM2IBrowse->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Right));
-				 this->buttonInputM2IBrowse->Location = System::Drawing::Point(452, 5);
+				 this->buttonInputM2IBrowse->Location = System::Drawing::Point(472, 5);
 				 this->buttonInputM2IBrowse->Name = L"buttonInputM2IBrowse";
-				 this->buttonInputM2IBrowse->Size = System::Drawing::Size(75, 20);
+				 this->buttonInputM2IBrowse->Size = System::Drawing::Size(55, 20);
 				 this->buttonInputM2IBrowse->TabIndex = 11;
 				 this->buttonInputM2IBrowse->Text = L"...";
 				 this->toolTip1->SetToolTip(this->buttonInputM2IBrowse, L"Browse...");
@@ -291,9 +301,9 @@ namespace M2ModRedux
 				 // buttonOutputM2Browse
 				 // 
 				 this->buttonOutputM2Browse->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Right));
-				 this->buttonOutputM2Browse->Location = System::Drawing::Point(452, 2);
+				 this->buttonOutputM2Browse->Location = System::Drawing::Point(472, 2);
 				 this->buttonOutputM2Browse->Name = L"buttonOutputM2Browse";
-				 this->buttonOutputM2Browse->Size = System::Drawing::Size(75, 20);
+				 this->buttonOutputM2Browse->Size = System::Drawing::Size(55, 20);
 				 this->buttonOutputM2Browse->TabIndex = 14;
 				 this->buttonOutputM2Browse->Text = L"...";
 				 this->toolTip1->SetToolTip(this->buttonOutputM2Browse, L"Browse...");
@@ -377,9 +387,9 @@ namespace M2ModRedux
 				 // buttonInputM2ImpBrowse
 				 // 
 				 this->buttonInputM2ImpBrowse->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Right));
-				 this->buttonInputM2ImpBrowse->Location = System::Drawing::Point(452, 3);
+				 this->buttonInputM2ImpBrowse->Location = System::Drawing::Point(472, 3);
 				 this->buttonInputM2ImpBrowse->Name = L"buttonInputM2ImpBrowse";
-				 this->buttonInputM2ImpBrowse->Size = System::Drawing::Size(75, 20);
+				 this->buttonInputM2ImpBrowse->Size = System::Drawing::Size(55, 20);
 				 this->buttonInputM2ImpBrowse->TabIndex = 5;
 				 this->buttonInputM2ImpBrowse->Text = L"...";
 				 this->toolTip1->SetToolTip(this->buttonInputM2ImpBrowse, L"Browse...");
@@ -431,7 +441,7 @@ namespace M2ModRedux
 				 // 
 				 // manageMeshesButton
 				 // 
-				 this->manageMeshesButton->Location = System::Drawing::Point(9, 4);
+				 this->manageMeshesButton->Location = System::Drawing::Point(9, 3);
 				 this->manageMeshesButton->Name = L"manageMeshesButton";
 				 this->manageMeshesButton->Size = System::Drawing::Size(107, 30);
 				 this->manageMeshesButton->TabIndex = 0;
@@ -444,9 +454,9 @@ namespace M2ModRedux
 				 // 
 				 this->textBoxInputM2Imp->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
 					 | System::Windows::Forms::AnchorStyles::Right));
-				 this->textBoxInputM2Imp->Location = System::Drawing::Point(72, 3);
+				 this->textBoxInputM2Imp->Location = System::Drawing::Point(88, 3);
 				 this->textBoxInputM2Imp->Name = L"textBoxInputM2Imp";
-				 this->textBoxInputM2Imp->Size = System::Drawing::Size(374, 20);
+				 this->textBoxInputM2Imp->Size = System::Drawing::Size(378, 20);
 				 this->textBoxInputM2Imp->TabIndex = 4;
 				 this->toolTip1->SetToolTip(this->textBoxInputM2Imp, L"Path to source M2");
 				 // 
@@ -454,9 +464,9 @@ namespace M2ModRedux
 				 // 
 				 this->textBoxInputM2I->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
 					 | System::Windows::Forms::AnchorStyles::Right));
-				 this->textBoxInputM2I->Location = System::Drawing::Point(72, 5);
+				 this->textBoxInputM2I->Location = System::Drawing::Point(88, 5);
 				 this->textBoxInputM2I->Name = L"textBoxInputM2I";
-				 this->textBoxInputM2I->Size = System::Drawing::Size(374, 20);
+				 this->textBoxInputM2I->Size = System::Drawing::Size(378, 20);
 				 this->textBoxInputM2I->TabIndex = 10;
 				 this->toolTip1->SetToolTip(this->textBoxInputM2I, L"Path to M2I");
 				 // 
@@ -464,11 +474,46 @@ namespace M2ModRedux
 				 // 
 				 this->textBoxOutputM2->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
 					 | System::Windows::Forms::AnchorStyles::Right));
-				 this->textBoxOutputM2->Location = System::Drawing::Point(72, 2);
+				 this->textBoxOutputM2->Location = System::Drawing::Point(88, 2);
 				 this->textBoxOutputM2->Name = L"textBoxOutputM2";
-				 this->textBoxOutputM2->Size = System::Drawing::Size(374, 20);
+				 this->textBoxOutputM2->Size = System::Drawing::Size(378, 20);
 				 this->textBoxOutputM2->TabIndex = 13;
 				 this->toolTip1->SetToolTip(this->textBoxOutputM2, L"Destination path for M2");
+				 // 
+				 // textBoxReplaceM2
+				 // 
+				 this->textBoxReplaceM2->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
+					 | System::Windows::Forms::AnchorStyles::Right));
+				 this->textBoxReplaceM2->Location = System::Drawing::Point(8, 2);
+				 this->textBoxReplaceM2->Name = L"textBoxReplaceM2";
+				 this->textBoxReplaceM2->Size = System::Drawing::Size(378, 20);
+				 this->textBoxReplaceM2->TabIndex = 13;
+				 this->toolTip1->SetToolTip(this->textBoxReplaceM2, L"Destination path for M2");
+				 // 
+				 // buttonReplaceM2Browse
+				 // 
+				 this->buttonReplaceM2Browse->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Right));
+				 this->buttonReplaceM2Browse->Location = System::Drawing::Point(392, 2);
+				 this->buttonReplaceM2Browse->Name = L"buttonReplaceM2Browse";
+				 this->buttonReplaceM2Browse->Size = System::Drawing::Size(55, 20);
+				 this->buttonReplaceM2Browse->TabIndex = 14;
+				 this->buttonReplaceM2Browse->Text = L"...";
+				 this->toolTip1->SetToolTip(this->buttonReplaceM2Browse, L"Browse...");
+				 this->buttonReplaceM2Browse->UseVisualStyleBackColor = true;
+				 this->buttonReplaceM2Browse->Click += gcnew System::EventHandler(this, &Form1::buttonReplaceM2Browse_Click);
+				 // 
+				 // checkBoxReplaceM2
+				 // 
+				 this->checkBoxReplaceM2->AutoSize = true;
+				 this->checkBoxReplaceM2->Enabled = false;
+				 this->checkBoxReplaceM2->Location = System::Drawing::Point(7, 129);
+				 this->checkBoxReplaceM2->Name = L"checkBoxReplaceM2";
+				 this->checkBoxReplaceM2->Size = System::Drawing::Size(81, 17);
+				 this->checkBoxReplaceM2->TabIndex = 15;
+				 this->checkBoxReplaceM2->Text = L"ReplaceM2";
+				 this->toolTip1->SetToolTip(this->checkBoxReplaceM2, L"If you are swapping models, select target M2 that you would like to swap from.");
+				 this->checkBoxReplaceM2->UseVisualStyleBackColor = true;
+				 this->checkBoxReplaceM2->CheckedChanged += gcnew System::EventHandler(this, &Form1::checkBoxReplaceM2_CheckedChanged);
 				 // 
 				 // tabControl1
 				 // 
@@ -510,9 +555,9 @@ namespace M2ModRedux
 				 // 
 				 this->textBoxInputM2Exp->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
 					 | System::Windows::Forms::AnchorStyles::Right));
-				 this->textBoxInputM2Exp->Location = System::Drawing::Point(72, 3);
+				 this->textBoxInputM2Exp->Location = System::Drawing::Point(88, 3);
 				 this->textBoxInputM2Exp->Name = L"textBoxInputM2Exp";
-				 this->textBoxInputM2Exp->Size = System::Drawing::Size(374, 20);
+				 this->textBoxInputM2Exp->Size = System::Drawing::Size(378, 20);
 				 this->textBoxInputM2Exp->TabIndex = 4;
 				 // 
 				 // panelOutputM2I
@@ -529,13 +574,15 @@ namespace M2ModRedux
 				 // 
 				 this->textBoxOutputM2I->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
 					 | System::Windows::Forms::AnchorStyles::Right));
-				 this->textBoxOutputM2I->Location = System::Drawing::Point(73, 3);
+				 this->textBoxOutputM2I->Location = System::Drawing::Point(89, 3);
 				 this->textBoxOutputM2I->Name = L"textBoxOutputM2I";
-				 this->textBoxOutputM2I->Size = System::Drawing::Size(374, 20);
+				 this->textBoxOutputM2I->Size = System::Drawing::Size(378, 20);
 				 this->textBoxOutputM2I->TabIndex = 7;
 				 // 
 				 // tabImport
 				 // 
+				 this->tabImport->Controls->Add(this->checkBoxReplaceM2);
+				 this->tabImport->Controls->Add(this->panelReplaceM2);
 				 this->tabImport->Controls->Add(this->panel1);
 				 this->tabImport->Controls->Add(this->extraworkPanel);
 				 this->tabImport->Controls->Add(this->panelInputM2Import);
@@ -549,6 +596,18 @@ namespace M2ModRedux
 				 this->tabImport->TabIndex = 1;
 				 this->tabImport->Text = L"Import";
 				 this->tabImport->UseVisualStyleBackColor = true;
+				 // 
+				 // panelReplaceM2
+				 // 
+				 this->panelReplaceM2->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
+					 | System::Windows::Forms::AnchorStyles::Right));
+				 this->panelReplaceM2->Controls->Add(this->textBoxReplaceM2);
+				 this->panelReplaceM2->Controls->Add(this->buttonReplaceM2Browse);
+				 this->panelReplaceM2->Enabled = false;
+				 this->panelReplaceM2->Location = System::Drawing::Point(86, 124);
+				 this->panelReplaceM2->Name = L"panelReplaceM2";
+				 this->panelReplaceM2->Size = System::Drawing::Size(451, 25);
+				 this->panelReplaceM2->TabIndex = 25;
 				 // 
 				 // panel1
 				 // 
@@ -566,9 +625,9 @@ namespace M2ModRedux
 				 // 
 				 this->extraworkPanel->Controls->Add(this->manageMeshesButton);
 				 this->extraworkPanel->Enabled = false;
-				 this->extraworkPanel->Location = System::Drawing::Point(6, 124);
+				 this->extraworkPanel->Location = System::Drawing::Point(6, 156);
 				 this->extraworkPanel->Name = L"extraworkPanel";
-				 this->extraworkPanel->Size = System::Drawing::Size(528, 68);
+				 this->extraworkPanel->Size = System::Drawing::Size(528, 36);
 				 this->extraworkPanel->TabIndex = 30;
 				 // 
 				 // panelInputM2Import
@@ -605,7 +664,7 @@ namespace M2ModRedux
 				 this->panelOutputM2->Enabled = false;
 				 this->panelOutputM2->Location = System::Drawing::Point(6, 96);
 				 this->panelOutputM2->Name = L"panelOutputM2";
-				 this->panelOutputM2->Size = System::Drawing::Size(531, 24);
+				 this->panelOutputM2->Size = System::Drawing::Size(531, 25);
 				 this->panelOutputM2->TabIndex = 24;
 				 // 
 				 // panelImportCb
@@ -665,6 +724,9 @@ namespace M2ModRedux
 				 this->panelOutputM2I->ResumeLayout(false);
 				 this->panelOutputM2I->PerformLayout();
 				 this->tabImport->ResumeLayout(false);
+				 this->tabImport->PerformLayout();
+				 this->panelReplaceM2->ResumeLayout(false);
+				 this->panelReplaceM2->PerformLayout();
 				 this->panel1->ResumeLayout(false);
 				 this->extraworkPanel->ResumeLayout(false);
 				 this->panelInputM2Import->ResumeLayout(false);
@@ -811,6 +873,8 @@ namespace M2ModRedux
 			importButtonGo->Enabled = true;
 			extraworkPanel->Enabled = true;
 			importCancelButton->Enabled = true;
+			checkBoxReplaceM2->Enabled = true;
+			panelReplaceM2->Enabled = checkBoxReplaceM2->Checked;
 		}
 		else
 		{
@@ -823,6 +887,9 @@ namespace M2ModRedux
 			importButtonGo->Enabled = false;
 			extraworkPanel->Enabled = false;
 			importCancelButton->Enabled = false;
+
+			checkBoxReplaceM2->Enabled = false;
+			panelReplaceM2->Enabled = false;
 
 			if (preloadM2)
 			{
@@ -876,6 +943,24 @@ namespace M2ModRedux
 					Marshal::FreeHGlobal(StringPointer);
 				}
 			}
+		}
+
+		if (checkBoxReplaceM2->Checked)
+		{
+			M2Lib::M2 ReplaceM2;
+			auto StringPointer = Marshal::StringToHGlobalUni(textBoxReplaceM2->Text);
+			auto Error = ReplaceM2.Load((Char16*)StringPointer.ToPointer());
+			Marshal::FreeHGlobal(StringPointer);
+			if (Error)
+			{
+				SetStatus(gcnew System::String(M2Lib::GetErrorText(Error)));
+				delete preloadM2;
+				preloadM2 = NULL;
+				PreloadTransition(false);
+				return;
+			}
+
+			preloadM2->CopySFIDChunk(&ReplaceM2);
 		}
 
 		// export M2
@@ -1005,6 +1090,17 @@ namespace M2ModRedux
 		auto result = GetOrCreateMeshManagementForm()->ShowDialog();
 		if (result != Windows::Forms::DialogResult::OK)
 			MeshManagementForm = nullptr;
+	}
+	private: System::Void checkBoxReplaceM2_CheckedChanged(System::Object^  sender, System::EventArgs^  e) {
+		panelReplaceM2->Enabled = checkBoxReplaceM2->Checked;
+	}
+	private: System::Void buttonReplaceM2Browse_Click(System::Object^  sender, System::EventArgs^  e) {
+		openFileDialog1->Filter = M2Filter;
+		openFileDialog1->FileName = textBoxReplaceM2->Text;
+		if (openFileDialog1->ShowDialog() == System::Windows::Forms::DialogResult::OK)
+		{
+			textBoxReplaceM2->Text = openFileDialog1->FileName;
+		}
 	}
 };
 }

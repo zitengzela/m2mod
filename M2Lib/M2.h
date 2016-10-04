@@ -10,6 +10,7 @@
 #include "DataElement.h"
 #include "M2Element.h"
 #include "M2Skin.h"
+#include "M2Chunk.h"
 
 #define DegreesToRadians 0.0174532925f
 
@@ -144,8 +145,7 @@ namespace M2Lib
 
 		CM2Header Header;		// used for loading and saving. not used when editing.
 		DataElement Elements[M2Element::EElement__Count__];
-		DataElement Chunks[M2Element::EChunk__Count__];
-		const static UInt32 kChunkIDs[M2Element::EChunk__Count__];
+		std::map<UInt32, M2Chunk::ChunkBase*> Chunks;
 
 		DataElement* GetLastElement();
 
@@ -171,11 +171,14 @@ namespace M2Lib
 		{
 			if (pInM2I)
 				delete pInM2I;
+			for (auto& Chunk : Chunks)
+				delete Chunk.second;
 		}
 
 	public:
 		// loads an M2 from a file.
 		M2Lib::EError Load(const Char16* FileName);
+		void PrepareChunks();
 		// saves this M2 to a file.
 		M2Lib::EError Save(const Char16* FileName);
 
@@ -192,6 +195,9 @@ namespace M2Lib
 
 		bool HasLODSkins() const { return hasLODSkins; }
 
+		M2Chunk::ChunkBase* GetChunk(UInt32 ChunkId);
+
+		void CopySFIDChunk(M2* Other);
 
 	public:
 		// utilities and tests
@@ -231,8 +237,5 @@ namespace M2Lib
 		void m_FixFakeAnimationBlockOffsets(SInt32 OffsetDelta, M2Element::CElement_FakeAnimationBlock& AnimationBlock, SInt32 iElement);
 
 		void m_SaveElements_CopyElementsToHeader();
-
-		// chunk index in Chunks (-1 if invalid chunk)
-		SInt32 m_GetChunkIndex(UInt32 ChunkID) const;
 	};
 }
