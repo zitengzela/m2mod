@@ -20,6 +20,7 @@ namespace M2ModRedux
 	using namespace System::Drawing;
 	using namespace System::Runtime::InteropServices;
 	using namespace System::Threading::Tasks;
+	using namespace System::IO;
 
 	/// <summary>
 	/// Summary for Form1
@@ -749,16 +750,22 @@ namespace M2ModRedux
 		System::Void buttonInputM2Browse_Click(System::Object^  sender, System::EventArgs^  e)
 		{
 			openFileDialog1->Filter = M2Filter;
-			openFileDialog1->FileName = textBoxInputM2Exp->Text;
-			openFileDialog1->FileName = textBoxInputM2Imp->Text;
+			try
+			{
+				openFileDialog1->FileName = textBoxInputM2Exp->Text;
+				openFileDialog1->InitialDirectory = Path::GetDirectoryName(textBoxInputM2Exp->Text);
+			}
+			catch (...) {}
 
 			if (openFileDialog1->ShowDialog() == System::Windows::Forms::DialogResult::OK)
 			{
 				textBoxInputM2Exp->Text = openFileDialog1->FileName;
 				textBoxInputM2Imp->Text = openFileDialog1->FileName;
-				textBoxOutputM2I->Text = openFileDialog1->FileName + "i";
-				textBoxInputM2I->Text = openFileDialog1->FileName + "i";
-				textBoxOutputM2->Text = textBoxInputM2Exp->Text->Substring(0, textBoxInputM2Exp->Text->Length - 3) + "2.m2";
+				textBoxOutputM2I->Text = Path::ChangeExtension(openFileDialog1->FileName, "m2i");
+				textBoxInputM2I->Text = Path::ChangeExtension(openFileDialog1->FileName, "m2i");
+				textBoxOutputM2->Text = Path::ChangeExtension(Path::Combine(
+					Path::GetDirectoryName(textBoxInputM2Exp->Text),
+					Path::GetFileNameWithoutExtension(textBoxInputM2Exp->Text) + "2"), "m2");
 			}
 		}
 
@@ -766,7 +773,12 @@ namespace M2ModRedux
 		System::Void buttonOutputM2IBrowse_Click(System::Object^  sender, System::EventArgs^  e)
 		{
 			saveFileDialog1->Filter = M2IFilter;
-			saveFileDialog1->FileName = textBoxOutputM2I->Text;
+			try
+			{
+				saveFileDialog1->FileName = textBoxOutputM2I->Text;
+				saveFileDialog1->InitialDirectory = System::IO::Path::GetDirectoryName(textBoxOutputM2I->Text);
+			}
+			catch (...) {}
 			if (saveFileDialog1->ShowDialog() == System::Windows::Forms::DialogResult::OK)
 			{
 				textBoxOutputM2I->Text = saveFileDialog1->FileName;
@@ -777,7 +789,12 @@ namespace M2ModRedux
 		System::Void buttonInputM2IBrowse_Click(System::Object^  sender, System::EventArgs^  e)
 		{
 			openFileDialog1->Filter = M2IFilter;
-			openFileDialog1->FileName = textBoxInputM2I->Text;
+			try
+			{
+				openFileDialog1->FileName = textBoxInputM2I->Text;
+				openFileDialog1->InitialDirectory = System::IO::Path::GetDirectoryName(textBoxInputM2I->Text);
+			}
+			catch (...) {}
 			if (openFileDialog1->ShowDialog() == System::Windows::Forms::DialogResult::OK)
 			{
 				textBoxInputM2I->Text = openFileDialog1->FileName;
@@ -788,7 +805,12 @@ namespace M2ModRedux
 		System::Void buttonOutputM2Browse_Click(System::Object^  sender, System::EventArgs^  e)
 		{
 			saveFileDialog1->Filter = M2Filter;
-			saveFileDialog1->FileName = textBoxOutputM2->Text;
+			try
+			{
+				saveFileDialog1->FileName = textBoxOutputM2->Text;
+				saveFileDialog1->InitialDirectory = System::IO::Path::GetDirectoryName(textBoxOutputM2->Text);
+			}
+			catch (...) {}
 			if (saveFileDialog1->ShowDialog() == System::Windows::Forms::DialogResult::OK)
 			{
 				textBoxOutputM2->Text = saveFileDialog1->FileName;
@@ -1096,7 +1118,13 @@ namespace M2ModRedux
 	}
 	private: System::Void buttonReplaceM2Browse_Click(System::Object^  sender, System::EventArgs^  e) {
 		openFileDialog1->Filter = M2Filter;
-		openFileDialog1->FileName = textBoxReplaceM2->Text;
+		try
+		{
+			openFileDialog1->FileName = textBoxReplaceM2->Text;
+			openFileDialog1->InitialDirectory = System::IO::Path::GetDirectoryName(textBoxReplaceM2->Text);
+		}
+		catch (...) {}
+
 		if (openFileDialog1->ShowDialog() == System::Windows::Forms::DialogResult::OK)
 		{
 			textBoxReplaceM2->Text = openFileDialog1->FileName;
