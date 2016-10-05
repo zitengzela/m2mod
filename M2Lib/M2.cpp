@@ -453,6 +453,8 @@ M2Lib::EError M2Lib::M2::Save(const Char16* FileName)
 
 	FileStream.seekp(0, std::ios::end);
 
+	PrepareChunks();
+
 	for (auto chunk : Chunks)
 	{
 		if (chunk.first == EChunk::Model)
