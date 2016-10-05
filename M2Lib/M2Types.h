@@ -6,6 +6,17 @@
 
 namespace M2Lib
 {
+	enum class Expansion : SInt32
+	{
+		None = -1,
+		Classic = 0,
+		BurningCrusade = 1,
+		WrathOfTheLichKing = 2,
+		Cataclysm = 3,
+		MistsOfPandaria = 4,
+		WarlordsOfDraenor = 5,
+		Legion = 6
+	};
 
 #pragma pack(push,1)
 
@@ -50,6 +61,8 @@ namespace M2Lib
 		Float32 Max[3];
 		Float32 Radius;
 	};
+
+	ASSERT_SIZE(SVolume, 28);
 
 	struct M2Array
 	{

@@ -682,6 +682,29 @@ namespace M2Lib
 
 		ASSERT_SIZE(CElement_Camera, 116);
 
+		class CElement_Camera_PreCata
+		{
+		public:
+			enum ECameraType : SInt32
+			{
+				FlyBy = -1,
+				Portrait = 0,
+				PaperDoll = 1
+			};
+
+			ECameraType Type;
+			Float32 FoV;
+			Float32 ClipFar;
+			Float32 ClipNear;
+			CElement_AnimationBlock AnimationBlock_Position;		// Float32x3
+			Float32 Position[3];
+			CElement_AnimationBlock AnimationBlock_Target;			// Float32x3
+			Float32 Target[3];
+			CElement_AnimationBlock AnimationBlock_Roll;			// Float32
+		};
+
+		ASSERT_SIZE(CElement_Camera_PreCata, 100);
+
 		//
 		//
 		class CElement_CameraLookup

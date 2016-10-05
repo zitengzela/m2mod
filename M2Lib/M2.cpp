@@ -1,6 +1,7 @@
 #include "M2.h"
 #include "DataBinary.h"
 #include "M2SkinBuilder.h"
+#include "Settings.h"
 #include <sstream>
 #include <locale>
 #include <codecvt>
@@ -40,6 +41,33 @@ public:
 		this->stream->close();
 	}
 };
+
+M2Lib::Expansion M2Lib::M2::GetExpansion() const
+{
+	if (ForceExpansion != Expansion::None)
+		return ForceExpansion;
+
+	if (Header.Description.Version < 264)
+		return Expansion::BurningCrusade;
+	if (Header.Description.Version == 264)
+		return Expansion::WrathOfTheLichKing;
+	if (Header.Description.Version < 272)
+		return Expansion::Cataclysm;
+	if (Header.Description.Version < 274)
+		return Expansion::WarlordsOfDraenor;
+
+	return Expansion::Legion;
+}
+
+bool M2Lib::M2::CM2Header::IsLongHeader() const
+{
+	return (Description.Flags & 0x08) != 0;
+}
+
+UInt32 M2Lib::M2::GetHeaderSize() const
+{
+	return Header.IsLongHeader() && GetExpansion() >= Expansion::Cataclysm ? sizeof(Header) : sizeof(Header) - 8;
+}
 
 M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 {
@@ -146,26 +174,21 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 
 	// load header
 	memcpy(&Header, ModelChunk->RawData.data(), sizeof(Header));
-
-	if ((263 > Header.Description.Version) || (Header.Description.Version > 274))
-		return EError_FailedToLoadM2_VersionNotSupported;
-
-	if (!Header.IsLongHeader())
+	if (!Header.IsLongHeader() || GetExpansion() < Expansion::Cataclysm)
 	{
 		Header.Elements.nUnknown1 = 0;
 		Header.Elements.oUnknown1 = 0;
 	}
+
+	if (Header.Description.Version < 263 || Header.Description.Version > 274)
+		return EError_FailedToLoadM2_VersionNotSupported;
 
 	// fill elements header data
 	m_LoadElements_CopyHeaderToElements();
 	m_LoadElements_FindSizes(m_OriginalModelChunkSize);
 
 	// load elements
-	UInt32 ElementCount = EElement__Count__;
-	if (!(Header.Description.Flags & 0x08))
-		--ElementCount;
-
-	for (UInt32 i = 0; i < ElementCount; ++i)
+	for (UInt32 i = 0; i < EElement__Count__; ++i)
 	{
 		Elements[i].Align = 16;
 		if (!Elements[i].Load(ModelChunk->RawData.data()))
@@ -258,7 +281,7 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 		{
 			case EChunk::Skin:
 			{
-				Chunk = new SFIDChunk(Header.Elements.nSkin, hasLODSkins ? 2 : 0);
+				Chunk = new SFIDChunk(Header.Elements.nSkin, hasLODSkins ? LOD_SKIN_COUNT : 0);
 				Chunk->Load(FileStream, PostChunk.second.Size);
 				break;
 			}
@@ -434,8 +457,8 @@ M2Lib::EError M2Lib::M2::Save(const Char16* FileName)
 	//Header.Description.Flags &= ~0x80;
 
 	// save header
-	FileStream.write((Char8*)&Header.Description, sizeof(Header.Description));
-	FileStream.write((Char8*)&Header.Elements, Header.IsLongHeader() ? sizeof(Header.Elements) : sizeof(Header.Elements) - 8);
+	UInt32 HeaderSize = GetHeaderSize();
+	FileStream.write((Char8*)&Header, HeaderSize);
 
 	// save elements
 	UInt32 ElementCount = Header.IsLongHeader() ? EElement__Count__ : EElement__Count__ - 1;
@@ -543,7 +566,6 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate(Char16* FileName)
 	CElement_Attachment* Attachments = Elements[EElement_Attachment].as<CElement_Attachment>();
 
 	UInt32 CamerasCount = Elements[EElement_Camera].Count;
-	CElement_Camera* Cameras = Elements[EElement_Camera].as<CElement_Camera>();
 
 	// save signature
 	DataBinary.WriteFourCC(M2I::Signature_M2I0);
@@ -659,36 +681,56 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate(Char16* FileName)
 	DataBinary.WriteUInt32(CamerasCount);
 	for (UInt16 i = 0; i < CamerasCount; i++)
 	{
-		CElement_Camera& Camera = Cameras[i];
+		SInt32 CameraType;
+		Float32 ClipFar, ClipNear, FoV, *Position, *Target;
 
-		DataBinary.WriteUInt8(1);	// has data
-		DataBinary.WriteSInt32(Camera.Type);
-
-		// extract field of view of camera from animation block
-		if (Camera.AnimationBlock_FieldOfView.Keys.Count > 0)
+		if (GetExpansion() < Expansion::Cataclysm)
 		{
-			auto ExternalAnimations = (M2Array*)Elements[EElement_Camera].GetLocalPointer(Camera.AnimationBlock_FieldOfView.Keys.Offset);
-			auto LastElement = GetLastElement();
-			assert(LastElement != NULL);
-			assert(ExternalAnimations[0].Offset >= LastElement->Offset && ExternalAnimations[0].Offset < LastElement->Offset + LastElement->Data.size());
-
-			Float32* FieldOfView_Keys = (Float32*)LastElement->GetLocalPointer(ExternalAnimations[0].Offset);
-			DataBinary.WriteFloat32(FieldOfView_Keys[0]);
+			auto& Camera = Elements[EElement_Camera].as<CElement_Camera_PreCata>()[i];
+			CameraType = Camera.Type;
+			ClipFar = Camera.ClipFar;
+			ClipNear = Camera.ClipNear;
+			Position = Camera.Position;
+			Target = Camera.Target;
+			FoV = Camera.FoV;
 		}
 		else
 		{
-			Float32 TempFoV = 0.785398163f;	// 45 degrees in radians, assuming that WoW stores camera FoV in radians. or maybe it's half FoV.
-			DataBinary.WriteFloat32(TempFoV);
+			auto& Camera = Elements[EElement_Camera].as<CElement_Camera>()[i];
+			CameraType = Camera.Type;
+			ClipFar = Camera.ClipFar;
+			ClipNear = Camera.ClipNear;
+			Position = Camera.Position;
+			Target = Camera.Target;
+
+			// extract field of view of camera from animation block
+			if (Camera.AnimationBlock_FieldOfView.Keys.Count > 0)
+			{
+				auto ExternalAnimations = (M2Array*)Elements[EElement_Camera].GetLocalPointer(Camera.AnimationBlock_FieldOfView.Keys.Offset);
+				auto LastElement = GetLastElement();
+				assert(LastElement != NULL);
+				assert(ExternalAnimations[0].Offset >= LastElement->Offset && ExternalAnimations[0].Offset < LastElement->Offset + LastElement->Data.size());
+
+				Float32* FieldOfView_Keys = (Float32*)LastElement->GetLocalPointer(ExternalAnimations[0].Offset);
+				FoV = FieldOfView_Keys[0];
+			}
+			else
+				FoV = 0.785398163f;	// 45 degrees in radians, assuming that WoW stores camera FoV in radians. or maybe it's half FoV.
 		}
 
-		DataBinary.WriteFloat32(Camera.ClipFar);
-		DataBinary.WriteFloat32(Camera.ClipNear);
-		DataBinary.WriteFloat32(Camera.Position[0]);
-		DataBinary.WriteFloat32(Camera.Position[1]);
-		DataBinary.WriteFloat32(Camera.Position[2]);
-		DataBinary.WriteFloat32(Camera.Target[0]);
-		DataBinary.WriteFloat32(Camera.Target[1]);
-		DataBinary.WriteFloat32(Camera.Target[2]);
+		DataBinary.WriteUInt8(1);	// has data
+		DataBinary.WriteSInt32(CameraType);
+
+		DataBinary.WriteFloat32(FoV);
+
+		DataBinary.WriteFloat32(ClipFar);
+		DataBinary.WriteFloat32(ClipNear);
+		DataBinary.WriteFloat32(Position[0]);
+		DataBinary.WriteFloat32(Position[1]);
+		DataBinary.WriteFloat32(Position[2]);
+		DataBinary.WriteFloat32(Target[0]);
+		DataBinary.WriteFloat32(Target[1]);
+		DataBinary.WriteFloat32(Target[2]);
 	}
 
 	FileStream.close();
@@ -696,8 +738,13 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate(Char16* FileName)
 	return EError_OK;
 }
 
-M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16* FileName, bool IgnoreBones, bool IgnoreAttachments, bool IgnoreCameras, bool FixSeams)
+M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16* FileName, M2Lib::ImportSettings* Settings)
 {
+	bool IgnoreBones = Settings && !Settings->MergeBones;
+	bool IgnoreAttachments = Settings && !Settings->MergeAttachments;
+	bool IgnoreCameras = Settings && !Settings->MergeCameras;
+	bool FixSeams = Settings && !Settings->FixSeams;
+
 	Float32 SubmeshPositionalTolerance = 0.0001f;
 	Float32 SubmeshAngularTolerance = 45.0f;
 	Float32 BodyPositionalTolerance = 0.0001f;
@@ -1878,8 +1925,11 @@ void M2Lib::M2::m_LoadElements_CopyHeaderToElements()
 	Elements[EElement_ParticleEmitter].Count = Header.Elements.nParticleEmitter;
 	Elements[EElement_ParticleEmitter].Offset = Header.Elements.oParticleEmitter;
 
-	Elements[EElement_Unknown1].Count = Header.Elements.nUnknown1;
-	Elements[EElement_Unknown1].Offset = Header.Elements.oUnknown1;
+	if (Header.IsLongHeader() && GetExpansion() >= Expansion::Cataclysm)
+	{
+		Elements[EElement_Unknown1].Count = Header.Elements.nUnknown1;
+		Elements[EElement_Unknown1].Offset = Header.Elements.oUnknown1;
+	}
 }
 
 
@@ -1925,13 +1975,13 @@ void M2Lib::M2::m_SaveElements_FindOffsets()
 {
 	// fix animation offsets and find element offsets
 	SInt32 CurrentOffset = 0;
-	if (Header.IsLongHeader())
+	if (Header.IsLongHeader() && GetExpansion() >= Expansion::Cataclysm)
 		CurrentOffset = sizeof(CM2Header) + 8;	// +8 to align data at 16 byte bounds
 	else
 		CurrentOffset = sizeof(CM2Header) - 8;	// -8 because last 2 UInt32s are not saved
 
 	// totaldiff needed to fix animations that are in the end of a chunk
-	SInt32 totalDiff = -(SInt32)m_OriginalModelChunkSize + (Header.IsLongHeader() ? sizeof(Header) : sizeof(Header) - 8);
+	SInt32 totalDiff = -(SInt32)m_OriginalModelChunkSize + GetHeaderSize();
 	for (UInt32 iElement = 0; iElement < EElement__Count__; ++iElement)
 		totalDiff += Elements[iElement].Data.size();
 
@@ -2160,7 +2210,7 @@ void M2Lib::M2::m_SaveElements_FindOffsets()
 		CurrentOffset += Elements[iElement].Data.size();
 	}
 
-	m_OriginalModelChunkSize = (Header.IsLongHeader() ? sizeof(Header) : sizeof(Header) - 8);
+	m_OriginalModelChunkSize = GetHeaderSize();
 	for (UInt32 iElement = 0; iElement < EElement__Count__; ++iElement)
 		m_OriginalModelChunkSize += Elements[iElement].Data.size();
 }
@@ -2328,8 +2378,11 @@ void M2Lib::M2::m_SaveElements_CopyElementsToHeader()
 	Header.Elements.nParticleEmitter = Elements[EElement_ParticleEmitter].Count;
 	Header.Elements.oParticleEmitter = Elements[EElement_ParticleEmitter].Offset;
 
-	Header.Elements.nUnknown1 = Elements[EElement_Unknown1].Count;
-	Header.Elements.oUnknown1 = Elements[EElement_Unknown1].Offset;
+	if (Header.IsLongHeader() && GetExpansion() >= Expansion::Cataclysm)
+	{
+		Header.Elements.nUnknown1 = Elements[EElement_Unknown1].Count;
+		Header.Elements.oUnknown1 = Elements[EElement_Unknown1].Offset;
+	}
 }
 
 UInt32 M2Lib::M2::AddTexture(const Char8* szTextureSource, CElement_Texture::ETextureType Type, CElement_Texture::ETextureFlags Flags)

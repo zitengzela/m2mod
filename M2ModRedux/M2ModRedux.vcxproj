@@ -111,6 +111,9 @@
     </ClInclude>
     <ClInclude Include="RegistryStore.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="SettingsForm.h">
+      <FileType>CppForm</FileType>
+    </ClInclude>
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="UpdateForm.h">
       <FileType>CppForm</FileType>
@@ -130,6 +133,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="MeshInfoControl.resx">
       <DependentUpon>MeshInfoControl.h</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsForm.resx">
+      <DependentUpon>SettingsForm.h</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

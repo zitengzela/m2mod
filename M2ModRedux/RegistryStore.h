@@ -21,6 +21,7 @@ public:
 		MergeAttachments,
 		MergeCameras,
 		FixSeams,
+		ForceExportExpansion,
 
 		NotShowAutoUpdate,
 		ActualVersion,

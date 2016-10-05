@@ -39,7 +39,8 @@ M2Lib::EError M2Lib::M2Skin::Load(const Char16* FileName)
 	FileStream.seekg(0, std::ios::beg);
 
 	// load header
-	FileStream.read((char*)&Header, sizeof(Header));
+	UInt32 HeaderSize = pM2->GetExpansion() >= Expansion::Cataclysm ? sizeof(Header) : 48;
+	FileStream.read((char*)&Header, HeaderSize);
 
 	// check header
 	if (Header.ID[0] != 'S' || Header.ID[1] != 'K' || Header.ID[2] != 'I' || Header.ID[3] != 'N')
@@ -93,7 +94,8 @@ M2Lib::EError M2Lib::M2Skin::Save(const Char16* FileName)
 	m_SaveElements_CopyElementsToHeader();
 
 	// save header
-	FileStream.write((Char8*)&Header, sizeof(Header));
+	UInt32 HeaderSize = pM2->GetExpansion() >= Expansion::Cataclysm ? sizeof(Header) : 48;
+	FileStream.write((Char8*)&Header, HeaderSize);
 
 	DataElement::SetFileOffset(0);
 	// save elements
@@ -589,8 +591,11 @@ void M2Lib::M2Skin::m_LoadElements_CopyHeaderToElements()
 	Elements[EElement_Material].Count = Header.nMaterial;
 	Elements[EElement_Material].Offset = Header.oMaterial;
 
-	Elements[EElement_Flags].Count = Header.nFlags;
-	Elements[EElement_Flags].Offset = Header.oFlags;
+	if (pM2->GetExpansion() >= Expansion::Cataclysm)
+	{
+		Elements[EElement_Flags].Count = Header.nFlags;
+		Elements[EElement_Flags].Offset = Header.oFlags;
+	}
 }
 
 
@@ -663,8 +668,11 @@ void M2Lib::M2Skin::m_SaveElements_CopyElementsToHeader()
 
 	Header.Unknown1 = 0;
 
-	Header.nFlags = Elements[EElement_Flags].Count;
-	Header.oFlags = Elements[EElement_Flags].Offset;
+	if (pM2->GetExpansion() >= Expansion::Cataclysm)
+	{
+		Header.nFlags = Elements[EElement_Flags].Count;
+		Header.oFlags = Elements[EElement_Flags].Offset;
+	}
 
 	Header.Unknown2 = 0;
 	Header.Unknown3 = 0;

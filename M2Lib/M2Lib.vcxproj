@@ -78,6 +78,7 @@
     <ClInclude Include="M2SkinBuilder.h" />
     <ClInclude Include="M2SkinElement.h" />
     <ClInclude Include="M2Types.h" />
+    <ClInclude Include="Settings.h" />
     <ClInclude Include="Version.h" />
   </ItemGroup>
   <ItemGroup>

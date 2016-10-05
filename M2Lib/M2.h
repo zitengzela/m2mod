@@ -16,7 +16,7 @@
 
 namespace M2Lib
 {
-	//using namespace M2Element;
+	class ImportSettings;
 
 	// load, export, import merge, save: M2 file.
 	class M2
@@ -28,7 +28,7 @@ namespace M2Lib
 		class CM2Header
 		{
 		public:
-			struct
+			struct CM2Description
 			{
 				Char8 ID[4];	// 'MD20'
 				UInt32 Version;
@@ -39,7 +39,9 @@ namespace M2Lib
 				UInt32 Flags;
 			} Description;
 
-			struct
+			ASSERT_SIZE(CM2Description, 20);
+
+			struct CM2Elements
 			{
 				UInt32 nGlobalSequence;		// 4
 				UInt32 oGlobalSequence;
@@ -135,7 +137,9 @@ namespace M2Lib
 
 			} Elements;
 
-			bool IsLongHeader() const { return (Description.Flags & 0x08) != 0; }
+			ASSERT_SIZE(CM2Elements, 292);
+
+			bool IsLongHeader() const;
 		};
 
 #pragma pack(pop)
@@ -155,16 +159,18 @@ namespace M2Lib
 		bool hasLODSkins;
 
 		UInt32 m_OriginalModelChunkSize;
+		Expansion ForceExpansion;
 
 		M2I* pInM2I;
 
 	public:
-		M2()
+		M2(Expansion ForceExpansion = Expansion::None)
 		{
 			memset(Skins, 0, sizeof(Skins));
 			m_OriginalModelChunkSize = 0;
 			pInM2I = NULL;
 			hasLODSkins = false;
+			this->ForceExpansion = ForceExpansion;
 		}
 
 		~M2()
@@ -176,6 +182,9 @@ namespace M2Lib
 		}
 
 	public:
+		UInt32 GetHeaderSize() const;
+		Expansion GetExpansion() const;
+
 		// loads an M2 from a file.
 		M2Lib::EError Load(const Char16* FileName);
 		void PrepareChunks();
@@ -185,7 +194,7 @@ namespace M2Lib
 		// exports the loaded M2 as an M2I file.
 		M2Lib::EError ExportM2Intermediate(Char16* FileName);
 		// imports an M2I file and merges it with already loaded M2.
-		M2Lib::EError ImportM2Intermediate(Char16* FileName, bool IgnoreBones, bool IgnoreAttachments, bool IgnoreCameras, bool FixSeams);
+		M2Lib::EError ImportM2Intermediate(Char16* FileName, M2Lib::ImportSettings* Settings = NULL);
 
 		// prints diagnostic information.
 		void PrintInfo();

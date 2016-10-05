@@ -8,6 +8,8 @@
 #include "RegistryStore.h"
 #include "Version.h"
 #include "Updater.h"
+#include "Settings.h"
+#include "SettingsForm.h"
 
 namespace M2ModRedux
 {
@@ -31,8 +33,9 @@ namespace M2ModRedux
 		Form1(void)
 		{
 			InitializeComponent();
-			
+
 			this->Text = String::Format(L"M2Mod Redux {0}.{1}.{2}", VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH);
+			settings = new M2Lib::GlobalSettings();
 
 			try
 			{
@@ -51,14 +54,16 @@ namespace M2ModRedux
 				if (auto value = RegistyStore::GetValue(RegistyStore::Value::ImportReplaceM2))
 					this->textBoxReplaceM2->Text = (String^)value;
 
+				if (auto value = RegistyStore::GetValue(RegistyStore::Value::ForceExportExpansion))
+					settings->ExportSettings.ForceExpansion = (M2Lib::Expansion)Int32::Parse(value->ToString());
 				if (auto value = RegistyStore::GetValue(RegistyStore::Value::MergeAttachments))
-					this->checkBoxMergeAttachments->Checked = Boolean::Parse(value->ToString());
+					settings->ImportSettings.MergeAttachments = Boolean::Parse(value->ToString());
 				if (auto value = RegistyStore::GetValue(RegistyStore::Value::MergeBones))
-					this->checkBoxMergeBones->Checked = Boolean::Parse(value->ToString());
+					settings->ImportSettings.MergeBones = Boolean::Parse(value->ToString());
 				if (auto value = RegistyStore::GetValue(RegistyStore::Value::MergeCameras))
-					this->checkBoxMergeCameras->Checked = Boolean::Parse(value->ToString());
+					settings->ImportSettings.MergeCameras = Boolean::Parse(value->ToString());
 				if (auto value = RegistyStore::GetValue(RegistyStore::Value::FixSeams))
-					this->checkBoxFixSeams->Checked = Boolean::Parse(value->ToString());
+					settings->ImportSettings.FixSeams = Boolean::Parse(value->ToString());
 			}
 			catch (...)
 			{
@@ -81,10 +86,11 @@ namespace M2ModRedux
 		RegistyStore::SetValue(RegistyStore::Value::ImportOutM2, this->textBoxOutputM2->Text);
 		RegistyStore::SetValue(RegistyStore::Value::ImportReplaceM2, this->textBoxReplaceM2->Text);
 
-		RegistyStore::SetValue(RegistyStore::Value::MergeAttachments, this->checkBoxMergeAttachments->Checked);
-		RegistyStore::SetValue(RegistyStore::Value::MergeBones, this->checkBoxMergeBones->Checked);
-		RegistyStore::SetValue(RegistyStore::Value::MergeCameras, this->checkBoxMergeCameras->Checked);
-		RegistyStore::SetValue(RegistyStore::Value::FixSeams, this->checkBoxFixSeams->Checked);
+		RegistyStore::SetValue(RegistyStore::Value::ForceExportExpansion, (SInt32)settings->ExportSettings.ForceExpansion);
+		RegistyStore::SetValue(RegistyStore::Value::MergeAttachments, settings->ImportSettings.MergeAttachments);
+		RegistyStore::SetValue(RegistyStore::Value::MergeBones, settings->ImportSettings.MergeBones);
+		RegistyStore::SetValue(RegistyStore::Value::MergeCameras, settings->ImportSettings.MergeCameras);
+		RegistyStore::SetValue(RegistyStore::Value::FixSeams, settings->ImportSettings.FixSeams);
 
 	}
 
@@ -98,6 +104,7 @@ namespace M2ModRedux
 			{
 				delete components;
 			}
+			delete settings;
 		}
 
 	private: System::Windows::Forms::OpenFileDialog^  openFileDialog1;
@@ -126,13 +133,7 @@ namespace M2ModRedux
 	private: System::Windows::Forms::TextBox^  textBoxOutputM2;
 	private: System::Windows::Forms::Button^  buttonOutputM2Browse;
 	private: System::Windows::Forms::Label^  label2;
-	private: System::Windows::Forms::Panel^  panelImportCb;
-	private: System::Windows::Forms::CheckBox^  checkBoxMergeCameras;
-	private: System::Windows::Forms::CheckBox^  checkBoxMergeAttachments;
-	private: System::Windows::Forms::CheckBox^  checkBoxMergeBones;
 	private: System::Windows::Forms::Button^  exportButtonGo;
-
-	private: System::Windows::Forms::CheckBox^  checkBoxFixSeams;
 
 	private: System::Windows::Forms::Button^  importButtonGo;
 	private: System::Windows::Forms::Button^  importButtonPreload;
@@ -147,6 +148,10 @@ namespace M2ModRedux
 	private: System::Windows::Forms::Panel^  panelReplaceM2;
 	private: System::Windows::Forms::TextBox^  textBoxReplaceM2;
 	private: System::Windows::Forms::Button^  buttonReplaceM2Browse;
+	private: System::Windows::Forms::MenuStrip^  menuStrip1;
+	private: System::Windows::Forms::ToolStripMenuItem^  fileToolStripMenuItem;
+	private: System::Windows::Forms::ToolStripMenuItem^  settingsToolStripMenuItem;
+	private: System::Windows::Forms::ToolStripMenuItem^  exitToolStripMenuItem;
 
 	private: System::ComponentModel::IContainer^  components;
 
@@ -170,9 +175,6 @@ namespace M2ModRedux
 				 this->buttonInputM2IBrowse = (gcnew System::Windows::Forms::Button());
 				 this->buttonOutputM2Browse = (gcnew System::Windows::Forms::Button());
 				 this->label2 = (gcnew System::Windows::Forms::Label());
-				 this->checkBoxMergeCameras = (gcnew System::Windows::Forms::CheckBox());
-				 this->checkBoxMergeAttachments = (gcnew System::Windows::Forms::CheckBox());
-				 this->checkBoxMergeBones = (gcnew System::Windows::Forms::CheckBox());
 				 this->exportButtonGo = (gcnew System::Windows::Forms::Button());
 				 this->label5 = (gcnew System::Windows::Forms::Label());
 				 this->buttonInputM2ImpBrowse = (gcnew System::Windows::Forms::Button());
@@ -199,10 +201,12 @@ namespace M2ModRedux
 				 this->panelInputM2Import = (gcnew System::Windows::Forms::Panel());
 				 this->panelInputM2I = (gcnew System::Windows::Forms::Panel());
 				 this->panelOutputM2 = (gcnew System::Windows::Forms::Panel());
-				 this->panelImportCb = (gcnew System::Windows::Forms::Panel());
-				 this->checkBoxFixSeams = (gcnew System::Windows::Forms::CheckBox());
 				 this->statusStrip1 = (gcnew System::Windows::Forms::StatusStrip());
 				 this->toolStripStatusLabel1 = (gcnew System::Windows::Forms::ToolStripStatusLabel());
+				 this->menuStrip1 = (gcnew System::Windows::Forms::MenuStrip());
+				 this->fileToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
+				 this->settingsToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
+				 this->exitToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 				 this->tabControl1->SuspendLayout();
 				 this->tabExport->SuspendLayout();
 				 this->panelImputM2Exp->SuspendLayout();
@@ -214,8 +218,8 @@ namespace M2ModRedux
 				 this->panelInputM2Import->SuspendLayout();
 				 this->panelInputM2I->SuspendLayout();
 				 this->panelOutputM2->SuspendLayout();
-				 this->panelImportCb->SuspendLayout();
 				 this->statusStrip1->SuspendLayout();
+				 this->menuStrip1->SuspendLayout();
 				 this->SuspendLayout();
 				 // 
 				 // openFileDialog1
@@ -321,49 +325,9 @@ namespace M2ModRedux
 				 this->label2->Text = L"OutputM2";
 				 this->toolTip1->SetToolTip(this->label2, L"Optional. If set, this is where M2Mod will save the modified M2.");
 				 // 
-				 // checkBoxMergeCameras
-				 // 
-				 this->checkBoxMergeCameras->AutoSize = true;
-				 this->checkBoxMergeCameras->Checked = true;
-				 this->checkBoxMergeCameras->CheckState = System::Windows::Forms::CheckState::Checked;
-				 this->checkBoxMergeCameras->Location = System::Drawing::Point(217, 0);
-				 this->checkBoxMergeCameras->Name = L"checkBoxMergeCameras";
-				 this->checkBoxMergeCameras->Size = System::Drawing::Size(97, 17);
-				 this->checkBoxMergeCameras->TabIndex = 17;
-				 this->checkBoxMergeCameras->Text = L"MergeCameras";
-				 this->toolTip1->SetToolTip(this->checkBoxMergeCameras, L"Check to load cameras from M2I");
-				 this->checkBoxMergeCameras->UseVisualStyleBackColor = true;
-				 // 
-				 // checkBoxMergeAttachments
-				 // 
-				 this->checkBoxMergeAttachments->AutoSize = true;
-				 this->checkBoxMergeAttachments->Checked = true;
-				 this->checkBoxMergeAttachments->CheckState = System::Windows::Forms::CheckState::Checked;
-				 this->checkBoxMergeAttachments->Location = System::Drawing::Point(95, 0);
-				 this->checkBoxMergeAttachments->Name = L"checkBoxMergeAttachments";
-				 this->checkBoxMergeAttachments->Size = System::Drawing::Size(115, 17);
-				 this->checkBoxMergeAttachments->TabIndex = 16;
-				 this->checkBoxMergeAttachments->Text = L"MergeAttachments";
-				 this->toolTip1->SetToolTip(this->checkBoxMergeAttachments, L"Check to load attachments from M2I");
-				 this->checkBoxMergeAttachments->UseVisualStyleBackColor = true;
-				 // 
-				 // checkBoxMergeBones
-				 // 
-				 this->checkBoxMergeBones->AutoSize = true;
-				 this->checkBoxMergeBones->Checked = true;
-				 this->checkBoxMergeBones->CheckState = System::Windows::Forms::CheckState::Checked;
-				 this->checkBoxMergeBones->Location = System::Drawing::Point(2, 0);
-				 this->checkBoxMergeBones->Name = L"checkBoxMergeBones";
-				 this->checkBoxMergeBones->Size = System::Drawing::Size(86, 17);
-				 this->checkBoxMergeBones->TabIndex = 15;
-				 this->checkBoxMergeBones->Text = L"MergeBones";
-				 this->toolTip1->SetToolTip(this->checkBoxMergeBones, L"Check to load bones from M2I");
-				 this->checkBoxMergeBones->UseVisualStyleBackColor = true;
-				 // 
 				 // exportButtonGo
 				 // 
-				 this->exportButtonGo->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
-					 | System::Windows::Forms::AnchorStyles::Right));
+				 this->exportButtonGo->Anchor = System::Windows::Forms::AnchorStyles::Top;
 				 this->exportButtonGo->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 8.25F, System::Drawing::FontStyle::Bold, System::Drawing::GraphicsUnit::Point,
 					 static_cast<System::Byte>(0)));
 				 this->exportButtonGo->Location = System::Drawing::Point(214, 208);
@@ -485,7 +449,7 @@ namespace M2ModRedux
 				 // 
 				 this->textBoxReplaceM2->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
 					 | System::Windows::Forms::AnchorStyles::Right));
-				 this->textBoxReplaceM2->Location = System::Drawing::Point(8, 2);
+				 this->textBoxReplaceM2->Location = System::Drawing::Point(8, 3);
 				 this->textBoxReplaceM2->Name = L"textBoxReplaceM2";
 				 this->textBoxReplaceM2->Size = System::Drawing::Size(378, 20);
 				 this->textBoxReplaceM2->TabIndex = 13;
@@ -507,7 +471,7 @@ namespace M2ModRedux
 				 // 
 				 this->checkBoxReplaceM2->AutoSize = true;
 				 this->checkBoxReplaceM2->Enabled = false;
-				 this->checkBoxReplaceM2->Location = System::Drawing::Point(8, 129);
+				 this->checkBoxReplaceM2->Location = System::Drawing::Point(7, 99);
 				 this->checkBoxReplaceM2->Name = L"checkBoxReplaceM2";
 				 this->checkBoxReplaceM2->Size = System::Drawing::Size(81, 17);
 				 this->checkBoxReplaceM2->TabIndex = 15;
@@ -518,15 +482,16 @@ namespace M2ModRedux
 				 // 
 				 // tabControl1
 				 // 
-				 this->tabControl1->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
+				 this->tabControl1->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Bottom)
+					 | System::Windows::Forms::AnchorStyles::Left)
 					 | System::Windows::Forms::AnchorStyles::Right));
 				 this->tabControl1->Controls->Add(this->tabExport);
 				 this->tabControl1->Controls->Add(this->tabImport);
-				 this->tabControl1->Location = System::Drawing::Point(1, 2);
+				 this->tabControl1->Location = System::Drawing::Point(1, 24);
 				 this->tabControl1->Name = L"tabControl1";
 				 this->tabControl1->Padding = System::Drawing::Point(10, 3);
 				 this->tabControl1->SelectedIndex = 0;
-				 this->tabControl1->Size = System::Drawing::Size(570, 309);
+				 this->tabControl1->Size = System::Drawing::Size(570, 277);
 				 this->tabControl1->TabIndex = 25;
 				 // 
 				 // tabExport
@@ -537,13 +502,15 @@ namespace M2ModRedux
 				 this->tabExport->Location = System::Drawing::Point(4, 22);
 				 this->tabExport->Name = L"tabExport";
 				 this->tabExport->Padding = System::Windows::Forms::Padding(3);
-				 this->tabExport->Size = System::Drawing::Size(562, 283);
+				 this->tabExport->Size = System::Drawing::Size(562, 251);
 				 this->tabExport->TabIndex = 0;
 				 this->tabExport->Text = L"Export";
 				 this->tabExport->UseVisualStyleBackColor = true;
 				 // 
 				 // panelImputM2Exp
 				 // 
+				 this->panelImputM2Exp->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
+					 | System::Windows::Forms::AnchorStyles::Right));
 				 this->panelImputM2Exp->Controls->Add(this->textBoxInputM2Exp);
 				 this->panelImputM2Exp->Controls->Add(this->label1);
 				 this->panelImputM2Exp->Controls->Add(this->buttonInputM2ExpBrowse);
@@ -563,6 +530,8 @@ namespace M2ModRedux
 				 // 
 				 // panelOutputM2I
 				 // 
+				 this->panelOutputM2I->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
+					 | System::Windows::Forms::AnchorStyles::Right));
 				 this->panelOutputM2I->Controls->Add(this->buttonOutputM2IBrowse);
 				 this->panelOutputM2I->Controls->Add(this->textBoxOutputM2I);
 				 this->panelOutputM2I->Controls->Add(this->label7);
@@ -589,11 +558,10 @@ namespace M2ModRedux
 				 this->tabImport->Controls->Add(this->panelInputM2Import);
 				 this->tabImport->Controls->Add(this->panelInputM2I);
 				 this->tabImport->Controls->Add(this->panelOutputM2);
-				 this->tabImport->Controls->Add(this->panelImportCb);
 				 this->tabImport->Location = System::Drawing::Point(4, 22);
 				 this->tabImport->Name = L"tabImport";
 				 this->tabImport->Padding = System::Windows::Forms::Padding(3);
-				 this->tabImport->Size = System::Drawing::Size(562, 283);
+				 this->tabImport->Size = System::Drawing::Size(562, 251);
 				 this->tabImport->TabIndex = 1;
 				 this->tabImport->Text = L"Import";
 				 this->tabImport->UseVisualStyleBackColor = true;
@@ -605,7 +573,7 @@ namespace M2ModRedux
 				 this->panelReplaceM2->Controls->Add(this->textBoxReplaceM2);
 				 this->panelReplaceM2->Controls->Add(this->buttonReplaceM2Browse);
 				 this->panelReplaceM2->Enabled = false;
-				 this->panelReplaceM2->Location = System::Drawing::Point(86, 124);
+				 this->panelReplaceM2->Location = System::Drawing::Point(86, 96);
 				 this->panelReplaceM2->Name = L"panelReplaceM2";
 				 this->panelReplaceM2->Size = System::Drawing::Size(451, 25);
 				 this->panelReplaceM2->TabIndex = 25;
@@ -626,9 +594,9 @@ namespace M2ModRedux
 				 // 
 				 this->extraworkPanel->Controls->Add(this->manageMeshesButton);
 				 this->extraworkPanel->Enabled = false;
-				 this->extraworkPanel->Location = System::Drawing::Point(6, 156);
+				 this->extraworkPanel->Location = System::Drawing::Point(7, 127);
 				 this->extraworkPanel->Name = L"extraworkPanel";
-				 this->extraworkPanel->Size = System::Drawing::Size(528, 36);
+				 this->extraworkPanel->Size = System::Drawing::Size(530, 65);
 				 this->extraworkPanel->TabIndex = 30;
 				 // 
 				 // panelInputM2Import
@@ -663,39 +631,16 @@ namespace M2ModRedux
 				 this->panelOutputM2->Controls->Add(this->buttonOutputM2Browse);
 				 this->panelOutputM2->Controls->Add(this->label2);
 				 this->panelOutputM2->Enabled = false;
-				 this->panelOutputM2->Location = System::Drawing::Point(6, 96);
+				 this->panelOutputM2->Location = System::Drawing::Point(6, 68);
 				 this->panelOutputM2->Name = L"panelOutputM2";
 				 this->panelOutputM2->Size = System::Drawing::Size(531, 25);
 				 this->panelOutputM2->TabIndex = 24;
-				 // 
-				 // panelImportCb
-				 // 
-				 this->panelImportCb->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
-					 | System::Windows::Forms::AnchorStyles::Right));
-				 this->panelImportCb->Controls->Add(this->checkBoxFixSeams);
-				 this->panelImportCb->Controls->Add(this->checkBoxMergeCameras);
-				 this->panelImportCb->Controls->Add(this->checkBoxMergeAttachments);
-				 this->panelImportCb->Controls->Add(this->checkBoxMergeBones);
-				 this->panelImportCb->Location = System::Drawing::Point(6, 70);
-				 this->panelImportCb->Name = L"panelImportCb";
-				 this->panelImportCb->Size = System::Drawing::Size(531, 22);
-				 this->panelImportCb->TabIndex = 25;
-				 // 
-				 // checkBoxFixSeams
-				 // 
-				 this->checkBoxFixSeams->AutoSize = true;
-				 this->checkBoxFixSeams->Location = System::Drawing::Point(320, 0);
-				 this->checkBoxFixSeams->Name = L"checkBoxFixSeams";
-				 this->checkBoxFixSeams->Size = System::Drawing::Size(74, 17);
-				 this->checkBoxFixSeams->TabIndex = 18;
-				 this->checkBoxFixSeams->Text = L"Fix Seams";
-				 this->checkBoxFixSeams->UseVisualStyleBackColor = true;
 				 // 
 				 // statusStrip1
 				 // 
 				 this->statusStrip1->BackColor = System::Drawing::Color::Transparent;
 				 this->statusStrip1->Items->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(1) { this->toolStripStatusLabel1 });
-				 this->statusStrip1->Location = System::Drawing::Point(0, 287);
+				 this->statusStrip1->Location = System::Drawing::Point(0, 298);
 				 this->statusStrip1->Name = L"statusStrip1";
 				 this->statusStrip1->Size = System::Drawing::Size(569, 22);
 				 this->statusStrip1->TabIndex = 31;
@@ -706,14 +651,49 @@ namespace M2ModRedux
 				 this->toolStripStatusLabel1->Name = L"toolStripStatusLabel1";
 				 this->toolStripStatusLabel1->Size = System::Drawing::Size(0, 17);
 				 // 
+				 // menuStrip1
+				 // 
+				 this->menuStrip1->Items->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(1) { this->fileToolStripMenuItem });
+				 this->menuStrip1->Location = System::Drawing::Point(0, 0);
+				 this->menuStrip1->Name = L"menuStrip1";
+				 this->menuStrip1->Size = System::Drawing::Size(569, 24);
+				 this->menuStrip1->TabIndex = 32;
+				 this->menuStrip1->Text = L"menuStrip1";
+				 // 
+				 // fileToolStripMenuItem
+				 // 
+				 this->fileToolStripMenuItem->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(2) {
+					 this->settingsToolStripMenuItem,
+						 this->exitToolStripMenuItem
+				 });
+				 this->fileToolStripMenuItem->Name = L"fileToolStripMenuItem";
+				 this->fileToolStripMenuItem->Size = System::Drawing::Size(37, 20);
+				 this->fileToolStripMenuItem->Text = L"File";
+				 // 
+				 // settingsToolStripMenuItem
+				 // 
+				 this->settingsToolStripMenuItem->Name = L"settingsToolStripMenuItem";
+				 this->settingsToolStripMenuItem->Size = System::Drawing::Size(116, 22);
+				 this->settingsToolStripMenuItem->Text = L"Settings";
+				 this->settingsToolStripMenuItem->Click += gcnew System::EventHandler(this, &Form1::settingsToolStripMenuItem_Click);
+				 // 
+				 // exitToolStripMenuItem
+				 // 
+				 this->exitToolStripMenuItem->Name = L"exitToolStripMenuItem";
+				 this->exitToolStripMenuItem->Size = System::Drawing::Size(116, 22);
+				 this->exitToolStripMenuItem->Text = L"Exit";
+				 this->exitToolStripMenuItem->Click += gcnew System::EventHandler(this, &Form1::exitToolStripMenuItem_Click);
+				 // 
 				 // Form1
 				 // 
 				 this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 				 this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
-				 this->ClientSize = System::Drawing::Size(569, 309);
+				 this->ClientSize = System::Drawing::Size(569, 320);
 				 this->Controls->Add(this->statusStrip1);
+				 this->Controls->Add(this->menuStrip1);
 				 this->Controls->Add(this->tabControl1);
 				 this->Icon = (cli::safe_cast<System::Drawing::Icon^>(resources->GetObject(L"$this.Icon")));
+				 this->MainMenuStrip = this->menuStrip1;
 				 this->MinimumSize = System::Drawing::Size(500, 320);
 				 this->Name = L"Form1";
 				 this->Text = L"M2Mod Redux";
@@ -736,10 +716,10 @@ namespace M2ModRedux
 				 this->panelInputM2I->PerformLayout();
 				 this->panelOutputM2->ResumeLayout(false);
 				 this->panelOutputM2->PerformLayout();
-				 this->panelImportCb->ResumeLayout(false);
-				 this->panelImportCb->PerformLayout();
 				 this->statusStrip1->ResumeLayout(false);
 				 this->statusStrip1->PerformLayout();
+				 this->menuStrip1->ResumeLayout(false);
+				 this->menuStrip1->PerformLayout();
 				 this->ResumeLayout(false);
 				 this->PerformLayout();
 
@@ -846,7 +826,7 @@ namespace M2ModRedux
 				return;
 			}
 
-			M2Lib::M2* M2 = new M2Lib::M2();
+			M2Lib::M2* M2 = new M2Lib::M2(settings->ExportSettings.ForceExpansion);
 
 			// import M2
 			System::IntPtr StringPointer = Marshal::StringToHGlobalUni(textBoxInputM2Exp->Text);
@@ -888,7 +868,6 @@ namespace M2ModRedux
 		{
 			panelInputM2Import->Enabled = false;
 			panelInputM2I->Enabled = false;
-			panelImportCb->Enabled = false;
 			panelOutputM2->Enabled = true;
 
 			importButtonPreload->Enabled = false;
@@ -902,7 +881,6 @@ namespace M2ModRedux
 		{
 			panelInputM2Import->Enabled = true;
 			panelInputM2I->Enabled = true;
-			panelImportCb->Enabled = true;
 			panelOutputM2->Enabled = false;
 
 			importButtonPreload->Enabled = true;
@@ -924,6 +902,7 @@ namespace M2ModRedux
 	}
 
 	private: M2Lib::M2* preloadM2 = NULL;
+	private: M2Lib::GlobalSettings* settings = NULL;
 
 	private: System::Void importButtonGo_Click(System::Object^  sender, System::EventArgs^  e) {
 		importButtonPreload->Enabled = false;
@@ -1054,7 +1033,7 @@ namespace M2ModRedux
 
 		// import M2I
 		StringPointer = Marshal::StringToHGlobalUni(textBoxInputM2I->Text);
-		Error = preloadM2->ImportM2Intermediate((Char16*)StringPointer.ToPointer(), !checkBoxMergeBones->Checked, !checkBoxMergeAttachments->Checked, !checkBoxMergeCameras->Checked, checkBoxFixSeams->Checked);
+		Error = preloadM2->ImportM2Intermediate((Char16*)StringPointer.ToPointer(), &settings->ImportSettings);
 		Marshal::FreeHGlobal(StringPointer);
 
 		if (Error != 0)
@@ -1129,6 +1108,17 @@ namespace M2ModRedux
 		{
 			textBoxReplaceM2->Text = openFileDialog1->FileName;
 		}
+	}
+
+	private: System::Void exitToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) {
+		Close();
+	}
+
+	private: System::Void settingsToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) {
+		auto form = gcnew SettingsForm();
+		form->Setup(settings);
+		if (form->ShowDialog() == Windows::Forms::DialogResult::OK)
+			*settings = form->ProduceSettings();
 	}
 };
 }
