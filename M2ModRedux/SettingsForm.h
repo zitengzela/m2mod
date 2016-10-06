@@ -146,7 +146,7 @@ namespace M2ModRedux {
 			this->forceExpansionComboBox->Name = L"forceExpansionComboBox";
 			this->forceExpansionComboBox->Size = System::Drawing::Size(122, 21);
 			this->forceExpansionComboBox->TabIndex = 0;
-			this->toolTip1->SetToolTip(this->forceExpansionComboBox, L"All input M2\'s will be treated accordingly. Currenly only work for export");
+			this->toolTip1->SetToolTip(this->forceExpansionComboBox, L"All input M2\'s will be treated accordingly");
 			this->groupBox3->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
 				| System::Windows::Forms::AnchorStyles::Right));
 			this->groupBox3->Controls->Add(this->checkBoxFixSeams);
