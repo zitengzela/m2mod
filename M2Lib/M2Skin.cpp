@@ -681,10 +681,53 @@ void M2Lib::M2Skin::m_SaveElements_CopyElementsToHeader()
 void M2Lib::M2Skin::MakeGlossy(UInt32 GlossTextureId, std::vector<UInt32> const& MeshIndexes, TextureLookupRemap& LookupRemap)
 {
 	auto Submeshes = Elements[EElement_SubMesh].as<CElement_SubMesh>();
+	auto Materials = Elements[EElement_Material].as<CElement_Material>();
+	auto ShadowBatches = Elements[EElement_Flags].as<CElement_Flags>();
+	auto TextureLookup = pM2->Elements[M2Element::EElement_TextureLookup].as<M2Element::CElement_TextureLookup>();
+
+	pM2->Header.Description.Flags &= ~0x80;	// enables gloss but breaks dh tattoos
+
 	for (auto submeshId : MeshIndexes)
 	{
 		auto& SubMesh = Submeshes[submeshId];
-		SubMesh.MakeGlossy(this, GlossTextureId, LookupRemap);
+		
+		// loop through all materials to find ones assigned to our submesh
+		for (UInt32 i = 0; i < Elements[EElement_Material].Count; ++i)
+		{
+			auto& Material = Materials[i];
+			if (Material.iSubMesh != submeshId)
+				continue;
+
+			auto textureId = TextureLookup[Material.iTexture].TextureIndex;
+			int newLookup;
+
+			if (LookupRemap.find(textureId) == LookupRemap.end())
+			{
+				int replaceId = -1;
+				//if (pM2->Elements[M2Element::EElement_Texture].as<M2Element::CElement_Texture>()[textureId].Type == M2Element::CElement_Texture::ETextureType::Skin)
+				//	replaceId = pM2->CloneTexture(textureId);
+
+				// add two new lookups successively to use with op_count
+				newLookup = pM2->AddTextureLookup(replaceId != -1 ? replaceId : textureId, true);
+				pM2->AddTextureLookup(GlossTextureId, true);
+				LookupRemap[textureId] = newLookup;
+			}
+			else
+				newLookup = LookupRemap[textureId];
+
+			Material.iTexture = newLookup;
+			Material.op_count = 2;
+			Material.shader_id = GLOSS_SHADER_ID;
+
+			for (UInt32 j = 0; j < Elements[EElement_Flags].Count; ++j)
+			{
+				auto& batch = ShadowBatches[j];
+				if (batch.iSubMesh != submeshId)
+					continue;
+
+				//batch.Flags1 |= 0x100;
+			}
+		}
 	}
 }
 

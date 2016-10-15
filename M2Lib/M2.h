@@ -230,6 +230,7 @@ namespace M2Lib
 		UInt32 AddTexture(const Char8* szTextureSource, M2Element::CElement_Texture::ETextureType Type, M2Element::CElement_Texture::ETextureFlags Flags);
 		UInt32 GetTexture(const Char8* szTextureSource);
 		UInt32 AddTextureLookup(UInt16 TextureId, bool ForceNewIndex = false);
+		UInt32 CloneTexture(UInt16 TextureId);
 		UInt32 AddTextureFlags(M2Element::CElement_TextureFlag::EFlags Flags, M2Element::CElement_TextureFlag::EBlend Blend);
 
 		UInt32 AddBone(M2Element::CElement_Bone const& Bone);

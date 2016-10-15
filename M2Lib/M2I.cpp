@@ -119,9 +119,9 @@ M2Lib::EError M2Lib::M2I::Load(Char16* FileName, M2Lib::M2* pM2, bool IgnoreBone
 			InVertex.Texture[0] = DataBinary.ReadFloat32();
 			InVertex.Texture[1] = DataBinary.ReadFloat32();
 
-			UInt16 VertexTriangleIndex = VertexList.size();
+			UInt16 VertexIndex = VertexList.size();
 			VertexList.push_back(InVertex);
-			pNewSubMesh->Indices.push_back(VertexTriangleIndex);
+			pNewSubMesh->Indices.push_back(VertexIndex);
 
 			submeshVertices.push_back(InVertex);
 		}

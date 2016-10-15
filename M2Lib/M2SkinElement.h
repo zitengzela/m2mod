@@ -111,10 +111,6 @@ namespace M2Lib
 			Float32 CenterMass[3];			// average position of all vertices in this subset. found by summing positions of all vertices and then dividing by the number of vertices.
 			Float32 CenterBounds[3];		// bounding box center. if we make a minimum axis aligned bounding box around the set of vertices in this subset and get the center of that box, this is the result.
 			Float32 Radius;					// this is the distance of the vertex farthest from CenterBoundingBox.
-
-			void MakeGlossy(M2Skin* pSkin, UInt32 GlossTextureId, TextureLookupRemap& LookupRemap);
-
-			bool Same(CElement_SubMesh const& other) const;
 		};
 
 		class CElement_Flags

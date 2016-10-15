@@ -375,6 +375,7 @@ namespace M2Lib
 			enum EFlags
 				: UInt16
 			{
+				EFlags_None = 0x00,
 				EFlags_Unlit = 0x01,
 				EFlags_Unfogged = 0x02,
 				EFlags_TwoSided = 0x04,

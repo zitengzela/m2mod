@@ -2418,6 +2418,16 @@ UInt32 M2Lib::M2::AddTexture(const Char8* szTextureSource, CElement_Texture::ETe
 	return newIndex;
 }
 
+UInt32 M2Lib::M2::CloneTexture(UInt16 TextureId)
+{
+	assert(TextureId < Header.Elements.nTexture && "Too large texture index");
+
+	auto& texture = Elements[EElement_Texture].as<CElement_Texture>()[TextureId];
+	std::string texturePath = (char*)Elements[EElement_Texture].GetLocalPointer(texture.TexturePath.Offset);
+
+	return AddTexture(texturePath.c_str(), texture.Type, texture.Flags);
+}
+
 UInt32 M2Lib::M2::AddTextureFlags(CElement_TextureFlag::EFlags Flags, CElement_TextureFlag::EBlend Blend)
 {
 	auto& Element = Elements[EElement_TextureFlags];
