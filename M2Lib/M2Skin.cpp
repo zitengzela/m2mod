@@ -685,8 +685,6 @@ void M2Lib::M2Skin::MakeGlossy(UInt32 GlossTextureId, std::vector<UInt32> const&
 	auto ShadowBatches = Elements[EElement_Flags].as<CElement_Flags>();
 	auto TextureLookup = pM2->Elements[M2Element::EElement_TextureLookup].as<M2Element::CElement_TextureLookup>();
 
-	pM2->Header.Description.Flags &= ~0x80;	// enables gloss but breaks dh tattoos
-
 	for (auto submeshId : MeshIndexes)
 	{
 		auto& SubMesh = Submeshes[submeshId];
@@ -699,6 +697,10 @@ void M2Lib::M2Skin::MakeGlossy(UInt32 GlossTextureId, std::vector<UInt32> const&
 				continue;
 
 			auto textureId = TextureLookup[Material.iTexture].TextureIndex;
+			auto& texture = pM2->Elements[M2Element::EElement_Texture].as<M2Element::CElement_Texture>()[textureId];
+			if (texture.Type == M2Element::CElement_Texture::ETextureType::Skin)
+				pM2->Header.Description.Flags &= ~0x80;	// fixes gloss but breaks dh tattoos
+
 			int newLookup;
 
 			if (LookupRemap.find(textureId) == LookupRemap.end())
