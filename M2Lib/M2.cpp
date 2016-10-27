@@ -269,7 +269,7 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 			return Error;
 		}
 
-		hasLODSkins = true;
+		lodSkinsLoaded = true;
 		break;
 	}
 
@@ -281,7 +281,7 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 		{
 			case EChunk::Skin:
 			{
-				Chunk = new SFIDChunk(Header.Elements.nSkin, hasLODSkins ? LOD_SKIN_COUNT : 0);
+				Chunk = new SFIDChunk(Header.Elements.nSkin);
 				Chunk->Load(FileStream, PostChunk.second.Size);
 				break;
 			}
@@ -423,8 +423,6 @@ void M2Lib::M2::PrepareChunks()
 			SkinChunk->SkinsFileDataIds.resize(Header.Elements.nSkin);
 		else
 			Header.Elements.nSkin = SkinChunk->SkinsFileDataIds.size();
-		if (!hasLODSkins)
-			SkinChunk->Lod_SkinsFileDataIds.clear();
 	}
 }
 
@@ -524,15 +522,19 @@ M2Lib::EError M2Lib::M2::Save(const Char16* FileName)
 
 	// 0x80 = flag_has_lod_skin_files - wrong
 	//if (Header.Description.Flags & 0x80)
-	if (HasLODSkins())
+	UInt32 LodSkinCount = 0;
+	auto SkinChunk = (M2Chunk::SFIDChunk*)GetChunk(M2Chunk::EChunk::Skin);
+	if (SkinChunk && SkinChunk->HasLodSkins())
+		LodSkinCount = SkinChunk->Lod_SkinsFileDataIds.size();
+	else if (LodSkinsLoaded())
+		LodSkinCount = LOD_SKIN_COUNT;
+
+	for (int i = 0; i < LodSkinCount; ++i)
 	{
-		for (int i = 0; i < LOD_SKIN_COUNT; ++i)
-		{
-			Char16 FileNameSkin[1024];
-			GetFileSkin(FileNameSkin, FileName, i + 4);
-			if (EError Error = (Skins[1] ? Skins[1] : Skins[0])->Save(FileNameSkin))
-				return Error;
-		}
+		Char16 FileNameSkin[1024];
+		GetFileSkin(FileNameSkin, FileName, i + 4);
+		if (EError Error = (Skins[1] ? Skins[1] : Skins[0])->Save(FileNameSkin))
+			return Error;
 	}
 
 	return EError_OK;

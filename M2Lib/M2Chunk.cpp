@@ -1,6 +1,8 @@
 #include "M2Chunk.h"
+#include "M2.h"
 #include <fstream>
 #include <assert.h>
+#include <algorithm>
 
 void M2Lib::M2Chunk::PFIDChunk::Load(std::fstream& FileStream, UInt32 Size)
 {
@@ -14,20 +16,28 @@ void M2Lib::M2Chunk::PFIDChunk::Save(std::fstream& FileStream)
 	FileStream.write((char*)&PhysFileId, 4);
 }
 
-M2Lib::M2Chunk::SFIDChunk::SFIDChunk(UInt32 SkinCount, UInt32 LodCount)
+M2Lib::M2Chunk::SFIDChunk::SFIDChunk(UInt32 SkinCount)
 {
 	SkinsFileDataIds.resize(SkinCount);
-	Lod_SkinsFileDataIds.resize(LodCount);
 }
 
 void M2Lib::M2Chunk::SFIDChunk::Load(std::fstream& FileStream, UInt32 Size)
 {
-	assert(Size == (SkinsFileDataIds.size() * 4 + Lod_SkinsFileDataIds.size() * 4) && "Bad SFIDChunk chunk size");
+	assert((Size % 4) == 0 && "Bad SFID chunk size");
+	assert(SkinsFileDataIds.size() * 4 <= Size && "Bad SFID chunk size");
 
 	for (UInt32 i = 0; i < SkinsFileDataIds.size(); ++i)
 		FileStream.read((char*)&SkinsFileDataIds[i], 4);
-	for (UInt32 i = 0; i < Lod_SkinsFileDataIds.size(); ++i)
-		FileStream.read((char*)&Lod_SkinsFileDataIds[i], 4);
+
+	Lod_SkinsFileDataIds.clear();
+	int RemainingBytes = Size - SkinsFileDataIds.size() * 4;
+	int LodSkinFileCount = RemainingBytes ? std::min(RemainingBytes / 4, LOD_SKIN_COUNT) : 0;
+	for (UInt32 i = 0; i < LodSkinFileCount; ++i)
+	{
+		UInt32 FileDataId = 0;
+		FileStream.read((char*)&FileDataId, 4);
+		Lod_SkinsFileDataIds.push_back(FileDataId);
+	}
 }
 
 void M2Lib::M2Chunk::SFIDChunk::Save(std::fstream& FileStream)

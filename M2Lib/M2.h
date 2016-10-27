@@ -156,7 +156,7 @@ namespace M2Lib
 		#define SKIN_COUNT 6
 		#define LOD_SKIN_COUNT 2
 		M2Skin* Skins[SKIN_COUNT];
-		bool hasLODSkins;
+		bool lodSkinsLoaded;
 
 		UInt32 m_OriginalModelChunkSize;
 		Expansion ForceExpansion;
@@ -169,7 +169,7 @@ namespace M2Lib
 			memset(Skins, 0, sizeof(Skins));
 			m_OriginalModelChunkSize = 0;
 			pInM2I = NULL;
-			hasLODSkins = false;
+			lodSkinsLoaded = false;
 			this->ForceExpansion = ForceExpansion;
 		}
 
@@ -202,7 +202,7 @@ namespace M2Lib
 		// szResult is a buffer large enough to store result, which on windows means it should be at least MAX_PATH long, which is 260.
 		bool GetFileSkin(Char16* SkinFileNameResultBuffer, const Char16* M2FileName, UInt32 SkinIndex);
 
-		bool HasLODSkins() const { return hasLODSkins; }
+		bool LodSkinsLoaded() const { return lodSkinsLoaded; }
 
 		M2Chunk::ChunkBase* GetChunk(M2Chunk::EChunk ChunkId);
 
