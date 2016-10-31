@@ -247,6 +247,8 @@ const char* M2Lib::GetErrorText(EError Error)
 
 	case EError_FailedToSaveSKIN_NoFileSpecified:
 		return "error: faled to save SKIN, no file was specified.";
+	case EError_FailedToSaveM2BR_Ambiguous:
+		return "error: failed to save M2BR file, remap is ambiguous.";
 
 	}
 

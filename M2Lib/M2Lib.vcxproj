@@ -68,6 +68,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="BaseTypes.h" />
+    <ClInclude Include="BoneComparator.h" />
     <ClInclude Include="DataBinary.h" />
     <ClInclude Include="M2.h" />
     <ClInclude Include="DataElement.h" />
@@ -82,6 +83,7 @@
     <ClInclude Include="Version.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="BoneComparator.cpp" />
     <ClCompile Include="DataBinary.cpp" />
     <ClCompile Include="M2.cpp" />
     <ClCompile Include="DataElement.cpp" />

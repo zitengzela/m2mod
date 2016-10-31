@@ -10,6 +10,7 @@
 #include "Updater.h"
 #include "Settings.h"
 #include "SettingsForm.h"
+#include "CompareBonesForm.h"
 
 namespace M2ModRedux
 {
@@ -152,6 +153,8 @@ namespace M2ModRedux
 	private: System::Windows::Forms::ToolStripMenuItem^  fileToolStripMenuItem;
 	private: System::Windows::Forms::ToolStripMenuItem^  settingsToolStripMenuItem;
 	private: System::Windows::Forms::ToolStripMenuItem^  exitToolStripMenuItem;
+	private: System::Windows::Forms::ToolStripMenuItem^  toolsToolStripMenuItem;
+	private: System::Windows::Forms::ToolStripMenuItem^  compareBonesToolStripMenuItem;
 
 	private: System::ComponentModel::IContainer^  components;
 
@@ -207,6 +210,8 @@ namespace M2ModRedux
 				 this->fileToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 				 this->settingsToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 				 this->exitToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
+				 this->toolsToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
+				 this->compareBonesToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 				 this->tabControl1->SuspendLayout();
 				 this->tabExport->SuspendLayout();
 				 this->panelImputM2Exp->SuspendLayout();
@@ -536,7 +541,10 @@ namespace M2ModRedux
 				 this->statusStrip1->Text = L"statusStrip1";
 				 this->toolStripStatusLabel1->Name = L"toolStripStatusLabel1";
 				 this->toolStripStatusLabel1->Size = System::Drawing::Size(0, 17);
-				 this->menuStrip1->Items->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(1) { this->fileToolStripMenuItem });
+				 this->menuStrip1->Items->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(2) {
+					 this->fileToolStripMenuItem,
+						 this->toolsToolStripMenuItem
+				 });
 				 this->menuStrip1->Location = System::Drawing::Point(0, 0);
 				 this->menuStrip1->Name = L"menuStrip1";
 				 this->menuStrip1->Size = System::Drawing::Size(569, 24);
@@ -557,6 +565,14 @@ namespace M2ModRedux
 				 this->exitToolStripMenuItem->Size = System::Drawing::Size(116, 22);
 				 this->exitToolStripMenuItem->Text = L"Exit";
 				 this->exitToolStripMenuItem->Click += gcnew System::EventHandler(this, &Form1::exitToolStripMenuItem_Click);
+				 this->toolsToolStripMenuItem->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(1) { this->compareBonesToolStripMenuItem });
+				 this->toolsToolStripMenuItem->Name = L"toolsToolStripMenuItem";
+				 this->toolsToolStripMenuItem->Size = System::Drawing::Size(48, 20);
+				 this->toolsToolStripMenuItem->Text = L"Tools";
+				 this->compareBonesToolStripMenuItem->Name = L"compareBonesToolStripMenuItem";
+				 this->compareBonesToolStripMenuItem->Size = System::Drawing::Size(158, 22);
+				 this->compareBonesToolStripMenuItem->Text = L"Compare bones";
+				 this->compareBonesToolStripMenuItem->Click += gcnew System::EventHandler(this, &Form1::compareBonesToolStripMenuItem_Click);
 				 this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 				 this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 				 this->ClientSize = System::Drawing::Size(569, 320);
@@ -990,6 +1006,10 @@ namespace M2ModRedux
 		form->Setup(settings);
 		if (form->ShowDialog() == Windows::Forms::DialogResult::OK)
 			*settings = form->ProduceSettings();
+	}
+	private: System::Void compareBonesToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) {
+		auto form = gcnew CompareBonesForm();
+		form->ShowDialog();
 	}
 };
 }

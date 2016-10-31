@@ -149,6 +149,8 @@ namespace M2Lib
 
 		EError_FailedToSaveSKIN,
 		EError_FailedToSaveSKIN_NoFileSpecified,
+
+		EError_FailedToSaveM2BR_Ambiguous,
 	};
 
 	const char* GetErrorText(EError Error);
