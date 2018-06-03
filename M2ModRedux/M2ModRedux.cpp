@@ -1,6 +1,6 @@
 // M2ModRedux.cpp : main project file.
 
-#include "stdafx.h"
+#include <M2.h>
 #include "Form1.h"
 
 using namespace M2ModRedux;
