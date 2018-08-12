@@ -2,11 +2,12 @@
 
 #include <M2.h>
 #include "Form1.h"
+#include "MyForm.h"
 
 using namespace M2ModRedux;
 
 [STAThreadAttribute]
-int main(array<System::String ^> ^args)
+int WinMain(void *var1, unsigned long var2, void *var3)
 {
 	// Enabling Windows XP visual effects before any controls are created
 	Application::EnableVisualStyles();
