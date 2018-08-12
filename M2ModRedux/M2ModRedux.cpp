@@ -2,7 +2,6 @@
 
 #include <M2.h>
 #include "Form1.h"
-#include "MyForm.h"
 
 using namespace M2ModRedux;
 
