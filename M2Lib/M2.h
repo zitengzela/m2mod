@@ -17,6 +17,7 @@
 namespace M2Lib
 {
 	class ImportSettings;
+	class Skeleton;
 
 	// load, export, import merge, save: M2 file.
 	class M2
@@ -149,13 +150,14 @@ namespace M2Lib
 
 		CM2Header Header;		// used for loading and saving. not used when editing.
 		DataElement Elements[M2Element::EElement__Count__];
-		std::map<M2Chunk::EChunk, M2Chunk::ChunkBase*> Chunks;
+		std::map<M2Chunk::EM2Chunk, ChunkBase*> Chunks;
 
 		DataElement* GetLastElement();
 
 		#define SKIN_COUNT 6
-		#define LOD_SKIN_COUNT 2
+		#define LOD_SKIN_MAX_COUNT 3
 		M2Skin* Skins[SKIN_COUNT];
+		Skeleton* Skeleton;
 		bool lodSkinsLoaded;
 
 		UInt32 m_OriginalModelChunkSize;
@@ -167,6 +169,7 @@ namespace M2Lib
 		M2(Expansion ForceExpansion = Expansion::None)
 		{
 			memset(Skins, 0, sizeof(Skins));
+			Skeleton = NULL;
 			m_OriginalModelChunkSize = 0;
 			pInM2I = NULL;
 			lodSkinsLoaded = false;
@@ -201,10 +204,11 @@ namespace M2Lib
 
 		// szResult is a buffer large enough to store result, which on windows means it should be at least MAX_PATH long, which is 260.
 		bool GetFileSkin(Char16* SkinFileNameResultBuffer, const Char16* M2FileName, UInt32 SkinIndex);
+		bool GetSkeleton(Char16* SkeletonFileNameResultBuffer, const Char16* M2FileName);
 
 		bool LodSkinsLoaded() const { return lodSkinsLoaded; }
 
-		M2Chunk::ChunkBase* GetChunk(M2Chunk::EChunk ChunkId);
+		ChunkBase* GetChunk(M2Chunk::EM2Chunk ChunkId);
 
 		void CopySFIDChunk(M2* Other);
 

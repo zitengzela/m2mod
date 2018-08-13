@@ -70,21 +70,25 @@
   <ItemGroup>
     <ClInclude Include="BaseTypes.h" />
     <ClInclude Include="BoneComparator.h" />
+    <ClInclude Include="ChunkBase.h" />
     <ClInclude Include="DataBinary.h" />
     <ClInclude Include="M2.h" />
     <ClInclude Include="DataElement.h" />
     <ClInclude Include="M2Chunk.h" />
     <ClInclude Include="M2Element.h" />
     <ClInclude Include="M2I.h" />
+    <ClInclude Include="Skeleton.h" />
     <ClInclude Include="M2Skin.h" />
     <ClInclude Include="M2SkinBuilder.h" />
     <ClInclude Include="M2SkinElement.h" />
     <ClInclude Include="M2Types.h" />
     <ClInclude Include="Settings.h" />
+    <ClInclude Include="SkeletonChunk.h" />
     <ClInclude Include="Version.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BoneComparator.cpp" />
+    <ClCompile Include="ChunkBase.cpp" />
     <ClCompile Include="DataBinary.cpp" />
     <ClCompile Include="M2.cpp" />
     <ClCompile Include="DataElement.cpp" />
@@ -95,6 +99,8 @@
     <ClCompile Include="M2SkinBuilder.cpp" />
     <ClCompile Include="M2SkinElement.cpp" />
     <ClCompile Include="M2Types.cpp" />
+    <ClCompile Include="Skeleton.cpp" />
+    <ClCompile Include="SkeletonChunk.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

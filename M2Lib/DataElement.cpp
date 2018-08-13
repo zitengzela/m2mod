@@ -3,8 +3,6 @@
 #include <string.h>
 #include <algorithm>
 
-UInt32 M2Lib::DataElement::FileOffset = 0;
-
 M2Lib::DataElement::DataElement()
 	: Count(0)
 	, Offset(0)
@@ -24,7 +22,7 @@ void* M2Lib::DataElement::GetLocalPointer(UInt32 GlobalOffset)
 	return &Data[GlobalOffset];
 }
 
-bool M2Lib::DataElement::Load(std::fstream& FileStream)
+bool M2Lib::DataElement::Load(std::fstream& FileStream, SInt32 FileOffset)
 {
 	if (Data.empty())
 		return true;
@@ -35,7 +33,7 @@ bool M2Lib::DataElement::Load(std::fstream& FileStream)
 	return true;
 }
 
-bool M2Lib::DataElement::Load(UInt8 const* RawData)
+bool M2Lib::DataElement::Load(UInt8 const* RawData, SInt32 FileOffset)
 {
 	if (Data.empty())
 		return true;
@@ -44,7 +42,7 @@ bool M2Lib::DataElement::Load(UInt8 const* RawData)
 	return true;
 }
 
-bool M2Lib::DataElement::Save(std::fstream& FileStream)
+bool M2Lib::DataElement::Save(std::fstream& FileStream, SInt32 FileOffset)
 {
 	if (Data.empty())
 		return true;

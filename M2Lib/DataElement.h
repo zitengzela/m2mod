@@ -29,11 +29,11 @@ namespace M2Lib
 		void* GetLocalPointer(UInt32 GlobalOffset);
 
 		// loads this element's data from a file stream. assumes that Offset and DataSize have already been set.
-		bool Load(std::fstream& FileStream);
+		bool Load(std::fstream& FileStream, SInt32 FileOffset);
 		// loads this element's data from memory. assumes that Offset and DataSize have already been set.
-		bool Load(UInt8 const* RawData);
+		bool Load(UInt8 const* RawData, SInt32 FileOffset);
 		// saves this element's data to a file stream. assumes that Offset and DataSize have already been set.
-		bool Save(std::fstream& FileStream);
+		bool Save(std::fstream& FileStream, SInt32 FileOffset);
 
 		// reallocates Data, either erasing existing data or preserving it.
 		// adds padding to NewDataSize if necessary so that new size aligns with Align.
@@ -58,11 +58,5 @@ namespace M2Lib
 
 		// clones this element from Source to Destination.
 		static void Clone(DataElement* Source, DataElement* Destination);
-
-		static void SetFileOffset(UInt32 offset) { FileOffset = offset; }
-	private:
-		static UInt32 FileOffset;
-
 	};
-
 }

@@ -31,7 +31,7 @@ void M2Lib::M2Chunk::SFIDChunk::Load(std::fstream& FileStream, UInt32 Size)
 
 	Lod_SkinsFileDataIds.clear();
 	int RemainingBytes = Size - SkinsFileDataIds.size() * 4;
-	int LodSkinFileCount = RemainingBytes ? std::min(RemainingBytes / 4, LOD_SKIN_COUNT) : 0;
+	int LodSkinFileCount = RemainingBytes ? std::min(RemainingBytes / 4, LOD_SKIN_MAX_COUNT) : 0;
 	for (UInt32 i = 0; i < LodSkinFileCount; ++i)
 	{
 		UInt32 FileDataId = 0;
@@ -91,17 +91,6 @@ void M2Lib::M2Chunk::BFIDChunk::Save(std::fstream& FileStream)
 {
 	for (auto& boneFileDataId : BoneFileDataIds)
 		FileStream.write((char*)&boneFileDataId, 4);
-}
-
-void M2Lib::M2Chunk::RawChunk::Load(std::fstream& FileStream, UInt32 Size)
-{
-	RawData.resize(Size);
-	FileStream.read((char*)RawData.data(), Size);
-}
-
-void M2Lib::M2Chunk::RawChunk::Save(std::fstream& FileStream)
-{
-	FileStream.write((char*)RawData.data(), RawData.size());
 }
 
 void M2Lib::M2Chunk::MD21Chunk::Save(std::fstream& FileStream)

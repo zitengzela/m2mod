@@ -50,11 +50,10 @@ M2Lib::EError M2Lib::M2Skin::Load(const Char16* FileName)
 	m_LoadElements_CopyHeaderToElements();
 	m_LoadElements_FindSizes(FileSize);
 
-	DataElement::SetFileOffset(0);
 	// load elements
 	for (UInt32 i = 0; i < EElement__Count__; ++i)
 	{
-		if (!Elements[i].Load(FileStream))
+		if (!Elements[i].Load(FileStream, 0))
 			return EError_FailedToLoadSKIN_FileMissingOrCorrupt;
 	}
 
@@ -97,11 +96,10 @@ M2Lib::EError M2Lib::M2Skin::Save(const Char16* FileName)
 	UInt32 HeaderSize = pM2->GetExpansion() >= Expansion::Cataclysm ? sizeof(Header) : 48;
 	FileStream.write((Char8*)&Header, HeaderSize);
 
-	DataElement::SetFileOffset(0);
 	// save elements
 	for (UInt32 i = 0; i != EElement__Count__; i++)
 	{
-		if (!Elements[i].Save(FileStream))
+		if (!Elements[i].Save(FileStream, 0))
 			return EError_FailedToSaveSKIN;
 	}
 

@@ -1,26 +1,18 @@
 #pragma once
 
-#include "BaseTypes.h"
-#include "M2Types.h"
+#include "ChunkBase.h"
 
 namespace M2Lib
 {
 	namespace M2Chunk
 	{
-		enum class EChunk : UInt32
+		enum class EM2Chunk : UInt32
 		{
 			Model = 'MD21',
 			Physic = 'PFID',
 			Animation = 'AFID',
 			Skin = 'SFID',
 			Bone = 'BFID',
-		};
-
-		class ChunkBase
-		{
-		public:
-			virtual void Load(std::fstream& FileStream, UInt32 Size) = 0;
-			virtual void Save(std::fstream& FileStream) = 0;
 		};
 
 		class PFIDChunk : public ChunkBase
@@ -69,15 +61,6 @@ namespace M2Lib
 			void Save(std::fstream& FileStream) override;
 
 			std::vector<UInt32> BoneFileDataIds;
-		};
-
-		class RawChunk : public ChunkBase
-		{
-		public:
-			void Load(std::fstream& FileStream, UInt32 Size) override;
-			void Save(std::fstream& FileStream) override;
-
-			std::vector<UInt8> RawData;
 		};
 
 		class MD21Chunk : public RawChunk

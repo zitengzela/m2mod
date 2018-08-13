@@ -2,6 +2,7 @@
 #include "DataBinary.h"
 #include "M2SkinBuilder.h"
 #include "Settings.h"
+#include "Skeleton.h"
 #include <sstream>
 #include <locale>
 #include <codecvt>
@@ -13,9 +14,6 @@ using namespace M2Lib::M2Chunk;
 // level of detail for output messages
 int g_Verbose = 1;
 
-#define REVERSE_CC(x) \
-	 ((x & 0xFF) << 24 | ((x >> 8) & 0xFF) << 16 | ((x >> 16) & 0xFF) << 8 | (x >> 24) & 0xFF)
-
 M2Lib::DataElement* M2Lib::M2::GetLastElement()
 {
 	for (int i = M2Element::EElement__Count__ - 1; i >= 0; --i)
@@ -26,21 +24,6 @@ M2Lib::DataElement* M2Lib::M2::GetLastElement()
 
 	return NULL;
 }
-
-class SteamCloser
-{
-	std::fstream* stream;
-public:
-	SteamCloser(std::fstream& stream)
-	{
-		this->stream = &stream;
-	}
-
-	~SteamCloser()
-	{
-		this->stream->close();
-	}
-};
 
 M2Lib::Expansion M2Lib::M2::GetExpansion() const
 {
@@ -95,14 +78,12 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 	if (FileStream.fail())
 		return EError_FailedToLoadM2_CouldNotOpenFile;
 
-	SteamCloser _fsCloser(FileStream);
+	StreamCloser _fsCloser(FileStream);
 
 	// find file size
 	FileStream.seekg(0, std::ios::end);
 	UInt32 FileSize = (UInt32)FileStream.tellg();
 	FileStream.seekg(0, std::ios::beg);
-
-	DataElement::SetFileOffset(0);
 
 	struct PostChunkInfo
 	{
@@ -117,7 +98,7 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 		UInt32 Size;
 	};
 
-	std::map<EChunk, PostChunkInfo> PostProcessChunks;
+	std::map<EM2Chunk, PostChunkInfo> PostProcessChunks;
 
 	while (FileStream.tellg() < FileSize)
 	{
@@ -133,20 +114,20 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 			auto Chunk = new MD21Chunk();
 			FileStream.seekg(0, std::ios::beg);
 			Chunk->Load(FileStream, FileSize);
-			Chunks[EChunk::Model] = Chunk;
+			Chunks[EM2Chunk::Model] = Chunk;
 			break;
 		}
 		else
 		{
 			ChunkBase* Chunk = NULL;
-			auto eChunk = (EChunk)REVERSE_CC(ChunkId);
+			auto eChunk = (EM2Chunk)REVERSE_CC(ChunkId);
 			switch (eChunk)
 			{
-				case EChunk::Model: Chunk = new MD21Chunk(); break;
-				case EChunk::Physic: Chunk = new PFIDChunk(); break;
-				case EChunk::Animation: Chunk = new AFIDChunk(); break;
-				case EChunk::Bone: Chunk = new BFIDChunk(); break;
-				case EChunk::Skin:
+				case EM2Chunk::Model: Chunk = new MD21Chunk(); break;
+				case EM2Chunk::Physic: Chunk = new PFIDChunk(); break;
+				case EM2Chunk::Animation: Chunk = new AFIDChunk(); break;
+				case EM2Chunk::Bone: Chunk = new BFIDChunk(); break;
+				case EM2Chunk::Skin:
 				{
 					PostProcessChunks[eChunk] = PostChunkInfo(FileStream.tellg(), ChunkSize);
 					FileStream.seekg(ChunkSize, std::ios::cur);
@@ -166,7 +147,7 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 		}
 	}
 
-	auto ModelChunk = (MD21Chunk*)GetChunk(EChunk::Model);
+	auto ModelChunk = (MD21Chunk*)GetChunk(EM2Chunk::Model);
 	if (!ModelChunk)
 		return EError_FailedToLoadM2_FileCorrupt;
 
@@ -191,7 +172,7 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 	for (UInt32 i = 0; i < EElement__Count__; ++i)
 	{
 		Elements[i].Align = 16;
-		if (!Elements[i].Load(ModelChunk->RawData.data()))
+		if (!Elements[i].Load(ModelChunk->RawData.data(), 0))
 			return EError_FailedToLoadM2_FileCorrupt;
 	}
 
@@ -254,7 +235,7 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 		}
 	}
 
-	for (int i = 0; i < LOD_SKIN_COUNT; ++i)
+	for (int i = 0; i < LOD_SKIN_MAX_COUNT; ++i)
 	{
 		Char16 FileNameSkin[1024];
 		GetFileSkin(FileNameSkin, FileName, 4 + i);
@@ -279,7 +260,7 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 		ChunkBase* Chunk = NULL;
 		switch (PostChunk.first)
 		{
-			case EChunk::Skin:
+			case EM2Chunk::Skin:
 			{
 				Chunk = new SFIDChunk(Header.Elements.nSkin);
 				Chunk->Load(FileStream, PostChunk.second.Size);
@@ -294,6 +275,16 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 		}
 
 		Chunks[PostChunk.first] = Chunk;
+	}
+
+	Char16 FileNameSkeleton[1024];
+	if (GetSkeleton(FileNameSkeleton, FileName))
+	{
+		auto sk = new M2Lib::Skeleton();
+		if (sk->Load(FileNameSkeleton) == EError::EError_OK)
+			Skeleton = sk;
+		else
+			delete sk;
 	}
 
 	// print info
@@ -406,7 +397,7 @@ void M2Lib::M2::DoExtraWork()
 	}
 }
 
-M2Lib::M2Chunk::ChunkBase* M2Lib::M2::GetChunk(EChunk ChunkId)
+M2Lib::ChunkBase* M2Lib::M2::GetChunk(EM2Chunk ChunkId)
 {
 	auto chunkItr = Chunks.find(ChunkId);
 	if (chunkItr == Chunks.end())
@@ -417,7 +408,7 @@ M2Lib::M2Chunk::ChunkBase* M2Lib::M2::GetChunk(EChunk ChunkId)
 
 void M2Lib::M2::PrepareChunks()
 {
-	if (auto SkinChunk = (SFIDChunk*)GetChunk(EChunk::Skin))
+	if (auto SkinChunk = (SFIDChunk*)GetChunk(EM2Chunk::Skin))
 	{
 		if (Header.Elements.nSkin < SkinChunk->SkinsFileDataIds.size())
 			SkinChunk->SkinsFileDataIds.resize(Header.Elements.nSkin);
@@ -445,9 +436,9 @@ M2Lib::EError M2Lib::M2::Save(const Char16* FileName)
 	m_SaveElements_CopyElementsToHeader();
 
 	// Reserve model chunk header
-	DataElement::SetFileOffset(8);
+	UInt32 const ChunkReserveOffset = 8;
 
-	UInt32 ChunkId = REVERSE_CC((UInt32)EChunk::Model);
+	UInt32 ChunkId = REVERSE_CC((UInt32)EM2Chunk::Model);
 	FileStream.write((Char8*)&ChunkId, 4);
 	FileStream.seekp(4, std::ios::cur);		// reserve bytes for chunk size
 
@@ -462,12 +453,12 @@ M2Lib::EError M2Lib::M2::Save(const Char16* FileName)
 	UInt32 ElementCount = Header.IsLongHeader() ? EElement__Count__ : EElement__Count__ - 1;
 	for (UInt32 i = 0; i < ElementCount; ++i)
 	{
-		if (!Elements[i].Save(FileStream))
+		if (!Elements[i].Save(FileStream, ChunkReserveOffset))
 			return EError_FailedToSaveM2;
 	}
 
 	UInt32 MD20Size = FileStream.tellp();
-	MD20Size -= 8;
+	MD20Size -= ChunkReserveOffset;
 
 	FileStream.seekp(4, std::ios::beg);
 	FileStream.write((Char8*)(&MD20Size), 4);
@@ -478,7 +469,7 @@ M2Lib::EError M2Lib::M2::Save(const Char16* FileName)
 
 	for (auto chunk : Chunks)
 	{
-		if (chunk.first == EChunk::Model)
+		if (chunk.first == EM2Chunk::Model)
 			continue;
 
 		//if (chunk.first == 'SFID')
@@ -523,11 +514,11 @@ M2Lib::EError M2Lib::M2::Save(const Char16* FileName)
 	// 0x80 = flag_has_lod_skin_files - wrong
 	//if (Header.Description.Flags & 0x80)
 	UInt32 LodSkinCount = 0;
-	auto SkinChunk = (M2Chunk::SFIDChunk*)GetChunk(M2Chunk::EChunk::Skin);
+	auto SkinChunk = (M2Chunk::SFIDChunk*)GetChunk(M2Chunk::EM2Chunk::Skin);
 	if (SkinChunk && SkinChunk->HasLodSkins())
 		LodSkinCount = SkinChunk->Lod_SkinsFileDataIds.size();
 	else if (LodSkinsLoaded())
-		LodSkinCount = LOD_SKIN_COUNT;
+		LodSkinCount = LOD_SKIN_MAX_COUNT;
 
 	for (int i = 0; i < LodSkinCount; ++i)
 	{
@@ -561,11 +552,27 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate(Char16* FileName)
 	UInt16* Triangles = pSkin->Elements[M2SkinElement::EElement_TriangleIndex].as<UInt16>();
 	UInt16* Indices = pSkin->Elements[M2SkinElement::EElement_VertexLookup].as<UInt16>();
 
+	auto BoneChunk = (SkeletonChunk::SKB1Chunk*)(Skeleton ? Skeleton->GetChunk(SkeletonChunk::ESkeletonChunk::SKB1) : NULL);
+
 	UInt32 BonesCount = Elements[EElement_Bone].Count;
 	CElement_Bone* Bones = Elements[EElement_Bone].as<CElement_Bone>();
 
+	if (!BonesCount && BoneChunk)
+	{
+		BonesCount = BoneChunk->Elements[SkeletonChunk::SKB1Chunk::EElement_Bone].Count;
+		Bones = BoneChunk->Elements[SkeletonChunk::SKB1Chunk::EElement_Bone].as<CElement_Bone>();
+	}
+
+	auto AttachmentChunk = (SkeletonChunk::SKA1Chunk*)(Skeleton ? Skeleton->GetChunk(SkeletonChunk::ESkeletonChunk::SKA1) : NULL);
+
 	UInt32 AttachmentsCount = Elements[EElement_Attachment].Count;
 	CElement_Attachment* Attachments = Elements[EElement_Attachment].as<CElement_Attachment>();
+
+	if (!AttachmentsCount && AttachmentChunk)
+	{
+		AttachmentsCount = AttachmentChunk->Elements[SkeletonChunk::SKA1Chunk::EElement_Attachment].Count;
+		Attachments = AttachmentChunk->Elements[SkeletonChunk::SKA1Chunk::EElement_Attachment].as<CElement_Attachment>();
+	}
 
 	UInt32 CamerasCount = Elements[EElement_Camera].Count;
 
@@ -1272,6 +1279,16 @@ bool M2Lib::M2::GetFileSkin(Char16* SkinFileNameResultBuffer, const Char16* M2Fi
 		SkinFileNameResultBuffer[j++] = L'0';
 		SkinFileNameResultBuffer[j++] = L'2';
 		break;
+	case 6:
+		SkinFileNameResultBuffer[j++] = L'_';
+		SkinFileNameResultBuffer[j++] = L'L';
+		SkinFileNameResultBuffer[j++] = L'O';
+		SkinFileNameResultBuffer[j++] = L'D';
+		SkinFileNameResultBuffer[j++] = L'0';
+		SkinFileNameResultBuffer[j++] = L'3';
+		break;
+	default:
+		return false;
 	}
 	SkinFileNameResultBuffer[j++] = L'.';
 	SkinFileNameResultBuffer[j++] = L's';
@@ -1283,6 +1300,41 @@ bool M2Lib::M2::GetFileSkin(Char16* SkinFileNameResultBuffer, const Char16* M2Fi
 	return true;
 }
 
+bool M2Lib::M2::GetSkeleton(Char16* SkeletonFileNameResultBuffer, const Char16* M2FileName)
+{
+	// ghetto string ops
+	SInt32 LastDot = -1;
+	UInt32 Length = 0;
+	for (; Length < 1024; Length++)
+	{
+		if (M2FileName[Length] == L'\0')
+		{
+			break;
+		}
+		else if (M2FileName[Length] == L'.')
+		{
+			LastDot = Length;
+		}
+	}
+	if ((LastDot == -1) || (LastDot > 1018))
+	{
+		return false;
+	}
+	UInt32 j = 0;
+	for (; j != LastDot; j++)
+	{
+		SkeletonFileNameResultBuffer[j] = M2FileName[j];
+	}
+
+	SkeletonFileNameResultBuffer[j++] = L'.';
+	SkeletonFileNameResultBuffer[j++] = L's';
+	SkeletonFileNameResultBuffer[j++] = L'k';
+	SkeletonFileNameResultBuffer[j++] = L'e';
+	SkeletonFileNameResultBuffer[j++] = L'l';
+	SkeletonFileNameResultBuffer[j] = L'\0';
+
+	return true;
+}
 
 void M2Lib::M2::FixSeamsSubMesh(Float32 PositionalTolerance, Float32 AngularTolerance)
 {
@@ -2510,15 +2562,15 @@ UInt32 M2Lib::M2::AddBone(CElement_Bone const& Bone)
 
 void M2Lib::M2::CopySFIDChunk(M2* Other)
 {
-	auto thisChunk = (SFIDChunk*)GetChunk(EChunk::Skin);
+	auto thisChunk = (SFIDChunk*)GetChunk(EM2Chunk::Skin);
 	if (!thisChunk)
 		return;
 
-	auto otherChunk = (SFIDChunk*)Other->GetChunk(EChunk::Skin);
+	auto otherChunk = (SFIDChunk*)Other->GetChunk(EM2Chunk::Skin);
 	if (!otherChunk)
 	{
 		delete thisChunk;
-		Chunks.erase(EChunk::Skin);
+		Chunks.erase(EM2Chunk::Skin);
 		return;
 	}
 
