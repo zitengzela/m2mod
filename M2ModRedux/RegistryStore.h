@@ -23,6 +23,8 @@ public:
 		FixSeams,
 		ForceExportExpansion,
 
+		WowPath,
+
 		NotShowAutoUpdate,
 		ActualVersion,
 	};

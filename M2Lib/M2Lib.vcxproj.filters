@@ -13,6 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Casc">
+      <UniqueIdentifier>{c9552b36-bfbf-49da-ba08-d662650b1fd7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FileSystem">
+      <UniqueIdentifier>{1188fdff-1a20-4883-aebb-e5df05037b87}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BaseTypes.h">
@@ -66,6 +72,12 @@
     <ClInclude Include="SkeletonChunk.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Casc.h">
+      <Filter>Casc</Filter>
+    </ClInclude>
+    <ClInclude Include="FileSystem.h">
+      <Filter>FileSystem</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="M2.cpp">
@@ -109,6 +121,12 @@
     </ClCompile>
     <ClCompile Include="ChunkBase.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Casc.cpp">
+      <Filter>Casc</Filter>
+    </ClCompile>
+    <ClCompile Include="FileSystem.cpp">
+      <Filter>FileSystem</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

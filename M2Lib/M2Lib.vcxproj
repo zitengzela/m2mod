@@ -42,12 +42,14 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <TargetExt>.lib</TargetExt>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <CompileAsManaged>false</CompileAsManaged>
+      <AdditionalIncludeDirectories>..\CascLib\src</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -72,6 +74,8 @@
     <ClInclude Include="BoneComparator.h" />
     <ClInclude Include="ChunkBase.h" />
     <ClInclude Include="DataBinary.h" />
+    <ClInclude Include="Casc.h" />
+    <ClInclude Include="FileSystem.h" />
     <ClInclude Include="M2.h" />
     <ClInclude Include="DataElement.h" />
     <ClInclude Include="M2Chunk.h" />
@@ -88,8 +92,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BoneComparator.cpp" />
+    <ClCompile Include="Casc.cpp" />
     <ClCompile Include="ChunkBase.cpp" />
     <ClCompile Include="DataBinary.cpp" />
+    <ClCompile Include="FileSystem.cpp" />
     <ClCompile Include="M2.cpp" />
     <ClCompile Include="DataElement.cpp" />
     <ClCompile Include="M2Chunk.cpp" />

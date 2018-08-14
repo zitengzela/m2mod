@@ -1,6 +1,7 @@
 #pragma once
 
 #include "M2Types.h"
+#include <string>
 
 namespace M2Lib
 {
@@ -24,5 +25,7 @@ namespace M2Lib
 	public:
 		ExportSettings ExportSettings;
 		ImportSettings ImportSettings;
+
+		std::string WowPath;
 	};
 }

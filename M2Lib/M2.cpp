@@ -4,9 +4,9 @@
 #include "Settings.h"
 #include "Skeleton.h"
 #include "FileSystem.h"
+#include "Casc.h"
 #include <sstream>
 #include <locale>
-#include <codecvt>
 #include <string>
 
 using namespace M2Lib::M2Element;
@@ -28,8 +28,8 @@ M2Lib::DataElement* M2Lib::M2::GetLastElement()
 
 M2Lib::Expansion M2Lib::M2::GetExpansion() const
 {
-	if (ForceExpansion != Expansion::None)
-		return ForceExpansion;
+	if (Settings && Settings->ExportSettings.ForceExpansion  != Expansion::None)
+		return Settings->ExportSettings.ForceExpansion;
 
 	if (Header.Description.Version < 264)
 		return Expansion::BurningCrusade;
@@ -184,10 +184,9 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 		std::wstring FileNameSkin;
 		GetFileSkin(FileNameSkin, _FileName, 4 + i);
 
-		auto newSkin = new M2Skin(this);
-		if (EError Error = newSkin->Load(FileNameSkin.c_str()))
+		M2Skin LoDSkin(this);
+		if (EError Error = LoDSkin.Load(FileNameSkin.c_str()))
 		{
-			delete newSkin;
 			if (Error = EError_FailedToLoadSKIN_CouldNotOpenFile)
 				continue;
 
@@ -252,6 +251,51 @@ M2Lib::EError M2Lib::M2::LoadSkins()
 			Skins[i] = NULL;
 			return Error;
 		}
+	}
+
+	return EError::EError_OK;
+}
+
+M2Lib::EError M2Lib::M2::SaveSkins()
+{
+	if (Header.Elements.nSkin == 0 || Header.Elements.nSkin > 4)
+		return EError_FailedToSaveM2;
+
+	// delete existing skin files
+	for (UInt32 i = 0; i < SKIN_COUNT; ++i)
+	{
+		std::wstring FileNameSkin;
+		if (GetFileSkin(FileNameSkin, _FileName, i))
+			_wremove(FileNameSkin.c_str());
+	}
+
+	for (UInt32 i = 0; i < Header.Elements.nSkin; ++i)
+	{
+		std::wstring FileNameSkin;
+		if (!GetFileSkin(FileNameSkin, _FileName, i))
+			continue;
+
+		if (EError Error = Skins[i]->Save(FileNameSkin.c_str()))
+			return Error;
+	}
+
+	// 0x80 = flag_has_lod_skin_files - wrong
+	//if (Header.Description.Flags & 0x80)
+	UInt32 LodSkinCount = 0;
+	auto SkinChunk = (M2Chunk::SFIDChunk*)GetChunk(M2Chunk::EM2Chunk::Skin);
+	if (SkinChunk && SkinChunk->HasLodSkins())
+		LodSkinCount = SkinChunk->Lod_SkinsFileDataIds.size();
+	else if (LodSkinsLoaded())
+		LodSkinCount = LOD_SKIN_MAX_COUNT;
+
+	for (int i = 0; i < LodSkinCount; ++i)
+	{
+		std::wstring FileNameSkin;
+		if (!GetFileSkin(FileNameSkin, _FileName, i + 4))
+			continue;
+
+		if (EError Error = (Skins[1] ? Skins[1] : Skins[0])->Save(FileNameSkin.c_str()))
+			return Error;
 	}
 
 	return EError::EError_OK;
@@ -420,7 +464,7 @@ M2Lib::EError M2Lib::M2::Save(const Char16* FileName)
 			return EError_FailedToSaveM2;
 	}
 
-	UInt32 MD20Size = FileStream.tellp();
+	UInt32 MD20Size = (UInt32)FileStream.tellp();
 	MD20Size -= ChunkReserveOffset;
 
 	FileStream.seekp(4, std::ios::beg);
@@ -442,7 +486,7 @@ M2Lib::EError M2Lib::M2::Save(const Char16* FileName)
 
 		FileStream.write((char*)&ChunkId, 4);
 		FileStream.seekp(4, std::ios::cur);		// reserve space for chunk size
-		UInt32 savePos = FileStream.tellp();
+		UInt32 savePos = (UInt32)FileStream.tellp();
 		chunk.second->Save(FileStream);
 		UInt32 ChunkSize = (UInt32)FileStream.tellp() - savePos;
 		FileStream.seekp(savePos - 4, std::ios::beg);
@@ -453,46 +497,10 @@ M2Lib::EError M2Lib::M2::Save(const Char16* FileName)
 	// close file stream
 	FileStream.close();
 
-	// delete existing skin files
-	for (UInt32 i = 0; i < SKIN_COUNT; ++i)
-	{
-		std::wstring FileNameSkin;
-		if (GetFileSkin(FileNameSkin, FileName, i))
-			_wremove(FileNameSkin.c_str());
-	}
-
 	// save skins
-	if ((Header.Elements.nSkin == 0) || (Header.Elements.nSkin > 4))
-		return EError_FailedToSaveM2;
-
-	for (UInt32 i = 0; i < Header.Elements.nSkin; ++i)
-	{
-		std::wstring FileNameSkin;
-		if (!GetFileSkin(FileNameSkin, FileName, i))
-			continue;
-
-		if (EError Error = Skins[i]->Save(FileNameSkin.c_str()))
-			return Error;
-	}
-
-	// 0x80 = flag_has_lod_skin_files - wrong
-	//if (Header.Description.Flags & 0x80)
-	UInt32 LodSkinCount = 0;
-	auto SkinChunk = (M2Chunk::SFIDChunk*)GetChunk(M2Chunk::EM2Chunk::Skin);
-	if (SkinChunk && SkinChunk->HasLodSkins())
-		LodSkinCount = SkinChunk->Lod_SkinsFileDataIds.size();
-	else if (LodSkinsLoaded())
-		LodSkinCount = LOD_SKIN_MAX_COUNT;
-
-	for (int i = 0; i < LodSkinCount; ++i)
-	{
-		std::wstring FileNameSkin;
-		if (!GetFileSkin(FileNameSkin, FileName, i + 4))
-			continue;
-
-		if (EError Error = (Skins[1] ? Skins[1] : Skins[0])->Save(FileNameSkin.c_str()))
-			return Error;
-	}
+	auto Error = SaveSkins();
+	if (Error != EError::EError_OK)
+		return Error;
 
 	return EError_OK;
 }
@@ -713,12 +721,12 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate(Char16* FileName)
 	return EError_OK;
 }
 
-M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16* FileName, M2Lib::ImportSettings* Settings)
+M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16* FileName)
 {
-	bool IgnoreBones = Settings && !Settings->MergeBones;
-	bool IgnoreAttachments = Settings && !Settings->MergeAttachments;
-	bool IgnoreCameras = Settings && !Settings->MergeCameras;
-	bool FixSeams = Settings && !Settings->FixSeams;
+	bool IgnoreBones = Settings && !Settings->ImportSettings.MergeBones;
+	bool IgnoreAttachments = Settings && !Settings->ImportSettings.MergeAttachments;
+	bool IgnoreCameras = Settings && !Settings->ImportSettings.MergeCameras;
+	bool FixSeams = !Settings || Settings->ImportSettings.FixSeams;
 
 	Float32 SubmeshPositionalTolerance = 0.0001f;
 	Float32 SubmeshAngularTolerance = 45.0f;
@@ -2376,7 +2384,7 @@ UInt32 M2Lib::M2::GetTexture(const Char8* szTextureSource)
 		if (texture.TexturePath.Offset)
 		{
 			auto pTexturePath = (Char8 const*)Element.GetLocalPointer(texture.TexturePath.Offset);
-			if (strcmpi(pTexturePath, szTextureSource) == 0)
+			if (_strcmpi(pTexturePath, szTextureSource) == 0)
 				return i;
 		}
 	}

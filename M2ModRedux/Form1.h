@@ -3,6 +3,7 @@
 #define M2Filter L"M2 Files|*.m2|All Files|*.*"
 #define M2IFilter L"M2I Files|*.m2i|All Files|*.*"
 
+#include "Casc.h"
 #include "ElementManagementForm.h"
 #include "MeshInfoControl.h"
 #include "RegistryStore.h"
@@ -55,6 +56,9 @@ namespace M2ModRedux
 				if (auto value = RegistyStore::GetValue(RegistyStore::Value::ImportReplaceM2))
 					this->textBoxReplaceM2->Text = (String^)value;
 
+				if (auto value = RegistyStore::GetValue(RegistyStore::Value::WowPath))
+					settings->WowPath = (char const*)Marshal::StringToHGlobalAnsi((String^)value).ToPointer();
+
 				if (auto value = RegistyStore::GetValue(RegistyStore::Value::ForceExportExpansion))
 					settings->ExportSettings.ForceExpansion = (M2Lib::Expansion)Int32::Parse(value->ToString());
 				if (auto value = RegistyStore::GetValue(RegistyStore::Value::MergeAttachments))
@@ -87,12 +91,13 @@ namespace M2ModRedux
 		RegistyStore::SetValue(RegistyStore::Value::ImportOutM2, this->textBoxOutputM2->Text);
 		RegistyStore::SetValue(RegistyStore::Value::ImportReplaceM2, this->textBoxReplaceM2->Text);
 
+		RegistyStore::SetValue(RegistyStore::Value::WowPath, gcnew String(M2Lib::FileSystemA::GetParentDirectory(settings->WowPath).c_str()));
+
 		RegistyStore::SetValue(RegistyStore::Value::ForceExportExpansion, (SInt32)settings->ExportSettings.ForceExpansion);
 		RegistyStore::SetValue(RegistyStore::Value::MergeAttachments, settings->ImportSettings.MergeAttachments);
 		RegistyStore::SetValue(RegistyStore::Value::MergeBones, settings->ImportSettings.MergeBones);
 		RegistyStore::SetValue(RegistyStore::Value::MergeCameras, settings->ImportSettings.MergeCameras);
 		RegistyStore::SetValue(RegistyStore::Value::FixSeams, settings->ImportSettings.FixSeams);
-
 	}
 
 	protected:
@@ -713,7 +718,7 @@ namespace M2ModRedux
 				return;
 			}
 
-			M2Lib::M2* M2 = new M2Lib::M2(settings->ExportSettings.ForceExpansion);
+			M2Lib::M2* M2 = new M2Lib::M2(settings);
 
 			// import M2
 			System::IntPtr StringPointer = Marshal::StringToHGlobalUni(textBoxInputM2Exp->Text);
@@ -790,6 +795,15 @@ namespace M2ModRedux
 
 	private: M2Lib::M2* preloadM2 = NULL;
 	private: M2Lib::GlobalSettings* settings = NULL;
+
+	private: M2Lib::Casc* _casc = NULL;
+	private: M2Lib::Casc* GetCasc()
+	{
+		if (!_casc && settings && !settings->WowPath.empty())
+			_casc = new M2Lib::Casc(settings->WowPath);
+
+		return _casc;
+	}
 
 	private: System::Void importButtonGo_Click(System::Object^  sender, System::EventArgs^  e) {
 		importButtonPreload->Enabled = false;
@@ -903,7 +917,7 @@ namespace M2ModRedux
 			return;
 		}
 
-		preloadM2 = new M2Lib::M2();
+		preloadM2 = new M2Lib::M2(settings);
 
 		System::IntPtr StringPointer = Marshal::StringToHGlobalUni(textBoxInputM2Imp->Text);
 		M2Lib::EError Error = preloadM2->Load((Char16*)StringPointer.ToPointer());
@@ -920,7 +934,7 @@ namespace M2ModRedux
 
 		// import M2I
 		StringPointer = Marshal::StringToHGlobalUni(textBoxInputM2I->Text);
-		Error = preloadM2->ImportM2Intermediate((Char16*)StringPointer.ToPointer(), &settings->ImportSettings);
+		Error = preloadM2->ImportM2Intermediate((Char16*)StringPointer.ToPointer());
 		Marshal::FreeHGlobal(StringPointer);
 
 		if (Error != 0)

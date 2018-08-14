@@ -16,7 +16,8 @@
 
 namespace M2Lib
 {
-	class ImportSettings;
+	class Casc;
+	class GlobalSettings;
 	class Skeleton;
 
 	// load, export, import merge, save: M2 file.
@@ -154,9 +155,10 @@ namespace M2Lib
 		bool lodSkinsLoaded;
 
 		UInt32 m_OriginalModelChunkSize;
-		Expansion ForceExpansion;
+		GlobalSettings* Settings;
 
 		M2I* pInM2I;
+		Casc* casc;
 
 	public:
 		CM2Header Header;		// used for loading and saving. not used when editing.
@@ -167,14 +169,15 @@ namespace M2Lib
 		#define LOD_SKIN_MAX_COUNT 3
 		M2Skin* Skins[SKIN_COUNT];
 
-		M2(Expansion ForceExpansion = Expansion::None)
+		M2(GlobalSettings* Settings = NULL)
 		{
 			memset(Skins, 0, sizeof(Skins));
 			Skeleton = NULL;
 			m_OriginalModelChunkSize = 0;
 			pInM2I = NULL;
 			lodSkinsLoaded = false;
-			this->ForceExpansion = ForceExpansion;
+			this->Settings = Settings;
+			casc = NULL;
 		}
 
 		~M2()
@@ -199,7 +202,7 @@ namespace M2Lib
 		// exports the loaded M2 as an M2I file.
 		EError ExportM2Intermediate(Char16* FileName);
 		// imports an M2I file and merges it with already loaded M2.
-		EError ImportM2Intermediate(Char16* FileName, ImportSettings* Settings = NULL);
+		EError ImportM2Intermediate(Char16* FileName);
 		
 		// prints diagnostic information.
 		void PrintInfo();
@@ -209,6 +212,8 @@ namespace M2Lib
 		UInt32 AddTexture(const Char8* szTextureSource, M2Element::CElement_Texture::ETextureType Type, M2Element::CElement_Texture::ETextureFlags Flags);
 		UInt32 AddTextureLookup(UInt16 TextureId, bool ForceNewIndex = false);
 		UInt32 GetTexture(const Char8* szTextureSource);
+
+		Casc* GetCasc() const { return casc; }
 
 	private:
 		// utilities and tests
@@ -233,6 +238,7 @@ namespace M2Lib
 		UInt32 AddTextureFlags(M2Element::CElement_TextureFlag::EFlags Flags, M2Element::CElement_TextureFlag::EBlend Blend);
 
 		EError LoadSkins();
+		EError SaveSkins();
 
 		bool GetFileSkin(std::wstring& SkinFileNameResultBuffer, std::wstring const& M2FileName, UInt32 SkinIndex);
 		bool GetSkeleton(std::wstring& SkeletonFileNameResultBuffer, std::wstring const& M2FileName);
