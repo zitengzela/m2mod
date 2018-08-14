@@ -175,19 +175,9 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 	if ((Header.Elements.nSkin == 0) || (Header.Elements.nSkin > 4))
 		return EError_FailedToLoadM2_FileCorrupt;
 
-	for (UInt32 i = 0; i < Header.Elements.nSkin; ++i)
-	{
-		std::wstring FileNameSkin;
-		GetFileSkin(FileNameSkin, _FileName, i);
-
-		Skins[i] = new M2Skin(this);
-		if (EError Error = Skins[i]->Load(FileNameSkin.c_str()))
-		{
-			delete Skins[i];
-			Skins[i] = NULL;
-			return Error;
-		}
-	}
+	auto Error = LoadSkins();
+	if (Error != EError::EError_OK)
+		return Error;
 
 	for (int i = 0; i < LOD_SKIN_MAX_COUNT; ++i)
 	{
@@ -246,6 +236,25 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 
 	// done
 	return EError_OK;
+}
+
+M2Lib::EError M2Lib::M2::LoadSkins()
+{
+	for (UInt32 i = 0; i < Header.Elements.nSkin; ++i)
+	{
+		std::wstring FileNameSkin;
+		GetFileSkin(FileNameSkin, _FileName, i);
+
+		Skins[i] = new M2Skin(this);
+		if (EError Error = Skins[i]->Load(FileNameSkin.c_str()))
+		{
+			delete Skins[i];
+			Skins[i] = NULL;
+			return Error;
+		}
+	}
+
+	return EError::EError_OK;
 }
 
 void M2Lib::M2::DoExtraWork()

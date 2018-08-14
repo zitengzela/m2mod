@@ -145,18 +145,11 @@ namespace M2Lib
 
 #pragma pack(pop)
 
-	public:
+	private:
 		std::wstring _FileName;	// needed to create skin file names so we can load/save skins.
 
-		CM2Header Header;		// used for loading and saving. not used when editing.
-		DataElement Elements[M2Element::EElement__Count__];
 		std::map<M2Chunk::EM2Chunk, ChunkBase*> Chunks;
 
-		DataElement* GetLastElement();
-
-		#define SKIN_COUNT 6
-		#define LOD_SKIN_MAX_COUNT 3
-		M2Skin* Skins[SKIN_COUNT];
 		Skeleton* Skeleton;
 		bool lodSkinsLoaded;
 
@@ -166,6 +159,14 @@ namespace M2Lib
 		M2I* pInM2I;
 
 	public:
+		CM2Header Header;		// used for loading and saving. not used when editing.
+		DataElement Elements[M2Element::EElement__Count__];
+		DataElement* GetLastElement();
+
+		#define SKIN_COUNT 6
+		#define LOD_SKIN_MAX_COUNT 3
+		M2Skin* Skins[SKIN_COUNT];
+
 		M2(Expansion ForceExpansion = Expansion::None)
 		{
 			memset(Skins, 0, sizeof(Skins));
@@ -184,37 +185,32 @@ namespace M2Lib
 				delete Chunk.second;
 		}
 
-	public:
 		UInt32 GetHeaderSize() const;
 		Expansion GetExpansion() const;
 
 		std::wstring GetModelDirectory() const;
 
 		// loads an M2 from a file.
-		M2Lib::EError Load(const Char16* FileName);
-		void PrepareChunks();
+		EError Load(const Char16* FileName);
+
 		// saves this M2 to a file.
-		M2Lib::EError Save(const Char16* FileName);
+		EError Save(const Char16* FileName);
 
 		// exports the loaded M2 as an M2I file.
-		M2Lib::EError ExportM2Intermediate(Char16* FileName);
+		EError ExportM2Intermediate(Char16* FileName);
 		// imports an M2I file and merges it with already loaded M2.
-		M2Lib::EError ImportM2Intermediate(Char16* FileName, M2Lib::ImportSettings* Settings = NULL);
-
+		EError ImportM2Intermediate(Char16* FileName, ImportSettings* Settings = NULL);
+		
 		// prints diagnostic information.
 		void PrintInfo();
 
-		// szResult is a buffer large enough to store result, which on windows means it should be at least MAX_PATH long, which is 260.
-		bool GetFileSkin(std::wstring& SkinFileNameResultBuffer, std::wstring const& M2FileName, UInt32 SkinIndex);
-		bool GetSkeleton(std::wstring& SkeletonFileNameResultBuffer, std::wstring const& M2FileName);
-
-		bool LodSkinsLoaded() const { return lodSkinsLoaded; }
-
-		ChunkBase* GetChunk(M2Chunk::EM2Chunk ChunkId);
-
 		void CopySFIDChunk(M2* Other);
+		UInt32 AddBone(M2Element::CElement_Bone const& Bone);
+		UInt32 AddTexture(const Char8* szTextureSource, M2Element::CElement_Texture::ETextureType Type, M2Element::CElement_Texture::ETextureFlags Flags);
+		UInt32 AddTextureLookup(UInt16 TextureId, bool ForceNewIndex = false);
+		UInt32 GetTexture(const Char8* szTextureSource);
 
-	public:
+	private:
 		// utilities and tests
 
 		// averages normals of duplicate vertices within submeshes.
@@ -233,15 +229,18 @@ namespace M2Lib
 
 		void SetGlobalBoundingData(BoundaryData& Data);
 
-		UInt32 AddTexture(const Char8* szTextureSource, M2Element::CElement_Texture::ETextureType Type, M2Element::CElement_Texture::ETextureFlags Flags);
-		UInt32 GetTexture(const Char8* szTextureSource);
-		UInt32 AddTextureLookup(UInt16 TextureId, bool ForceNewIndex = false);
 		UInt32 CloneTexture(UInt16 TextureId);
 		UInt32 AddTextureFlags(M2Element::CElement_TextureFlag::EFlags Flags, M2Element::CElement_TextureFlag::EBlend Blend);
 
-		UInt32 AddBone(M2Element::CElement_Bone const& Bone);
+		EError LoadSkins();
 
-	public:
+		bool GetFileSkin(std::wstring& SkinFileNameResultBuffer, std::wstring const& M2FileName, UInt32 SkinIndex);
+		bool GetSkeleton(std::wstring& SkeletonFileNameResultBuffer, std::wstring const& M2FileName);
+
+		bool LodSkinsLoaded() const { return lodSkinsLoaded; }
+		ChunkBase* GetChunk(M2Chunk::EM2Chunk ChunkId);
+		void PrepareChunks();
+
 		// post load header
 		void m_LoadElements_CopyHeaderToElements();
 		void m_LoadElements_FindSizes(UInt32 ChunkSize);
