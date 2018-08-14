@@ -13,6 +13,7 @@ namespace M2ModRedux {
 	using namespace System::Drawing;
 	using namespace System::Collections::Generic;
 	using namespace System::Runtime::InteropServices;
+	using namespace System::IO;
 
 	ref class SettingsForm;
 	ref class Form1;
@@ -50,8 +51,7 @@ namespace M2ModRedux {
 			else
 				forceExpansionComboBox->SelectedIndex = 0;
 
-			auto WowPath = gcnew String(settings->WowPath.c_str());
-			wowPathTextBox->Text = WowPath->Length ? WowPath + "\\Wow.exe" : "";
+			wowPathTextBox->Text = gcnew String(settings->WowPath.c_str());
 
 			checkBoxMergeBones->Checked = settings->ImportSettings.MergeBones;
 			checkBoxMergeAttachments->Checked = settings->ImportSettings.MergeAttachments;
@@ -63,8 +63,9 @@ namespace M2ModRedux {
 		{
 			M2Lib::GlobalSettings settings;
 
-			settings.WowPath = (char const*)Marshal::StringToHGlobalAnsi(wowPathTextBox->Text).ToPointer();
+			std::string path = (char const*)Marshal::StringToHGlobalAnsi(wowPathTextBox->Text->Trim()).ToPointer();
 
+			settings.WowPath = path.length() ? M2Lib::FileSystemA::GetParentDirectory(path) : "";
 			settings.ImportSettings.MergeBones = checkBoxMergeBones->Checked;
 			settings.ImportSettings.MergeAttachments = checkBoxMergeAttachments->Checked;
 			settings.ImportSettings.MergeCameras = checkBoxMergeCameras->Checked;
@@ -107,6 +108,8 @@ namespace M2ModRedux {
 	private: System::Windows::Forms::Button^  button1;
 	private: System::Windows::Forms::Button^  wowBrowseButton;
 	private: System::Windows::Forms::Button^  wowBrowseTextBox;
+	private: System::Windows::Forms::OpenFileDialog^  wowBrowseDialog;
+	private: System::Windows::Forms::GroupBox^  wowPathGroupBox;
 
 	private: System::ComponentModel::IContainer^  components;
 
@@ -138,28 +141,31 @@ namespace M2ModRedux {
 			this->toolTip1 = (gcnew System::Windows::Forms::ToolTip(this->components));
 			this->wowPathTextBox = (gcnew System::Windows::Forms::TextBox());
 			this->wowBrowseTextBox = (gcnew System::Windows::Forms::Button());
+			this->wowBrowseDialog = (gcnew System::Windows::Forms::OpenFileDialog());
+			this->wowPathGroupBox = (gcnew System::Windows::Forms::GroupBox());
 			this->groupBox1->SuspendLayout();
 			this->groupBox3->SuspendLayout();
+			this->wowPathGroupBox->SuspendLayout();
 			this->SuspendLayout();
 			this->groupBox1->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
 				| System::Windows::Forms::AnchorStyles::Right));
 			this->groupBox1->Controls->Add(this->label1);
 			this->groupBox1->Controls->Add(this->forceExpansionComboBox);
-			this->groupBox1->Location = System::Drawing::Point(12, 46);
+			this->groupBox1->Location = System::Drawing::Point(12, 73);
 			this->groupBox1->Name = L"groupBox1";
-			this->groupBox1->Size = System::Drawing::Size(242, 61);
+			this->groupBox1->Size = System::Drawing::Size(346, 53);
 			this->groupBox1->TabIndex = 0;
 			this->groupBox1->TabStop = false;
 			this->groupBox1->Text = L"Export Settings";
-			this->label1->Location = System::Drawing::Point(6, 19);
+			this->label1->Location = System::Drawing::Point(6, 20);
 			this->label1->Name = L"label1";
-			this->label1->Size = System::Drawing::Size(103, 29);
+			this->label1->Size = System::Drawing::Size(153, 29);
 			this->label1->TabIndex = 1;
 			this->label1->Text = L"Force Input M2 Expansion:";
 			this->forceExpansionComboBox->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Right));
 			this->forceExpansionComboBox->DropDownStyle = System::Windows::Forms::ComboBoxStyle::DropDownList;
 			this->forceExpansionComboBox->FormattingEnabled = true;
-			this->forceExpansionComboBox->Location = System::Drawing::Point(114, 20);
+			this->forceExpansionComboBox->Location = System::Drawing::Point(218, 18);
 			this->forceExpansionComboBox->Name = L"forceExpansionComboBox";
 			this->forceExpansionComboBox->Size = System::Drawing::Size(122, 21);
 			this->forceExpansionComboBox->TabIndex = 0;
@@ -171,9 +177,9 @@ namespace M2ModRedux {
 			this->groupBox3->Controls->Add(this->checkBoxMergeCameras);
 			this->groupBox3->Controls->Add(this->checkBoxMergeAttachments);
 			this->groupBox3->Controls->Add(this->checkBoxMergeBones);
-			this->groupBox3->Location = System::Drawing::Point(12, 108);
+			this->groupBox3->Location = System::Drawing::Point(12, 127);
 			this->groupBox3->Name = L"groupBox3";
-			this->groupBox3->Size = System::Drawing::Size(242, 109);
+			this->groupBox3->Size = System::Drawing::Size(346, 94);
 			this->groupBox3->TabIndex = 2;
 			this->groupBox3->TabStop = false;
 			this->groupBox3->Text = L"Import Settings";
@@ -216,40 +222,51 @@ namespace M2ModRedux {
 			this->toolTip1->SetToolTip(this->checkBoxMergeBones, L"Merge bones from M2I to result model");
 			this->checkBoxMergeBones->UseVisualStyleBackColor = true;
 			this->saveButton->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Bottom | System::Windows::Forms::AnchorStyles::Right));
-			this->saveButton->Location = System::Drawing::Point(84, 221);
+			this->saveButton->Location = System::Drawing::Point(188, 228);
 			this->saveButton->Name = L"saveButton";
-			this->saveButton->Size = System::Drawing::Size(81, 30);
+			this->saveButton->Size = System::Drawing::Size(81, 29);
 			this->saveButton->TabIndex = 3;
 			this->saveButton->Text = L"Save";
 			this->saveButton->UseVisualStyleBackColor = true;
 			this->saveButton->Click += gcnew System::EventHandler(this, &SettingsForm::saveButton_Click);
 			this->cancelButton->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Bottom | System::Windows::Forms::AnchorStyles::Right));
-			this->cancelButton->Location = System::Drawing::Point(171, 221);
+			this->cancelButton->Location = System::Drawing::Point(275, 228);
 			this->cancelButton->Name = L"cancelButton";
-			this->cancelButton->Size = System::Drawing::Size(81, 30);
+			this->cancelButton->Size = System::Drawing::Size(81, 29);
 			this->cancelButton->TabIndex = 4;
 			this->cancelButton->Text = L"Cancel";
 			this->cancelButton->UseVisualStyleBackColor = true;
 			this->cancelButton->Click += gcnew System::EventHandler(this, &SettingsForm::cancelButton_Click);
 			this->wowPathTextBox->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
 				| System::Windows::Forms::AnchorStyles::Right));
-			this->wowPathTextBox->Location = System::Drawing::Point(12, 13);
+			this->wowPathTextBox->Location = System::Drawing::Point(9, 21);
 			this->wowPathTextBox->Name = L"wowPathTextBox";
-			this->wowPathTextBox->Size = System::Drawing::Size(195, 20);
+			this->wowPathTextBox->Size = System::Drawing::Size(289, 20);
 			this->wowPathTextBox->TabIndex = 5;
 			this->wowBrowseTextBox->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Right));
-			this->wowBrowseTextBox->Location = System::Drawing::Point(213, 12);
+			this->wowBrowseTextBox->Location = System::Drawing::Point(304, 20);
 			this->wowBrowseTextBox->Name = L"wowBrowseTextBox";
 			this->wowBrowseTextBox->Size = System::Drawing::Size(37, 22);
 			this->wowBrowseTextBox->TabIndex = 6;
 			this->wowBrowseTextBox->Text = L"...";
 			this->wowBrowseTextBox->UseVisualStyleBackColor = true;
 			this->wowBrowseTextBox->Click += gcnew System::EventHandler(this, &SettingsForm::wowBrowseTextBox_Click);
+			this->wowBrowseDialog->FileName = L"Wow.exe";
+			this->wowBrowseDialog->Filter = L"WoW Executable|*.exe";
+			this->wowPathGroupBox->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
+				| System::Windows::Forms::AnchorStyles::Right));
+			this->wowPathGroupBox->Controls->Add(this->wowBrowseTextBox);
+			this->wowPathGroupBox->Controls->Add(this->wowPathTextBox);
+			this->wowPathGroupBox->Location = System::Drawing::Point(12, 12);
+			this->wowPathGroupBox->Name = L"wowPathGroupBox";
+			this->wowPathGroupBox->Size = System::Drawing::Size(346, 61);
+			this->wowPathGroupBox->TabIndex = 2;
+			this->wowPathGroupBox->TabStop = false;
+			this->wowPathGroupBox->Text = L"WoW Path";
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
-			this->ClientSize = System::Drawing::Size(264, 267);
-			this->Controls->Add(this->wowBrowseTextBox);
-			this->Controls->Add(this->wowPathTextBox);
+			this->ClientSize = System::Drawing::Size(368, 262);
+			this->Controls->Add(this->wowPathGroupBox);
 			this->Controls->Add(this->cancelButton);
 			this->Controls->Add(this->saveButton);
 			this->Controls->Add(this->groupBox3);
@@ -259,8 +276,9 @@ namespace M2ModRedux {
 			this->groupBox1->ResumeLayout(false);
 			this->groupBox3->ResumeLayout(false);
 			this->groupBox3->PerformLayout();
+			this->wowPathGroupBox->ResumeLayout(false);
+			this->wowPathGroupBox->PerformLayout();
 			this->ResumeLayout(false);
-			this->PerformLayout();
 
 		}
 #pragma endregion
@@ -289,7 +307,15 @@ namespace M2ModRedux {
 		DialogResult = Windows::Forms::DialogResult::Cancel;
 	}
 	private: System::Void wowBrowseTextBox_Click(System::Object^  sender, System::EventArgs^  e) {
-		
+		auto path = wowPathTextBox->Text;
+		if (path->Length > 0 && File::Exists(path))
+			wowBrowseDialog->InitialDirectory = path;
+
+		auto result = wowBrowseDialog->ShowDialog();
+		if (result == System::Windows::Forms::DialogResult::OK)
+		{
+			wowPathTextBox->Text = wowBrowseDialog->FileName;
+		}
 	}
 };
 }
