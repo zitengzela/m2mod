@@ -146,7 +146,7 @@ namespace M2Lib
 #pragma pack(pop)
 
 	public:
-		Char16 _FileName[1024];	// needed to create skin file names so we can load/save skins.
+		std::wstring _FileName;	// needed to create skin file names so we can load/save skins.
 
 		CM2Header Header;		// used for loading and saving. not used when editing.
 		DataElement Elements[M2Element::EElement__Count__];
@@ -188,6 +188,8 @@ namespace M2Lib
 		UInt32 GetHeaderSize() const;
 		Expansion GetExpansion() const;
 
+		std::wstring GetModelDirectory() const;
+
 		// loads an M2 from a file.
 		M2Lib::EError Load(const Char16* FileName);
 		void PrepareChunks();
@@ -203,8 +205,8 @@ namespace M2Lib
 		void PrintInfo();
 
 		// szResult is a buffer large enough to store result, which on windows means it should be at least MAX_PATH long, which is 260.
-		bool GetFileSkin(Char16* SkinFileNameResultBuffer, const Char16* M2FileName, UInt32 SkinIndex);
-		bool GetSkeleton(Char16* SkeletonFileNameResultBuffer, const Char16* M2FileName);
+		bool GetFileSkin(std::wstring& SkinFileNameResultBuffer, std::wstring const& M2FileName, UInt32 SkinIndex);
+		bool GetSkeleton(std::wstring& SkeletonFileNameResultBuffer, std::wstring const& M2FileName);
 
 		bool LodSkinsLoaded() const { return lodSkinsLoaded; }
 

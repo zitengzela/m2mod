@@ -93,6 +93,16 @@ void M2Lib::M2Chunk::BFIDChunk::Save(std::fstream& FileStream)
 		FileStream.write((char*)&boneFileDataId, 4);
 }
 
+void M2Lib::M2Chunk::SKIDChunk::Load(std::fstream& FileStream, UInt32 Size)
+{
+	FileStream.read((char*)&SkeletonFileDataId, 4);
+}
+
+void M2Lib::M2Chunk::SKIDChunk::Save(std::fstream& FileStream)
+{
+	FileStream.write((char*)&SkeletonFileDataId, 4);
+}
+
 void M2Lib::M2Chunk::MD21Chunk::Save(std::fstream& FileStream)
 {
 	assert(false && "Not implemented");

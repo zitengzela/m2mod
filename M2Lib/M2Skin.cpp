@@ -1,6 +1,7 @@
 #include "M2Skin.h"
 #include "M2.h"
 #include "M2Element.h"
+#include "FileSystem.h"
 #include <math.h>
 #include <iostream>
 #include <fstream>
@@ -11,21 +12,12 @@ using namespace M2Lib::M2SkinElement;
 
 extern int g_Verbose;
 
-M2Lib::EError M2Lib::M2Skin::Load(const Char16* FileName)
+M2Lib::EError M2Lib::M2Skin::Load(Char16 const* FileName)
 {
-	// check path
-	UInt32 Length = 0;
-	while (FileName[Length] != '\0')
-	{
-		Length++;
-	}
-	if (Length >= 1024)
-		return EError_PathTooLong;
-	_FileName[Length] = '\0';
-	for (UInt32 i = 0; i != Length; i++)
-	{
-		_FileName[i] = FileName[i];
-	}
+	if (!FileName)
+		return EError_FailedToLoadM2_NoFileSpecified;
+
+	_FileName = FileName;
 
 	// open file stream
 	std::fstream FileStream;
@@ -436,23 +428,10 @@ void M2Lib::M2Skin::GetSubMeshFlags(UInt32 SubMeshIndex, std::vector< CElement_F
 
 bool M2Lib::M2Skin::PrintInfo()
 {
-	UInt32 Count = 0;
-
-	Char16 szFileOut[1024];
-	UInt32 Length = 0;
-	while (_FileName[Length] != '\0')
-	{
-		szFileOut[Length] = _FileName[Length];
-		Length++;
-	}
-	szFileOut[Length++] = '.';
-	szFileOut[Length++] = 't';
-	szFileOut[Length++] = 'x';
-	szFileOut[Length++] = 't';
-	szFileOut[Length++] = '\0';
+	std::wstring FileOut = FileSystemW::GetParentDirectory(_FileName) + L"\\" + FileSystemW::GetFileName(_FileName) + L".txt";
 
 	std::fstream FileStream;
-	FileStream.open(szFileOut, std::ios::out | std::ios::trunc);
+	FileStream.open(FileOut.c_str(), std::ios::out | std::ios::trunc);
 
 	SInt32 MaxBones = 0;
 	CElement_SubMesh* SubMeshes = Elements[EElement_SubMesh].as<CElement_SubMesh>();

@@ -3,6 +3,7 @@
 #include "M2SkinBuilder.h"
 #include "Settings.h"
 #include "Skeleton.h"
+#include "FileSystem.h"
 #include <sstream>
 #include <locale>
 #include <codecvt>
@@ -52,25 +53,18 @@ UInt32 M2Lib::M2::GetHeaderSize() const
 	return Header.IsLongHeader() && GetExpansion() >= Expansion::Cataclysm ? sizeof(Header) : sizeof(Header) - 8;
 }
 
+std::wstring M2Lib::M2::GetModelDirectory() const
+{
+	return FileSystemW::GetParentDirectory(_FileName);
+}
+
 M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 {
 	// check path
 	if (!FileName)
 		return EError_FailedToLoadM2_NoFileSpecified;
-	UInt32 Length = 0;
-	while (FileName[Length] != '\0')
-	{
-		Length++;
-	}
 
-	if (Length >= 1024)
-		return EError_PathTooLong;
-
-	_FileName[Length] = '\0';
-	for (UInt32 i = 0; i != Length; i++)
-	{
-		_FileName[i] = FileName[i];
-	}
+	_FileName = FileName;
 
 	// open file stream
 	std::fstream FileStream;
@@ -127,6 +121,7 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 				case EM2Chunk::Physic: Chunk = new PFIDChunk(); break;
 				case EM2Chunk::Animation: Chunk = new AFIDChunk(); break;
 				case EM2Chunk::Bone: Chunk = new BFIDChunk(); break;
+				case EM2Chunk::Skeleton: Chunk = new SKIDChunk(); break;
 				case EM2Chunk::Skin:
 				{
 					PostProcessChunks[eChunk] = PostChunkInfo(FileStream.tellg(), ChunkSize);
@@ -182,52 +177,11 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 
 	for (UInt32 i = 0; i < Header.Elements.nSkin; ++i)
 	{
-		Char16 FileNameSkin[1024];
-		GetFileSkin(FileNameSkin, FileName, i);
-
-		// FMN 2015-02-03: LOD skins.
-		/*
-		if (i == 1 || i == 2)
-		{
-			std::string strFileName;
-			std::wstring wstrFileName = (std::wstring)FileName;
-
-			for (UInt8 j = 0; j < wstrFileName.size(); j++)
-				strFileName += (char)wstrFileName.at(j);
-
-			//std::string chrI = std::string(i);
-			std::stringstream ss;
-			std::string strI;
-			ss << i;
-			ss >> strI;
-
-			std::string strFileNameLOD = strFileName.substr(0, strFileName.length() - 3) + "_LOD0" + strI + ".skin";
-			//std::wstring  wstrFileNameLOD = (std::wstring)strFileNameLOD;
-
-			//wchar_t wstrFileNameLOD = '\0';
-			//for (UInt8 j = 0; j < strFileNameLOD.size(); j++)
-			//	wstrFileNameLOD += (wchar_t)strFileNameLOD.at(j);
-
-			//std::wstring name = (std::wstring)strFileNameLOD;
-			std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-			//std::string narrow = converter.to_bytes(wide_utf16_source_string);
-			std::wstring wstrFileNameLOD = converter.from_bytes(strFileNameLOD);
-
-			wchar_t* wchrFileNameLOD = (wchar_t*)wstrFileNameLOD.c_str();
-
-			Char16* FileNameLOD = (Char16*)wchrFileNameLOD;
-
-			GetFileSkin(FileNameLOD, FileName, i);
-
-			// Add the LODs after the 4 main skins.
-			Skins[i + 4] = new M2Skin(this);
-			if (EError Error = Skins[i + 4]->Load(FileNameSkin))
-				return Error;
-		}
-		*/
+		std::wstring FileNameSkin;
+		GetFileSkin(FileNameSkin, _FileName, i);
 
 		Skins[i] = new M2Skin(this);
-		if (EError Error = Skins[i]->Load(FileNameSkin))
+		if (EError Error = Skins[i]->Load(FileNameSkin.c_str()))
 		{
 			delete Skins[i];
 			Skins[i] = NULL;
@@ -237,11 +191,11 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 
 	for (int i = 0; i < LOD_SKIN_MAX_COUNT; ++i)
 	{
-		Char16 FileNameSkin[1024];
-		GetFileSkin(FileNameSkin, FileName, 4 + i);
+		std::wstring FileNameSkin;
+		GetFileSkin(FileNameSkin, _FileName, 4 + i);
 
 		auto newSkin = new M2Skin(this);
-		if (EError Error = newSkin->Load(FileNameSkin))
+		if (EError Error = newSkin->Load(FileNameSkin.c_str()))
 		{
 			delete newSkin;
 			if (Error = EError_FailedToLoadSKIN_CouldNotOpenFile)
@@ -277,11 +231,11 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 		Chunks[PostChunk.first] = Chunk;
 	}
 
-	Char16 FileNameSkeleton[1024];
-	if (GetSkeleton(FileNameSkeleton, FileName))
+	std::wstring FileNameSkeleton;
+	if (GetSkeleton(FileNameSkeleton, _FileName))
 	{
 		auto sk = new M2Lib::Skeleton();
-		if (sk->Load(FileNameSkeleton) == EError::EError_OK)
+		if (sk->Load(FileNameSkeleton.c_str()) == EError::EError_OK)
 			Skeleton = sk;
 		else
 			delete sk;
@@ -493,9 +447,9 @@ M2Lib::EError M2Lib::M2::Save(const Char16* FileName)
 	// delete existing skin files
 	for (UInt32 i = 0; i < SKIN_COUNT; ++i)
 	{
-		Char16 FileNameSkin[1024];
-		GetFileSkin(FileNameSkin, FileName, i);
-		_wremove(FileNameSkin);
+		std::wstring FileNameSkin;
+		if (GetFileSkin(FileNameSkin, FileName, i))
+			_wremove(FileNameSkin.c_str());
 	}
 
 	// save skins
@@ -504,10 +458,11 @@ M2Lib::EError M2Lib::M2::Save(const Char16* FileName)
 
 	for (UInt32 i = 0; i < Header.Elements.nSkin; ++i)
 	{
-		Char16 FileNameSkin[1024];
-		GetFileSkin(FileNameSkin, FileName, i);
+		std::wstring FileNameSkin;
+		if (!GetFileSkin(FileNameSkin, FileName, i))
+			continue;
 
-		if (EError Error = Skins[i]->Save(FileNameSkin))
+		if (EError Error = Skins[i]->Save(FileNameSkin.c_str()))
 			return Error;
 	}
 
@@ -522,9 +477,11 @@ M2Lib::EError M2Lib::M2::Save(const Char16* FileName)
 
 	for (int i = 0; i < LodSkinCount; ++i)
 	{
-		Char16 FileNameSkin[1024];
-		GetFileSkin(FileNameSkin, FileName, i + 4);
-		if (EError Error = (Skins[1] ? Skins[1] : Skins[0])->Save(FileNameSkin))
+		std::wstring FileNameSkin;
+		if (!GetFileSkin(FileNameSkin, FileName, i + 4))
+			continue;
+
+		if (EError Error = (Skins[1] ? Skins[1] : Skins[0])->Save(FileNameSkin.c_str()))
 			return Error;
 	}
 
@@ -961,21 +918,10 @@ void M2Lib::M2::PrintInfo()
 
 	UInt32 Count = 0;
 
-	Char16 szFileOut[1024];
-	UInt32 Length = 0;
-	while (_FileName[Length] != '\0')
-	{
-		szFileOut[Length] = _FileName[Length];
-		Length++;
-	}
-	szFileOut[Length++] = '.';
-	szFileOut[Length++] = 't';
-	szFileOut[Length++] = 'x';
-	szFileOut[Length++] = 't';
-	szFileOut[Length++] = '\0';
+	std::wstring FileOut = FileSystemW::GetParentDirectory(_FileName) + L"\\" + FileSystemW::GetFileName(_FileName) + L".txt";
 
 	std::fstream FileStream;
-	FileStream.open(szFileOut, std::ios::out | std::ios::trunc);
+	FileStream.open(FileOut.c_str(), std::ios::out | std::ios::trunc);
 
 	FileStream << "ID       " << Header.Description.ID[0] << Header.Description.ID[1] << Header.Description.ID[2] << Header.Description.ID[3] << std::endl;		// 'MD20'
 	FileStream << "Version  " << Header.Description.Version << std::endl;
@@ -1218,121 +1164,36 @@ void M2Lib::M2::PrintInfo()
 	FileStream.close();
 }
 
-
 // Gets the .skin file names.
-bool M2Lib::M2::GetFileSkin(Char16* SkinFileNameResultBuffer, const Char16* M2FileName, UInt32 SkinIndex)
+bool M2Lib::M2::GetFileSkin(std::wstring& SkinFileNameResultBuffer, std::wstring const& M2FileName, UInt32 SkinIndex)
 {
-	// ghetto string ops
-	SInt32 LastDot = -1;
-	UInt32 Length = 0;
-	for (; Length < 1024; Length++)
-	{
-		if (M2FileName[Length] == L'\0')
-		{
-			break;
-		}
-		else if (M2FileName[Length] == L'.')
-		{
-			LastDot = Length;
-		}
-	}
-	if ((LastDot == -1) || (LastDot > 1018))
-	{
-		return false;
-	}
-	UInt32 j = 0;
-	for (; j != LastDot; j++)
-	{
-		SkinFileNameResultBuffer[j] = M2FileName[j];
-	}
+	SkinFileNameResultBuffer.resize(1024);
+
 	switch (SkinIndex)
 	{
-	case 0:
-		SkinFileNameResultBuffer[j++] = L'0';
-		SkinFileNameResultBuffer[j++] = L'0';
-		break;
-	case 1:
-		SkinFileNameResultBuffer[j++] = L'0';
-		SkinFileNameResultBuffer[j++] = L'1';
-		break;
-	case 2:
-		SkinFileNameResultBuffer[j++] = L'0';
-		SkinFileNameResultBuffer[j++] = L'2';
-		break;
-	case 3:
-		SkinFileNameResultBuffer[j++] = L'0';
-		SkinFileNameResultBuffer[j++] = L'3';
-		break;
-	case 4:
-		SkinFileNameResultBuffer[j++] = L'_';
-		SkinFileNameResultBuffer[j++] = L'L';
-		SkinFileNameResultBuffer[j++] = L'O';
-		SkinFileNameResultBuffer[j++] = L'D';
-		SkinFileNameResultBuffer[j++] = L'0';
-		SkinFileNameResultBuffer[j++] = L'1';
-		break;
-	case 5:
-		SkinFileNameResultBuffer[j++] = L'_';
-		SkinFileNameResultBuffer[j++] = L'L';
-		SkinFileNameResultBuffer[j++] = L'O';
-		SkinFileNameResultBuffer[j++] = L'D';
-		SkinFileNameResultBuffer[j++] = L'0';
-		SkinFileNameResultBuffer[j++] = L'2';
-		break;
-	case 6:
-		SkinFileNameResultBuffer[j++] = L'_';
-		SkinFileNameResultBuffer[j++] = L'L';
-		SkinFileNameResultBuffer[j++] = L'O';
-		SkinFileNameResultBuffer[j++] = L'D';
-		SkinFileNameResultBuffer[j++] = L'0';
-		SkinFileNameResultBuffer[j++] = L'3';
-		break;
-	default:
-		return false;
+		case 0:
+		case 1:
+		case 2:
+		case 3:
+			std::swprintf((wchar_t*)SkinFileNameResultBuffer.data(), L"%s\\%s0%u.skin",
+				FileSystemW::GetParentDirectory(M2FileName).c_str(), FileSystemW::GetFileName(M2FileName).c_str(), SkinIndex);
+			break;
+		case 4:
+		case 5:
+		case 6:
+			std::swprintf((wchar_t*)SkinFileNameResultBuffer.data(), L"%s\\%s_LOD0%u.skin",
+				FileSystemW::GetParentDirectory(M2FileName).c_str(), FileSystemW::GetFileName(M2FileName).c_str(), SkinIndex - 3);
+			break;
+		default:
+			return false;
 	}
-	SkinFileNameResultBuffer[j++] = L'.';
-	SkinFileNameResultBuffer[j++] = L's';
-	SkinFileNameResultBuffer[j++] = L'k';
-	SkinFileNameResultBuffer[j++] = L'i';
-	SkinFileNameResultBuffer[j++] = L'n';
-	SkinFileNameResultBuffer[j] = L'\0';
 
 	return true;
 }
 
-bool M2Lib::M2::GetSkeleton(Char16* SkeletonFileNameResultBuffer, const Char16* M2FileName)
+bool M2Lib::M2::GetSkeleton(std::wstring& SkeletonFileNameResultBuffer, std::wstring const& M2FileName)
 {
-	// ghetto string ops
-	SInt32 LastDot = -1;
-	UInt32 Length = 0;
-	for (; Length < 1024; Length++)
-	{
-		if (M2FileName[Length] == L'\0')
-		{
-			break;
-		}
-		else if (M2FileName[Length] == L'.')
-		{
-			LastDot = Length;
-		}
-	}
-	if ((LastDot == -1) || (LastDot > 1018))
-	{
-		return false;
-	}
-	UInt32 j = 0;
-	for (; j != LastDot; j++)
-	{
-		SkeletonFileNameResultBuffer[j] = M2FileName[j];
-	}
-
-	SkeletonFileNameResultBuffer[j++] = L'.';
-	SkeletonFileNameResultBuffer[j++] = L's';
-	SkeletonFileNameResultBuffer[j++] = L'k';
-	SkeletonFileNameResultBuffer[j++] = L'e';
-	SkeletonFileNameResultBuffer[j++] = L'l';
-	SkeletonFileNameResultBuffer[j] = L'\0';
-
+	SkeletonFileNameResultBuffer = FileSystemW::GetParentDirectory(M2FileName) + L"\\" + FileSystemW::GetFileName(M2FileName) + L".skel";
 	return true;
 }
 

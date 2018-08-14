@@ -72,7 +72,7 @@ namespace M2Lib
 
 
 	public:
-		Char16 _FileName[1024];
+		std::wstring _FileName;
 
 		CM2SkinHeader Header;
 		DataElement Elements[M2SkinElement::EElement__Count__];

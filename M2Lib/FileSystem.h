@@ -19,4 +19,7 @@ namespace M2Lib
 		static bool IsDirectory(std::basic_string<T> const& path);
 		static bool IsFile(std::basic_string<T> const& path);
 	};
+
+	using FileSystemA = FileSystem<char>;
+	using FileSystemW = FileSystem<wchar_t>;
 }
