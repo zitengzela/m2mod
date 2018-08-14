@@ -1,0 +1,9 @@
+Debug
+Release
+Test
+.vs
+binaries
+*.user
+*.filters
+*.suo
+*.sdf
