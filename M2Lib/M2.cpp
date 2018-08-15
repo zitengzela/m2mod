@@ -138,6 +138,7 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 				case EM2Chunk::Bone: Chunk = new BFIDChunk(); break;
 				case EM2Chunk::Skeleton: Chunk = new SKIDChunk(); break;
 				case EM2Chunk::Skin: Chunk = new SFIDChunk(); break;
+				case EM2Chunk::Texture: Chunk = new TXIDChunk(); break;
 				default:
 					Chunk = new RawChunk();
 					break;

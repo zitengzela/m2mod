@@ -13,7 +13,8 @@ namespace M2Lib
 			Animation = 'AFID',
 			Skin = 'SFID',
 			Bone = 'BFID',
-			Skeleton = 'SKID'
+			Skeleton = 'SKID',
+			Texture = 'TXID',
 		};
 
 		class PFIDChunk : public ChunkBase
@@ -66,6 +67,15 @@ namespace M2Lib
 			void Save(std::fstream& FileStream) override;
 
 			UInt32 SkeletonFileDataId;
+		};
+
+		class TXIDChunk : public ChunkBase
+		{
+		public:
+			void Load(std::fstream& FileStream, UInt32 Size) override;
+			void Save(std::fstream& FileStream) override;
+
+			std::vector<UInt32> TextureFileDataIds;
 		};
 
 		class MD21Chunk : public RawChunk

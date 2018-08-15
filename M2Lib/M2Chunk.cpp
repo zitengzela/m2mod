@@ -90,3 +90,18 @@ void M2Lib::M2Chunk::MD21Chunk::Save(std::fstream& FileStream)
 {
 	assert(false && "Not implemented");
 }
+
+void M2Lib::M2Chunk::TXIDChunk::Load(std::fstream & FileStream, UInt32 Size)
+{
+	assert((Size % 4) == 0 && "Bad SFID chunk size");
+
+	TextureFileDataIds.resize(Size / 4);
+	for (UInt32 i = 0; i < Size / 4; ++i)
+		FileStream.read((char*)&TextureFileDataIds[i], 4);
+}
+
+void M2Lib::M2Chunk::TXIDChunk::Save(std::fstream & FileStream)
+{
+	for (UInt32 i = 0; i < TextureFileDataIds.size(); ++i)
+		FileStream.write((char*)&TextureFileDataIds[i], 4);
+}
