@@ -5,9 +5,11 @@
 #include "Skeleton.h"
 #include "FileSystem.h"
 #include "Casc.h"
+#include "Logger.h"
 #include <sstream>
 #include <locale>
 #include <string>
+#include <codecvt>
 
 using namespace M2Lib::M2Element;
 using namespace M2Lib::M2Chunk;
@@ -60,9 +62,14 @@ std::wstring M2Lib::M2::GetModelDirectory() const
 
 M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 {
+	sLogger.Log("Loading file %s", std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(FileName).c_str());
+
 	// check path
 	if (!FileName)
+	{
+		sLogger.Log("Error: No file specified");
 		return EError_FailedToLoadM2_NoFileSpecified;
+	}
 
 	_FileName = FileName;
 
@@ -70,7 +77,10 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 	std::fstream FileStream;
 	FileStream.open(FileName, std::ios::in | std::ios::binary);
 	if (FileStream.fail())
+	{
+		sLogger.Log("Error: Failed to open file");
 		return EError_FailedToLoadM2_CouldNotOpenFile;
+	}
 
 	StreamCloser _fsCloser(FileStream);
 
@@ -78,6 +88,8 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 	FileStream.seekg(0, std::ios::end);
 	UInt32 FileSize = (UInt32)FileStream.tellg();
 	FileStream.seekg(0, std::ios::beg);
+
+	sLogger.Log("File size: %u", FileSize);
 
 	struct PostChunkInfo
 	{
@@ -105,6 +117,7 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 		// support pre-legion M2
 		if (REVERSE_CC(ChunkId) == 'MD20')
 		{
+			sLogger.Log("Detected pre-Legion mode (unchunked)");
 			auto Chunk = new MD21Chunk();
 			FileStream.seekg(0, std::ios::beg);
 			Chunk->Load(FileStream, FileSize);
@@ -115,6 +128,8 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 		{
 			ChunkBase* Chunk = NULL;
 			auto eChunk = (EM2Chunk)REVERSE_CC(ChunkId);
+
+			sLogger.Log("Loaded '%s' chunk", ChunkIdToStr(ChunkId, false).c_str());
 			switch (eChunk)
 			{
 				case EM2Chunk::Model: Chunk = new MD21Chunk(); break;
@@ -144,7 +159,10 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 
 	auto ModelChunk = (MD21Chunk*)GetChunk(EM2Chunk::Model);
 	if (!ModelChunk)
+	{
+		sLogger.Log("Error: '%s' chunk not found in model", ChunkIdToStr((UInt32)EM2Chunk::Model, true).c_str());
 		return EError_FailedToLoadM2_FileCorrupt;
+	}
 
 	m_OriginalModelChunkSize = ModelChunk->RawData.size();
 
@@ -152,12 +170,16 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 	memcpy(&Header, ModelChunk->RawData.data(), sizeof(Header));
 	if (!Header.IsLongHeader() || GetExpansion() < Expansion::Cataclysm)
 	{
+		sLogger.Log("Short header detected");
 		Header.Elements.nUnknown1 = 0;
 		Header.Elements.oUnknown1 = 0;
 	}
 
 	if (Header.Description.Version < 263 || Header.Description.Version > 274)
+	{
+		sLogger.Log("Error: Unsupported model version %u", Header.Description.Version);
 		return EError_FailedToLoadM2_VersionNotSupported;
+	}
 
 	// fill elements header data
 	m_LoadElements_CopyHeaderToElements();
@@ -168,12 +190,18 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 	{
 		Elements[i].Align = 16;
 		if (!Elements[i].Load(ModelChunk->RawData.data(), 0))
+		{
+			sLogger.Log("Error: Failed to load M2 element #%u", i);
 			return EError_FailedToLoadM2_FileCorrupt;
+		}
 	}
 
 	// load skins
 	if ((Header.Elements.nSkin == 0) || (Header.Elements.nSkin > 4))
+	{
+		sLogger.Log("Error: Unsupported number of skins in model: %u", Header.Elements.nSkin);
 		return EError_FailedToLoadM2_FileCorrupt;
+	}
 
 	auto Error = LoadSkins();
 	if (Error != EError::EError_OK)
@@ -190,11 +218,14 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 			if (Error = EError_FailedToLoadSKIN_CouldNotOpenFile)
 				continue;
 
+			sLogger.Log("Error: Failed to load #%u lod skin %s", i, std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(FileSystemW::GetBaseName(FileNameSkin)).c_str());
 			return Error;
 		}
-
-		lodSkinsLoaded = true;
-		break;
+		else
+		{
+			lodSkinsLoaded = true;
+			break;
+		}
 	}
 
 	for (auto& PostChunk : PostProcessChunks)
@@ -225,13 +256,18 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 	{
 		auto sk = new M2Lib::Skeleton();
 		if (sk->Load(FileNameSkeleton.c_str()) == EError::EError_OK)
+		{
+			sLogger.Log("Sekeleton file detected and loaded");
 			Skeleton = sk;
+		}
 		else
 			delete sk;
 	}
 
 	// print info
 	//PrintInfo();
+
+	sLogger.Log("Finished loading M2");
 
 	// done
 	return EError_OK;

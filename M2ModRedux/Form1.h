@@ -4,6 +4,7 @@
 #define M2IFilter L"M2I Files|*.m2i|All Files|*.*"
 
 #include "Casc.h"
+#include "Logger.h"
 #include "ElementManagementForm.h"
 #include "MeshInfoControl.h"
 #include "RegistryStore.h"
@@ -35,11 +36,37 @@ namespace M2ModRedux
 	public:
 		Form1(void)
 		{
+			Instance = this;
+
 			InitializeComponent();
 
 			this->Text = String::Format(L"M2Mod Redux {0}.{1}.{2}", VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH);
 			settings = new M2Lib::GlobalSettings();
 
+			InitializeLogger();
+			LoadSettingsFromRegistry();
+
+			auto updater = gcnew Updater();
+			auto func = gcnew Func<int>(updater, &Updater::Update);
+			Task::Run(func);
+
+		}
+
+		static Form1^ Instance = nullptr;
+
+		private: System::Void InitializeLogger()
+		{
+			auto delegate = gcnew LoggerDelegate(Log);
+			GCHandle gch = GCHandle::Alloc(delegate);
+			IntPtr ip = Marshal::GetFunctionPointerForDelegate(delegate);
+			auto callback = static_cast<M2Lib::LoggerCallback>(ip.ToPointer());
+			GC::Collect();
+
+			sLogger.AttachCallback(callback);
+		}
+
+		private: System::Void LoadSettingsFromRegistry()
+		{
 			try
 			{
 				if (auto value = RegistyStore::GetValue(RegistyStore::Value::ExportM2))
@@ -73,12 +100,7 @@ namespace M2ModRedux
 			}
 			catch (...)
 			{
-
 			}
-
-			auto updater = gcnew Updater();
-			auto func = gcnew Func<int>(updater, &Updater::Update);
-			Task::Run(func);
 		}
 
 	private: System::Void Form1_FormClosing(System::Object^  sender, System::Windows::Forms::FormClosingEventArgs^  e) {
@@ -117,7 +139,8 @@ namespace M2ModRedux
 	private: System::Windows::Forms::OpenFileDialog^  openFileDialog1;
 	private: System::Windows::Forms::SaveFileDialog^  saveFileDialog1;
 	private: System::Windows::Forms::ToolTip^  toolTip1;
-	private: System::Windows::Forms::TabControl^  tabControl1;
+	private: System::Windows::Forms::TabControl^  logTabControl;
+
 	private: System::Windows::Forms::TabPage^  tabExport;
 	private: System::Windows::Forms::Panel^  panelImputM2Exp;
 	private: System::Windows::Forms::TextBox^  textBoxInputM2Exp;
@@ -162,6 +185,13 @@ namespace M2ModRedux
 	private: System::Windows::Forms::ToolStripMenuItem^  toolsToolStripMenuItem;
 	private: System::Windows::Forms::ToolStripMenuItem^  compareBonesToolStripMenuItem;
 private: System::Windows::Forms::ToolStripMenuItem^  cASCInfoToolStripMenuItem;
+private: System::Windows::Forms::TabPage^  tabLog;
+private: System::Windows::Forms::TextBox^  logTextBox;
+private: System::Windows::Forms::Button^  clearButton;
+
+
+
+
 
 
 	private: System::ComponentModel::IContainer^  components;
@@ -199,7 +229,7 @@ private: System::Windows::Forms::ToolStripMenuItem^  cASCInfoToolStripMenuItem;
 				 this->textBoxReplaceM2 = (gcnew System::Windows::Forms::TextBox());
 				 this->buttonReplaceM2Browse = (gcnew System::Windows::Forms::Button());
 				 this->checkBoxReplaceM2 = (gcnew System::Windows::Forms::CheckBox());
-				 this->tabControl1 = (gcnew System::Windows::Forms::TabControl());
+				 this->logTabControl = (gcnew System::Windows::Forms::TabControl());
 				 this->tabExport = (gcnew System::Windows::Forms::TabPage());
 				 this->panelImputM2Exp = (gcnew System::Windows::Forms::Panel());
 				 this->textBoxInputM2Exp = (gcnew System::Windows::Forms::TextBox());
@@ -212,6 +242,9 @@ private: System::Windows::Forms::ToolStripMenuItem^  cASCInfoToolStripMenuItem;
 				 this->panelInputM2Import = (gcnew System::Windows::Forms::Panel());
 				 this->panelInputM2I = (gcnew System::Windows::Forms::Panel());
 				 this->panelOutputM2 = (gcnew System::Windows::Forms::Panel());
+				 this->tabLog = (gcnew System::Windows::Forms::TabPage());
+				 this->clearButton = (gcnew System::Windows::Forms::Button());
+				 this->logTextBox = (gcnew System::Windows::Forms::TextBox());
 				 this->statusStrip1 = (gcnew System::Windows::Forms::StatusStrip());
 				 this->toolStripStatusLabel1 = (gcnew System::Windows::Forms::ToolStripStatusLabel());
 				 this->menuStrip1 = (gcnew System::Windows::Forms::MenuStrip());
@@ -221,7 +254,7 @@ private: System::Windows::Forms::ToolStripMenuItem^  cASCInfoToolStripMenuItem;
 				 this->exitToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 				 this->toolsToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 				 this->compareBonesToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
-				 this->tabControl1->SuspendLayout();
+				 this->logTabControl->SuspendLayout();
 				 this->tabExport->SuspendLayout();
 				 this->panelImputM2Exp->SuspendLayout();
 				 this->panelOutputM2I->SuspendLayout();
@@ -232,6 +265,7 @@ private: System::Windows::Forms::ToolStripMenuItem^  cASCInfoToolStripMenuItem;
 				 this->panelInputM2Import->SuspendLayout();
 				 this->panelInputM2I->SuspendLayout();
 				 this->panelOutputM2->SuspendLayout();
+				 this->tabLog->SuspendLayout();
 				 this->statusStrip1->SuspendLayout();
 				 this->menuStrip1->SuspendLayout();
 				 this->SuspendLayout();
@@ -494,19 +528,20 @@ private: System::Windows::Forms::ToolStripMenuItem^  cASCInfoToolStripMenuItem;
 				 this->checkBoxReplaceM2->UseVisualStyleBackColor = true;
 				 this->checkBoxReplaceM2->CheckedChanged += gcnew System::EventHandler(this, &Form1::checkBoxReplaceM2_CheckedChanged);
 				 // 
-				 // tabControl1
+				 // logTabControl
 				 // 
-				 this->tabControl1->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Bottom)
+				 this->logTabControl->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Bottom)
 					 | System::Windows::Forms::AnchorStyles::Left)
 					 | System::Windows::Forms::AnchorStyles::Right));
-				 this->tabControl1->Controls->Add(this->tabExport);
-				 this->tabControl1->Controls->Add(this->tabImport);
-				 this->tabControl1->Location = System::Drawing::Point(1, 24);
-				 this->tabControl1->Name = L"tabControl1";
-				 this->tabControl1->Padding = System::Drawing::Point(10, 3);
-				 this->tabControl1->SelectedIndex = 0;
-				 this->tabControl1->Size = System::Drawing::Size(570, 277);
-				 this->tabControl1->TabIndex = 25;
+				 this->logTabControl->Controls->Add(this->tabExport);
+				 this->logTabControl->Controls->Add(this->tabImport);
+				 this->logTabControl->Controls->Add(this->tabLog);
+				 this->logTabControl->Location = System::Drawing::Point(1, 24);
+				 this->logTabControl->Name = L"logTabControl";
+				 this->logTabControl->Padding = System::Drawing::Point(10, 3);
+				 this->logTabControl->SelectedIndex = 0;
+				 this->logTabControl->Size = System::Drawing::Size(570, 277);
+				 this->logTabControl->TabIndex = 25;
 				 // 
 				 // tabExport
 				 // 
@@ -650,6 +685,39 @@ private: System::Windows::Forms::ToolStripMenuItem^  cASCInfoToolStripMenuItem;
 				 this->panelOutputM2->Size = System::Drawing::Size(531, 25);
 				 this->panelOutputM2->TabIndex = 24;
 				 // 
+				 // tabLog
+				 // 
+				 this->tabLog->Controls->Add(this->clearButton);
+				 this->tabLog->Controls->Add(this->logTextBox);
+				 this->tabLog->Location = System::Drawing::Point(4, 22);
+				 this->tabLog->Name = L"tabLog";
+				 this->tabLog->Padding = System::Windows::Forms::Padding(3);
+				 this->tabLog->Size = System::Drawing::Size(562, 251);
+				 this->tabLog->TabIndex = 2;
+				 this->tabLog->Text = L"Log";
+				 this->tabLog->UseVisualStyleBackColor = true;
+				 // 
+				 // clearButton
+				 // 
+				 this->clearButton->Location = System::Drawing::Point(241, 222);
+				 this->clearButton->Name = L"clearButton";
+				 this->clearButton->Size = System::Drawing::Size(75, 23);
+				 this->clearButton->TabIndex = 1;
+				 this->clearButton->Text = L"Clear";
+				 this->clearButton->UseVisualStyleBackColor = true;
+				 this->clearButton->Click += gcnew System::EventHandler(this, &Form1::clearButton_Click);
+				 // 
+				 // logTextBox
+				 // 
+				 this->logTextBox->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Bottom)
+					 | System::Windows::Forms::AnchorStyles::Left)
+					 | System::Windows::Forms::AnchorStyles::Right));
+				 this->logTextBox->Location = System::Drawing::Point(3, 3);
+				 this->logTextBox->Multiline = true;
+				 this->logTextBox->Name = L"logTextBox";
+				 this->logTextBox->Size = System::Drawing::Size(556, 216);
+				 this->logTextBox->TabIndex = 0;
+				 // 
 				 // statusStrip1
 				 // 
 				 this->statusStrip1->BackColor = System::Drawing::Color::Transparent;
@@ -690,21 +758,21 @@ private: System::Windows::Forms::ToolStripMenuItem^  cASCInfoToolStripMenuItem;
 				 // settingsToolStripMenuItem
 				 // 
 				 this->settingsToolStripMenuItem->Name = L"settingsToolStripMenuItem";
-				 this->settingsToolStripMenuItem->Size = System::Drawing::Size(180, 22);
+				 this->settingsToolStripMenuItem->Size = System::Drawing::Size(128, 22);
 				 this->settingsToolStripMenuItem->Text = L"Settings";
 				 this->settingsToolStripMenuItem->Click += gcnew System::EventHandler(this, &Form1::settingsToolStripMenuItem_Click);
 				 // 
 				 // cASCInfoToolStripMenuItem
 				 // 
 				 this->cASCInfoToolStripMenuItem->Name = L"cASCInfoToolStripMenuItem";
-				 this->cASCInfoToolStripMenuItem->Size = System::Drawing::Size(180, 22);
+				 this->cASCInfoToolStripMenuItem->Size = System::Drawing::Size(128, 22);
 				 this->cASCInfoToolStripMenuItem->Text = L"CASC Info";
 				 this->cASCInfoToolStripMenuItem->Click += gcnew System::EventHandler(this, &Form1::cASCInfoToolStripMenuItem_Click_1);
 				 // 
 				 // exitToolStripMenuItem
 				 // 
 				 this->exitToolStripMenuItem->Name = L"exitToolStripMenuItem";
-				 this->exitToolStripMenuItem->Size = System::Drawing::Size(180, 22);
+				 this->exitToolStripMenuItem->Size = System::Drawing::Size(128, 22);
 				 this->exitToolStripMenuItem->Text = L"Exit";
 				 this->exitToolStripMenuItem->Click += gcnew System::EventHandler(this, &Form1::exitToolStripMenuItem_Click);
 				 // 
@@ -729,14 +797,14 @@ private: System::Windows::Forms::ToolStripMenuItem^  cASCInfoToolStripMenuItem;
 				 this->ClientSize = System::Drawing::Size(569, 320);
 				 this->Controls->Add(this->statusStrip1);
 				 this->Controls->Add(this->menuStrip1);
-				 this->Controls->Add(this->tabControl1);
+				 this->Controls->Add(this->logTabControl);
 				 this->Icon = (cli::safe_cast<System::Drawing::Icon^>(resources->GetObject(L"$this.Icon")));
 				 this->MainMenuStrip = this->menuStrip1;
 				 this->MinimumSize = System::Drawing::Size(500, 320);
 				 this->Name = L"Form1";
 				 this->Text = L"M2Mod Redux";
 				 this->FormClosing += gcnew System::Windows::Forms::FormClosingEventHandler(this, &Form1::Form1_FormClosing);
-				 this->tabControl1->ResumeLayout(false);
+				 this->logTabControl->ResumeLayout(false);
 				 this->tabExport->ResumeLayout(false);
 				 this->panelImputM2Exp->ResumeLayout(false);
 				 this->panelImputM2Exp->PerformLayout();
@@ -754,6 +822,8 @@ private: System::Windows::Forms::ToolStripMenuItem^  cASCInfoToolStripMenuItem;
 				 this->panelInputM2I->PerformLayout();
 				 this->panelOutputM2->ResumeLayout(false);
 				 this->panelOutputM2->PerformLayout();
+				 this->tabLog->ResumeLayout(false);
+				 this->tabLog->PerformLayout();
 				 this->statusStrip1->ResumeLayout(false);
 				 this->statusStrip1->PerformLayout();
 				 this->menuStrip1->ResumeLayout(false);
@@ -942,6 +1012,7 @@ private: System::Windows::Forms::ToolStripMenuItem^  cASCInfoToolStripMenuItem;
 	private: M2Lib::M2* preloadM2 = NULL;
 	private: M2Lib::GlobalSettings* settings = NULL;
 
+
 	private: M2Lib::Casc* _casc = NULL;
 	private: M2Lib::Casc* GetCasc()
 	{
@@ -949,6 +1020,22 @@ private: System::Windows::Forms::ToolStripMenuItem^  cASCInfoToolStripMenuItem;
 			_casc = new M2Lib::Casc(settings->WowPath);
 
 		return _casc;
+	}
+
+	private: delegate void LoggerDelegate(char const*);
+
+	private: static void Log(char const* data)
+	{
+		if (Instance)
+			Instance->_Log(data);
+	}
+
+	private: void _Log(char const* data)
+	{
+		if (logTextBox->Text->Length)
+			logTextBox->Text += "\r\n" + gcnew String(data);
+		else
+			logTextBox->Text = gcnew String(data);
 	}
 
 	private: System::Void importButtonGo_Click(System::Object^  sender, System::EventArgs^  e) {
@@ -1175,6 +1262,9 @@ private: System::Windows::Forms::ToolStripMenuItem^  cASCInfoToolStripMenuItem;
 		auto form = gcnew CascStatusForm();
 		form->SetParameters(GetCasc(), settings);
 		form->ShowDialog();
+	}
+	private: System::Void clearButton_Click(System::Object^  sender, System::EventArgs^  e) {
+		logTextBox->Text = "";
 	}
 };
 }
