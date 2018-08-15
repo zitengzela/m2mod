@@ -935,6 +935,7 @@ private: System::Windows::Forms::Button^  clearButton;
 			}
 
 			M2Lib::M2* M2 = new M2Lib::M2(settings);
+			M2->SetCasc(GetCasc());
 
 			// import M2
 			System::IntPtr StringPointer = Marshal::StringToHGlobalUni(textBoxInputM2Exp->Text);
@@ -1151,6 +1152,7 @@ private: System::Windows::Forms::Button^  clearButton;
 		}
 
 		preloadM2 = new M2Lib::M2(settings);
+		preloadM2->SetCasc(GetCasc());
 
 		System::IntPtr StringPointer = Marshal::StringToHGlobalUni(textBoxInputM2Imp->Text);
 		M2Lib::EError Error = preloadM2->Load((Char16*)StringPointer.ToPointer());

@@ -19,6 +19,7 @@ namespace M2Lib
 
 		void* hStorage = NULL;
 
+		bool cacheLoaded = false;
 		std::map<UInt32, std::string> filesByFileDataId;
 
 	public:
@@ -28,5 +29,7 @@ namespace M2Lib
 		bool IsLoaded() const { return hStorage != NULL; }
 		bool GenerateListFileCache();
 		UInt32 GetCacheSize() const { return filesByFileDataId.size(); }
+
+		std::string GetFileById(UInt32 FileDataId);
 	};
 }

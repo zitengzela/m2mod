@@ -24,19 +24,6 @@ bool M2Lib::Casc::Load()
 		return false;
 	}
 
-	if (!FileSystemA::IsFile(BinListFile))
-	{
-		sLogger.Log("Listfile cache at %s not found, generating new one", BinListFile.c_str());
-		if (!GenerateListFileCache())
-			sLogger.Log("Error: Failed to generate listfile cache");
-	}
-	else if (!LoadListFileCache())
-	{
-		sLogger.Log("Failed to load listfile cache at %s, generating new one", BinListFile.c_str());
-		if (!GenerateListFileCache())
-			sLogger.Log("Error: Failed to generate listfile cache");
-	}
-
 	sLogger.Log("Finished CASC initialization");
 	return true;
 }
@@ -48,11 +35,21 @@ void M2Lib::Casc::Unload()
 	hStorage = NULL;
 
 	filesByFileDataId.clear();
+	cacheLoaded = false;
 }
 
 bool M2Lib::Casc::LoadListFileCache()
 {
 	filesByFileDataId.clear();
+	cacheLoaded = false;
+
+	if (!FileSystemA::IsFile(BinListFile))
+	{
+		sLogger.Log("Listfile cache at %s not found, generating new one", BinListFile.c_str());
+		if (!GenerateListFileCache())
+			sLogger.Log("Error: Failed to generate listfile cache");
+		return false;
+	}
 
 	std::fstream FileStream;
 	FileStream.open(BinListFile, std::ios::in | std::ios::binary);
@@ -90,12 +87,14 @@ bool M2Lib::Casc::LoadListFileCache()
 
 	sLogger.Log("Loaded %u cached listfile entries", filesByFileDataId.size());
 
+	cacheLoaded = true;
 	return true;
 }
 
 bool M2Lib::Casc::GenerateListFileCache()
 {
 	filesByFileDataId.clear();
+	cacheLoaded = false;
 
 	sLogger.Log("Loading listfile at %s", ListFile.c_str());
 	std::fstream in;
@@ -104,6 +103,15 @@ bool M2Lib::Casc::GenerateListFileCache()
 	{
 		sLogger.Log("Error: Failed to open listfile");
 		return false;
+	}
+
+	if (!IsLoaded())
+	{
+		if (!Load())
+		{
+			sLogger.Log("Failed to generate listfile cache: can't be validated without CASC storage");
+			return false;
+		}
 	}
 
 	std::fstream out;
@@ -115,9 +123,6 @@ bool M2Lib::Casc::GenerateListFileCache()
 		in.close();
 		return false;
 	}
-
-	if (!IsLoaded())
-		Load();
 
 	UInt32 totalCount = 0;
 
@@ -136,6 +141,8 @@ bool M2Lib::Casc::GenerateListFileCache()
 	}
 	sLogger.Log("Parsing finished. %u valid entries of %u", filesByFileDataId.size(), totalCount);
 
+	cacheLoaded = true;
+
 	sLogger.Log("Writing listfile cache file...");
 	UInt32 _magic = REVERSE_CC(Magic);
 	out.write((char const*)&_magic, sizeof(_magic));
@@ -151,4 +158,17 @@ bool M2Lib::Casc::GenerateListFileCache()
 
 	sLogger.Log("Writing finished");
 	return true;
+}
+
+std::string M2Lib::Casc::GetFileById(UInt32 FileDataId)
+{
+	if (!cacheLoaded)
+		if (!LoadListFileCache())
+			return "";
+
+	auto itr = filesByFileDataId.find(FileDataId);
+	if (itr == filesByFileDataId.end())
+		return "";
+
+	return itr->second;
 }

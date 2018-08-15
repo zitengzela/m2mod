@@ -137,12 +137,7 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 				case EM2Chunk::Animation: Chunk = new AFIDChunk(); break;
 				case EM2Chunk::Bone: Chunk = new BFIDChunk(); break;
 				case EM2Chunk::Skeleton: Chunk = new SKIDChunk(); break;
-				case EM2Chunk::Skin:
-				{
-					PostProcessChunks[eChunk] = PostChunkInfo(FileStream.tellg(), ChunkSize);
-					FileStream.seekg(ChunkSize, std::ios::cur);
-					continue;
-				}
+				case EM2Chunk::Skin: Chunk = new SFIDChunk(); break;
 				default:
 					Chunk = new RawChunk();
 					break;
@@ -207,24 +202,33 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 	if (Error != EError::EError_OK)
 		return Error;
 
-	for (int i = 0; i < LOD_SKIN_MAX_COUNT; ++i)
+	hasLodSkins = false;
+	auto skinChunk = (M2Chunk::SFIDChunk*)GetChunk(EM2Chunk::Skin);
+	if (skinChunk && skinChunk->SkinsFileDataIds.size() > Header.Elements.nSkin)
+		hasLodSkins = true;
+	else
 	{
-		std::wstring FileNameSkin;
-		GetFileSkin(FileNameSkin, _FileName, 4 + i);
-
-		M2Skin LoDSkin(this);
-		if (EError Error = LoDSkin.Load(FileNameSkin.c_str()))
+		for (int i = 0; i < LOD_SKIN_MAX_COUNT; ++i)
 		{
-			if (Error = EError_FailedToLoadSKIN_CouldNotOpenFile)
+			std::wstring FileNameSkin;
+			if (!GetFileSkin(FileNameSkin, _FileName, SKIN_COUNT - LOD_SKIN_MAX_COUNT + i))
 				continue;
 
-			sLogger.Log("Error: Failed to load #%u lod skin %s", i, std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(FileSystemW::GetBaseName(FileNameSkin)).c_str());
-			return Error;
-		}
-		else
-		{
-			lodSkinsLoaded = true;
-			break;
+			sLogger.Log("Loading skin '%s'...", std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(FileSystemW::GetBaseName(FileNameSkin)).c_str());
+			M2Skin LoDSkin(this);
+			if (EError Error = LoDSkin.Load(FileNameSkin.c_str()))
+			{
+				if (Error = EError_FailedToLoadSKIN_CouldNotOpenFile)
+					continue;
+
+				sLogger.Log("Error: Failed to load #%u lod skin %s", i, std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(FileSystemW::GetBaseName(FileNameSkin)).c_str());
+				return Error;
+			}
+			else
+			{
+				hasLodSkins = true;
+				break;
+			}
 		}
 	}
 
@@ -234,12 +238,6 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 		ChunkBase* Chunk = NULL;
 		switch (PostChunk.first)
 		{
-			case EM2Chunk::Skin:
-			{
-				Chunk = new SFIDChunk(Header.Elements.nSkin);
-				Chunk->Load(FileStream, PostChunk.second.Size);
-				break;
-			}
 			default:
 			{
 				Chunk = new RawChunk();
@@ -261,7 +259,11 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 			Skeleton = sk;
 		}
 		else
+		{
+			if (GetChunk(EM2Chunk::Skeleton))
+				sLogger.Log("Error: model has skeleton chunk, but chunk file not loaded!");
 			delete sk;
+		}
 	}
 
 	// print info
@@ -278,7 +280,8 @@ M2Lib::EError M2Lib::M2::LoadSkins()
 	for (UInt32 i = 0; i < Header.Elements.nSkin; ++i)
 	{
 		std::wstring FileNameSkin;
-		GetFileSkin(FileNameSkin, _FileName, i);
+		if (!GetFileSkin(FileNameSkin, _FileName, i))
+			continue;
 
 		Skins[i] = new M2Skin(this);
 		if (EError Error = Skins[i]->Load(FileNameSkin.c_str()))
@@ -315,15 +318,11 @@ M2Lib::EError M2Lib::M2::SaveSkins()
 			return Error;
 	}
 
+	auto skinChunk = (M2Chunk::SFIDChunk*)GetChunk(EM2Chunk::Skin);
+
 	// 0x80 = flag_has_lod_skin_files - wrong
 	//if (Header.Description.Flags & 0x80)
-	UInt32 LodSkinCount = 0;
-	auto SkinChunk = (M2Chunk::SFIDChunk*)GetChunk(M2Chunk::EM2Chunk::Skin);
-	if (SkinChunk && SkinChunk->HasLodSkins())
-		LodSkinCount = SkinChunk->Lod_SkinsFileDataIds.size();
-	else if (LodSkinsLoaded())
-		LodSkinCount = LOD_SKIN_MAX_COUNT;
-
+	UInt32 LodSkinCount = skinChunk ? skinChunk->SkinsFileDataIds.size() - Header.Elements.nSkin : (hasLodSkins ? LOD_SKIN_MAX_COUNT : 0);
 	for (int i = 0; i < LodSkinCount; ++i)
 	{
 		std::wstring FileNameSkin;
@@ -856,7 +855,7 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16* FileName)
 	SInt32 BoneStart = 0;
 	UInt32 iSkin = 0;
 
-	for (UInt32 iLoD = 0; iLoD < SKIN_COUNT - 2; ++iLoD)
+	for (UInt32 iLoD = 0; iLoD < SKIN_COUNT - LOD_SKIN_MAX_COUNT; ++iLoD)
 	{
 		M2Skin* pNewSkin = new M2Skin(this);
 		assert(SkinBuilder.Build(pNewSkin, MaxBoneList[iLoD], pInM2I, Elements[EElement_Vertex].as<CVertex>(), BoneStart));
@@ -1220,6 +1219,38 @@ void M2Lib::M2::PrintInfo()
 // Gets the .skin file names.
 bool M2Lib::M2::GetFileSkin(std::wstring& SkinFileNameResultBuffer, std::wstring const& M2FileName, UInt32 SkinIndex)
 {
+	auto skinChunk = (M2Chunk::SFIDChunk*)GetChunk(EM2Chunk::Skin);
+	if (skinChunk && casc)
+	{
+		//sLogger.Log("Skin chunk detected");
+		SInt32 chunkIndex = -1;
+		if (SkinIndex < SKIN_COUNT - LOD_SKIN_MAX_COUNT)
+		{
+			if (SkinIndex < Header.Elements.nSkin)
+				chunkIndex = SkinIndex;
+		}
+		else
+			chunkIndex = SkinIndex + LOD_SKIN_MAX_COUNT + Header.Elements.nSkin - SKIN_COUNT;
+
+		if (chunkIndex < 0 || chunkIndex >= skinChunk->SkinsFileDataIds.size())
+		{
+			//sLogger.Log("Skin #%u is not present in chunk", SkinIndex);
+			return false;
+		}
+
+		auto skinFileDataId = skinChunk->SkinsFileDataIds[chunkIndex];
+		auto path = casc->GetFileById(skinFileDataId);
+		if (!path.empty())
+		{
+			//sLogger.Log("Skin listfile entry: %s", path.c_str());
+			auto SkinFileName = std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(FileSystemA::GetBaseName(path));
+			SkinFileNameResultBuffer = FileSystemW::GetParentDirectory(M2FileName) + L"\\" + SkinFileName;
+			return true;
+		}
+
+		sLogger.Log("Warning: skin FileDataId not found in listfile! Listfile is not up to date! Trying default skin name");
+	}
+
 	SkinFileNameResultBuffer.resize(1024);
 
 	switch (SkinIndex)
@@ -1246,6 +1277,29 @@ bool M2Lib::M2::GetFileSkin(std::wstring& SkinFileNameResultBuffer, std::wstring
 
 bool M2Lib::M2::GetSkeleton(std::wstring& SkeletonFileNameResultBuffer, std::wstring const& M2FileName)
 {
+	auto chunk = (M2Chunk::SKIDChunk*)GetChunk(EM2Chunk::Skeleton);
+	auto casc = GetCasc();
+	if (!chunk || !casc)
+	{
+		if (!chunk)
+			sLogger.Log("Skeleton chunk not found, trying default names");
+		else if (!casc)
+			sLogger.Log("CASC not provided, trying default names");
+
+		SkeletonFileNameResultBuffer = FileSystemW::GetParentDirectory(M2FileName) + L"\\" + FileSystemW::GetFileName(M2FileName) + L".skel";
+		return true;
+	}
+
+	auto path = casc->GetFileById(chunk->SkeletonFileDataId);
+	if (!path.empty())
+	{
+		sLogger.Log("Skeleton listfile entry: %s", path.c_str());
+		auto SkeletonFileName = std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(FileSystemA::GetBaseName(path));
+		SkeletonFileNameResultBuffer = FileSystemW::GetParentDirectory(M2FileName) + L"\\" + SkeletonFileName;
+		return true;
+	}
+	
+	sLogger.Log("Warning: skeleton FileDataId not found in listfile! Listfile is not up to date! Trying default skeleton name");
 	SkeletonFileNameResultBuffer = FileSystemW::GetParentDirectory(M2FileName) + L"\\" + FileSystemW::GetFileName(M2FileName) + L".skel";
 	return true;
 }

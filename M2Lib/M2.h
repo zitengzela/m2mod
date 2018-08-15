@@ -152,7 +152,7 @@ namespace M2Lib
 		std::map<M2Chunk::EM2Chunk, ChunkBase*> Chunks;
 
 		Skeleton* Skeleton;
-		bool lodSkinsLoaded;
+		bool hasLodSkins;
 
 		UInt32 m_OriginalModelChunkSize;
 		GlobalSettings* Settings;
@@ -165,7 +165,7 @@ namespace M2Lib
 		DataElement Elements[M2Element::EElement__Count__];
 		DataElement* GetLastElement();
 
-		#define SKIN_COUNT 6
+		#define SKIN_COUNT 7
 		#define LOD_SKIN_MAX_COUNT 3
 		M2Skin* Skins[SKIN_COUNT];
 
@@ -175,7 +175,7 @@ namespace M2Lib
 			Skeleton = NULL;
 			m_OriginalModelChunkSize = 0;
 			pInM2I = NULL;
-			lodSkinsLoaded = false;
+			hasLodSkins = false;
 			this->Settings = Settings;
 			casc = NULL;
 		}
@@ -214,6 +214,7 @@ namespace M2Lib
 		UInt32 GetTexture(const Char8* szTextureSource);
 
 		Casc* GetCasc() const { return casc; }
+		void SetCasc(Casc* casc) { this->casc = casc; }
 
 	private:
 		// utilities and tests
@@ -243,7 +244,6 @@ namespace M2Lib
 		bool GetFileSkin(std::wstring& SkinFileNameResultBuffer, std::wstring const& M2FileName, UInt32 SkinIndex);
 		bool GetSkeleton(std::wstring& SkeletonFileNameResultBuffer, std::wstring const& M2FileName);
 
-		bool LodSkinsLoaded() const { return lodSkinsLoaded; }
 		ChunkBase* GetChunk(M2Chunk::EM2Chunk ChunkId);
 		void PrepareChunks();
 

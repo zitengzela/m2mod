@@ -28,15 +28,10 @@ namespace M2Lib
 		class SFIDChunk : public ChunkBase
 		{
 		public:
-			SFIDChunk(UInt32 SkinCount);
-
 			void Load(std::fstream& FileStream, UInt32 Size) override;
 			void Save(std::fstream& FileStream) override;
 
 			std::vector<UInt32> SkinsFileDataIds;
-			std::vector<UInt32> Lod_SkinsFileDataIds;
-
-			bool HasLodSkins() const { return Lod_SkinsFileDataIds.size() > 0; }
 		};
 
 		class AFIDChunk : public ChunkBase
