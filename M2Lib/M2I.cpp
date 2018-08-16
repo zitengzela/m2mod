@@ -3,6 +3,7 @@
 #include <assert.h>
 #include "DataBinary.h"
 #include "M2.h"
+#include "Logger.h"
 
 M2Lib::EError M2Lib::M2I::Load(Char16* FileName, M2Lib::M2* pM2, bool IgnoreBones, bool IgnoreAttachments, bool IgnoreCameras)
 {
@@ -156,7 +157,8 @@ M2Lib::EError M2Lib::M2I::Load(Char16* FileName, M2Lib::M2* pM2, bool IgnoreBone
 	if (!IgnoreBones)
 	{
 		// read bones, overwrite existing
-		UInt32 BoneCount = pM2->Elements[M2Element::EElement_Bone].Count;
+		auto boneElement = pM2->GetBones();
+		UInt32 BoneCount = boneElement->Count;
 		UInt32 BoneCountIn = DataBinary.ReadUInt32();
 		for (UInt32 i = 0; i < BoneCountIn; ++i)
 		{
@@ -182,18 +184,23 @@ M2Lib::EError M2Lib::M2I::Load(Char16* FileName, M2Lib::M2* pM2, bool IgnoreBone
 			{
 				ModBoneIndex = InBoneIndex;
 			}
-			else if (HasExtraData)
+			else
+			{
+				sLogger.Log("Extra bones detected: skipping");
+				continue;
+			}
+			/*else if (HasExtraData)
 			{
 				M2Element::CElement_Bone newBone;
 				newBone.BoneLookupID = -1;
 				ModBoneIndex = pM2->AddBone(newBone);
 				BoneRemap[InBoneIndex] = ModBoneIndex;
-			}
+			}*/
 
 			if (ModBoneIndex == -1)
 				continue;
 
-			auto Bones = pM2->Elements[M2Element::EElement_Bone].as<M2Element::CElement_Bone>();
+			auto Bones = boneElement->as<M2Element::CElement_Bone>();
 			auto& BoneToMod = Bones[ModBoneIndex];
 
 			BoneToMod.ParentBone = ParentBone;
@@ -232,7 +239,8 @@ M2Lib::EError M2Lib::M2I::Load(Char16* FileName, M2Lib::M2* pM2, bool IgnoreBone
 		}
 	}
 
-	if (!BoneRemap.empty())
+	// this is only executed when new bones are present, skip
+	/*if (!BoneRemap.empty())
 	{
 		UInt32 BoneCount = pM2->Elements[M2Element::EElement_Bone].Count;
 		auto Bones = pM2->Elements[M2Element::EElement_Bone].as<M2Element::CElement_Bone>();
@@ -255,13 +263,14 @@ M2Lib::EError M2Lib::M2I::Load(Char16* FileName, M2Lib::M2* pM2, bool IgnoreBone
 				Vertex.BoneIndices[i] = BoneRemap[Vertex.BoneIndices[i]];
 			}
 		}
-	}
+	}*/
 
 	if (!IgnoreAttachments)
 	{
 		// read attachments, overwrite existing
-		UInt32 AttachmentsCount = pM2->Elements[M2Element::EElement_Attachment].Count;
-		auto Attachments = pM2->Elements[M2Element::EElement_Attachment].as<M2Element::CElement_Attachment>();
+		auto attachmentElement = pM2->GetAttachments();
+		UInt32 AttachmentsCount = attachmentElement->Count;
+		auto Attachments = attachmentElement->as<M2Element::CElement_Attachment>();
 		UInt32 AttachmentCountIn;
 		AttachmentCountIn = DataBinary.ReadUInt32();
 		for (UInt32 i = 0; i < AttachmentCountIn; i++)

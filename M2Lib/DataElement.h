@@ -57,7 +57,7 @@ namespace M2Lib
 		}
 
 		template <class T>
-		T* at(int Index)
+		T* at(UInt32 Index)
 		{
 			assert(__FUNCTION__ " Index too large" && Index < Count);
 

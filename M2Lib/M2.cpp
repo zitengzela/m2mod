@@ -558,27 +558,8 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate(Char16* FileName)
 	UInt16* Triangles = pSkin->Elements[M2SkinElement::EElement_TriangleIndex].as<UInt16>();
 	UInt16* Indices = pSkin->Elements[M2SkinElement::EElement_VertexLookup].as<UInt16>();
 
-	auto BoneChunk = (SkeletonChunk::SKB1Chunk*)(Skeleton ? Skeleton->GetChunk(SkeletonChunk::ESkeletonChunk::SKB1) : NULL);
-
-	UInt32 BonesCount = Elements[EElement_Bone].Count;
-	CElement_Bone* Bones = Elements[EElement_Bone].as<CElement_Bone>();
-
-	if (!BonesCount && BoneChunk)
-	{
-		BonesCount = BoneChunk->Elements[SkeletonChunk::SKB1Chunk::EElement_Bone].Count;
-		Bones = BoneChunk->Elements[SkeletonChunk::SKB1Chunk::EElement_Bone].as<CElement_Bone>();
-	}
-
-	auto AttachmentChunk = (SkeletonChunk::SKA1Chunk*)(Skeleton ? Skeleton->GetChunk(SkeletonChunk::ESkeletonChunk::SKA1) : NULL);
-
-	UInt32 AttachmentsCount = Elements[EElement_Attachment].Count;
-	CElement_Attachment* Attachments = Elements[EElement_Attachment].as<CElement_Attachment>();
-
-	if (!AttachmentsCount && AttachmentChunk)
-	{
-		AttachmentsCount = AttachmentChunk->Elements[SkeletonChunk::SKA1Chunk::EElement_Attachment].Count;
-		Attachments = AttachmentChunk->Elements[SkeletonChunk::SKA1Chunk::EElement_Attachment].as<CElement_Attachment>();
-	}
+	auto boneElement = GetBones();
+	auto attachmentElement = GetAttachments();
 
 	UInt32 CamerasCount = Elements[EElement_Camera].Count;
 
@@ -661,10 +642,10 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate(Char16* FileName)
 	}
 
 	// write bones
-	DataBinary.WriteUInt32(BonesCount);
-	for (UInt16 i = 0; i < BonesCount; i++)
+	DataBinary.WriteUInt32(boneElement->Count);
+	for (UInt16 i = 0; i < boneElement->Count; i++)
 	{
-		CElement_Bone& Bone = Bones[i];
+		CElement_Bone& Bone = *boneElement->at<CElement_Bone>(i);
 
 		DataBinary.WriteUInt16(i);
 		DataBinary.WriteSInt16(Bone.ParentBone);
@@ -679,10 +660,10 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate(Char16* FileName)
 	}
 
 	// write attachments
-	DataBinary.WriteUInt32(AttachmentsCount);
-	for (UInt16 i = 0; i < AttachmentsCount; i++)
+	DataBinary.WriteUInt32(attachmentElement->Count);
+	for (UInt16 i = 0; i < attachmentElement->Count; i++)
 	{
-		CElement_Attachment& Attachment = Attachments[i];
+		CElement_Attachment& Attachment = *attachmentElement->at<CElement_Attachment>(i);
 
 		DataBinary.WriteUInt32(Attachment.ID);
 		DataBinary.WriteSInt16(Attachment.ParentBone);
@@ -1035,9 +1016,9 @@ void M2Lib::M2::PrintInfo()
         FileStream << "\tFlags: " << (UInt32)texture[i].Flags << std::endl;
         FileStream << "\tType: " << (UInt32)texture[i].Type << std::endl;
         if (texture[i].TexturePath.Count > 1)
-			FileStream << "\tPath: " << (char*)Elements[EElement_Texture].GetLocalPointer(texture[i].TexturePath.Offset) << std::endl;
+			FileStream << "\tPath: " << GetTexturePath(i) << std::endl;
         else
-            FileStream << "\tPath: unk" << std::endl;
+            FileStream << "\tPath: None" << std::endl;
         FileStream << std::endl;
     }
 
@@ -1872,8 +1853,9 @@ void M2Lib::M2::Scale(Float32 Scale)
 
 	// bones
 	{
-		UInt32 BoneListLength = Elements[EElement_Bone].Count;
-		CElement_Bone* BoneList = Elements[EElement_Bone].as<CElement_Bone>();
+		auto boneElement = GetBones();
+		UInt32 BoneListLength = boneElement->Count;
+		CElement_Bone* BoneList = boneElement->as<CElement_Bone>();
 		for (UInt32 i = 0; i < BoneListLength; i++)
 		{
 			CElement_Bone& Bone = BoneList[i];
@@ -1885,8 +1867,9 @@ void M2Lib::M2::Scale(Float32 Scale)
 
 	// attachments
 	{
-		UInt32 AttachmentListLength = Elements[EElement_Attachment].Count;
-		CElement_Attachment* AttachmentList = Elements[EElement_Attachment].as<CElement_Attachment>();
+		auto attachmentElement = GetAttachments();
+		UInt32 AttachmentListLength = attachmentElement->Count;
+		CElement_Attachment* AttachmentList = attachmentElement->as<CElement_Attachment>();
 		for (UInt32 i = 0; i < AttachmentListLength; i++)
 		{
 			CElement_Attachment& Attachment = AttachmentList[i];
@@ -2118,6 +2101,46 @@ void M2Lib::M2::m_LoadElements_FindSizes(UInt32 ChunkSize)
 #define VERIFY_OFFSET_NOTLOCAL( offset ) \
 	assert( !offset || offset >= Elements[iElement].OffsetOriginal + Elements[iElement].Data.size() );
 
+M2Lib::DataElement* M2Lib::M2::GetAnimations()
+{
+	using namespace SkeletonChunk;
+
+	if (auto animationChunk = Skeleton ? (SKS1Chunk*)Skeleton->GetChunk(ESkeletonChunk::SKS1) : NULL)
+		return &animationChunk->Elements[SKS1Chunk::EElement_Animation];
+	else
+		return &Elements[EElement_Animation];
+}
+
+M2Lib::DataElement* M2Lib::M2::GetBones()
+{
+	using namespace SkeletonChunk;
+
+	if (auto boneChunk = Skeleton ? (SKB1Chunk*)Skeleton->GetChunk(ESkeletonChunk::SKB1) : NULL)
+		return &boneChunk->Elements[SKB1Chunk::EElement_Bone];
+	else
+		return &Elements[EElement_Bone];
+}
+
+M2Lib::DataElement* M2Lib::M2::GetBoneLookups()
+{
+	using namespace SkeletonChunk;
+
+	if (auto boneChunk = Skeleton ? (SKB1Chunk*)Skeleton->GetChunk(ESkeletonChunk::SKB1) : NULL)
+		return &boneChunk->Elements[SKB1Chunk::EElement_KeyBoneLookup];
+	else
+		return &Elements[EElement_KeyBoneLookup];
+}
+
+M2Lib::DataElement* M2Lib::M2::GetAttachments()
+{
+	using namespace SkeletonChunk;
+
+	if (auto attachmentChunk = Skeleton ? (SKA1Chunk*)Skeleton->GetChunk(ESkeletonChunk::SKA1) : NULL)
+		return &attachmentChunk->Elements[SKA1Chunk::EElement_Attachment];
+	else
+		return &Elements[EElement_Attachment];
+}
+
 void M2Lib::M2::m_SaveElements_FindOffsets()
 {
 	// fix animation offsets and find element offsets
@@ -2239,7 +2262,6 @@ void M2Lib::M2::m_SaveElements_FindOffsets()
 			case EElement_Event:
 			{
 				CElement_Event* Events = Elements[iElement].as<CElement_Event>();
-				auto animations = Elements[EElement_Animation].as<CElement_Animation>();
 				for (UInt32 j = 0; j < Elements[iElement].Count; j++)
 					m_FixAnimationM2Array(OffsetDelta, totalDiff, Events[j].GlobalSequenceID, Events[j].TimeLines, iElement);
 
@@ -2362,14 +2384,16 @@ void M2Lib::M2::m_SaveElements_FindOffsets()
 		m_OriginalModelChunkSize += Elements[iElement].Data.size();
 }
 
-
-
 void M2Lib::M2::m_FixAnimationM2Array(SInt32 OffsetDelta, SInt32 TotalDelta, SInt16 GlobalSequenceID, M2Array& Array, SInt32 iElement)
 {
 #define IS_LOCAL_ANIMATION(Offset) \
 	(Offset >= Elements[iElement].OffsetOriginal && (Offset < Elements[iElement].OffsetOriginal + Elements[iElement].Data.size()))
 
-	auto animations = Elements[EElement_Animation].as<CElement_Animation>();
+	auto animationElement = GetAnimations();
+	assert("Failed to get model animations" && animationElement);
+	assert("Zero animations count for model" && animationElement->Count);
+
+	auto animations = animationElement->as<CElement_Animation>();
 
 	VERIFY_OFFSET_LOCAL(Array.Offset);
 
@@ -2379,9 +2403,9 @@ void M2Lib::M2::m_FixAnimationM2Array(SInt32 OffsetDelta, SInt32 TotalDelta, SIn
 		{
 			auto SubArrays = (M2Array*)Elements[iElement].GetLocalPointer(Array.Offset);
 
-			assert(Elements[EElement_Animation].Count != 0);
 			for (UInt32 i = 0; i < Array.Count; ++i)
 			{
+				assert("Out of animation index" && i < animationElement->Count);
 				if (!animations[i].IsInternal())
 					continue;
 

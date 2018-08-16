@@ -130,8 +130,8 @@ void M2Lib::BoneComparator::Prepare()
 	prepared = true;
 
 	using namespace M2Element;
-	auto bones71 = newM2->Elements[EElement_Bone].asVector<CElement_Bone>();
-	auto bones = oldM2->Elements[EElement_Bone].asVector<CElement_Bone>();
+	auto bones71 = newM2->GetBones()->asVector<CElement_Bone>();
+	auto bones = oldM2->GetBones()->asVector<CElement_Bone>();
 
 	for (UInt32 i = 0; i < bones71.size(); ++i)
 	{
@@ -168,8 +168,8 @@ void M2Lib::BoneComparator::Prepare()
 	boneMap.EraseData(toErase);
 	toErase.clear();
 
-	auto lookupNew = newM2->Elements[EElement_KeyBoneLookup].asVector<CElement_BoneLookup>();
-	auto lookupOld = oldM2->Elements[EElement_KeyBoneLookup].asVector<CElement_BoneLookup>();
+	auto lookupNew = newM2->GetBoneLookups()->asVector<CElement_BoneLookup>();
+	auto lookupOld = oldM2->GetBoneLookups()->asVector<CElement_BoneLookup>();
 
 	auto maxIndex = std::max(lookupNew.size(), lookupOld.size());
 

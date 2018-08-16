@@ -218,6 +218,11 @@ namespace M2Lib
 		Casc* GetCasc() const { return casc; }
 		void SetCasc(Casc* casc) { this->casc = casc; }
 
+		DataElement* GetAnimations();
+		DataElement* GetBones();
+		DataElement* GetBoneLookups();
+		DataElement* GetAttachments();
+
 	private:
 		// utilities and tests
 
