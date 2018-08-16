@@ -13,7 +13,6 @@
 #include "Settings.h"
 #include "SettingsForm.h"
 #include "CompareBonesForm.h"
-#include "CascStatusForm.h"
 
 namespace M2ModRedux
 {
@@ -45,12 +44,26 @@ namespace M2ModRedux
 
 			InitializeLogger();
 			LoadSettingsFromRegistry();
+			AnalyzeCasc();
 
 			auto updater = gcnew Updater();
 			auto func = gcnew Func<int>(updater, &Updater::Update);
 			Task::Run(func);
 
 		}
+	private: System::Windows::Forms::TabPage^  cascTabPage;
+	private: System::Windows::Forms::Label^  cascInfoLabel;
+	private: System::Windows::Forms::TextBox^  cascInfoTextBox;
+	private: System::Windows::Forms::Button^  loadCascButton;
+	private: System::Windows::Forms::Button^  loadCacheButton;
+	private: System::Windows::Forms::TextBox^  testOutputTextBox;
+
+	private: System::Windows::Forms::TextBox^  testInputTextBox;
+
+	private: System::Windows::Forms::Label^  fileTestLabel;
+	private: System::Windows::Forms::Button^  fileTestButton;
+
+	public:
 
 		static Form1^ Instance = nullptr;
 
@@ -63,6 +76,69 @@ namespace M2ModRedux
 			GC::Collect();
 
 			sLogger.AttachCallback(callback);
+		}
+
+		private: void AnalyzeCasc()
+		{
+			std::string text = "Storage path: ";
+			if (settings && settings->WowPath.length())
+				text += settings->WowPath + "\r\n";
+			else
+				text += "<not specified>\r\n";
+
+			auto casc = GetCasc();
+			text += "Casc status: ";
+			if (settings->WowPath.empty())
+				text += "<storage not specified>\r\n";
+			else if (!casc->StorageInitialized())
+				text += "<not loaded>\r\n";
+			else
+				text += "<loaded>\r\n";
+
+			text += "Cache size: ";
+			if (!casc->CacheLoaded())
+				text += "<not loaded>\r\n";
+			else
+				text += std::to_string(casc->GetCacheSize()) + " files\r\n";
+
+			loadCascButton->Enabled = casc && !casc->StorageInitialized();
+			if (!casc->CacheLoaded())
+				loadCacheButton->Text = "Load cache";
+			else
+				loadCacheButton->Text = "Regenerate cache";
+
+			cascInfoTextBox->Text = gcnew String(text.c_str());
+		}
+
+		private: void TestFiles()
+		{
+			testOutputTextBox->Text = "";
+			if (!testInputTextBox->Text->Length)
+				return;
+
+			auto casc = GetCasc();
+			System::UInt32 FileDataId;
+			if (System::UInt32::TryParse(testInputTextBox->Text, FileDataId))
+			{
+				auto path = casc->GetFileByFileDataId(FileDataId);
+				if (!path.empty())
+					testOutputTextBox->Text = gcnew String(path.c_str());
+				else
+					testOutputTextBox->Text = "Not cached";
+			}
+			else
+			{
+				FileDataId = casc->GetFileDataIdByFile((char const*)Marshal::StringToHGlobalAnsi(testInputTextBox->Text).ToPointer());
+				if (!FileDataId)
+					testOutputTextBox->Text = "Not found in storage";
+				else
+					testOutputTextBox->Text = FileDataId.ToString();
+			}
+
+			AnalyzeCasc();
+
+			testOutputTextBox->Focus();
+			testOutputTextBox->SelectAll();
 		}
 
 		private: System::Void LoadSettingsFromRegistry()
@@ -139,7 +215,9 @@ namespace M2ModRedux
 	private: System::Windows::Forms::OpenFileDialog^  openFileDialog1;
 	private: System::Windows::Forms::SaveFileDialog^  saveFileDialog1;
 	private: System::Windows::Forms::ToolTip^  toolTip1;
-	private: System::Windows::Forms::TabControl^  logTabControl;
+private: System::Windows::Forms::TabControl^  tabControl;
+
+
 
 	private: System::Windows::Forms::TabPage^  tabExport;
 	private: System::Windows::Forms::Panel^  panelImputM2Exp;
@@ -184,7 +262,7 @@ namespace M2ModRedux
 	private: System::Windows::Forms::ToolStripMenuItem^  exitToolStripMenuItem;
 	private: System::Windows::Forms::ToolStripMenuItem^  toolsToolStripMenuItem;
 	private: System::Windows::Forms::ToolStripMenuItem^  compareBonesToolStripMenuItem;
-private: System::Windows::Forms::ToolStripMenuItem^  cASCInfoToolStripMenuItem;
+
 private: System::Windows::Forms::TabPage^  tabLog;
 private: System::Windows::Forms::TextBox^  logTextBox;
 private: System::Windows::Forms::Button^  clearButton;
@@ -229,7 +307,7 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->textBoxReplaceM2 = (gcnew System::Windows::Forms::TextBox());
 				 this->buttonReplaceM2Browse = (gcnew System::Windows::Forms::Button());
 				 this->checkBoxReplaceM2 = (gcnew System::Windows::Forms::CheckBox());
-				 this->logTabControl = (gcnew System::Windows::Forms::TabControl());
+				 this->tabControl = (gcnew System::Windows::Forms::TabControl());
 				 this->tabExport = (gcnew System::Windows::Forms::TabPage());
 				 this->panelImputM2Exp = (gcnew System::Windows::Forms::Panel());
 				 this->textBoxInputM2Exp = (gcnew System::Windows::Forms::TextBox());
@@ -242,6 +320,15 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->panelInputM2Import = (gcnew System::Windows::Forms::Panel());
 				 this->panelInputM2I = (gcnew System::Windows::Forms::Panel());
 				 this->panelOutputM2 = (gcnew System::Windows::Forms::Panel());
+				 this->cascTabPage = (gcnew System::Windows::Forms::TabPage());
+				 this->fileTestButton = (gcnew System::Windows::Forms::Button());
+				 this->testOutputTextBox = (gcnew System::Windows::Forms::TextBox());
+				 this->testInputTextBox = (gcnew System::Windows::Forms::TextBox());
+				 this->fileTestLabel = (gcnew System::Windows::Forms::Label());
+				 this->loadCascButton = (gcnew System::Windows::Forms::Button());
+				 this->loadCacheButton = (gcnew System::Windows::Forms::Button());
+				 this->cascInfoTextBox = (gcnew System::Windows::Forms::TextBox());
+				 this->cascInfoLabel = (gcnew System::Windows::Forms::Label());
 				 this->tabLog = (gcnew System::Windows::Forms::TabPage());
 				 this->clearButton = (gcnew System::Windows::Forms::Button());
 				 this->logTextBox = (gcnew System::Windows::Forms::TextBox());
@@ -250,11 +337,10 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->menuStrip1 = (gcnew System::Windows::Forms::MenuStrip());
 				 this->fileToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 				 this->settingsToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
-				 this->cASCInfoToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 				 this->exitToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 				 this->toolsToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 				 this->compareBonesToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
-				 this->logTabControl->SuspendLayout();
+				 this->tabControl->SuspendLayout();
 				 this->tabExport->SuspendLayout();
 				 this->panelImputM2Exp->SuspendLayout();
 				 this->panelOutputM2I->SuspendLayout();
@@ -265,6 +351,7 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->panelInputM2Import->SuspendLayout();
 				 this->panelInputM2I->SuspendLayout();
 				 this->panelOutputM2->SuspendLayout();
+				 this->cascTabPage->SuspendLayout();
 				 this->tabLog->SuspendLayout();
 				 this->statusStrip1->SuspendLayout();
 				 this->menuStrip1->SuspendLayout();
@@ -375,7 +462,7 @@ private: System::Windows::Forms::Button^  clearButton;
 				 // 
 				 // exportButtonGo
 				 // 
-				 this->exportButtonGo->Anchor = System::Windows::Forms::AnchorStyles::Top;
+				 this->exportButtonGo->Anchor = System::Windows::Forms::AnchorStyles::Bottom;
 				 this->exportButtonGo->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 8.25F, System::Drawing::FontStyle::Bold, System::Drawing::GraphicsUnit::Point,
 					 static_cast<System::Byte>(0)));
 				 this->exportButtonGo->Location = System::Drawing::Point(214, 208);
@@ -411,7 +498,7 @@ private: System::Windows::Forms::Button^  clearButton;
 				 // 
 				 // importButtonGo
 				 // 
-				 this->importButtonGo->Anchor = System::Windows::Forms::AnchorStyles::Top;
+				 this->importButtonGo->Anchor = System::Windows::Forms::AnchorStyles::Bottom;
 				 this->importButtonGo->Enabled = false;
 				 this->importButtonGo->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 8.25F, System::Drawing::FontStyle::Bold, System::Drawing::GraphicsUnit::Point,
 					 static_cast<System::Byte>(0)));
@@ -426,6 +513,7 @@ private: System::Windows::Forms::Button^  clearButton;
 				 // 
 				 // importButtonPreload
 				 // 
+				 this->importButtonPreload->Anchor = System::Windows::Forms::AnchorStyles::Bottom;
 				 this->importButtonPreload->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 8.25F, System::Drawing::FontStyle::Bold,
 					 System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(0)));
 				 this->importButtonPreload->Location = System::Drawing::Point(54, 10);
@@ -439,7 +527,7 @@ private: System::Windows::Forms::Button^  clearButton;
 				 // 
 				 // importCancelButton
 				 // 
-				 this->importCancelButton->Anchor = System::Windows::Forms::AnchorStyles::Right;
+				 this->importCancelButton->Anchor = System::Windows::Forms::AnchorStyles::Bottom;
 				 this->importCancelButton->Enabled = false;
 				 this->importCancelButton->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 8.25F, System::Drawing::FontStyle::Bold, System::Drawing::GraphicsUnit::Point,
 					 static_cast<System::Byte>(0)));
@@ -528,20 +616,21 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->checkBoxReplaceM2->UseVisualStyleBackColor = true;
 				 this->checkBoxReplaceM2->CheckedChanged += gcnew System::EventHandler(this, &Form1::checkBoxReplaceM2_CheckedChanged);
 				 // 
-				 // logTabControl
+				 // tabControl
 				 // 
-				 this->logTabControl->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Bottom)
+				 this->tabControl->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Bottom)
 					 | System::Windows::Forms::AnchorStyles::Left)
 					 | System::Windows::Forms::AnchorStyles::Right));
-				 this->logTabControl->Controls->Add(this->tabExport);
-				 this->logTabControl->Controls->Add(this->tabImport);
-				 this->logTabControl->Controls->Add(this->tabLog);
-				 this->logTabControl->Location = System::Drawing::Point(1, 24);
-				 this->logTabControl->Name = L"logTabControl";
-				 this->logTabControl->Padding = System::Drawing::Point(10, 3);
-				 this->logTabControl->SelectedIndex = 0;
-				 this->logTabControl->Size = System::Drawing::Size(570, 277);
-				 this->logTabControl->TabIndex = 25;
+				 this->tabControl->Controls->Add(this->tabExport);
+				 this->tabControl->Controls->Add(this->tabImport);
+				 this->tabControl->Controls->Add(this->cascTabPage);
+				 this->tabControl->Controls->Add(this->tabLog);
+				 this->tabControl->Location = System::Drawing::Point(1, 24);
+				 this->tabControl->Name = L"tabControl";
+				 this->tabControl->Padding = System::Drawing::Point(10, 3);
+				 this->tabControl->SelectedIndex = 0;
+				 this->tabControl->Size = System::Drawing::Size(570, 277);
+				 this->tabControl->TabIndex = 25;
 				 // 
 				 // tabExport
 				 // 
@@ -629,7 +718,7 @@ private: System::Windows::Forms::Button^  clearButton;
 				 // 
 				 // panel1
 				 // 
-				 this->panel1->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
+				 this->panel1->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Bottom | System::Windows::Forms::AnchorStyles::Left)
 					 | System::Windows::Forms::AnchorStyles::Right));
 				 this->panel1->Controls->Add(this->importButtonGo);
 				 this->panel1->Controls->Add(this->importButtonPreload);
@@ -685,6 +774,107 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->panelOutputM2->Size = System::Drawing::Size(531, 25);
 				 this->panelOutputM2->TabIndex = 24;
 				 // 
+				 // cascTabPage
+				 // 
+				 this->cascTabPage->Controls->Add(this->fileTestButton);
+				 this->cascTabPage->Controls->Add(this->testOutputTextBox);
+				 this->cascTabPage->Controls->Add(this->testInputTextBox);
+				 this->cascTabPage->Controls->Add(this->fileTestLabel);
+				 this->cascTabPage->Controls->Add(this->loadCascButton);
+				 this->cascTabPage->Controls->Add(this->loadCacheButton);
+				 this->cascTabPage->Controls->Add(this->cascInfoTextBox);
+				 this->cascTabPage->Controls->Add(this->cascInfoLabel);
+				 this->cascTabPage->Location = System::Drawing::Point(4, 22);
+				 this->cascTabPage->Name = L"cascTabPage";
+				 this->cascTabPage->Padding = System::Windows::Forms::Padding(3);
+				 this->cascTabPage->Size = System::Drawing::Size(562, 251);
+				 this->cascTabPage->TabIndex = 3;
+				 this->cascTabPage->Text = L"CASC";
+				 this->cascTabPage->UseVisualStyleBackColor = true;
+				 // 
+				 // fileTestButton
+				 // 
+				 this->fileTestButton->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Bottom | System::Windows::Forms::AnchorStyles::Left));
+				 this->fileTestButton->Location = System::Drawing::Point(30, 193);
+				 this->fileTestButton->Name = L"fileTestButton";
+				 this->fileTestButton->Size = System::Drawing::Size(75, 23);
+				 this->fileTestButton->TabIndex = 8;
+				 this->fileTestButton->Text = L"Test";
+				 this->fileTestButton->UseVisualStyleBackColor = true;
+				 this->fileTestButton->Click += gcnew System::EventHandler(this, &Form1::fileTestButton_Click);
+				 // 
+				 // testOutputTextBox
+				 // 
+				 this->testOutputTextBox->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Bottom | System::Windows::Forms::AnchorStyles::Left)
+					 | System::Windows::Forms::AnchorStyles::Right));
+				 this->testOutputTextBox->Location = System::Drawing::Point(128, 195);
+				 this->testOutputTextBox->Name = L"testOutputTextBox";
+				 this->testOutputTextBox->Size = System::Drawing::Size(431, 20);
+				 this->testOutputTextBox->TabIndex = 7;
+				 // 
+				 // testInputTextBox
+				 // 
+				 this->testInputTextBox->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Bottom | System::Windows::Forms::AnchorStyles::Left)
+					 | System::Windows::Forms::AnchorStyles::Right));
+				 this->testInputTextBox->Location = System::Drawing::Point(128, 169);
+				 this->testInputTextBox->Name = L"testInputTextBox";
+				 this->testInputTextBox->Size = System::Drawing::Size(431, 20);
+				 this->testInputTextBox->TabIndex = 6;
+				 this->testInputTextBox->KeyDown += gcnew System::Windows::Forms::KeyEventHandler(this, &Form1::testInputTextBox_KeyDown);
+				 // 
+				 // fileTestLabel
+				 // 
+				 this->fileTestLabel->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Bottom | System::Windows::Forms::AnchorStyles::Left));
+				 this->fileTestLabel->AutoSize = true;
+				 this->fileTestLabel->Location = System::Drawing::Point(6, 172);
+				 this->fileTestLabel->Name = L"fileTestLabel";
+				 this->fileTestLabel->Size = System::Drawing::Size(121, 13);
+				 this->fileTestLabel->TabIndex = 5;
+				 this->fileTestLabel->Text = L"Input path or FileDataId:";
+				 // 
+				 // loadCascButton
+				 // 
+				 this->loadCascButton->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Right));
+				 this->loadCascButton->Location = System::Drawing::Point(337, 3);
+				 this->loadCascButton->Name = L"loadCascButton";
+				 this->loadCascButton->Size = System::Drawing::Size(108, 23);
+				 this->loadCascButton->TabIndex = 4;
+				 this->loadCascButton->Text = L"Load Storage";
+				 this->loadCascButton->UseVisualStyleBackColor = true;
+				 this->loadCascButton->Click += gcnew System::EventHandler(this, &Form1::loadCascButton_Click);
+				 // 
+				 // loadCacheButton
+				 // 
+				 this->loadCacheButton->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Right));
+				 this->loadCacheButton->Location = System::Drawing::Point(451, 3);
+				 this->loadCacheButton->Name = L"loadCacheButton";
+				 this->loadCacheButton->Size = System::Drawing::Size(108, 23);
+				 this->loadCacheButton->TabIndex = 3;
+				 this->loadCacheButton->Text = L"Load Cache";
+				 this->loadCacheButton->UseVisualStyleBackColor = true;
+				 this->loadCacheButton->Click += gcnew System::EventHandler(this, &Form1::loadCacheButton_Click);
+				 // 
+				 // cascInfoTextBox
+				 // 
+				 this->cascInfoTextBox->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Bottom)
+					 | System::Windows::Forms::AnchorStyles::Left)
+					 | System::Windows::Forms::AnchorStyles::Right));
+				 this->cascInfoTextBox->Location = System::Drawing::Point(3, 29);
+				 this->cascInfoTextBox->Multiline = true;
+				 this->cascInfoTextBox->Name = L"cascInfoTextBox";
+				 this->cascInfoTextBox->ReadOnly = true;
+				 this->cascInfoTextBox->Size = System::Drawing::Size(556, 134);
+				 this->cascInfoTextBox->TabIndex = 1;
+				 // 
+				 // cascInfoLabel
+				 // 
+				 this->cascInfoLabel->AutoSize = true;
+				 this->cascInfoLabel->Location = System::Drawing::Point(8, 10);
+				 this->cascInfoLabel->Name = L"cascInfoLabel";
+				 this->cascInfoLabel->Size = System::Drawing::Size(59, 13);
+				 this->cascInfoLabel->TabIndex = 0;
+				 this->cascInfoLabel->Text = L"CASC Info:";
+				 // 
 				 // tabLog
 				 // 
 				 this->tabLog->Controls->Add(this->clearButton);
@@ -699,6 +889,7 @@ private: System::Windows::Forms::Button^  clearButton;
 				 // 
 				 // clearButton
 				 // 
+				 this->clearButton->Anchor = System::Windows::Forms::AnchorStyles::Bottom;
 				 this->clearButton->Location = System::Drawing::Point(241, 222);
 				 this->clearButton->Name = L"clearButton";
 				 this->clearButton->Size = System::Drawing::Size(75, 23);
@@ -749,9 +940,9 @@ private: System::Windows::Forms::Button^  clearButton;
 				 // 
 				 // fileToolStripMenuItem
 				 // 
-				 this->fileToolStripMenuItem->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(3) {
+				 this->fileToolStripMenuItem->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(2) {
 					 this->settingsToolStripMenuItem,
-						 this->cASCInfoToolStripMenuItem, this->exitToolStripMenuItem
+						 this->exitToolStripMenuItem
 				 });
 				 this->fileToolStripMenuItem->Name = L"fileToolStripMenuItem";
 				 this->fileToolStripMenuItem->Size = System::Drawing::Size(37, 20);
@@ -760,21 +951,14 @@ private: System::Windows::Forms::Button^  clearButton;
 				 // settingsToolStripMenuItem
 				 // 
 				 this->settingsToolStripMenuItem->Name = L"settingsToolStripMenuItem";
-				 this->settingsToolStripMenuItem->Size = System::Drawing::Size(128, 22);
+				 this->settingsToolStripMenuItem->Size = System::Drawing::Size(116, 22);
 				 this->settingsToolStripMenuItem->Text = L"Settings";
 				 this->settingsToolStripMenuItem->Click += gcnew System::EventHandler(this, &Form1::settingsToolStripMenuItem_Click);
-				 // 
-				 // cASCInfoToolStripMenuItem
-				 // 
-				 this->cASCInfoToolStripMenuItem->Name = L"cASCInfoToolStripMenuItem";
-				 this->cASCInfoToolStripMenuItem->Size = System::Drawing::Size(128, 22);
-				 this->cASCInfoToolStripMenuItem->Text = L"CASC Info";
-				 this->cASCInfoToolStripMenuItem->Click += gcnew System::EventHandler(this, &Form1::cASCInfoToolStripMenuItem_Click_1);
 				 // 
 				 // exitToolStripMenuItem
 				 // 
 				 this->exitToolStripMenuItem->Name = L"exitToolStripMenuItem";
-				 this->exitToolStripMenuItem->Size = System::Drawing::Size(128, 22);
+				 this->exitToolStripMenuItem->Size = System::Drawing::Size(116, 22);
 				 this->exitToolStripMenuItem->Text = L"Exit";
 				 this->exitToolStripMenuItem->Click += gcnew System::EventHandler(this, &Form1::exitToolStripMenuItem_Click);
 				 // 
@@ -799,14 +983,14 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->ClientSize = System::Drawing::Size(569, 320);
 				 this->Controls->Add(this->statusStrip1);
 				 this->Controls->Add(this->menuStrip1);
-				 this->Controls->Add(this->logTabControl);
+				 this->Controls->Add(this->tabControl);
 				 this->Icon = (cli::safe_cast<System::Drawing::Icon^>(resources->GetObject(L"$this.Icon")));
 				 this->MainMenuStrip = this->menuStrip1;
 				 this->MinimumSize = System::Drawing::Size(500, 320);
 				 this->Name = L"Form1";
 				 this->Text = L"M2Mod Redux";
 				 this->FormClosing += gcnew System::Windows::Forms::FormClosingEventHandler(this, &Form1::Form1_FormClosing);
-				 this->logTabControl->ResumeLayout(false);
+				 this->tabControl->ResumeLayout(false);
 				 this->tabExport->ResumeLayout(false);
 				 this->panelImputM2Exp->ResumeLayout(false);
 				 this->panelImputM2Exp->PerformLayout();
@@ -824,6 +1008,8 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->panelInputM2I->PerformLayout();
 				 this->panelOutputM2->ResumeLayout(false);
 				 this->panelOutputM2->PerformLayout();
+				 this->cascTabPage->ResumeLayout(false);
+				 this->cascTabPage->PerformLayout();
 				 this->tabLog->ResumeLayout(false);
 				 this->tabLog->PerformLayout();
 				 this->statusStrip1->ResumeLayout(false);
@@ -1019,10 +1205,11 @@ private: System::Windows::Forms::Button^  clearButton;
 	private: M2Lib::Casc* _casc = NULL;
 	private: M2Lib::Casc* GetCasc()
 	{
-		if (!_casc && settings && !settings->WowPath.empty())
+		if (!_casc)
 		{
 			_casc = new M2Lib::Casc();
-			_casc->SetStoragePath(settings->WowPath);
+			if (settings && !settings->WowPath.empty())
+				_casc->SetStoragePath(settings->WowPath);
 		}
 
 		return _casc;
@@ -1262,20 +1449,49 @@ private: System::Windows::Forms::Button^  clearButton;
 		{
 			*settings = form->ProduceSettings();
 			if (auto casc = GetCasc())
+			{
 				casc->SetStoragePath(settings->WowPath);
+				AnalyzeCasc();
+			}
 		}
 	}
 	private: System::Void compareBonesToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) {
 		auto form = gcnew CompareBonesForm();
 		form->ShowDialog();
 	}
-	private: System::Void cASCInfoToolStripMenuItem_Click_1(System::Object^  sender, System::EventArgs^  e) {
-		auto form = gcnew CascStatusForm();
-		form->SetParameters(GetCasc(), settings);
-		form->ShowDialog();
-	}
 	private: System::Void clearButton_Click(System::Object^  sender, System::EventArgs^  e) {
 		logTextBox->Text = "";
+	}
+	private: System::Void loadCascButton_Click(System::Object^  sender, System::EventArgs^  e) {
+		auto casc = GetCasc();
+		if (casc->StorageInitialized())
+			return;
+
+		casc->InitializeStorage();
+
+		AnalyzeCasc();
+	}
+	private: System::Void loadCacheButton_Click(System::Object^  sender, System::EventArgs^  e) {
+		auto casc = GetCasc();
+
+		if (!casc->CacheLoaded())
+			casc->LoadListFileCache();
+		else
+			casc->GenerateListFileCache();
+
+		AnalyzeCasc();
+	}
+	private: System::Void fileTestButton_Click(System::Object^  sender, System::EventArgs^  e) {
+		TestFiles();
+	}
+	private: System::Void testInputTextBox_KeyPress(System::Object^  sender, System::Windows::Forms::KeyPressEventArgs^  e) {
+		
+	}
+	private: System::Void testInputTextBox_KeyDown(System::Object^  sender, System::Windows::Forms::KeyEventArgs^  e) {
+		if (e->KeyCode != Keys::Enter)
+			return;
+
+		TestFiles();
 	}
 };
 }

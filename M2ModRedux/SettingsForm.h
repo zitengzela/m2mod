@@ -66,6 +66,7 @@ namespace M2ModRedux {
 			std::string path = (char const*)Marshal::StringToHGlobalAnsi(wowPathTextBox->Text->Trim()).ToPointer();
 
 			settings.WowPath = path.length() ? M2Lib::FileSystemA::GetParentDirectory(path) : "";
+
 			settings.ImportSettings.MergeBones = checkBoxMergeBones->Checked;
 			settings.ImportSettings.MergeAttachments = checkBoxMergeAttachments->Checked;
 			settings.ImportSettings.MergeCameras = checkBoxMergeCameras->Checked;

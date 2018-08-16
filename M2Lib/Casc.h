@@ -11,7 +11,6 @@ namespace M2Lib
 	private:
 		static UInt32 Magic;
 
-		bool LoadListFileCache();
 		void ClearCache() { filesByFileDataId.clear(); fileDataIdsByHash.clear(); cacheLoaded = false; }
 
 		std::string StoragePath;
@@ -29,10 +28,14 @@ namespace M2Lib
 
 		void SetStoragePath(std::string const& StoragePath);
 
-		bool Load();
 		void Unload();
-		bool IsLoaded() const { return hStorage != NULL; }
+
+		bool InitializeStorage();
+		bool StorageInitialized() const { return hStorage != NULL; }
+		
+		bool LoadListFileCache();
 		bool GenerateListFileCache();
+		bool CacheLoaded() const { return cacheLoaded; }
 		UInt32 GetCacheSize() const { return filesByFileDataId.size(); }
 
 		std::string GetFileByFileDataId(UInt32 FileDataId);

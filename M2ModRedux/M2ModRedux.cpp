@@ -6,7 +6,7 @@
 using namespace M2ModRedux;
 
 [STAThreadAttribute]
-int WinMain(void *var1, unsigned long var2, void *var3)
+int __stdcall WinMain(void *var1, unsigned long var2, void *var3)
 {
 	// Enabling Windows XP visual effects before any controls are created
 	Application::EnableVisualStyles();

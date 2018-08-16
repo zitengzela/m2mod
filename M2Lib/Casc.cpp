@@ -22,7 +22,7 @@ void M2Lib::Casc::SetStoragePath(std::string const& StoragePath)
 	Unload();
 }
 
-bool M2Lib::Casc::Load()
+bool M2Lib::Casc::InitializeStorage()
 {
 	sLogger.Log("Initializing CASC storage at '%s'", StoragePath.c_str());
 	// Open the storage directory
@@ -111,9 +111,9 @@ bool M2Lib::Casc::GenerateListFileCache()
 		return false;
 	}
 
-	if (!IsLoaded())
+	if (!StorageInitialized())
 	{
-		if (!Load())
+		if (!InitializeStorage())
 		{
 			sLogger.Log("Failed to generate listfile cache: can't be validated without CASC storage");
 			return false;
@@ -192,8 +192,8 @@ UInt32 M2Lib::Casc::GetFileDataIdByFile(std::string const & File)
 			return itr->second;
 	}
 
-	if (!IsLoaded())
-		if (!Load())
+	if (!StorageInitialized())
+		if (!InitializeStorage())
 			return 0;
 
 	UInt32 FileDataId = CascGetFileId(hStorage, File.c_str());

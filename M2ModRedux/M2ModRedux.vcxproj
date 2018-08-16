@@ -101,9 +101,6 @@
     <ClCompile Include="M2ModRedux.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="CascStatusForm.h">
-      <FileType>CppForm</FileType>
-    </ClInclude>
     <ClInclude Include="ElementManagementForm.h">
       <FileType>CppForm</FileType>
     </ClInclude>
@@ -127,9 +124,6 @@
     <ResourceCompile Include="app.rc" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="CascStatusForm.resx">
-      <DependentUpon>CascStatusForm.h</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="ElementManagementForm.resx">
       <DependentUpon>ElementManagementForm.h</DependentUpon>
     </EmbeddedResource>

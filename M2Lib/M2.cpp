@@ -1323,7 +1323,6 @@ void M2Lib::M2::PrintReferencedFileInfo()
 					sLogger.Log("\tError: texture #%u path must be present in either in element or chunk, but it is not", i);
 			}
 		}
-
 	}
 
 	if (auto physChunk = (PFIDChunk*)GetChunk(EM2Chunk::Physic))
