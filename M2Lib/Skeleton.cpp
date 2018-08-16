@@ -15,8 +15,6 @@ M2Lib::EError M2Lib::Skeleton::Load(const Char16* FileName)
 	if (FileStream.fail())
 		return EError_FailedToLoadM2_CouldNotOpenFile;
 
-	StreamCloser _fsCloser(FileStream);
-
 	// find file size
 	FileStream.seekg(0, std::ios::end);
 	UInt32 FileSize = (UInt32)FileStream.tellg();

@@ -70,7 +70,6 @@ bool M2Lib::Casc::LoadListFileCache()
 	if (TestMagic != REVERSE_CC(Magic))
 	{
 		sLogger.Log("Error: Usupported listfile cache magic");
-		FileStream.close();
 		return false;
 	}
 
@@ -89,8 +88,6 @@ bool M2Lib::Casc::LoadListFileCache()
 		filesByFileDataId[FileDataId] = Name;
 		fileDataIdsByHash[CalcFileNameHash(Name.c_str())] = FileDataId;
 	}
-
-	FileStream.close();
 
 	sLogger.Log("Loaded %u cached listfile entries", filesByFileDataId.size());
 
@@ -125,8 +122,6 @@ bool M2Lib::Casc::GenerateListFileCache()
 	if (out.fail())
 	{
 		sLogger.Log("Error: Failed to open listfile cache for writing at %s", BinListFile.c_str());
-
-		in.close();
 		return false;
 	}
 
@@ -160,7 +155,7 @@ bool M2Lib::Casc::GenerateListFileCache()
 		out.write((char const*)&len, sizeof(UInt32));
 		out.write(info.second.c_str(), len);
 	}
-	in.close();
+
 	out.close();
 
 	sLogger.Log("Writing finished");

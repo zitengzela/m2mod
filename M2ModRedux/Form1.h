@@ -62,6 +62,8 @@ namespace M2ModRedux
 
 	private: System::Windows::Forms::Label^  fileTestLabel;
 	private: System::Windows::Forms::Button^  fileTestButton;
+	private: System::Windows::Forms::Button^  refreshButton;
+
 
 	public:
 
@@ -321,6 +323,7 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->panelInputM2I = (gcnew System::Windows::Forms::Panel());
 				 this->panelOutputM2 = (gcnew System::Windows::Forms::Panel());
 				 this->cascTabPage = (gcnew System::Windows::Forms::TabPage());
+				 this->refreshButton = (gcnew System::Windows::Forms::Button());
 				 this->fileTestButton = (gcnew System::Windows::Forms::Button());
 				 this->testOutputTextBox = (gcnew System::Windows::Forms::TextBox());
 				 this->testInputTextBox = (gcnew System::Windows::Forms::TextBox());
@@ -776,6 +779,7 @@ private: System::Windows::Forms::Button^  clearButton;
 				 // 
 				 // cascTabPage
 				 // 
+				 this->cascTabPage->Controls->Add(this->refreshButton);
 				 this->cascTabPage->Controls->Add(this->fileTestButton);
 				 this->cascTabPage->Controls->Add(this->testOutputTextBox);
 				 this->cascTabPage->Controls->Add(this->testInputTextBox);
@@ -791,6 +795,16 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->cascTabPage->TabIndex = 3;
 				 this->cascTabPage->Text = L"CASC";
 				 this->cascTabPage->UseVisualStyleBackColor = true;
+				 // 
+				 // refreshButton
+				 // 
+				 this->refreshButton->Location = System::Drawing::Point(3, 2);
+				 this->refreshButton->Name = L"refreshButton";
+				 this->refreshButton->Size = System::Drawing::Size(75, 23);
+				 this->refreshButton->TabIndex = 9;
+				 this->refreshButton->Text = L"Refresh";
+				 this->refreshButton->UseVisualStyleBackColor = true;
+				 this->refreshButton->Click += gcnew System::EventHandler(this, &Form1::refreshButton_Click);
 				 // 
 				 // fileTestButton
 				 // 
@@ -869,7 +883,7 @@ private: System::Windows::Forms::Button^  clearButton;
 				 // cascInfoLabel
 				 // 
 				 this->cascInfoLabel->AutoSize = true;
-				 this->cascInfoLabel->Location = System::Drawing::Point(8, 10);
+				 this->cascInfoLabel->Location = System::Drawing::Point(84, 12);
 				 this->cascInfoLabel->Name = L"cascInfoLabel";
 				 this->cascInfoLabel->Size = System::Drawing::Size(59, 13);
 				 this->cascInfoLabel->TabIndex = 0;
@@ -1492,6 +1506,9 @@ private: System::Windows::Forms::Button^  clearButton;
 			return;
 
 		TestFiles();
+	}
+	private: System::Void refreshButton_Click(System::Object^  sender, System::EventArgs^  e) {
+		AnalyzeCasc();
 	}
 };
 }

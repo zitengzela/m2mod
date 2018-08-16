@@ -49,9 +49,6 @@ M2Lib::EError M2Lib::M2Skin::Load(Char16 const* FileName)
 			return EError_FailedToLoadSKIN_FileMissingOrCorrupt;
 	}
 
-	// close file stream
-	FileStream.close();
-
 	// print info
 	//PrintInfo();
 
@@ -541,9 +538,6 @@ bool M2Lib::M2Skin::PrintInfo()
         FileStream << "iTextureAnimation:   " << Material.iTextureAnimation << std::endl;
         FileStream << std::endl;
     }
-
-
-    // CElement_Material
 
 	FileStream.close();
 

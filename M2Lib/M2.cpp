@@ -82,8 +82,6 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 		return EError_FailedToLoadM2_CouldNotOpenFile;
 	}
 
-	StreamCloser _fsCloser(FileStream);
-
 	// find file size
 	FileStream.seekg(0, std::ios::end);
 	UInt32 FileSize = (UInt32)FileStream.tellg();
@@ -530,9 +528,6 @@ M2Lib::EError M2Lib::M2::Save(const Char16* FileName)
 		FileStream.write((char*)&ChunkSize, 4);
 		FileStream.seekp(0, std::ios::end);
 	}
-
-	// close file stream
-	FileStream.close();
 
 	// save skins
 	auto Error = SaveSkins();

@@ -6,28 +6,12 @@
 
 namespace M2Lib
 {
-	class StreamCloser
-	{
-		std::fstream* stream;
-	public:
-		StreamCloser(std::fstream& stream)
-		{
-			this->stream = &stream;
-		}
-
-		~StreamCloser()
-		{
-			this->stream->close();
-		}
-	};
-
 	enum EEndianness
 	{
 		EEndianness_Little,
 		EEndianness_Big,
 		EEndianness_Native,
 	};
-
 
 	class DataBinary
 	{
