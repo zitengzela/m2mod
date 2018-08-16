@@ -8,7 +8,7 @@ template <>
 std::basic_string<wchar_t> M2Lib::FileSystem<wchar_t>::PathSeparator = L"\\";
 
 template <class T>
-std::basic_string<T> M2Lib::FileSystem<T>::preparePath(std::basic_string<T> const& path)
+std::basic_string<T> M2Lib::FileSystem<T>::FixPath(std::basic_string<T> const& path)
 {
 	auto copy = path;
 
@@ -36,7 +36,7 @@ std::basic_string<char> M2Lib::FileSystem<char>::GetCurrentPath()
 template<class T>
 std::basic_string<T> M2Lib::FileSystem<T>::GetParentDirectory(std::basic_string<T> path)
 {
-	path = preparePath(path);
+	path = FixPath(path);
 	auto lastSlash = path.find_last_of('\\');
 	if (lastSlash != std::string::npos)
 		return path.substr(0, lastSlash);
@@ -52,7 +52,7 @@ std::basic_string<wchar_t> M2Lib::FileSystem<wchar_t>::GetParentDirectory(std::b
 template<class T>
 std::basic_string<T> M2Lib::FileSystem<T>::GetBaseName(std::basic_string<T> path)
 {
-	path = preparePath(path);
+	path = FixPath(path);
 	auto lastSlash = path.find_last_of('\\');
 	if (lastSlash != std::string::npos)
 		return path.substr(lastSlash + 1);
@@ -68,7 +68,7 @@ std::basic_string<wchar_t> M2Lib::FileSystem<wchar_t>::GetBaseName(std::basic_st
 template<class T>
 std::basic_string<T> M2Lib::FileSystem<T>::GetFileName(std::basic_string<T> path)
 {
-	path = preparePath(path);
+	path = FixPath(path);
 	auto BaseName = GetBaseName(path);
 	auto lastDot = BaseName.find_last_of('.');
 	if (lastDot != std::string::npos)
@@ -85,7 +85,7 @@ std::basic_string<wchar_t> M2Lib::FileSystem<wchar_t>::GetFileName(std::basic_st
 template<class T>
 std::basic_string<T> M2Lib::FileSystem<T>::GetExtension(std::basic_string<T> path)
 {
-	path = preparePath(path);
+	path = FixPath(path);
 	auto BaseName = GetBaseName(path);
 	auto lastDot = BaseName.find_last_of('.');
 	if (lastDot != std::string::npos)

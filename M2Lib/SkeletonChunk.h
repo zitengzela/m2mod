@@ -134,6 +134,47 @@ namespace M2Lib
 
 			DataElement Elements[EElement_Count];
 		};
+
+		class SKPDChunk : public ChunkBase
+		{
+		public:
+			struct TData
+			{
+				UInt8 _0x00[8];
+				uint32_t ParentSkeletonFileId;
+				UInt8 _0x0c[4];
+			} Data;
+
+			ASSERT_SIZE(TData, 16);
+
+			void Load(std::fstream& FileStream, UInt32 Size) override;
+			void Save(std::fstream& FileStream) override;
+		};
+
+		class AFIDChunk : public ChunkBase
+		{
+		public:
+			void Load(std::fstream& FileStream, UInt32 Size) override;
+			void Save(std::fstream& FileStream) override;
+
+			struct AnimFileInfo
+			{
+				UInt16 AnimId;
+				UInt16 SubAnimId;
+				UInt32 FileId;
+			};
+
+			std::vector<AnimFileInfo> AnimInfos;
+		};
+
+		class BFIDChunk : public ChunkBase
+		{
+		public:
+			void Load(std::fstream& FileStream, UInt32 Size) override;
+			void Save(std::fstream& FileStream) override;
+
+			std::vector<UInt32> BoneFileDataIds;
+		};
 #pragma pack(pop)
 	}
 }

@@ -715,6 +715,8 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->logTextBox->Location = System::Drawing::Point(3, 3);
 				 this->logTextBox->Multiline = true;
 				 this->logTextBox->Name = L"logTextBox";
+				 this->logTextBox->ReadOnly = true;
+				 this->logTextBox->ScrollBars = System::Windows::Forms::ScrollBars::Vertical;
 				 this->logTextBox->Size = System::Drawing::Size(556, 216);
 				 this->logTextBox->TabIndex = 0;
 				 // 
@@ -1018,7 +1020,10 @@ private: System::Windows::Forms::Button^  clearButton;
 	private: M2Lib::Casc* GetCasc()
 	{
 		if (!_casc && settings && !settings->WowPath.empty())
-			_casc = new M2Lib::Casc(settings->WowPath);
+		{
+			_casc = new M2Lib::Casc();
+			_casc->SetStoragePath(settings->WowPath);
+		}
 
 		return _casc;
 	}
@@ -1254,7 +1259,11 @@ private: System::Windows::Forms::Button^  clearButton;
 		auto form = gcnew SettingsForm();
 		form->Setup(settings);
 		if (form->ShowDialog() == Windows::Forms::DialogResult::OK)
+		{
 			*settings = form->ProduceSettings();
+			if (auto casc = GetCasc())
+				casc->SetStoragePath(settings->WowPath);
+		}
 	}
 	private: System::Void compareBonesToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) {
 		auto form = gcnew CompareBonesForm();

@@ -48,7 +48,7 @@ namespace M2Lib
 				UInt32 FileId;
 			};
 
-			std::vector<AnimFileInfo> AnimFileIds;
+			std::vector<AnimFileInfo> AnimInfos;
 		};
 
 		class BFIDChunk : public ChunkBase

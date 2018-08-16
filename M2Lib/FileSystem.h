@@ -8,7 +8,7 @@ namespace M2Lib
 	class FileSystem
 	{
 		static std::basic_string<T> PathSeparator;
-		static std::basic_string<T> preparePath(std::basic_string<T> const& path);
+		static std::basic_string<T> FixPath(std::basic_string<T> const& path);
 
 	public:
 		static std::basic_string<T> GetCurrentPath();

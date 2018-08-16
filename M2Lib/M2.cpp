@@ -269,6 +269,7 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 
 	// print info
 	//PrintInfo();
+	PrintReferencedFileInfo();
 
 	sLogger.Log("Finished loading M2");
 
@@ -324,7 +325,7 @@ M2Lib::EError M2Lib::M2::SaveSkins()
 	// 0x80 = flag_has_lod_skin_files - wrong
 	//if (Header.Description.Flags & 0x80)
 	UInt32 LodSkinCount = skinChunk ? skinChunk->SkinsFileDataIds.size() - Header.Elements.nSkin : (hasLodSkins ? LOD_SKIN_MAX_COUNT : 0);
-	for (int i = 0; i < LodSkinCount; ++i)
+	for (UInt32 i = 0; i < LodSkinCount; ++i)
 	{
 		std::wstring FileNameSkin;
 		if (!GetFileSkin(FileNameSkin, _FileName, i + 4))
@@ -1217,6 +1218,135 @@ void M2Lib::M2::PrintInfo()
 	FileStream.close();
 }
 
+void M2Lib::M2::PrintReferencedFileInfo()
+{
+	sLogger.Log("=====START REFERENCED FILE INFO=======");
+	auto skinChunk = (SFIDChunk*)GetChunk(EM2Chunk::Skin);
+	if (!skinChunk)
+		sLogger.Log("Skins files are not referenced by M2");
+	auto skeletonChunk = (SKIDChunk*)GetChunk(EM2Chunk::Skeleton);
+	if (!skeletonChunk)
+		sLogger.Log("Skeleton is not referenced by M2");
+	auto textureChunk = (TXIDChunk*)GetChunk(EM2Chunk::Texture);
+	if (!textureChunk)
+		sLogger.Log("Texture files are not referenced by M2");
+
+	auto casc = GetCasc();
+	auto pathInfo = [casc](UInt32 FileDataId) -> std::string
+	{
+		if (!FileDataId)
+			return "<none>";
+		
+		if (!casc)
+			return "<casc not initialized>";
+		
+		std::string path = casc->GetFileByFileDataId(FileDataId);
+		if (path.empty())
+			path = "<not cached>";
+
+		return path;
+	};
+
+	if (skinChunk)
+	{
+		sLogger.Log("Total skin files referenced: %u", skinChunk->SkinsFileDataIds.size());
+		for (auto skinFileDataId : skinChunk->SkinsFileDataIds)
+			if (skinFileDataId)
+				sLogger.Log("\t[%u] %s", skinFileDataId, pathInfo(skinFileDataId).c_str());
+	}
+	if (skeletonChunk)
+	{
+		sLogger.Log("Skeleton file referenced:");
+		sLogger.Log("\t[%u] %s", skeletonChunk->SkeletonFileDataId, pathInfo(skeletonChunk->SkeletonFileDataId).c_str());
+		if (Skeleton)
+		{
+			using namespace SkeletonChunk;
+
+			if (auto skpdChunk = (SKPDChunk*)Skeleton->GetChunk(ESkeletonChunk::SKPD))
+				sLogger.Log("\tParent skeleton file: [%u] %s", skpdChunk->Data.ParentSkeletonFileId, pathInfo(skpdChunk->Data.ParentSkeletonFileId).c_str());
+			else
+				sLogger.Log("\tNo parent skeleton referenced");
+			if (auto afidChunk = (AFIDChunk*)Skeleton->GetChunk(ESkeletonChunk::AFID))
+			{
+				sLogger.Log("\tTotal skeleton animation files referenced: %u", afidChunk->AnimInfos.size());
+				for (auto anim : afidChunk->AnimInfos)
+					sLogger.Log("\t\t[%u] %s", anim.FileId, pathInfo(anim.FileId).c_str());
+			}
+			if (auto boneChunk = (BFIDChunk*)Skeleton->GetChunk(ESkeletonChunk::BFID))
+			{
+				sLogger.Log("\tTotal skeleton bone files referenced: %u", boneChunk->BoneFileDataIds.size());
+				for (auto bone : boneChunk->BoneFileDataIds)
+					sLogger.Log("\t\t[%u] %s", bone, pathInfo(bone).c_str());
+			}
+		}
+		else
+			sLogger.Log("\tError! Skeleton is referenced, but not loaded");
+	}
+	if (textureChunk)
+	{
+		UInt32 count = 0;
+		for (auto textuteFileDataId : textureChunk->TextureFileDataIds)
+			if (textuteFileDataId)
+				++count;
+
+		sLogger.Log("Total texture files referenced: %u", count);
+		for (auto textuteFileDataId : textureChunk->TextureFileDataIds)
+			if (textuteFileDataId)
+				sLogger.Log("\t[%u] %s", textuteFileDataId, pathInfo(textuteFileDataId).c_str());
+
+		if (textureChunk->TextureFileDataIds.size() != Elements[EElement_Texture].Count)
+			sLogger.Log("\tError: M2 texture block element count is not equal to chunk element count! (%u vs %u)", Elements[EElement_Texture].Count, textureChunk->TextureFileDataIds.size());
+		else
+		{
+			CElement_Texture* TextureElements = Elements[EElement_Texture].as<CElement_Texture>();
+			for (UInt32 i = 0; i < Elements[EElement_Texture].Count; ++i)
+			{
+				auto& textureElement = TextureElements[i];
+				if (textureElement.Type != CElement_Texture::ETextureType::Final_Hardcoded)
+					continue;
+
+				char const* localTexturePath = NULL;
+				if (textureElement.TexturePath.Offset)
+					localTexturePath = (char const*)Elements[EElement_Texture].GetLocalPointer(textureElement.TexturePath.Offset);
+				auto FileDataId = textureChunk->TextureFileDataIds[i];
+
+				if (textureElement.TexturePath.Offset && FileDataId)
+				{
+					auto cascPath = pathInfo(FileDataId);
+					sLogger.Log("\tWarning: Texture #%u file is stored in both chunk and texture element.\r\n"
+						"\t\tElement path: %s\r\n"
+						"\t\tChunk path: [%u] %s", i, localTexturePath, FileDataId, pathInfo(FileDataId).c_str());
+				}
+				else if (textureElement.TexturePath.Offset)
+					sLogger.Log("\tWarning: texture #%u '%s' is referenced in texture element but not in chunk (legacy model?)", i, localTexturePath);
+				else if (!textureElement.TexturePath.Offset && !FileDataId)
+					sLogger.Log("\tError: texture #%u path must be present in either in element or chunk, but it is not", i);
+			}
+		}
+
+	}
+
+	if (auto physChunk = (PFIDChunk*)GetChunk(EM2Chunk::Physic))
+	{
+		sLogger.Log("Physics file referenced:");
+		sLogger.Log("\t[%u] %s", physChunk->PhysFileId, pathInfo(physChunk->PhysFileId).c_str());
+	}
+	if (auto afidChunk = (AFIDChunk*)GetChunk(EM2Chunk::Animation))
+	{
+		sLogger.Log("Total animation files referenced: %u", afidChunk->AnimInfos.size());
+		for (auto anim : afidChunk->AnimInfos)
+			sLogger.Log("\t[%u] %s", anim.FileId, pathInfo(anim.FileId).c_str());
+	}
+	if (auto boneChunk = (BFIDChunk*)GetChunk(EM2Chunk::Bone))
+	{
+		sLogger.Log("Total bone files referenced: [%u]", boneChunk->BoneFileDataIds.size());
+		for (auto bone : boneChunk->BoneFileDataIds)
+			sLogger.Log("\t[%u] %s", bone, pathInfo(bone).c_str());
+	}
+
+	sLogger.Log("======END OF REFERENCED FILE INFO======");
+}
+
 // Gets the .skin file names.
 bool M2Lib::M2::GetFileSkin(std::wstring& SkinFileNameResultBuffer, std::wstring const& M2FileName, UInt32 SkinIndex)
 {
@@ -1240,7 +1370,7 @@ bool M2Lib::M2::GetFileSkin(std::wstring& SkinFileNameResultBuffer, std::wstring
 		}
 
 		auto skinFileDataId = skinChunk->SkinsFileDataIds[chunkIndex];
-		auto path = casc->GetFileById(skinFileDataId);
+		auto path = casc->GetFileByFileDataId(skinFileDataId);
 		if (!path.empty())
 		{
 			//sLogger.Log("Skin listfile entry: %s", path.c_str());
@@ -1291,7 +1421,7 @@ bool M2Lib::M2::GetSkeleton(std::wstring& SkeletonFileNameResultBuffer, std::wst
 		return true;
 	}
 
-	auto path = casc->GetFileById(chunk->SkeletonFileDataId);
+	auto path = casc->GetFileByFileDataId(chunk->SkeletonFileDataId);
 	if (!path.empty())
 	{
 		sLogger.Log("Skeleton listfile entry: %s", path.c_str());
@@ -2467,8 +2597,21 @@ UInt32 M2Lib::M2::AddTextureFlags(CElement_TextureFlag::EFlags Flags, CElement_T
 
 UInt32 M2Lib::M2::GetTexture(const Char8* szTextureSource)
 {
-	auto& Element = Elements[EElement_Texture];
+	if (auto textureChunk = (M2Chunk::TXIDChunk*)GetChunk(EM2Chunk::Texture))
+	{
+		if (casc)
+		{
+			// if file not found - can be custom texture
+			if (auto FileDataId = casc->GetFileDataIdByFile(szTextureSource))
+			{
+				for (UInt32 i = 0; i < textureChunk->TextureFileDataIds.size(); ++i)
+					if (textureChunk->TextureFileDataIds[i] == FileDataId)
+						return i;
+			}
+		}
+	}
 
+	auto& Element = Elements[EElement_Texture];
 	for (UInt32 i = 0; i < Element.Count; ++i)
 	{
 		auto& texture = Element.as<CElement_Texture>()[i];

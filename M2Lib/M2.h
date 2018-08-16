@@ -206,6 +206,7 @@ namespace M2Lib
 		
 		// prints diagnostic information.
 		void PrintInfo();
+		void PrintReferencedFileInfo();
 
 		void CopySFIDChunk(M2* Other);
 		UInt32 AddBone(M2Element::CElement_Bone const& Bone);

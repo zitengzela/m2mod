@@ -262,3 +262,58 @@ bool M2Lib::SkeletonChunk::SKS1Chunk::IntializeElements(UInt32 DataSize)
 
 	return true;
 }
+
+void M2Lib::SkeletonChunk::SKPDChunk::Load(std::fstream & FileStream, UInt32 Size)
+{
+	FileStream.read((char*)&Data, sizeof(Data));
+}
+
+void M2Lib::SkeletonChunk::SKPDChunk::Save(std::fstream & FileStream)
+{
+	FileStream.write((char*)&Data, sizeof(Data));
+}
+
+void M2Lib::SkeletonChunk::AFIDChunk::Load(std::fstream& FileStream, UInt32 Size)
+{
+	UInt32 offs = 0;
+	while (offs < Size)
+	{
+		AnimFileInfo info;
+		FileStream.read((char*)&info.AnimId, 2);
+		FileStream.read((char*)&info.SubAnimId, 2);
+		FileStream.read((char*)&info.FileId, 4);
+
+		AnimInfos.push_back(info);
+
+		offs += sizeof(AnimFileInfo);
+	}
+}
+
+void M2Lib::SkeletonChunk::AFIDChunk::Save(std::fstream& FileStream)
+{
+	for (auto& info : AnimInfos)
+	{
+		FileStream.write((char*)&info.AnimId, 2);
+		FileStream.write((char*)&info.SubAnimId, 2);
+		FileStream.write((char*)&info.FileId, 4);
+	}
+}
+
+void M2Lib::SkeletonChunk::BFIDChunk::Load(std::fstream& FileStream, UInt32 Size)
+{
+	UInt32 offs = 0;
+	while (offs < Size)
+	{
+		UInt32 boneFileDataId;
+		FileStream.read((char*)&boneFileDataId, 4);
+		BoneFileDataIds.push_back(boneFileDataId);
+
+		offs += sizeof(UInt32);
+	}
+}
+
+void M2Lib::SkeletonChunk::BFIDChunk::Save(std::fstream& FileStream)
+{
+	for (auto& boneFileDataId : BoneFileDataIds)
+		FileStream.write((char*)&boneFileDataId, 4);
+}

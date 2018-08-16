@@ -41,7 +41,7 @@ void M2Lib::M2Chunk::AFIDChunk::Load(std::fstream& FileStream, UInt32 Size)
 		FileStream.read((char*)&info.SubAnimId, 2);
 		FileStream.read((char*)&info.FileId, 4);
 
-		AnimFileIds.push_back(info);
+		AnimInfos.push_back(info);
 
 		offs += sizeof(AnimFileInfo);
 	}
@@ -49,7 +49,7 @@ void M2Lib::M2Chunk::AFIDChunk::Load(std::fstream& FileStream, UInt32 Size)
 
 void M2Lib::M2Chunk::AFIDChunk::Save(std::fstream& FileStream)
 {
-	for (auto& info : AnimFileIds)
+	for (auto& info : AnimInfos)
 	{
 		FileStream.write((char*)&info.AnimId, 2);
 		FileStream.write((char*)&info.SubAnimId, 2);

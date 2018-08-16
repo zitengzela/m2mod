@@ -2,16 +2,24 @@
 #include "FileSystem.h"
 #include "Logger.h"
 #include <CascLib.h>
+#include <common/Common.h>
 #include <fstream>
 
 UInt32 M2Lib::Casc::Magic = 'BLSF';
 
-M2Lib::Casc::Casc(std::string const & StoragePath)
+M2Lib::Casc::Casc()
 {
-	this->StoragePath = StoragePath;
-
 	BinListFile = FileSystemA::GetCurrentPath() + "\\" + "listfile.lsb";
 	ListFile = FileSystemA::GetCurrentPath() + "\\" + "listfile.txt";
+}
+
+void M2Lib::Casc::SetStoragePath(std::string const& StoragePath)
+{
+	if (!_strcmpi(StoragePath.c_str(), this->StoragePath.c_str()))
+		return;
+
+	this->StoragePath = StoragePath;
+	Unload();
 }
 
 bool M2Lib::Casc::Load()
@@ -34,14 +42,12 @@ void M2Lib::Casc::Unload()
 		CascCloseStorage(hStorage);
 	hStorage = NULL;
 
-	filesByFileDataId.clear();
-	cacheLoaded = false;
+	ClearCache();
 }
 
 bool M2Lib::Casc::LoadListFileCache()
 {
-	filesByFileDataId.clear();
-	cacheLoaded = false;
+	ClearCache();
 
 	if (!FileSystemA::IsFile(BinListFile))
 	{
@@ -81,6 +87,7 @@ bool M2Lib::Casc::LoadListFileCache()
 		FileStream.read((char*)Name.data(), NameLen);
 		
 		filesByFileDataId[FileDataId] = Name;
+		fileDataIdsByHash[CalcFileNameHash(Name.c_str())] = FileDataId;
 	}
 
 	FileStream.close();
@@ -93,8 +100,7 @@ bool M2Lib::Casc::LoadListFileCache()
 
 bool M2Lib::Casc::GenerateListFileCache()
 {
-	filesByFileDataId.clear();
-	cacheLoaded = false;
+	ClearCache();
 
 	sLogger.Log("Loading listfile at %s", ListFile.c_str());
 	std::fstream in;
@@ -133,11 +139,12 @@ bool M2Lib::Casc::GenerateListFileCache()
 	while (std::getline(in, s))
 	{
 		++totalCount;
-		UInt32 FileId = CascGetFileId(hStorage, s.c_str());
-		if (!FileId || FileId == CASC_INVALID_ID)
+		UInt32 FileDataId = CascGetFileId(hStorage, s.c_str());
+		if (!FileDataId || FileDataId == CASC_INVALID_ID)
 			continue;
 
-		filesByFileDataId[FileId] = s;
+		filesByFileDataId[FileDataId] = s;
+		fileDataIdsByHash[CalcFileNameHash(s.c_str())] = FileDataId;
 	}
 	sLogger.Log("Parsing finished. %u valid entries of %u", filesByFileDataId.size(), totalCount);
 
@@ -160,7 +167,7 @@ bool M2Lib::Casc::GenerateListFileCache()
 	return true;
 }
 
-std::string M2Lib::Casc::GetFileById(UInt32 FileDataId)
+std::string M2Lib::Casc::GetFileByFileDataId(UInt32 FileDataId)
 {
 	if (!cacheLoaded)
 		if (!LoadListFileCache())
@@ -171,4 +178,27 @@ std::string M2Lib::Casc::GetFileById(UInt32 FileDataId)
 		return "";
 
 	return itr->second;
+}
+
+UInt32 M2Lib::Casc::GetFileDataIdByFile(std::string const & File)
+{
+	if (!cacheLoaded)
+		LoadListFileCache();
+
+	if (cacheLoaded)
+	{
+		auto itr = fileDataIdsByHash.find(CalcFileNameHash(File.c_str()));
+		if (itr != fileDataIdsByHash.end())
+			return itr->second;
+	}
+
+	if (!IsLoaded())
+		if (!Load())
+			return 0;
+
+	UInt32 FileDataId = CascGetFileId(hStorage, File.c_str());
+	if (!FileDataId || FileDataId == CASC_INVALID_ID)
+		return 0;
+
+	return FileDataId;
 }

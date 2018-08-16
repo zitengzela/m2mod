@@ -38,6 +38,9 @@ M2Lib::EError M2Lib::Skeleton::Load(const Char16* FileName)
 			case ESkeletonChunk::SKA1: Chunk = new SKA1Chunk(); break;
 			case ESkeletonChunk::SKB1: Chunk = new SKB1Chunk(); break;
 			case ESkeletonChunk::SKS1: Chunk = new SKS1Chunk(); break;
+			case ESkeletonChunk::SKPD: Chunk = new SKPDChunk(); break;
+			case ESkeletonChunk::AFID: Chunk = new AFIDChunk(); break;
+			case ESkeletonChunk::BFID: Chunk = new BFIDChunk(); break;
 			default:
 				Chunk = new RawChunk();
 				break;
