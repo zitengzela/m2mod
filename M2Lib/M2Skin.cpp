@@ -706,7 +706,7 @@ void M2Lib::M2Skin::MakeGlossy(UInt32 GlossTextureId, std::vector<UInt32> const&
 
 void M2Lib::M2Skin::MakeGlossy(Char8 const* szGlossTexturePath, std::vector<UInt32> const& MeshIndexes, TextureLookupRemap& LookupRemap)
 {
-	SInt32 GlossTextureId = pM2->GetTexture(szGlossTexturePath);
+	SInt32 GlossTextureId = pM2->GetTextureIndex(szGlossTexturePath);
 	if (GlossTextureId == -1)
 		GlossTextureId = pM2->AddTexture(szGlossTexturePath, M2Element::CElement_Texture::ETextureType::Final_Hardcoded, M2Element::CElement_Texture::ETextureFlags::None);
 
@@ -750,7 +750,7 @@ std::vector<M2Lib::M2Skin::MeshInfo> M2Lib::M2Skin::GetMeshInfo()
 				TextureInfo.pTexture = &texture;
 
 				if (texture.Type == M2Element::CElement_Texture::ETextureType::Final_Hardcoded)
-					TextureInfo.Name = (char*)TextureElement.GetLocalPointer(texture.TexturePath.Offset);
+					TextureInfo.Name = pM2->GetTexturePath(TextureLookup[Material->iTexture + k].TextureIndex);
 
 				Info.Textures.push_back(TextureInfo);
 			}

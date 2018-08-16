@@ -47,13 +47,21 @@ namespace M2Lib
 		template <class T>
 		std::vector<T> asVector()
 		{
-			assert(sizeof(T) * Count <= Data.size());
+			assert("Element data size is less than expected" && sizeof(T) * Count <= Data.size());
 
 			std::vector<T> ret(Count);
 			if (!Data.empty())
 				memcpy(ret.data(), Data.data(), sizeof(T) * Count);
 
 			return ret;
+		}
+
+		template <class T>
+		T* at(int Index)
+		{
+			assert(__FUNCTION__ " Index too large" && Index < Count);
+
+			return &as<T>()[Index];
 		}
 
 		// clones this element from Source to Destination.

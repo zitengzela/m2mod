@@ -212,7 +212,8 @@ namespace M2Lib
 		UInt32 AddBone(M2Element::CElement_Bone const& Bone);
 		UInt32 AddTexture(const Char8* szTextureSource, M2Element::CElement_Texture::ETextureType Type, M2Element::CElement_Texture::ETextureFlags Flags);
 		UInt32 AddTextureLookup(UInt16 TextureId, bool ForceNewIndex = false);
-		UInt32 GetTexture(const Char8* szTextureSource);
+		UInt32 GetTextureIndex(const Char8* szTextureSource);
+		std::string GetTexturePath(UInt32 Index);
 
 		Casc* GetCasc() const { return casc; }
 		void SetCasc(Casc* casc) { this->casc = casc; }

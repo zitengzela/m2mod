@@ -197,3 +197,8 @@ UInt32 M2Lib::Casc::GetFileDataIdByFile(std::string const & File)
 
 	return FileDataId;
 }
+
+UInt64 M2Lib::Casc::CalculateHash(std::string const & FileName)
+{
+	return CalcFileNameHash(FileName.c_str());
+}

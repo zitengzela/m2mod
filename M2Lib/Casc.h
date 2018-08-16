@@ -40,5 +40,6 @@ namespace M2Lib
 
 		std::string GetFileByFileDataId(UInt32 FileDataId);
 		UInt32 GetFileDataIdByFile(std::string const& File);
+		static UInt64 CalculateHash(std::string const& File);
 	};
 }

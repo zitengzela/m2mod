@@ -266,7 +266,7 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 	}
 
 	// print info
-	//PrintInfo();
+	PrintInfo();
 	PrintReferencedFileInfo();
 
 	sLogger.Log("Finished loading M2");
@@ -360,7 +360,7 @@ void M2Lib::M2::DoExtraWork()
 			// assign custom texture
 			if (ExtraData->CustomTextureName.length() > 0)
 			{
-				auto textureId = GetTexture(ExtraData->CustomTextureName.c_str());
+				auto textureId = GetTextureIndex(ExtraData->CustomTextureName.c_str());
 				if (textureId == -1)
 					textureId = AddTexture(ExtraData->CustomTextureName.c_str(),
 					CElement_Texture::ETextureType::Final_Hardcoded,
@@ -2362,6 +2362,8 @@ void M2Lib::M2::m_SaveElements_FindOffsets()
 		m_OriginalModelChunkSize += Elements[iElement].Data.size();
 }
 
+
+
 void M2Lib::M2::m_FixAnimationM2Array(SInt32 OffsetDelta, SInt32 TotalDelta, SInt16 GlobalSequenceID, M2Array& Array, SInt32 iElement)
 {
 #define IS_LOCAL_ANIMATION(Offset) \
@@ -2546,19 +2548,37 @@ UInt32 M2Lib::M2::AddTexture(const Char8* szTextureSource, CElement_Texture::ETe
 
 	// add element placeholder for new texture
 	Element.Data.insert(Element.Data.begin() + Element.Count * sizeof(CElement_Texture), sizeof(CElement_Texture), 0);
+	
+	bool rawPathTexture = true;
+	auto casc = GetCasc();
+	auto textureChunk = (TXIDChunk*)GetChunk(EM2Chunk::Texture);
+	if (casc && textureChunk)
+	{
+		if (auto FileDataId = casc->GetFileDataIdByFile(szTextureSource))
+		{
+			rawPathTexture = false;
+			textureChunk->TextureFileDataIds.push_back(FileDataId);
+		}
+	}
+	
 	auto texturePathPos = Element.Data.size();
-	// add placeholder for texture path
-	Element.Data.insert(Element.Data.end(), strlen(szTextureSource) + 1, 0);
+
+	if (rawPathTexture)
+	{
+		// add placeholder for texture path
+		Element.Data.insert(Element.Data.end(), strlen(szTextureSource) + 1, 0);
+	}
 
 	auto newIndex = Element.Count;
 
 	CElement_Texture& newTexture = Element.as<CElement_Texture>()[newIndex];
 	newTexture.Type = Type;
 	newTexture.Flags = Flags;
-	newTexture.TexturePath.Count = strlen(szTextureSource) + 1;
-	newTexture.TexturePath.Offset = Element.Offset + texturePathPos;
+	newTexture.TexturePath.Count = rawPathTexture ? strlen(szTextureSource) + 1 : 0;
+	newTexture.TexturePath.Offset = rawPathTexture ? Element.Offset + texturePathPos : 0;
 
-	memcpy(&Element.Data[texturePathPos], szTextureSource, newTexture.TexturePath.Count);
+	if (rawPathTexture)
+		memcpy(&Element.Data[texturePathPos], szTextureSource, newTexture.TexturePath.Count);
 
 	++Element.Count;
 
@@ -2589,7 +2609,7 @@ UInt32 M2Lib::M2::AddTextureFlags(CElement_TextureFlag::EFlags Flags, CElement_T
 	return newIndex;
 }
 
-UInt32 M2Lib::M2::GetTexture(const Char8* szTextureSource)
+UInt32 M2Lib::M2::GetTextureIndex(const Char8* szTextureSource)
 {
 	if (auto textureChunk = (M2Chunk::TXIDChunk*)GetChunk(EM2Chunk::Texture))
 	{
@@ -2612,12 +2632,33 @@ UInt32 M2Lib::M2::GetTexture(const Char8* szTextureSource)
 		if (texture.TexturePath.Offset)
 		{
 			auto pTexturePath = (Char8 const*)Element.GetLocalPointer(texture.TexturePath.Offset);
-			if (_strcmpi(pTexturePath, szTextureSource) == 0)
+			if (Casc::CalculateHash(pTexturePath) == Casc::CalculateHash(szTextureSource))
 				return i;
 		}
 	}
 
 	return -1;
+}
+
+std::string M2Lib::M2::GetTexturePath(UInt32 Index)
+{
+	auto& TextureElement = Elements[EElement_Texture];
+	assert("Texture index too large" && Index < TextureElement.Count);
+
+	auto texture = TextureElement.at<CElement_Texture>(Index);
+
+	if (texture->Type != M2Element::CElement_Texture::ETextureType::Final_Hardcoded)
+		return "";
+
+	if (texture->TexturePath.Offset && texture->TexturePath.Count)
+		return (char*)TextureElement.GetLocalPointer(texture->TexturePath.Offset);
+
+	auto textureChunk = (TXIDChunk*)GetChunk(EM2Chunk::Texture);
+	auto casc = GetCasc();
+	if (!textureChunk || !casc || textureChunk->TextureFileDataIds.size() <= Index)
+		return "";
+
+	return casc->GetFileByFileDataId(textureChunk->TextureFileDataIds[Index]);
 }
 
 UInt32 M2Lib::M2::AddTextureLookup(UInt16 TextureId, bool ForceNewIndex /*= false*/)
