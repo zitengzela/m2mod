@@ -2584,6 +2584,9 @@ UInt32 M2Lib::M2::AddTexture(const Char8* szTextureSource, CElement_Texture::ETe
 			textureChunk->TextureFileDataIds.push_back(FileDataId);
 		}
 	}
+
+	if (rawPathTexture && textureChunk)
+		textureChunk->TextureFileDataIds.push_back(0);
 	
 	auto texturePathPos = Element.Data.size();
 
