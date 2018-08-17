@@ -1,44 +1,47 @@
 #pragma once
 
-using namespace System;
-
-ref class RegistyStore
+namespace M2ModRedux
 {
-	static Microsoft::Win32::RegistryKey^ Root = nullptr;
-public:
+	using namespace System;
 
-	enum class Value
+	ref class RegistyStore
 	{
-		ExportM2,
-		ExportM2I,
+		static Microsoft::Win32::RegistryKey^ Root = nullptr;
+	public:
 
-		ImportInM2,
-		ImportM2I,
-		ImportOutM2,
-		ImportReplaceM2,
+		enum class Value
+		{
+			ExportM2,
+			ExportM2I,
 
-		MergeBones,
-		MergeAttachments,
-		MergeCameras,
-		FixSeams,
-		ForceExportExpansion,
+			ImportInM2,
+			ImportM2I,
+			ImportOutM2,
+			ImportReplaceM2,
 
-		WowPath,
+			MergeBones,
+			MergeAttachments,
+			MergeCameras,
+			FixSeams,
+			ForceExportExpansion,
 
-		NotShowAutoUpdate,
-		ActualVersion,
+			WowPath,
+
+			NotShowAutoUpdate,
+			ActualVersion,
+		};
+
+		static RegistyStore()
+		{
+			Root = Microsoft::Win32::Registry::CurrentUser->CreateSubKey("M2Mod");
+		}
+
+		~RegistyStore()
+		{
+			Root->Close();
+		}
+
+		static Object^ GetValue(Value Key) { return Root->GetValue(Key.ToString()); }
+		static System::Void SetValue(Value Key, Object^ Value) { Root->SetValue(Key.ToString(), Value); }
 	};
-
-	static RegistyStore()
-	{
-		Root = Microsoft::Win32::Registry::CurrentUser->CreateSubKey("M2Mod");
-	}
-
-	~RegistyStore()
-	{
-		Root->Close();
-	}
-
-	static Object^ GetValue(Value Key) { return Root->GetValue(Key.ToString()); }
-	static System::Void SetValue(Value Key, Object^ Value) { Root->SetValue(Key.ToString(), Value); }
-};
+}

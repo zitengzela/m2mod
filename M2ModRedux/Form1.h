@@ -13,6 +13,7 @@
 #include "Settings.h"
 #include "SettingsForm.h"
 #include "CompareBonesForm.h"
+#include "StringHelpers.h"
 
 namespace M2ModRedux
 {
@@ -130,7 +131,7 @@ namespace M2ModRedux
 			}
 			else
 			{
-				FileDataId = casc->GetFileDataIdByFile((char const*)Marshal::StringToHGlobalAnsi(testInputTextBox->Text).ToPointer());
+				FileDataId = casc->GetFileDataIdByFile(StringConverter(testInputTextBox->Text).ToStringA());
 				if (!FileDataId)
 					testOutputTextBox->Text = "Not found in storage";
 				else
@@ -157,13 +158,11 @@ namespace M2ModRedux
 					this->textBoxInputM2Imp->Text = (String^)value;
 				if (auto value = RegistyStore::GetValue(RegistyStore::Value::ImportM2I))
 					this->textBoxInputM2I->Text = (String^)value;
-				if (auto value = RegistyStore::GetValue(RegistyStore::Value::ImportOutM2))
-					this->textBoxOutputM2->Text = (String^)value;
 				if (auto value = RegistyStore::GetValue(RegistyStore::Value::ImportReplaceM2))
 					this->textBoxReplaceM2->Text = (String^)value;
 
 				if (auto value = RegistyStore::GetValue(RegistyStore::Value::WowPath))
-					settings->WowPath = (char const*)Marshal::StringToHGlobalAnsi((String^)value).ToPointer();
+					settings->WowPath = StringConverter((String^)value).ToStringA();
 
 				if (auto value = RegistyStore::GetValue(RegistyStore::Value::ForceExportExpansion))
 					settings->ExportSettings.ForceExpansion = (M2Lib::Expansion)Int32::Parse(value->ToString());
@@ -189,7 +188,6 @@ namespace M2ModRedux
 
 		RegistyStore::SetValue(RegistyStore::Value::ImportInM2, this->textBoxInputM2Imp->Text);
 		RegistyStore::SetValue(RegistyStore::Value::ImportM2I, this->textBoxInputM2I->Text);
-		RegistyStore::SetValue(RegistyStore::Value::ImportOutM2, this->textBoxOutputM2->Text);
 		RegistyStore::SetValue(RegistyStore::Value::ImportReplaceM2, this->textBoxReplaceM2->Text);
 
 		RegistyStore::SetValue(RegistyStore::Value::WowPath, gcnew String(settings->WowPath.c_str()));
@@ -239,10 +237,10 @@ private: System::Windows::Forms::TabControl^  tabControl;
 	private: System::Windows::Forms::Label^  label3;
 	private: System::Windows::Forms::Button^  buttonInputM2IBrowse;
 	private: System::Windows::Forms::TextBox^  textBoxInputM2I;
-	private: System::Windows::Forms::Panel^  panelOutputM2;
-	private: System::Windows::Forms::TextBox^  textBoxOutputM2;
-	private: System::Windows::Forms::Button^  buttonOutputM2Browse;
-	private: System::Windows::Forms::Label^  label2;
+
+
+
+
 	private: System::Windows::Forms::Button^  exportButtonGo;
 
 	private: System::Windows::Forms::Button^  importButtonGo;
@@ -294,8 +292,6 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->label7 = (gcnew System::Windows::Forms::Label());
 				 this->label3 = (gcnew System::Windows::Forms::Label());
 				 this->buttonInputM2IBrowse = (gcnew System::Windows::Forms::Button());
-				 this->buttonOutputM2Browse = (gcnew System::Windows::Forms::Button());
-				 this->label2 = (gcnew System::Windows::Forms::Label());
 				 this->exportButtonGo = (gcnew System::Windows::Forms::Button());
 				 this->label5 = (gcnew System::Windows::Forms::Label());
 				 this->buttonInputM2ImpBrowse = (gcnew System::Windows::Forms::Button());
@@ -305,7 +301,6 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->manageMeshesButton = (gcnew System::Windows::Forms::Button());
 				 this->textBoxInputM2Imp = (gcnew System::Windows::Forms::TextBox());
 				 this->textBoxInputM2I = (gcnew System::Windows::Forms::TextBox());
-				 this->textBoxOutputM2 = (gcnew System::Windows::Forms::TextBox());
 				 this->textBoxReplaceM2 = (gcnew System::Windows::Forms::TextBox());
 				 this->buttonReplaceM2Browse = (gcnew System::Windows::Forms::Button());
 				 this->checkBoxReplaceM2 = (gcnew System::Windows::Forms::CheckBox());
@@ -321,7 +316,6 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->extraworkPanel = (gcnew System::Windows::Forms::Panel());
 				 this->panelInputM2Import = (gcnew System::Windows::Forms::Panel());
 				 this->panelInputM2I = (gcnew System::Windows::Forms::Panel());
-				 this->panelOutputM2 = (gcnew System::Windows::Forms::Panel());
 				 this->cascTabPage = (gcnew System::Windows::Forms::TabPage());
 				 this->refreshButton = (gcnew System::Windows::Forms::Button());
 				 this->fileTestButton = (gcnew System::Windows::Forms::Button());
@@ -353,7 +347,6 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->extraworkPanel->SuspendLayout();
 				 this->panelInputM2Import->SuspendLayout();
 				 this->panelInputM2I->SuspendLayout();
-				 this->panelOutputM2->SuspendLayout();
 				 this->cascTabPage->SuspendLayout();
 				 this->tabLog->SuspendLayout();
 				 this->statusStrip1->SuspendLayout();
@@ -440,28 +433,6 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->toolTip1->SetToolTip(this->buttonInputM2IBrowse, L"Browse...");
 				 this->buttonInputM2IBrowse->UseVisualStyleBackColor = true;
 				 this->buttonInputM2IBrowse->Click += gcnew System::EventHandler(this, &Form1::buttonInputM2IBrowse_Click);
-				 // 
-				 // buttonOutputM2Browse
-				 // 
-				 this->buttonOutputM2Browse->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Right));
-				 this->buttonOutputM2Browse->Location = System::Drawing::Point(472, 2);
-				 this->buttonOutputM2Browse->Name = L"buttonOutputM2Browse";
-				 this->buttonOutputM2Browse->Size = System::Drawing::Size(55, 20);
-				 this->buttonOutputM2Browse->TabIndex = 14;
-				 this->buttonOutputM2Browse->Text = L"...";
-				 this->toolTip1->SetToolTip(this->buttonOutputM2Browse, L"Browse...");
-				 this->buttonOutputM2Browse->UseVisualStyleBackColor = true;
-				 this->buttonOutputM2Browse->Click += gcnew System::EventHandler(this, &Form1::buttonOutputM2Browse_Click);
-				 // 
-				 // label2
-				 // 
-				 this->label2->AutoSize = true;
-				 this->label2->Location = System::Drawing::Point(12, 5);
-				 this->label2->Name = L"label2";
-				 this->label2->Size = System::Drawing::Size(54, 13);
-				 this->label2->TabIndex = 12;
-				 this->label2->Text = L"OutputM2";
-				 this->toolTip1->SetToolTip(this->label2, L"Optional. If set, this is where M2Mod will save the modified M2.");
 				 // 
 				 // exportButtonGo
 				 // 
@@ -574,16 +545,6 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->textBoxInputM2I->TabIndex = 10;
 				 this->toolTip1->SetToolTip(this->textBoxInputM2I, L"Path to M2I");
 				 // 
-				 // textBoxOutputM2
-				 // 
-				 this->textBoxOutputM2->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
-					 | System::Windows::Forms::AnchorStyles::Right));
-				 this->textBoxOutputM2->Location = System::Drawing::Point(88, 2);
-				 this->textBoxOutputM2->Name = L"textBoxOutputM2";
-				 this->textBoxOutputM2->Size = System::Drawing::Size(378, 20);
-				 this->textBoxOutputM2->TabIndex = 13;
-				 this->toolTip1->SetToolTip(this->textBoxOutputM2, L"Destination path for M2");
-				 // 
 				 // textBoxReplaceM2
 				 // 
 				 this->textBoxReplaceM2->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
@@ -610,7 +571,7 @@ private: System::Windows::Forms::Button^  clearButton;
 				 // 
 				 this->checkBoxReplaceM2->AutoSize = true;
 				 this->checkBoxReplaceM2->Enabled = false;
-				 this->checkBoxReplaceM2->Location = System::Drawing::Point(7, 99);
+				 this->checkBoxReplaceM2->Location = System::Drawing::Point(7, 73);
 				 this->checkBoxReplaceM2->Name = L"checkBoxReplaceM2";
 				 this->checkBoxReplaceM2->Size = System::Drawing::Size(81, 17);
 				 this->checkBoxReplaceM2->TabIndex = 15;
@@ -698,7 +659,6 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->tabImport->Controls->Add(this->extraworkPanel);
 				 this->tabImport->Controls->Add(this->panelInputM2Import);
 				 this->tabImport->Controls->Add(this->panelInputM2I);
-				 this->tabImport->Controls->Add(this->panelOutputM2);
 				 this->tabImport->Location = System::Drawing::Point(4, 22);
 				 this->tabImport->Name = L"tabImport";
 				 this->tabImport->Padding = System::Windows::Forms::Padding(3);
@@ -714,7 +674,7 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->panelReplaceM2->Controls->Add(this->textBoxReplaceM2);
 				 this->panelReplaceM2->Controls->Add(this->buttonReplaceM2Browse);
 				 this->panelReplaceM2->Enabled = false;
-				 this->panelReplaceM2->Location = System::Drawing::Point(86, 96);
+				 this->panelReplaceM2->Location = System::Drawing::Point(86, 70);
 				 this->panelReplaceM2->Name = L"panelReplaceM2";
 				 this->panelReplaceM2->Size = System::Drawing::Size(451, 25);
 				 this->panelReplaceM2->TabIndex = 25;
@@ -735,9 +695,9 @@ private: System::Windows::Forms::Button^  clearButton;
 				 // 
 				 this->extraworkPanel->Controls->Add(this->manageMeshesButton);
 				 this->extraworkPanel->Enabled = false;
-				 this->extraworkPanel->Location = System::Drawing::Point(7, 127);
+				 this->extraworkPanel->Location = System::Drawing::Point(7, 101);
 				 this->extraworkPanel->Name = L"extraworkPanel";
-				 this->extraworkPanel->Size = System::Drawing::Size(530, 65);
+				 this->extraworkPanel->Size = System::Drawing::Size(530, 91);
 				 this->extraworkPanel->TabIndex = 30;
 				 // 
 				 // panelInputM2Import
@@ -763,19 +723,6 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->panelInputM2I->Name = L"panelInputM2I";
 				 this->panelInputM2I->Size = System::Drawing::Size(531, 30);
 				 this->panelInputM2I->TabIndex = 23;
-				 // 
-				 // panelOutputM2
-				 // 
-				 this->panelOutputM2->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
-					 | System::Windows::Forms::AnchorStyles::Right));
-				 this->panelOutputM2->Controls->Add(this->textBoxOutputM2);
-				 this->panelOutputM2->Controls->Add(this->buttonOutputM2Browse);
-				 this->panelOutputM2->Controls->Add(this->label2);
-				 this->panelOutputM2->Enabled = false;
-				 this->panelOutputM2->Location = System::Drawing::Point(6, 68);
-				 this->panelOutputM2->Name = L"panelOutputM2";
-				 this->panelOutputM2->Size = System::Drawing::Size(531, 25);
-				 this->panelOutputM2->TabIndex = 24;
 				 // 
 				 // cascTabPage
 				 // 
@@ -1020,8 +967,6 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->panelInputM2Import->PerformLayout();
 				 this->panelInputM2I->ResumeLayout(false);
 				 this->panelInputM2I->PerformLayout();
-				 this->panelOutputM2->ResumeLayout(false);
-				 this->panelOutputM2->PerformLayout();
 				 this->cascTabPage->ResumeLayout(false);
 				 this->cascTabPage->PerformLayout();
 				 this->tabLog->ResumeLayout(false);
@@ -1053,9 +998,6 @@ private: System::Windows::Forms::Button^  clearButton;
 				textBoxInputM2Imp->Text = openFileDialog1->FileName;
 				textBoxOutputM2I->Text = Path::ChangeExtension(openFileDialog1->FileName, "m2i");
 				textBoxInputM2I->Text = Path::ChangeExtension(openFileDialog1->FileName, "m2i");
-				textBoxOutputM2->Text = Path::ChangeExtension(Path::Combine(
-					Path::GetDirectoryName(textBoxInputM2Exp->Text),
-					Path::GetFileNameWithoutExtension(textBoxInputM2Exp->Text) + "2"), "m2");
 			}
 		}
 
@@ -1092,22 +1034,6 @@ private: System::Windows::Forms::Button^  clearButton;
 		}
 
 	private:
-		System::Void buttonOutputM2Browse_Click(System::Object^  sender, System::EventArgs^  e)
-		{
-			saveFileDialog1->Filter = M2Filter;
-			try
-			{
-				saveFileDialog1->FileName = textBoxOutputM2->Text;
-				saveFileDialog1->InitialDirectory = System::IO::Path::GetDirectoryName(textBoxOutputM2->Text);
-			}
-			catch (...) {}
-			if (saveFileDialog1->ShowDialog() == System::Windows::Forms::DialogResult::OK)
-			{
-				textBoxOutputM2->Text = saveFileDialog1->FileName;
-			}
-		}
-
-	private:
 		System::Void SetStatus(String^ Status)
 		{
 			toolStripStatusLabel1->Text = Status;
@@ -1140,9 +1066,7 @@ private: System::Windows::Forms::Button^  clearButton;
 			M2->SetCasc(GetCasc());
 
 			// import M2
-			System::IntPtr StringPointer = Marshal::StringToHGlobalUni(textBoxInputM2Exp->Text);
-			M2Lib::EError Error = M2->Load((Char16*)StringPointer.ToPointer());
-			Marshal::FreeHGlobal(StringPointer);
+			M2Lib::EError Error = M2->Load(StringConverter(textBoxInputM2Exp->Text).ToStringW());
 
 			if (Error != 0)
 			{
@@ -1153,9 +1077,7 @@ private: System::Windows::Forms::Button^  clearButton;
 			}
 
 			// export M2I
-			StringPointer = Marshal::StringToHGlobalUni(textBoxOutputM2I->Text);
-			Error = M2->ExportM2Intermediate((Char16*)StringPointer.ToPointer());
-			Marshal::FreeHGlobal(StringPointer);
+			Error = M2->ExportM2Intermediate(StringConverter(textBoxOutputM2I->Text).ToStringW());
 
 			if (Error != 0)
 			{
@@ -1179,7 +1101,6 @@ private: System::Windows::Forms::Button^  clearButton;
 		{
 			panelInputM2Import->Enabled = false;
 			panelInputM2I->Enabled = false;
-			panelOutputM2->Enabled = true;
 
 			importButtonPreload->Enabled = false;
 			importButtonGo->Enabled = true;
@@ -1192,7 +1113,6 @@ private: System::Windows::Forms::Button^  clearButton;
 		{
 			panelInputM2Import->Enabled = true;
 			panelInputM2I->Enabled = true;
-			panelOutputM2->Enabled = false;
 
 			importButtonPreload->Enabled = true;
 			importButtonGo->Enabled = false;
@@ -1272,28 +1192,18 @@ private: System::Windows::Forms::Button^  clearButton;
 					const_cast<M2Lib::SubmeshExtraData*>(MainSkin->ExtraDataBySubmeshIndex[i])->MaterialOverride = Control->srcMaterialComboBox->SelectedIndex - 1;
 
 				if (Control->customTextureCheckBox->Checked && Control->customTextureTextBox->Text->Length)
-				{
-					auto StringPointer = Marshal::StringToHGlobalAnsi(Control->customTextureTextBox->Text);
-					const_cast<M2Lib::SubmeshExtraData*>(MainSkin->ExtraDataBySubmeshIndex[i])->CustomTextureName = (char const*)StringPointer.ToPointer();
-					Marshal::FreeHGlobal(StringPointer);
-				}
+					const_cast<M2Lib::SubmeshExtraData*>(MainSkin->ExtraDataBySubmeshIndex[i])->CustomTextureName = StringConverter(Control->customTextureTextBox->Text).ToStringA();
 
 				if (Control->makeGlossyCheckBox->Checked && Control->glossTextureTextBox->Text->Length)
-				{
-					auto StringPointer = Marshal::StringToHGlobalAnsi(Control->glossTextureTextBox->Text);
-					const_cast<M2Lib::SubmeshExtraData*>(MainSkin->ExtraDataBySubmeshIndex[i])->GlossTextureName = (char const*)StringPointer.ToPointer();
-					Marshal::FreeHGlobal(StringPointer);
-				}
+					const_cast<M2Lib::SubmeshExtraData*>(MainSkin->ExtraDataBySubmeshIndex[i])->GlossTextureName = StringConverter(Control->glossTextureTextBox->Text).ToStringA();
 			}
 		}
 
 		if (checkBoxReplaceM2->Checked)
 		{
 			M2Lib::M2 ReplaceM2;
-			auto StringPointer = Marshal::StringToHGlobalUni(textBoxReplaceM2->Text);
-			auto Error = ReplaceM2.Load((Char16*)StringPointer.ToPointer());
-			Marshal::FreeHGlobal(StringPointer);
-			if (Error)
+			auto Error = ReplaceM2.Load(StringConverter(textBoxReplaceM2->Text).ToStringW());
+			if (Error != M2Lib::EError_OK)
 			{
 				SetStatus(gcnew System::String(M2Lib::GetErrorText(Error)));
 				delete preloadM2;
@@ -1305,12 +1215,15 @@ private: System::Windows::Forms::Button^  clearButton;
 			preloadM2->CopySFIDChunk(&ReplaceM2);
 		}
 
-		// export M2
-		auto StringPointer = Marshal::StringToHGlobalUni(textBoxOutputM2->Text);
-		auto Error = preloadM2->Save((Char16*)StringPointer.ToPointer());
-		Marshal::FreeHGlobal(StringPointer);
+		auto outputDirectory = Path::Combine(Path::GetDirectoryName(textBoxInputM2Exp->Text), "Export");
+		if (!Directory::Exists(outputDirectory))
+			Directory::CreateDirectory(outputDirectory);
+		
+		auto ExportFileName = Path::Combine(outputDirectory, Path::GetFileName(checkBoxReplaceM2->Checked ? textBoxReplaceM2->Text : textBoxInputM2Exp->Text));
 
-		if (Error != 0)
+		// export M2
+		auto Error = preloadM2->Save(StringConverter(ExportFileName).ToStringW());
+		if (Error != M2Lib::EError_OK)
 		{
 			SetStatus(gcnew System::String(M2Lib::GetErrorText(Error)));
 			delete preloadM2;
@@ -1342,13 +1255,6 @@ private: System::Windows::Forms::Button^  clearButton;
 			return;
 		}
 
-		if (textBoxOutputM2->Text->Length == 0)
-		{
-			SetStatus("Error: No output M2 file Specified.");
-			PreloadTransition(false);
-			return;
-		}
-
 		// import M2
 		if (textBoxInputM2Imp->Text->Length == 0)
 		{
@@ -1360,11 +1266,8 @@ private: System::Windows::Forms::Button^  clearButton;
 		preloadM2 = new M2Lib::M2(settings);
 		preloadM2->SetCasc(GetCasc());
 
-		System::IntPtr StringPointer = Marshal::StringToHGlobalUni(textBoxInputM2Imp->Text);
-		M2Lib::EError Error = preloadM2->Load((Char16*)StringPointer.ToPointer());
-		Marshal::FreeHGlobal(StringPointer);
-
-		if (Error != 0)
+		M2Lib::EError Error = preloadM2->Load(StringConverter(textBoxInputM2Imp->Text).ToStringW());
+		if (Error != M2Lib::EError_OK)
 		{
 			SetStatus(gcnew System::String(M2Lib::GetErrorText(Error)));
 			delete preloadM2;
@@ -1374,11 +1277,8 @@ private: System::Windows::Forms::Button^  clearButton;
 		}
 
 		// import M2I
-		StringPointer = Marshal::StringToHGlobalUni(textBoxInputM2I->Text);
-		Error = preloadM2->ImportM2Intermediate((Char16*)StringPointer.ToPointer());
-		Marshal::FreeHGlobal(StringPointer);
-
-		if (Error != 0)
+		Error = preloadM2->ImportM2Intermediate(StringConverter(textBoxInputM2I->Text).ToStringW());
+		if (Error != M2Lib::EError_OK)
 		{
 			SetStatus(gcnew System::String(M2Lib::GetErrorText(Error)));
 			delete preloadM2;

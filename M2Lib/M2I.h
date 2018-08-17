@@ -37,7 +37,7 @@ namespace M2Lib
 	public:
 		M2I() { }
 
-		EError Load(Char16* FileName, M2* pM2, bool IgnoreBones, bool IgnoreAttachments, bool IgnoreCameras);
+		EError Load(Char16 const* FileName, M2* pM2, bool IgnoreBones, bool IgnoreAttachments, bool IgnoreCameras);
 
 		~M2I()
 		{

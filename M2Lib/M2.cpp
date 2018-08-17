@@ -191,7 +191,7 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 	}
 
 	// load skins
-	if ((Header.Elements.nSkin == 0) || (Header.Elements.nSkin > 4))
+	if ((Header.Elements.nSkin == 0) || (Header.Elements.nSkin > SKIN_COUNT - LOD_SKIN_MAX_COUNT))
 	{
 		sLogger.Log("Error: Unsupported number of skins in model: %u", Header.Elements.nSkin);
 		return EError_FailedToLoadM2_FileCorrupt;
@@ -295,23 +295,23 @@ M2Lib::EError M2Lib::M2::LoadSkins()
 	return EError::EError_OK;
 }
 
-M2Lib::EError M2Lib::M2::SaveSkins()
+M2Lib::EError M2Lib::M2::SaveSkins(wchar_t const* M2FileName)
 {
-	if (Header.Elements.nSkin == 0 || Header.Elements.nSkin > 4)
+	if (Header.Elements.nSkin == 0 || Header.Elements.nSkin > SKIN_COUNT - LOD_SKIN_MAX_COUNT)
 		return EError_FailedToSaveM2;
 
 	// delete existing skin files
 	for (UInt32 i = 0; i < SKIN_COUNT; ++i)
 	{
 		std::wstring FileNameSkin;
-		if (GetFileSkin(FileNameSkin, _FileName, i))
+		if (GetFileSkin(FileNameSkin, M2FileName, i))
 			_wremove(FileNameSkin.c_str());
 	}
 
 	for (UInt32 i = 0; i < Header.Elements.nSkin; ++i)
 	{
 		std::wstring FileNameSkin;
-		if (!GetFileSkin(FileNameSkin, _FileName, i))
+		if (!GetFileSkin(FileNameSkin, M2FileName, i))
 			continue;
 
 		if (EError Error = Skins[i]->Save(FileNameSkin.c_str()))
@@ -326,7 +326,7 @@ M2Lib::EError M2Lib::M2::SaveSkins()
 	for (UInt32 i = 0; i < LodSkinCount; ++i)
 	{
 		std::wstring FileNameSkin;
-		if (!GetFileSkin(FileNameSkin, _FileName, i + 4))
+		if (!GetFileSkin(FileNameSkin, M2FileName, i + 4))
 			continue;
 
 		if (EError Error = (Skins[1] ? Skins[1] : Skins[0])->Save(FileNameSkin.c_str()))
@@ -448,22 +448,71 @@ M2Lib::ChunkBase* M2Lib::M2::GetChunk(EM2Chunk ChunkId)
 	return chunkItr->second;
 }
 
+void M2Lib::M2::RemoveChunk(EM2Chunk ChunkId)
+{
+	auto chunkItr = Chunks.find(ChunkId);
+	if (chunkItr != Chunks.end())
+		Chunks.erase(chunkItr);
+}
+
 void M2Lib::M2::PrepareChunks()
 {
-	if (auto SkinChunk = (SFIDChunk*)GetChunk(EM2Chunk::Skin))
+	// TODO: leave only non-lod filedataids in skin chunk?
+
+	sLogger.Log("Started preparing chunks for model");
+	if (replaceM2)
 	{
-		if (Header.Elements.nSkin < SkinChunk->SkinsFileDataIds.size())
-			SkinChunk->SkinsFileDataIds.resize(Header.Elements.nSkin);
+		auto otherSkinChunk = (SFIDChunk*)replaceM2->GetChunk(EM2Chunk::Skin);
+		if (!otherSkinChunk)
+		{
+			sLogger.Log("Model to replace does not have SKIN chunk, removing source one...");
+			RemoveChunk(EM2Chunk::Skin);
+		}
 		else
-			Header.Elements.nSkin = SkinChunk->SkinsFileDataIds.size();
+		{
+			sLogger.Log("Copying skin chunk to source model...");
+			Chunks[EM2Chunk::Skin] = otherSkinChunk;
+			Header.Elements.nSkin = replaceM2->Header.Elements.nSkin;
+		}
+
+		auto otherSkeletonChunk = replaceM2->GetChunk(EM2Chunk::Skeleton);
+		if (!otherSkeletonChunk)
+		{
+			if (GetChunk(EM2Chunk::Skeleton))
+				sLogger.Log("Warning: replaced model does not have skeleton file, but source does. Replaced model will use source skeleton file which may cause explosions");
+		}
+		else
+		{
+			sLogger.Log("Copying skeleton chunk to source model...");
+			Chunks[EM2Chunk::Skeleton] = otherSkinChunk;
+		}
+	}
+
+	if (auto skinChunk = (SFIDChunk*)GetChunk(EM2Chunk::Skin))
+	{
+		SInt32 SkinDiff = (replaceM2 ? replaceM2->Header.Elements.nSkin : OriginalSkinCount) - Header.Elements.nSkin;
+		if (SkinDiff > 0)
+		{
+			sLogger.Log("There was %u more skins in original M2, removing extra from skin chunk", SkinDiff);
+			for (UInt32 i = 0; i < SkinDiff; ++i)
+				skinChunk->SkinsFileDataIds.erase(skinChunk->SkinsFileDataIds.begin() + Header.Elements.nSkin);
+		}
+		else if (SkinDiff < 0)
+		{
+			sLogger.Log("Generated model has %u more skins than needed, removing extra", -SkinDiff);
+			Header.Elements.nSkin = replaceM2 ? replaceM2->Header.Elements.nSkin : OriginalSkinCount;
+		}
 	}
 }
 
-M2Lib::EError M2Lib::M2::Save(const Char16* FileName)
+M2Lib::EError M2Lib::M2::Save(const Char16* FileName, M2* replaceM2)
 {
 	// check path
 	if (!FileName)
 		return EError_FailedToSaveM2_NoFileSpecified;
+
+	if (replaceM2)
+		this->replaceM2 = replaceM2;
 
 	DoExtraWork();
 
@@ -530,14 +579,14 @@ M2Lib::EError M2Lib::M2::Save(const Char16* FileName)
 	}
 
 	// save skins
-	auto Error = SaveSkins();
+	auto Error = SaveSkins(FileName);
 	if (Error != EError::EError_OK)
 		return Error;
 
 	return EError_OK;
 }
 
-M2Lib::EError M2Lib::M2::ExportM2Intermediate(Char16* FileName)
+M2Lib::EError M2Lib::M2::ExportM2Intermediate(Char16 const* FileName)
 {
 	// open file stream
 	std::fstream FileStream;
@@ -734,7 +783,7 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate(Char16* FileName)
 	return EError_OK;
 }
 
-M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16* FileName)
+M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16 const* FileName)
 {
 	bool IgnoreBones = Settings && !Settings->ImportSettings.MergeBones;
 	bool IgnoreAttachments = Settings && !Settings->ImportSettings.MergeAttachments;
@@ -783,6 +832,7 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16* FileName)
 
 	// set skin 0 so we can begin seam fixing
 	M2Skin* pOriginalSkin0 = Skins[0];	// save this because we will need to copy materials from it later.
+	OriginalSkinCount = Header.Elements.nSkin;
 	Header.Elements.nSkin = 1;
 	for (UInt32 i = 0; i < SKIN_COUNT; ++i)
 	{
@@ -819,7 +869,7 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16* FileName)
 		NewSkinList[i] = NULL;
 
 	// for easy looping
-	UInt32 MaxBoneList[5];
+	UInt32 MaxBoneList[SKIN_COUNT - LOD_SKIN_MAX_COUNT + 1];
 	MaxBoneList[0] = 256;
 	MaxBoneList[1] = 64;
 	MaxBoneList[2] = 53;
@@ -2207,8 +2257,11 @@ void M2Lib::M2::m_SaveElements_FindOffsets()
 				CElement_Texture* Textures = Elements[iElement].as<CElement_Texture>();
 				for (UInt32 j = 0; j < Elements[iElement].Count; ++j)
 				{
-					VERIFY_OFFSET_LOCAL(Textures[j].TexturePath.Offset);
-					Textures[j].TexturePath.Offset += OffsetDelta;
+					if (Textures[j].TexturePath.Offset)
+					{
+						VERIFY_OFFSET_LOCAL(Textures[j].TexturePath.Offset);
+						Textures[j].TexturePath.Offset += OffsetDelta;
+					}
 				}
 				break;
 			}

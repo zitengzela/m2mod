@@ -158,6 +158,7 @@ namespace M2Lib
 		GlobalSettings* Settings;
 
 		M2I* pInM2I;
+		M2* replaceM2;
 		Casc* casc;
 
 	public:
@@ -168,6 +169,7 @@ namespace M2Lib
 		#define SKIN_COUNT 7
 		#define LOD_SKIN_MAX_COUNT 3
 		M2Skin* Skins[SKIN_COUNT];
+		UInt32 OriginalSkinCount;	// skin count before importing m2i
 
 		M2(GlobalSettings* Settings = NULL)
 		{
@@ -175,9 +177,11 @@ namespace M2Lib
 			Skeleton = NULL;
 			m_OriginalModelChunkSize = 0;
 			pInM2I = NULL;
+			replaceM2 = NULL;
 			hasLodSkins = false;
 			this->Settings = Settings;
 			casc = NULL;
+			OriginalSkinCount = 0;
 		}
 
 		~M2()
@@ -197,12 +201,12 @@ namespace M2Lib
 		EError Load(const Char16* FileName);
 
 		// saves this M2 to a file.
-		EError Save(const Char16* FileName);
+		EError Save(const Char16* FileName, M2* replaceM2 = NULL);
 
 		// exports the loaded M2 as an M2I file.
-		EError ExportM2Intermediate(Char16* FileName);
+		EError ExportM2Intermediate(Char16 const* FileName);
 		// imports an M2I file and merges it with already loaded M2.
-		EError ImportM2Intermediate(Char16* FileName);
+		EError ImportM2Intermediate(Char16 const* FileName);
 		
 		// prints diagnostic information.
 		void PrintInfo();
@@ -246,12 +250,13 @@ namespace M2Lib
 		UInt32 AddTextureFlags(M2Element::CElement_TextureFlag::EFlags Flags, M2Element::CElement_TextureFlag::EBlend Blend);
 
 		EError LoadSkins();
-		EError SaveSkins();
+		EError SaveSkins(wchar_t const* M2FileName);
 
 		bool GetFileSkin(std::wstring& SkinFileNameResultBuffer, std::wstring const& M2FileName, UInt32 SkinIndex);
 		bool GetSkeleton(std::wstring& SkeletonFileNameResultBuffer, std::wstring const& M2FileName);
 
 		ChunkBase* GetChunk(M2Chunk::EM2Chunk ChunkId);
+		void RemoveChunk(M2Chunk::EM2Chunk ChunkId);
 		void PrepareChunks();
 
 		// post load header

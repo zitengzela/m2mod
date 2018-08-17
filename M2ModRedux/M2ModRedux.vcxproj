@@ -115,6 +115,7 @@
     <ClInclude Include="SettingsForm.h">
       <FileType>CppForm</FileType>
     </ClInclude>
+    <ClInclude Include="StringHelpers.h" />
     <ClInclude Include="UpdateForm.h">
       <FileType>CppForm</FileType>
     </ClInclude>

@@ -5,7 +5,7 @@
 #include "M2.h"
 #include "Logger.h"
 
-M2Lib::EError M2Lib::M2I::Load(Char16* FileName, M2Lib::M2* pM2, bool IgnoreBones, bool IgnoreAttachments, bool IgnoreCameras)
+M2Lib::EError M2Lib::M2I::Load(Char16 const* FileName, M2Lib::M2* pM2, bool IgnoreBones, bool IgnoreAttachments, bool IgnoreCameras)
 {
 	// open file stream
 	std::fstream FileStream;

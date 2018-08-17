@@ -2,6 +2,7 @@
 
 #include "Settings.h"
 #include "FileSystem.h"
+#include "StringHelpers.h"
 
 namespace M2ModRedux {
 
@@ -63,7 +64,7 @@ namespace M2ModRedux {
 		{
 			M2Lib::GlobalSettings settings;
 
-			std::string path = (char const*)Marshal::StringToHGlobalAnsi(wowPathTextBox->Text->Trim()).ToPointer();
+			std::string path = StringConverter(wowPathTextBox->Text->Trim()).ToStringA();
 
 			settings.WowPath = path.length() ? M2Lib::FileSystemA::GetParentDirectory(path) : "";
 
@@ -285,7 +286,7 @@ namespace M2ModRedux {
 #pragma endregion
 
 	private: System::Void saveButton_Click(System::Object^  sender, System::EventArgs^  e) {
-		std::string WowPath = (const char*)Marshal::StringToHGlobalAnsi(wowPathTextBox->Text).ToPointer();
+		std::string WowPath = StringConverter(wowPathTextBox->Text).ToStringA();
 		if (WowPath.length() > 0)
 		{
 			if (!M2Lib::FileSystemA::IsFile(WowPath))
