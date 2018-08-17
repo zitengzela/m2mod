@@ -17,7 +17,7 @@ void M2Lib::SkeletonChunk::SKL1Chunk::Load(std::fstream& FileStream, UInt32 Size
 
 void M2Lib::SkeletonChunk::SKL1Chunk::Save(std::fstream& FileStream)
 {
-	assert(false && "Method not implemented");
+	FileStream.write(RawData.data(), RawData.size());
 }
 
 bool M2Lib::SkeletonChunk::SKL1Chunk::IntializeElements(UInt32 DataSize)
@@ -79,7 +79,7 @@ void M2Lib::SkeletonChunk::SKA1Chunk::Load(std::fstream& FileStream, UInt32 Size
 
 void M2Lib::SkeletonChunk::SKA1Chunk::Save(std::fstream& FileStream)
 {
-	assert(false && "Method not implemented");
+	FileStream.write(RawData.data(), RawData.size());
 }
 
 bool M2Lib::SkeletonChunk::SKA1Chunk::IntializeElements(UInt32 DataSize)
@@ -144,7 +144,7 @@ void M2Lib::SkeletonChunk::SKB1Chunk::Load(std::fstream& FileStream, UInt32 Size
 
 void M2Lib::SkeletonChunk::SKB1Chunk::Save(std::fstream& FileStream)
 {
-	assert(false && "Method not implemented");
+	FileStream.write(RawData.data(), RawData.size());
 }
 
 bool M2Lib::SkeletonChunk::SKB1Chunk::IntializeElements(UInt32 DataSize)
@@ -209,7 +209,7 @@ void M2Lib::SkeletonChunk::SKS1Chunk::Load(std::fstream& FileStream, UInt32 Size
 
 void M2Lib::SkeletonChunk::SKS1Chunk::Save(std::fstream& FileStream)
 {
-	assert(false && "Method not implemented");
+	FileStream.write(RawData.data(), RawData.size());
 }
 
 bool M2Lib::SkeletonChunk::SKS1Chunk::IntializeElements(UInt32 DataSize)

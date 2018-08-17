@@ -253,7 +253,7 @@ namespace M2Lib
 		EError SaveSkins(wchar_t const* M2FileName);
 
 		bool GetFileSkin(std::wstring& SkinFileNameResultBuffer, std::wstring const& M2FileName, UInt32 SkinIndex);
-		bool GetSkeleton(std::wstring& SkeletonFileNameResultBuffer, std::wstring const& M2FileName);
+		bool GetFileSkeleton(std::wstring& SkeletonFileNameResultBuffer, std::wstring const& M2FileName);
 
 		ChunkBase* GetChunk(M2Chunk::EM2Chunk ChunkId);
 		void RemoveChunk(M2Chunk::EM2Chunk ChunkId);

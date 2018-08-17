@@ -127,7 +127,7 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 			ChunkBase* Chunk = NULL;
 			auto eChunk = (EM2Chunk)REVERSE_CC(ChunkId);
 
-			sLogger.Log("Loaded '%s' chunk", ChunkIdToStr(ChunkId, false).c_str());
+			sLogger.Log("Loaded '%s' M2 chunk, size %u", ChunkIdToStr(ChunkId, false).c_str(), ChunkSize);
 			switch (eChunk)
 			{
 				case EM2Chunk::Model: Chunk = new MD21Chunk(); break;
@@ -249,7 +249,7 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 	}
 
 	std::wstring FileNameSkeleton;
-	if (GetSkeleton(FileNameSkeleton, _FileName))
+	if (GetFileSkeleton(FileNameSkeleton, _FileName))
 	{
 		auto sk = new M2Lib::Skeleton();
 		if (sk->Load(FileNameSkeleton.c_str()) == EError::EError_OK)
@@ -580,8 +580,19 @@ M2Lib::EError M2Lib::M2::Save(const Char16* FileName, M2* replaceM2)
 
 	// save skins
 	auto Error = SaveSkins(FileName);
-	if (Error != EError::EError_OK)
+	if (Error != EError_OK)
 		return Error;
+
+	if (Skeleton)
+	{
+		std::wstring SkeletonFileName;
+		if (GetFileSkeleton(SkeletonFileName, FileName))
+		{
+			Error = Skeleton->Save(SkeletonFileName.c_str());
+			if (Error != EError_OK)
+				return Error;
+		}
+	}
 
 	return EError_OK;
 }
@@ -1431,7 +1442,7 @@ bool M2Lib::M2::GetFileSkin(std::wstring& SkinFileNameResultBuffer, std::wstring
 	return true;
 }
 
-bool M2Lib::M2::GetSkeleton(std::wstring& SkeletonFileNameResultBuffer, std::wstring const& M2FileName)
+bool M2Lib::M2::GetFileSkeleton(std::wstring& SkeletonFileNameResultBuffer, std::wstring const& M2FileName)
 {
 	auto chunk = (M2Chunk::SKIDChunk*)GetChunk(EM2Chunk::Skeleton);
 	auto casc = GetCasc();

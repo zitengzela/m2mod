@@ -28,18 +28,13 @@ namespace M2Lib
 		{
 		}
 
-
-	public:
-
-	public:
-		// loads an M2 skin from a file.
 		EError Load(const Char16* FileName);
-		// saves this M2 skin to a file.
 		EError Save(const Char16* FileName);
 
 		ChunkBase* GetChunk(SkeletonChunk::ESkeletonChunk ChunkId);
 
 	private:
 		std::map<SkeletonChunk::ESkeletonChunk, ChunkBase*> Chunks;
+		std::vector<UInt32> ChunkOrder;
 	};
 }
