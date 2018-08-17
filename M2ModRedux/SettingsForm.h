@@ -64,9 +64,7 @@ namespace M2ModRedux {
 		{
 			M2Lib::GlobalSettings settings;
 
-			std::string path = StringConverter(wowPathTextBox->Text->Trim()).ToStringA();
-
-			settings.WowPath = path.length() ? M2Lib::FileSystemA::GetParentDirectory(path) : "";
+			settings.WowPath = StringConverter(wowPathTextBox->Text->Trim()).ToStringA();
 
 			settings.ImportSettings.MergeBones = checkBoxMergeBones->Checked;
 			settings.ImportSettings.MergeAttachments = checkBoxMergeAttachments->Checked;
@@ -107,9 +105,8 @@ namespace M2ModRedux {
 	private: System::Windows::Forms::ToolTip^  toolTip1;
 	private: System::Windows::Forms::TextBox^  wowPathTextBox;
 
-	private: System::Windows::Forms::Button^  button1;
 	private: System::Windows::Forms::Button^  wowBrowseButton;
-	private: System::Windows::Forms::Button^  wowBrowseTextBox;
+
 	private: System::Windows::Forms::OpenFileDialog^  wowBrowseDialog;
 	private: System::Windows::Forms::GroupBox^  wowPathGroupBox;
 
@@ -142,7 +139,7 @@ namespace M2ModRedux {
 			this->cancelButton = (gcnew System::Windows::Forms::Button());
 			this->toolTip1 = (gcnew System::Windows::Forms::ToolTip(this->components));
 			this->wowPathTextBox = (gcnew System::Windows::Forms::TextBox());
-			this->wowBrowseTextBox = (gcnew System::Windows::Forms::Button());
+			this->wowBrowseButton = (gcnew System::Windows::Forms::Button());
 			this->wowBrowseDialog = (gcnew System::Windows::Forms::OpenFileDialog());
 			this->wowPathGroupBox = (gcnew System::Windows::Forms::GroupBox());
 			this->groupBox1->SuspendLayout();
@@ -245,19 +242,19 @@ namespace M2ModRedux {
 			this->wowPathTextBox->Name = L"wowPathTextBox";
 			this->wowPathTextBox->Size = System::Drawing::Size(289, 20);
 			this->wowPathTextBox->TabIndex = 5;
-			this->wowBrowseTextBox->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Right));
-			this->wowBrowseTextBox->Location = System::Drawing::Point(304, 20);
-			this->wowBrowseTextBox->Name = L"wowBrowseTextBox";
-			this->wowBrowseTextBox->Size = System::Drawing::Size(37, 22);
-			this->wowBrowseTextBox->TabIndex = 6;
-			this->wowBrowseTextBox->Text = L"...";
-			this->wowBrowseTextBox->UseVisualStyleBackColor = true;
-			this->wowBrowseTextBox->Click += gcnew System::EventHandler(this, &SettingsForm::wowBrowseTextBox_Click);
+			this->wowBrowseButton->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Right));
+			this->wowBrowseButton->Location = System::Drawing::Point(304, 20);
+			this->wowBrowseButton->Name = L"wowBrowseButton";
+			this->wowBrowseButton->Size = System::Drawing::Size(37, 22);
+			this->wowBrowseButton->TabIndex = 6;
+			this->wowBrowseButton->Text = L"...";
+			this->wowBrowseButton->UseVisualStyleBackColor = true;
+			this->wowBrowseButton->Click += gcnew System::EventHandler(this, &SettingsForm::wowBrowseButton_Click);
 			this->wowBrowseDialog->FileName = L"Wow.exe";
 			this->wowBrowseDialog->Filter = L"WoW Executable|*.exe";
 			this->wowPathGroupBox->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
 				| System::Windows::Forms::AnchorStyles::Right));
-			this->wowPathGroupBox->Controls->Add(this->wowBrowseTextBox);
+			this->wowPathGroupBox->Controls->Add(this->wowBrowseButton);
 			this->wowPathGroupBox->Controls->Add(this->wowPathTextBox);
 			this->wowPathGroupBox->Location = System::Drawing::Point(12, 12);
 			this->wowPathGroupBox->Name = L"wowPathGroupBox";
@@ -289,14 +286,7 @@ namespace M2ModRedux {
 		std::string WowPath = StringConverter(wowPathTextBox->Text).ToStringA();
 		if (WowPath.length() > 0)
 		{
-			if (!M2Lib::FileSystemA::IsFile(WowPath))
-			{
-				MessageBox::Show("Path must point to Wow.exe", "Error", MessageBoxButtons::OK, MessageBoxIcon::Error);
-				return;
-			}
-
-			std::string File = M2Lib::FileSystemA::GetBaseName(WowPath);
-			if (_stricmp(File.c_str(), "wow.exe"))
+			if (!M2Lib::FileSystemA::IsFile(WowPath + "\\" + "Wow.exe"))
 			{
 				MessageBox::Show("Path must point to Wow.exe", "Error", MessageBoxButtons::OK, MessageBoxIcon::Error);
 				return;
@@ -308,7 +298,7 @@ namespace M2ModRedux {
 	private: System::Void cancelButton_Click(System::Object^  sender, System::EventArgs^  e) {
 		DialogResult = Windows::Forms::DialogResult::Cancel;
 	}
-	private: System::Void wowBrowseTextBox_Click(System::Object^  sender, System::EventArgs^  e) {
+	private: System::Void wowBrowseButton_Click(System::Object^  sender, System::EventArgs^  e) {
 		auto path = wowPathTextBox->Text;
 		if (path->Length > 0 && File::Exists(path))
 			wowBrowseDialog->InitialDirectory = path;
@@ -316,7 +306,7 @@ namespace M2ModRedux {
 		auto result = wowBrowseDialog->ShowDialog();
 		if (result == System::Windows::Forms::DialogResult::OK)
 		{
-			wowPathTextBox->Text = wowBrowseDialog->FileName;
+			wowPathTextBox->Text = Path::GetDirectoryName(wowBrowseDialog->FileName);
 		}
 	}
 };

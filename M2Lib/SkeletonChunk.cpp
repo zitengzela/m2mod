@@ -79,7 +79,30 @@ void M2Lib::SkeletonChunk::SKA1Chunk::Load(std::fstream& FileStream, UInt32 Size
 
 void M2Lib::SkeletonChunk::SKA1Chunk::Save(std::fstream& FileStream)
 {
-	FileStream.write(RawData.data(), RawData.size());
+	UInt32 CurrentOffset = sizeof(Header);
+	for (UInt32 i = 0; i < EElement_Count; ++i)
+	{
+		if (!Elements[i].Data.empty())
+		{
+			Elements[i].Offset = CurrentOffset;
+			Elements[i].SizeOriginal = Elements[i].Data.size();
+			Elements[i].OffsetOriginal = CurrentOffset;
+
+			CurrentOffset += Elements[i].Data.size();
+		}
+	}
+
+	Header.nAttachment = Elements[EElement_Attachment].Count;
+	Header.oAttachment = Elements[EElement_Attachment].Offset;
+
+	Header.nAttachmentLookup = Elements[EElement_AttachmentLookup].Count;
+	Header.oAttachmentLookup = Elements[EElement_AttachmentLookup].Offset;
+
+	UInt32 StartPos = (UInt32)FileStream.tellp();
+	FileStream.write((char*)&Header, sizeof(Header));
+	// save elements
+	for (UInt32 i = 0; i != EElement_Count; i++)
+		assert("Failed to write chunk element" && Elements[i].Save(FileStream, StartPos));
 }
 
 bool M2Lib::SkeletonChunk::SKA1Chunk::IntializeElements(UInt32 DataSize)
@@ -144,7 +167,30 @@ void M2Lib::SkeletonChunk::SKB1Chunk::Load(std::fstream& FileStream, UInt32 Size
 
 void M2Lib::SkeletonChunk::SKB1Chunk::Save(std::fstream& FileStream)
 {
-	FileStream.write(RawData.data(), RawData.size());
+	UInt32 CurrentOffset = sizeof(Header);
+	for (UInt32 i = 0; i < EElement_Count; ++i)
+	{
+		if (!Elements[i].Data.empty())
+		{
+			Elements[i].Offset = CurrentOffset;
+			Elements[i].SizeOriginal = Elements[i].Data.size();
+			Elements[i].OffsetOriginal = CurrentOffset;
+
+			CurrentOffset += Elements[i].Data.size();
+		}
+	}
+
+	Header.nBone = Elements[EElement_Bone].Count;
+	Header.oBone = Elements[EElement_Bone].Offset;
+
+	Header.nKeyBoneLookup = Elements[EElement_KeyBoneLookup].Count;
+	Header.oKeyBoneLookup = Elements[EElement_KeyBoneLookup].Offset;
+
+	UInt32 StartPos = (UInt32)FileStream.tellp();
+	FileStream.write((char*)&Header, sizeof(Header));
+	// save elements
+	for (UInt32 i = 0; i != EElement_Count; i++)
+		assert("Failed to write chunk element" && Elements[i].Save(FileStream, StartPos));
 }
 
 bool M2Lib::SkeletonChunk::SKB1Chunk::IntializeElements(UInt32 DataSize)
