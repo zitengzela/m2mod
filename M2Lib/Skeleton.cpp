@@ -49,7 +49,6 @@ EError Skeleton::Load(const Char16* FileName)
 
 		sLogger.Log("Loaded %s skeleton chunk, size %u", ChunkIdToStr(ChunkId, false).c_str(), ChunkSize);
 
-		ChunkOrder.push_back((UInt32)eChunk);
 		UInt32 savePos = FileStream.tellg();
 		Chunk->Load(FileStream, ChunkSize);
 		FileStream.seekg(savePos + ChunkSize, std::ios::beg);
@@ -73,20 +72,19 @@ EError Skeleton::Save(const Char16* FileName)
 	if (FileStream.fail())
 		return EError_FailedToSaveM2;
 
-	ChunkOrder.clear();
-	ChunkOrder.push_back((UInt32)ESkeletonChunk::SKL1);
-	ChunkOrder.push_back((UInt32)ESkeletonChunk::SKS1);
+	// SKS1 chunk must be loaded before other animation-dependent chunks (checked client)
+	std::list<ESkeletonChunk> ExplicitOrder = { ESkeletonChunk::SKL1, ESkeletonChunk::SKS1 };
 	for (auto chunk : Chunks)
 	{
-		if (chunk.first == ESkeletonChunk::SKL1 || chunk.first == ESkeletonChunk::SKS1)
+		if (std::find(ExplicitOrder.begin(), ExplicitOrder.end(), chunk.first) != ExplicitOrder.end())
 			continue;
 
-		ChunkOrder.push_back((UInt32)chunk.first);
+		ExplicitOrder.push_back(chunk.first);
 	}
 
-	for (auto chunkId : ChunkOrder)
+	for (auto chunkId : ExplicitOrder)
 	{
-		auto chunk = GetChunk((ESkeletonChunk)chunkId);
+		auto chunk = GetChunk(chunkId);
 		if (!chunk)
 			continue;
 

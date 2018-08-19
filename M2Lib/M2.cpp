@@ -197,6 +197,16 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 		return EError_FailedToLoadM2_FileCorrupt;
 	}
 
+	if (auto casc = GetCasc())
+	{
+		if (auto chunk = (SFIDChunk*)GetChunk(EM2Chunk::Skin))
+		{
+			sLogger.Log("Used skin files:");
+			for (auto fileDataId : chunk->SkinsFileDataIds)
+				sLogger.Log("\t[%u] %s", fileDataId, casc->GetFileByFileDataId(fileDataId).c_str());
+		}
+	}
+
 	auto Error = LoadSkins();
 	if (Error != EError::EError_OK)
 		return Error;
@@ -246,6 +256,15 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 		}
 
 		Chunks[PostChunk.first] = Chunk;
+	}
+
+	if (auto casc = GetCasc())
+	{
+		if (auto chunk = (SKIDChunk*)GetChunk(EM2Chunk::Skeleton))
+		{
+			sLogger.Log("Used skeleton file:");
+			sLogger.Log("\t[%u] %s", chunk->SkeletonFileDataId, casc->GetFileByFileDataId(chunk->SkeletonFileDataId).c_str());
+		}
 	}
 
 	std::wstring FileNameSkeleton;
@@ -591,6 +610,22 @@ M2Lib::EError M2Lib::M2::Save(const Char16* FileName, M2* replaceM2)
 			Error = Skeleton->Save(SkeletonFileName.c_str());
 			if (Error != EError_OK)
 				return Error;
+		}
+	}
+
+	if (auto casc = GetCasc())
+	{
+		if (auto chunk = (SFIDChunk*)GetChunk(EM2Chunk::Skin))
+		{
+			sLogger.Log("INFO: Put your skins to:");
+			for (auto fileDataId : chunk->SkinsFileDataIds)
+				sLogger.Log("\t%s", casc->GetFileByFileDataId(fileDataId).c_str());
+		}
+
+		if (auto chunk = (SKIDChunk*)GetChunk(EM2Chunk::Skeleton))
+		{
+			sLogger.Log("INFO: Put your skeleton to:");
+			sLogger.Log("\t%s", casc->GetFileByFileDataId(chunk->SkeletonFileDataId).c_str());
 		}
 	}
 

@@ -35,6 +35,5 @@ namespace M2Lib
 
 	private:
 		std::map<SkeletonChunk::ESkeletonChunk, ChunkBase*> Chunks;
-		std::vector<UInt32> ChunkOrder;
 	};
 }
