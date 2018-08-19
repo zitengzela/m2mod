@@ -50,6 +50,23 @@ bool M2Lib::M2::CM2Header::IsLongHeader() const
 	return (Description.Flags & 0x08) != 0;
 }
 
+M2Lib::M2::~M2()
+{
+	if (pInM2I)
+		delete pInM2I;
+	for (auto& Chunk : Chunks)
+		delete Chunk.second;
+	Chunks.clear();
+	if (Skeleton)
+		delete Skeleton;
+	if (replaceM2)
+		delete replaceM2;
+
+	for (UInt32 i = 0; i < SKIN_COUNT; ++i)
+		if (Skins[i])
+			delete Skins[i];
+}
+
 UInt32 M2Lib::M2::GetHeaderSize() const
 {
 	return Header.IsLongHeader() && GetExpansion() >= Expansion::Cataclysm ? sizeof(Header) : sizeof(Header) - 8;
@@ -147,7 +164,6 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 			FileStream.seekg(savePos + ChunkSize, std::ios::beg);
 
 			Chunks[eChunk] = Chunk;
-			continue;
 		}
 	}
 
@@ -2833,19 +2849,3 @@ UInt32 M2Lib::M2::AddBone(CElement_Bone const& Bone)
 	return newBoneId;
 }
 
-void M2Lib::M2::CopySFIDChunk(M2* Other)
-{
-	auto thisChunk = (SFIDChunk*)GetChunk(EM2Chunk::Skin);
-	if (!thisChunk)
-		return;
-
-	auto otherChunk = (SFIDChunk*)Other->GetChunk(EM2Chunk::Skin);
-	if (!otherChunk)
-	{
-		delete thisChunk;
-		Chunks.erase(EM2Chunk::Skin);
-		return;
-	}
-
-	*thisChunk = *otherChunk;
-}

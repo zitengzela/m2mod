@@ -10,6 +10,8 @@ namespace M2Lib
 	class ChunkBase
 	{
 	public:
+		virtual ~ChunkBase() {}
+
 		virtual void Load(std::fstream& FileStream, UInt32 Size) = 0;
 		virtual void Save(std::fstream& FileStream) = 0;
 	};

@@ -903,34 +903,28 @@ private: System::Windows::Forms::Button^  clearButton;
 				return;
 			}
 
-			M2Lib::M2* M2 = new M2Lib::M2(settings);
-			M2->SetCasc(GetCasc());
+			M2Lib::M2 M2(settings);
+			M2.SetCasc(GetCasc());
 
 			// import M2
-			M2Lib::EError Error = M2->Load(StringConverter(textBoxInputM2Exp->Text).ToStringW());
-
-			if (Error != 0)
+			M2Lib::EError Error = M2.Load(StringConverter(textBoxInputM2Exp->Text).ToStringW());
+			if (Error != M2Lib::EError_OK)
 			{
 				SetStatus(gcnew String(M2Lib::GetErrorText(Error)));
 				exportButtonGo->Enabled = true;
-				delete M2;
 				return;
 			}
 
 			// export M2I
-			Error = M2->ExportM2Intermediate(StringConverter(textBoxOutputM2I->Text).ToStringW());
-
-			if (Error != 0)
+			Error = M2.ExportM2Intermediate(StringConverter(textBoxOutputM2I->Text).ToStringW());
+			if (Error != M2Lib::EError_OK)
 			{
 				SetStatus(gcnew System::String(M2Lib::GetErrorText(Error)));
 				exportButtonGo->Enabled = true;
-				delete M2;
 				return;
 			}
 
 			SetStatus("Export done.");
-
-			delete M2;
 
 			exportButtonGo->Enabled = true;
 		}
@@ -1040,20 +1034,21 @@ private: System::Windows::Forms::Button^  clearButton;
 			}
 		}
 
+		M2Lib::M2* ReplaceM2 = NULL;
 		if (checkBoxReplaceM2->Checked)
 		{
-			M2Lib::M2 ReplaceM2;
-			auto Error = ReplaceM2.Load(StringConverter(textBoxReplaceM2->Text).ToStringW());
+			ReplaceM2 = new M2Lib::M2();
+			auto Error = ReplaceM2->Load(StringConverter(textBoxReplaceM2->Text).ToStringW());
 			if (Error != M2Lib::EError_OK)
 			{
 				SetStatus(gcnew System::String(M2Lib::GetErrorText(Error)));
+				delete ReplaceM2;
+
 				delete preloadM2;
 				preloadM2 = NULL;
 				PreloadTransition(false);
 				return;
 			}
-
-			preloadM2->CopySFIDChunk(&ReplaceM2);
 		}
 
 		auto outputDirectory = Path::Combine(Path::GetDirectoryName(textBoxInputM2Exp->Text), "Export");
@@ -1063,17 +1058,19 @@ private: System::Windows::Forms::Button^  clearButton;
 		auto ExportFileName = Path::Combine(outputDirectory, Path::GetFileName(checkBoxReplaceM2->Checked ? textBoxReplaceM2->Text : textBoxInputM2Exp->Text));
 
 		// export M2
-		auto Error = preloadM2->Save(StringConverter(ExportFileName).ToStringW());
+		auto Error = preloadM2->Save(StringConverter(ExportFileName).ToStringW(), ReplaceM2);
 		if (Error != M2Lib::EError_OK)
 		{
 			SetStatus(gcnew System::String(M2Lib::GetErrorText(Error)));
 			delete preloadM2;
+			delete ReplaceM2;
 			preloadM2 = NULL;
 			PreloadTransition(false);
 			return;
 		}
 
 		delete preloadM2;
+		delete ReplaceM2;
 		preloadM2 = NULL;
 
 		SetStatus("Import done.");

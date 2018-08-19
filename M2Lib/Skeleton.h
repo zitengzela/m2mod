@@ -26,6 +26,8 @@ namespace M2Lib
 
 		~Skeleton()
 		{
+			for (auto chunk : Chunks)
+				delete chunk.second;
 		}
 
 		EError Load(const Char16* FileName);

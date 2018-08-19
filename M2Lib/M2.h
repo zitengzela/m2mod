@@ -184,13 +184,7 @@ namespace M2Lib
 			OriginalSkinCount = 0;
 		}
 
-		~M2()
-		{
-			if (pInM2I)
-				delete pInM2I;
-			for (auto& Chunk : Chunks)
-				delete Chunk.second;
-		}
+		~M2();
 
 		UInt32 GetHeaderSize() const;
 		Expansion GetExpansion() const;
@@ -212,7 +206,6 @@ namespace M2Lib
 		void PrintInfo();
 		void PrintReferencedFileInfo();
 
-		void CopySFIDChunk(M2* Other);
 		UInt32 AddBone(M2Element::CElement_Bone const& Bone);
 		UInt32 AddTexture(const Char8* szTextureSource, M2Element::CElement_Texture::ETextureType Type, M2Element::CElement_Texture::ETextureFlags Flags);
 		UInt32 AddTextureLookup(UInt16 TextureId, bool ForceNewIndex = false);
