@@ -101,6 +101,7 @@
     <ClCompile Include="M2ModRedux.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CompareBonesForm.h" />
     <ClInclude Include="ElementManagementForm.h">
       <FileType>CppForm</FileType>
     </ClInclude>
@@ -125,6 +126,7 @@
     <ResourceCompile Include="app.rc" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="CompareBonesForm.resx" />
     <EmbeddedResource Include="ElementManagementForm.resx">
       <DependentUpon>ElementManagementForm.h</DependentUpon>
     </EmbeddedResource>
