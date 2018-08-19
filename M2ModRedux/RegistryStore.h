@@ -29,6 +29,9 @@ namespace M2ModRedux
 
 			NotShowAutoUpdate,
 			ActualVersion,
+
+			OldCompareM2,
+			NewCompareM2
 		};
 
 		static RegistyStore()

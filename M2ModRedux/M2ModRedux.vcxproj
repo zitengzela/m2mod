@@ -101,7 +101,9 @@
     <ClCompile Include="M2ModRedux.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="CompareBonesForm.h" />
+    <ClInclude Include="CompareBonesForm.h">
+      <FileType>CppForm</FileType>
+    </ClInclude>
     <ClInclude Include="ElementManagementForm.h">
       <FileType>CppForm</FileType>
     </ClInclude>

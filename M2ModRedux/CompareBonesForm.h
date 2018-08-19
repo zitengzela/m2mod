@@ -2,11 +2,17 @@
 
 #include "M2.h"
 #include "BoneComparator.h"
+#include "StringHelpers.h"
+
+#ifndef _DEFINE_FILTERS
+# define _DEFINE_FILTERS
+# define M2Filter L"M2 Files|*.m2|All Files|*.*"
+# define M2IFilter L"M2I Files|*.m2i|All Files|*.*"
+#endif
+
+#define TXTFilter L"Txt Files|*.txt|All Files|*.*"
 
 namespace M2ModRedux {
-
-#define M2Filter L"M2 Files|*.m2|All Files|*.*"
-#define M2BRFilter L"M2BR Files|*.m2br|All Files|*.*"
 
 	using namespace System;
 	using namespace System::ComponentModel;
@@ -16,9 +22,6 @@ namespace M2ModRedux {
 	using namespace System::Drawing;
 	using namespace System::IO;
 	using namespace System::Runtime::InteropServices;
-
-	ref class CompareBonesForm;
-	ref class Form1;
 
 	/// <summary>
 	/// Summary for CompareBonesForm
@@ -35,6 +38,11 @@ namespace M2ModRedux {
 
 			System::ComponentModel::ComponentResourceManager^  resources = (gcnew System::ComponentModel::ComponentResourceManager(Form1::typeid));
 			this->Icon = (cli::safe_cast<System::Drawing::Icon^>(resources->GetObject(L"$this.Icon")));
+
+			if (auto Value = RegistyStore::GetValue(RegistyStore::Value::OldCompareM2))
+				oldM2TextBox->Text = (String^)Value;
+			if (auto Value = RegistyStore::GetValue(RegistyStore::Value::NewCompareM2))
+				newM2TextBox->Text = (String^)Value;
 		}
 
 	protected:
@@ -61,12 +69,8 @@ namespace M2ModRedux {
 	private: System::Windows::Forms::TextBox^  resultsTextBox;
 
 
-
-
-
-
 	private: System::Windows::Forms::Button^  compareButton;
-	private: System::Windows::Forms::CheckBox^  saveCheckBox;
+	private: System::Windows::Forms::Button^  saveButton;
 
 
 	private:
@@ -90,32 +94,47 @@ namespace M2ModRedux {
 			this->newM2BrowseButton = (gcnew System::Windows::Forms::Button());
 			this->resultsTextBox = (gcnew System::Windows::Forms::TextBox());
 			this->compareButton = (gcnew System::Windows::Forms::Button());
-			this->saveCheckBox = (gcnew System::Windows::Forms::CheckBox());
+			this->saveButton = (gcnew System::Windows::Forms::Button());
 			this->SuspendLayout();
+			// 
+			// oldM2TextBox
+			// 
 			this->oldM2TextBox->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
 				| System::Windows::Forms::AnchorStyles::Right));
 			this->oldM2TextBox->Location = System::Drawing::Point(61, 13);
 			this->oldM2TextBox->Name = L"oldM2TextBox";
 			this->oldM2TextBox->Size = System::Drawing::Size(390, 20);
 			this->oldM2TextBox->TabIndex = 0;
+			// 
+			// newM2TextBox
+			// 
 			this->newM2TextBox->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
 				| System::Windows::Forms::AnchorStyles::Right));
 			this->newM2TextBox->Location = System::Drawing::Point(61, 39);
 			this->newM2TextBox->Name = L"newM2TextBox";
 			this->newM2TextBox->Size = System::Drawing::Size(390, 20);
 			this->newM2TextBox->TabIndex = 1;
+			// 
+			// oldM2Label
+			// 
 			this->oldM2Label->AutoSize = true;
 			this->oldM2Label->Location = System::Drawing::Point(14, 16);
 			this->oldM2Label->Name = L"oldM2Label";
 			this->oldM2Label->Size = System::Drawing::Size(41, 13);
 			this->oldM2Label->TabIndex = 3;
 			this->oldM2Label->Text = L"Old M2";
+			// 
+			// newM2Label
+			// 
 			this->newM2Label->AutoSize = true;
 			this->newM2Label->Location = System::Drawing::Point(8, 42);
 			this->newM2Label->Name = L"newM2Label";
 			this->newM2Label->Size = System::Drawing::Size(47, 13);
 			this->newM2Label->TabIndex = 4;
 			this->newM2Label->Text = L"New M2";
+			// 
+			// oldM2BrowseButton
+			// 
 			this->oldM2BrowseButton->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Right));
 			this->oldM2BrowseButton->Location = System::Drawing::Point(462, 12);
 			this->oldM2BrowseButton->Name = L"oldM2BrowseButton";
@@ -124,6 +143,9 @@ namespace M2ModRedux {
 			this->oldM2BrowseButton->Text = L"...";
 			this->oldM2BrowseButton->UseVisualStyleBackColor = true;
 			this->oldM2BrowseButton->Click += gcnew System::EventHandler(this, &CompareBonesForm::oldM2BrowseButton_Click);
+			// 
+			// newM2BrowseButton
+			// 
 			this->newM2BrowseButton->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Right));
 			this->newM2BrowseButton->Location = System::Drawing::Point(462, 39);
 			this->newM2BrowseButton->Name = L"newM2BrowseButton";
@@ -132,6 +154,9 @@ namespace M2ModRedux {
 			this->newM2BrowseButton->Text = L"...";
 			this->newM2BrowseButton->UseVisualStyleBackColor = true;
 			this->newM2BrowseButton->Click += gcnew System::EventHandler(this, &CompareBonesForm::newM2BrowseButton_Click);
+			// 
+			// resultsTextBox
+			// 
 			this->resultsTextBox->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Bottom)
 				| System::Windows::Forms::AnchorStyles::Left)
 				| System::Windows::Forms::AnchorStyles::Right));
@@ -141,26 +166,37 @@ namespace M2ModRedux {
 			this->resultsTextBox->ScrollBars = System::Windows::Forms::ScrollBars::Vertical;
 			this->resultsTextBox->Size = System::Drawing::Size(497, 103);
 			this->resultsTextBox->TabIndex = 8;
+			this->resultsTextBox->TextChanged += gcnew System::EventHandler(this, &CompareBonesForm::resultsTextBox_TextChanged);
+			// 
+			// compareButton
+			// 
 			this->compareButton->Anchor = System::Windows::Forms::AnchorStyles::Top;
-			this->compareButton->Location = System::Drawing::Point(252, 67);
+			this->compareButton->Location = System::Drawing::Point(201, 67);
 			this->compareButton->Name = L"compareButton";
 			this->compareButton->Size = System::Drawing::Size(59, 30);
 			this->compareButton->TabIndex = 9;
 			this->compareButton->Text = L"Compare";
 			this->compareButton->UseVisualStyleBackColor = true;
 			this->compareButton->Click += gcnew System::EventHandler(this, &CompareBonesForm::compareButton_Click);
-			this->saveCheckBox->Anchor = System::Windows::Forms::AnchorStyles::Top;
-			this->saveCheckBox->AutoSize = true;
-			this->saveCheckBox->Location = System::Drawing::Point(195, 75);
-			this->saveCheckBox->Name = L"saveCheckBox";
-			this->saveCheckBox->Size = System::Drawing::Size(51, 17);
-			this->saveCheckBox->TabIndex = 10;
-			this->saveCheckBox->Text = L"Save";
-			this->saveCheckBox->UseVisualStyleBackColor = true;
+			// 
+			// saveButton
+			// 
+			this->saveButton->Anchor = System::Windows::Forms::AnchorStyles::Top;
+			this->saveButton->Enabled = false;
+			this->saveButton->Location = System::Drawing::Point(266, 67);
+			this->saveButton->Name = L"saveButton";
+			this->saveButton->Size = System::Drawing::Size(59, 30);
+			this->saveButton->TabIndex = 10;
+			this->saveButton->Text = L"Save";
+			this->saveButton->UseVisualStyleBackColor = true;
+			this->saveButton->Click += gcnew System::EventHandler(this, &CompareBonesForm::saveButton_Click);
+			// 
+			// CompareBonesForm
+			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->ClientSize = System::Drawing::Size(529, 218);
-			this->Controls->Add(this->saveCheckBox);
+			this->Controls->Add(this->saveButton);
 			this->Controls->Add(this->compareButton);
 			this->Controls->Add(this->resultsTextBox);
 			this->Controls->Add(this->newM2BrowseButton);
@@ -176,6 +212,7 @@ namespace M2ModRedux {
 
 		}
 #pragma endregion
+
 	private: System::Void oldM2BrowseButton_Click(System::Object^  sender, System::EventArgs^  e) {
 		auto dialog = gcnew OpenFileDialog();
 		dialog->Filter = M2Filter;
@@ -195,10 +232,10 @@ namespace M2ModRedux {
 		newM2TextBox->Text = dialog->FileName;
 	}
 	private: System::Void compareButton_Click(System::Object^  sender, System::EventArgs^  e) {
-		Compare(saveCheckBox->Checked);
+		Compare();
 	}
 
-	private: void Compare(bool save)
+	private: void Compare()
 	{
 		if (!File::Exists(oldM2TextBox->Text))
 		{
@@ -211,20 +248,18 @@ namespace M2ModRedux {
 			return;
 		}
 
+		RegistyStore::SetValue(RegistyStore::Value::OldCompareM2, oldM2TextBox->Text);
+		RegistyStore::SetValue(RegistyStore::Value::NewCompareM2, newM2TextBox->Text);
+
 		M2Lib::M2 oldM2, newM2;
-		auto StringPointer = Marshal::StringToHGlobalUni(oldM2TextBox->Text);
-		auto Error = oldM2.Load((Char16*)StringPointer.ToPointer());
-		Marshal::FreeHGlobal(StringPointer);
+		auto Error = oldM2.Load(StringConverter(oldM2TextBox->Text).ToStringW());
 		if (Error != M2Lib::EError_OK)
 		{
 			MessageBox::Show(String::Format("Failed to load '{0}': {1}", oldM2TextBox->Text, gcnew String(M2Lib::GetErrorText(Error))), "Error", Windows::Forms::MessageBoxButtons::OK, Windows::Forms::MessageBoxIcon::Error);
 			return;
 		}
 
-		StringPointer = Marshal::StringToHGlobalUni(newM2TextBox->Text);
-		Error = newM2.Load((Char16*)StringPointer.ToPointer());
-		Marshal::FreeHGlobal(StringPointer);
-
+		Error = newM2.Load(StringConverter(newM2TextBox->Text).ToStringW());
 		if (Error != M2Lib::EError_OK)
 		{
 			MessageBox::Show(String::Format("Failed to load '{0}': {1}", newM2TextBox->Text, gcnew String(M2Lib::GetErrorText(Error))), "Error", Windows::Forms::MessageBoxButtons::OK, Windows::Forms::MessageBoxIcon::Error);
@@ -232,26 +267,55 @@ namespace M2ModRedux {
 		}
 
 		M2Lib::BoneComparator comparator(&oldM2, &newM2);
-		auto result = comparator.ShowDifference();
 
-		resultsTextBox->Text = gcnew String(result.empty() ? "Bones are identical" : result.c_str());
-
-		if (save)
+		resultsTextBox->Text = "";
+		auto result = comparator.Diff();
+		if (result.empty())
 		{
-			auto dialog = gcnew SaveFileDialog();
-			dialog->Filter = M2BRFilter;
-			auto result = dialog->ShowDialog();
-			if (result == Windows::Forms::DialogResult::OK)
-			{
-				auto filePath = dialog->FileName;
-				StringPointer = Marshal::StringToHGlobalAnsi(filePath);
-				Error = comparator.Save((char const*)StringPointer.ToPointer());
-				Marshal::FreeHGlobal(StringPointer);
+			MessageBox::Show("Empty result from bone comparator");
+			return;
+		}
 
-				if (Error != M2Lib::EError_OK)
-					MessageBox::Show(String::Format("Failed to save bone remap data: {0}", gcnew String(M2Lib::GetErrorText(Error))), "Error", Windows::Forms::MessageBoxButtons::OK, Windows::Forms::MessageBoxIcon::Error);
-			}
+		resultsTextBox->Text += "# Old M2: " + oldM2TextBox->Text + "\r\n";
+		resultsTextBox->Text += "# New M2: " + newM2TextBox->Text + "\r\n";
+		resultsTextBox->Text += "# Use this file with Blender\r\n";
+		resultsTextBox->Text += "# \r\n";
+		resultsTextBox->Text += "# Format: [old bone]: [new bone]\r\n";
+		resultsTextBox->Text += "# Remove extra bone candidates to make sure only one bone present before saving\r\n";
+		resultsTextBox->Text += "# If any <no candidate> lines present - remove, but most likely this file will be useless\r\n";
+		for (auto itr : result)
+		{
+			if (itr.second.size() == 1 && *itr.second.begin() == itr.first)
+				continue;
+
+			resultsTextBox->Text += itr.first.ToString() + ": ";
+			if (itr.second.empty())
+				resultsTextBox->Text += "<no candidate>";
+			else
+				for (auto itr2 : itr.second)
+					resultsTextBox->Text += itr2.ToString() + " ";
+			resultsTextBox->Text += "\r\n";
 		}
 	}
-	};
+	private: System::Void resultsTextBox_TextChanged(System::Object^  sender, System::EventArgs^  e) {
+		saveButton->Enabled = resultsTextBox->Text->Length > 0;
+	}
+	private: System::Void saveButton_Click(System::Object^  sender, System::EventArgs^  e) {
+		auto dialog = gcnew SaveFileDialog();
+		dialog->CheckPathExists = true;
+		dialog->Filter = TXTFilter;
+
+		if (oldM2TextBox->Text->Length > 0)
+		{
+			auto name = Path::GetFileNameWithoutExtension(oldM2TextBox->Text);
+			if (name->Length > 0)
+				dialog->FileName = String::Format("bone_migration_{0}.txt", name);
+		}
+		auto result = dialog->ShowDialog();
+		if (result != Windows::Forms::DialogResult::OK)
+			return;
+
+		File::WriteAllText(dialog->FileName, resultsTextBox->Text);
+	}
+};
 }

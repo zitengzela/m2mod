@@ -1,7 +1,10 @@
 #pragma once
 
-#define M2Filter L"M2 Files|*.m2|All Files|*.*"
-#define M2IFilter L"M2I Files|*.m2i|All Files|*.*"
+#ifndef _DEFINE_FILTERS
+# define _DEFINE_FILTERS
+# define M2Filter L"M2 Files|*.m2|All Files|*.*"
+# define M2IFilter L"M2I Files|*.m2i|All Files|*.*"
+#endif
 
 #include "Casc.h"
 #include "Logger.h"

@@ -194,4 +194,6 @@ namespace M2Lib
 
 		int MaterialOverride;
 	};
+
+	bool floatEq(float a, float b);
 }

@@ -458,3 +458,8 @@ M2Lib::C3Vector M2Lib::CalculateNormal(C3Vector v1, C3Vector v2, C3Vector v3)
 	N.Normalize();
 	return N;
 }
+
+bool M2Lib::floatEq(float a, float b)
+{
+	return std::fabsf(a - b) < 1e-5;
+}
