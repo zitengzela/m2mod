@@ -58,6 +58,7 @@ namespace M2ModRedux {
 			checkBoxMergeAttachments->Checked = settings->ImportSettings.MergeAttachments;
 			checkBoxMergeCameras->Checked = settings->ImportSettings.MergeCameras;
 			checkBoxFixSeams->Checked = settings->ImportSettings.FixSeams;
+			testFixAnimationsCheckBox->Checked = settings->ImportSettings.FixAnimationsTest;
 		}
 
 		M2Lib::GlobalSettings ProduceSettings()
@@ -70,6 +71,7 @@ namespace M2ModRedux {
 			settings.ImportSettings.MergeAttachments = checkBoxMergeAttachments->Checked;
 			settings.ImportSettings.MergeCameras = checkBoxMergeCameras->Checked;
 			settings.ImportSettings.FixSeams = checkBoxFixSeams->Checked;
+			settings.ImportSettings.FixAnimationsTest = testFixAnimationsCheckBox->Checked;
 
 			if (forceExpansionComboBox->SelectedIndex > 0)
 				settings.ExportSettings.ForceExpansion = (M2Lib::Expansion)(forceExpansionComboBox->SelectedIndex - 1);
@@ -109,6 +111,7 @@ namespace M2ModRedux {
 
 	private: System::Windows::Forms::OpenFileDialog^  wowBrowseDialog;
 	private: System::Windows::Forms::GroupBox^  wowPathGroupBox;
+	private: System::Windows::Forms::CheckBox^  testFixAnimationsCheckBox;
 
 	private: System::ComponentModel::IContainer^  components;
 
@@ -131,6 +134,7 @@ namespace M2ModRedux {
 			this->label1 = (gcnew System::Windows::Forms::Label());
 			this->forceExpansionComboBox = (gcnew System::Windows::Forms::ComboBox());
 			this->groupBox3 = (gcnew System::Windows::Forms::GroupBox());
+			this->testFixAnimationsCheckBox = (gcnew System::Windows::Forms::CheckBox());
 			this->checkBoxFixSeams = (gcnew System::Windows::Forms::CheckBox());
 			this->checkBoxMergeCameras = (gcnew System::Windows::Forms::CheckBox());
 			this->checkBoxMergeAttachments = (gcnew System::Windows::Forms::CheckBox());
@@ -172,6 +176,7 @@ namespace M2ModRedux {
 			this->groupBox3->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Bottom)
 				| System::Windows::Forms::AnchorStyles::Left)
 				| System::Windows::Forms::AnchorStyles::Right));
+			this->groupBox3->Controls->Add(this->testFixAnimationsCheckBox);
 			this->groupBox3->Controls->Add(this->checkBoxFixSeams);
 			this->groupBox3->Controls->Add(this->checkBoxMergeCameras);
 			this->groupBox3->Controls->Add(this->checkBoxMergeAttachments);
@@ -182,6 +187,14 @@ namespace M2ModRedux {
 			this->groupBox3->TabIndex = 2;
 			this->groupBox3->TabStop = false;
 			this->groupBox3->Text = L"Import Settings";
+			this->testFixAnimationsCheckBox->AutoSize = true;
+			this->testFixAnimationsCheckBox->Location = System::Drawing::Point(131, 42);
+			this->testFixAnimationsCheckBox->Name = L"testFixAnimationsCheckBox";
+			this->testFixAnimationsCheckBox->Size = System::Drawing::Size(94, 17);
+			this->testFixAnimationsCheckBox->TabIndex = 20;
+			this->testFixAnimationsCheckBox->Text = L"Test Fix Anims";
+			this->toolTip1->SetToolTip(this->testFixAnimationsCheckBox, L"Seams between meshes will be eleminated, also normals will be averaged on edges");
+			this->testFixAnimationsCheckBox->UseVisualStyleBackColor = true;
 			this->checkBoxFixSeams->AutoSize = true;
 			this->checkBoxFixSeams->Location = System::Drawing::Point(131, 19);
 			this->checkBoxFixSeams->Name = L"checkBoxFixSeams";

@@ -52,19 +52,16 @@ bool M2Lib::M2::CM2Header::IsLongHeader() const
 
 M2Lib::M2::~M2()
 {
-	if (pInM2I)
-		delete pInM2I;
+	delete pInM2I;
 	for (auto& Chunk : Chunks)
 		delete Chunk.second;
 	Chunks.clear();
-	if (Skeleton)
-		delete Skeleton;
-	if (replaceM2)
-		delete replaceM2;
+	delete Skeleton;
+	delete ParentSkeleton;
+	delete replaceM2;
 
 	for (UInt32 i = 0; i < SKIN_COUNT; ++i)
-		if (Skins[i])
-			delete Skins[i];
+		delete Skins[i];
 }
 
 UInt32 M2Lib::M2::GetHeaderSize() const
@@ -283,6 +280,24 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 		}
 	}
 
+	Error = LoadSkeleton();
+	if (Error != EError::EError_OK)
+		return Error;
+
+	// print info
+	PrintInfo();
+	PrintReferencedFileInfo();
+
+	sLogger.Log("Finished loading M2");
+
+	//m_SaveElements_FindOffsets();
+
+	// done
+	return EError_OK;
+}
+
+M2Lib::EError M2Lib::M2::LoadSkeleton()
+{
 	std::wstring FileNameSkeleton;
 	if (GetFileSkeleton(FileNameSkeleton, _FileName))
 	{
@@ -291,6 +306,34 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 		{
 			sLogger.Log("Sekeleton file detected and loaded");
 			Skeleton = sk;
+
+			if (auto chunk = (SkeletonChunk::SKPDChunk*)Skeleton->GetChunk(SkeletonChunk::ESkeletonChunk::SKPD))
+			{
+				if (auto casc = GetCasc())
+				{
+					auto path = casc->GetFileByFileDataId(chunk->Data.ParentSkeletonFileId);
+					if (!path.empty())
+					{
+						auto ParentSkeletonFileName = std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(FileSystemA::GetBaseName(path));
+						ParentSkeletonFileName = FileSystemW::GetParentDirectory(_FileName) + L"\\" + ParentSkeletonFileName;
+						auto parentSkeleton = new M2Lib::Skeleton();
+						if (parentSkeleton->Load(ParentSkeletonFileName.c_str()))
+						{
+							sLogger.Log("Parent skeleton file [%u] %s loaded", chunk->Data.ParentSkeletonFileId, std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(ParentSkeletonFileName).c_str());
+							ParentSkeleton = parentSkeleton;
+						}
+						else
+						{
+							sLogger.Log("Error: Failed to load parent skeleton file [%u] %s", chunk->Data.ParentSkeletonFileId, ParentSkeletonFileName.c_str());
+							delete parentSkeleton;
+						}
+					}
+					else
+						sLogger.Log("Error: skeleotn has parent skeleton chunk, but parent file not loaded!");
+				}
+				else
+					sLogger.Log("Error: failed to load parent skeleton file [%u], CASC not initialized!", chunk->Data.ParentSkeletonFileId);
+			}
 		}
 		else
 		{
@@ -300,13 +343,6 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 		}
 	}
 
-	// print info
-	PrintInfo();
-	PrintReferencedFileInfo();
-
-	sLogger.Log("Finished loading M2");
-
-	// done
 	return EError_OK;
 }
 
@@ -529,7 +565,7 @@ void M2Lib::M2::PrepareChunks()
 		if (SkinDiff > 0)
 		{
 			sLogger.Log("There was %u more skins in original M2, removing extra from skin chunk", SkinDiff);
-			for (UInt32 i = 0; i < SkinDiff; ++i)
+			for (UInt32 i = 0; i < (UInt32)SkinDiff; ++i)
 				skinChunk->SkinsFileDataIds.erase(skinChunk->SkinsFileDataIds.begin() + Header.Elements.nSkin);
 		}
 		else if (SkinDiff < 0)
@@ -2207,9 +2243,10 @@ void M2Lib::M2::m_LoadElements_FindSizes(UInt32 ChunkSize)
 	}
 }
 
-
+#define IS_LOCAL_ELEMENT_OFFSET(offset) \
+	(!offset || Elements[iElement].Offset <= offset && offset < Elements[iElement].OffsetOriginal + Elements[iElement].Data.size())
 #define VERIFY_OFFSET_LOCAL( offset ) \
-	assert( !offset || Elements[iElement].Offset <= offset && offset < Elements[iElement].OffsetOriginal + Elements[iElement].Data.size() );
+	assert(IS_LOCAL_ELEMENT_OFFSET(offset));
 #define VERIFY_OFFSET_NOTLOCAL( offset ) \
 	assert( !offset || offset >= Elements[iElement].OffsetOriginal + Elements[iElement].Data.size() );
 
@@ -2219,8 +2256,22 @@ M2Lib::DataElement* M2Lib::M2::GetAnimations()
 
 	if (auto animationChunk = Skeleton ? (SKS1Chunk*)Skeleton->GetChunk(ESkeletonChunk::SKS1) : NULL)
 		return &animationChunk->Elements[SKS1Chunk::EElement_Animation];
-	else
-		return &Elements[EElement_Animation];
+	if (auto animationChunk = ParentSkeleton ? (SKS1Chunk*)ParentSkeleton->GetChunk(ESkeletonChunk::SKS1) : NULL)
+		return &animationChunk->Elements[SKS1Chunk::EElement_Animation];
+		
+	return &Elements[EElement_Animation];
+}
+
+M2Lib::DataElement* M2Lib::M2::GetAnimationsLookup()
+{
+	using namespace SkeletonChunk;
+
+	if (auto animationChunk = Skeleton ? (SKS1Chunk*)Skeleton->GetChunk(ESkeletonChunk::SKS1) : NULL)
+		return &animationChunk->Elements[SKS1Chunk::EElement_AnimationLookup];
+	if (auto animationChunk = ParentSkeleton ? (SKS1Chunk*)ParentSkeleton->GetChunk(ESkeletonChunk::SKS1) : NULL)
+		return &animationChunk->Elements[SKS1Chunk::EElement_AnimationLookup];
+
+	return &Elements[EElement_Animation];
 }
 
 M2Lib::DataElement* M2Lib::M2::GetBones()
@@ -2229,8 +2280,10 @@ M2Lib::DataElement* M2Lib::M2::GetBones()
 
 	if (auto boneChunk = Skeleton ? (SKB1Chunk*)Skeleton->GetChunk(ESkeletonChunk::SKB1) : NULL)
 		return &boneChunk->Elements[SKB1Chunk::EElement_Bone];
-	else
-		return &Elements[EElement_Bone];
+	if (auto boneChunk = ParentSkeleton ? (SKB1Chunk*)ParentSkeleton->GetChunk(ESkeletonChunk::SKB1) : NULL)
+		return &boneChunk->Elements[SKB1Chunk::EElement_Bone];
+
+	return &Elements[EElement_Bone];
 }
 
 M2Lib::DataElement* M2Lib::M2::GetBoneLookups()
@@ -2239,8 +2292,10 @@ M2Lib::DataElement* M2Lib::M2::GetBoneLookups()
 
 	if (auto boneChunk = Skeleton ? (SKB1Chunk*)Skeleton->GetChunk(ESkeletonChunk::SKB1) : NULL)
 		return &boneChunk->Elements[SKB1Chunk::EElement_KeyBoneLookup];
-	else
-		return &Elements[EElement_KeyBoneLookup];
+	if (auto boneChunk = ParentSkeleton ? (SKB1Chunk*)ParentSkeleton->GetChunk(ESkeletonChunk::SKB1) : NULL)
+		return &boneChunk->Elements[SKB1Chunk::EElement_KeyBoneLookup];
+		
+	return &Elements[EElement_KeyBoneLookup];
 }
 
 M2Lib::DataElement* M2Lib::M2::GetAttachments()
@@ -2249,8 +2304,23 @@ M2Lib::DataElement* M2Lib::M2::GetAttachments()
 
 	if (auto attachmentChunk = Skeleton ? (SKA1Chunk*)Skeleton->GetChunk(ESkeletonChunk::SKA1) : NULL)
 		return &attachmentChunk->Elements[SKA1Chunk::EElement_Attachment];
-	else
-		return &Elements[EElement_Attachment];
+	if (auto attachmentChunk = ParentSkeleton ? (SKA1Chunk*)ParentSkeleton->GetChunk(ESkeletonChunk::SKA1) : NULL)
+		return &attachmentChunk->Elements[SKA1Chunk::EElement_Attachment];
+		
+	return &Elements[EElement_Attachment];
+}
+
+M2Lib::SkeletonChunk::AFIDChunk* M2Lib::M2::GetSkeletonAFIDChunk()
+{
+	using namespace SkeletonChunk;
+
+	if (auto chunk = Skeleton ? Skeleton->GetChunk(ESkeletonChunk::AFID) : NULL)
+		return (SkeletonChunk::AFIDChunk*)chunk;
+	if (auto chunk = ParentSkeleton ? ParentSkeleton->GetChunk(ESkeletonChunk::AFID) : NULL)
+		return (SkeletonChunk::AFIDChunk*)chunk;
+	
+
+	return NULL;
 }
 
 void M2Lib::M2::m_SaveElements_FindOffsets()
@@ -2477,11 +2547,11 @@ void M2Lib::M2::m_SaveElements_FindOffsets()
 					m_FixAnimationOffsets(OffsetDelta, totalDiff, ParticleEmitters[j].AnimationBlock_GravityStrong, iElement);
 					m_FixAnimationOffsets(OffsetDelta, totalDiff, ParticleEmitters[j].AnimationBlock_Visibility, iElement);
 
-					m_FixFakeAnimationBlockOffsets(OffsetDelta, ParticleEmitters[j].ColorTrack, iElement);
-					m_FixFakeAnimationBlockOffsets(OffsetDelta, ParticleEmitters[j].AlphaTrack, iElement);
-					m_FixFakeAnimationBlockOffsets(OffsetDelta, ParticleEmitters[j].ScaleTrack, iElement);
-					m_FixFakeAnimationBlockOffsets(OffsetDelta, ParticleEmitters[j].HeadCellTrack, iElement);
-					m_FixFakeAnimationBlockOffsets(OffsetDelta, ParticleEmitters[j].TailCellTrack, iElement);
+					m_FixFakeAnimationBlockOffsets_Old(OffsetDelta, totalDiff, ParticleEmitters[j].ColorTrack, iElement);
+					m_FixFakeAnimationBlockOffsets_Old(OffsetDelta, totalDiff, ParticleEmitters[j].AlphaTrack, iElement);
+					m_FixFakeAnimationBlockOffsets_Old(OffsetDelta, totalDiff, ParticleEmitters[j].ScaleTrack, iElement);
+					m_FixFakeAnimationBlockOffsets_Old(OffsetDelta, totalDiff, ParticleEmitters[j].HeadCellTrack, iElement);
+					m_FixFakeAnimationBlockOffsets_Old(OffsetDelta, totalDiff, ParticleEmitters[j].TailCellTrack, iElement);
 				}
 				break;
 			}
@@ -2489,6 +2559,8 @@ void M2Lib::M2::m_SaveElements_FindOffsets()
 
 		// set the element's new offset
 		Elements[iElement].Offset = CurrentOffset;
+		if (Elements[iElement].SizeOriginal != Elements[iElement].Data.size())
+			sLogger.Log("Element #%u size changed", iElement);
 		Elements[iElement].SizeOriginal = Elements[iElement].Data.size();
 		Elements[iElement].OffsetOriginal = CurrentOffset;
 		CurrentOffset += Elements[iElement].Data.size();
@@ -2499,7 +2571,7 @@ void M2Lib::M2::m_SaveElements_FindOffsets()
 		m_OriginalModelChunkSize += Elements[iElement].Data.size();
 }
 
-void M2Lib::M2::m_FixAnimationM2Array(SInt32 OffsetDelta, SInt32 TotalDelta, SInt16 GlobalSequenceID, M2Array& Array, SInt32 iElement)
+void M2Lib::M2::m_FixAnimationM2Array_Old(SInt32 OffsetDelta, SInt32 TotalDelta, SInt16 GlobalSequenceID, M2Array& Array, SInt32 iElement)
 {
 #define IS_LOCAL_ANIMATION(Offset) \
 	(Offset >= Elements[iElement].OffsetOriginal && (Offset < Elements[iElement].OffsetOriginal + Elements[iElement].Data.size()))
@@ -2544,13 +2616,85 @@ void M2Lib::M2::m_FixAnimationM2Array(SInt32 OffsetDelta, SInt32 TotalDelta, SIn
 	}
 }
 
+void M2Lib::M2::m_FixAnimationM2Array(SInt32 OffsetDelta, SInt32 TotalDelta, SInt16 GlobalSequenceID, M2Array& Array, SInt32 iElement)
+{
+	if (!Array.Count)
+		return;
+
+	auto SubArrays = (M2Array*)Elements[iElement].GetLocalPointer(Array.Offset);
+	auto& Element = Elements[iElement];
+
+	for (UInt32 i = 0; i < Array.Count; ++i)
+	{
+		if (!SubArrays[i].Offset)
+			continue;
+
+		assert("i < animation.count" && i < GetAnimations()->Count);
+		auto animation = GetAnimations()->at<CElement_Animation>(i);
+
+		/*auto lte = SubArrays[i].Offset < Element.Offset ? 1 : 0;
+		auto ext = SubArrays[i].Offset > (UInt32)Element.Data.size() + Element.Offset ? 1 : 0;
+		auto flags = (animation->Flags & 0x20) != 0 ? 1 : 0;
+		if ((lte == 0 && ext == 1 && flags == 0 || i == 68) && iElement == EElement_Transparency)
+		{
+			int a = 1;
+		}
+		sLogger.Log("lte:%u ext:%u seq:%i flags:%X flags&20:%u",
+			lte,
+			ext,
+			GlobalSequenceID,
+			animation->Flags,
+			flags);*/
+
+		if (animation->Flags & 0x20)
+		{
+			assert("Not external offset" && SubArrays[i].Offset > Elements[iElement].Offset + Elements[iElement].SizeOriginal);
+			SubArrays[i].Shift(TotalDelta);
+		}
+	}
+
+	Array.Shift(OffsetDelta);
+}
+
+void M2Lib::M2::m_FixAnimationOffsets_Old(SInt32 OffsetDelta, SInt32 TotalDelta, CElement_AnimationBlock& AnimationBlock, SInt32 iElement)
+{
+	m_FixAnimationM2Array_Old(OffsetDelta, TotalDelta, AnimationBlock.GlobalSequenceID, AnimationBlock.Times, iElement);
+	m_FixAnimationM2Array_Old(OffsetDelta, TotalDelta, AnimationBlock.GlobalSequenceID, AnimationBlock.Keys, iElement);
+}
+
 void M2Lib::M2::m_FixAnimationOffsets(SInt32 OffsetDelta, SInt32 TotalDelta, CElement_AnimationBlock& AnimationBlock, SInt32 iElement)
 {
+	if (Settings && Settings->ImportSettings.FixAnimationsTest)
+	{
+		if (AnimationBlock.Times.Count != AnimationBlock.Keys.Count)
+			return;
+	}
+
+	//auto animationElement = GetAnimations();
+	//assert("count(anims) != M2Array.Count" && AnimationBlock.Times.Count == animationElement->Count);
+	//sLogger.Log("seq:%i count:%u anims:%u eq:%u", AnimationBlock.GlobalSequenceID, AnimationBlock.Times.Count,animationElement->Count, AnimationBlock.Times.Count == animationElement->Count ? 1 :0);
+
 	m_FixAnimationM2Array(OffsetDelta, TotalDelta, AnimationBlock.GlobalSequenceID, AnimationBlock.Times, iElement);
 	m_FixAnimationM2Array(OffsetDelta, TotalDelta, AnimationBlock.GlobalSequenceID, AnimationBlock.Keys, iElement);
 }
 
-void M2Lib::M2::m_FixFakeAnimationBlockOffsets(SInt32 OffsetDelta, CElement_FakeAnimationBlock& AnimationBlock, SInt32 iElement)
+void M2Lib::M2::m_FixFakeAnimationBlockOffsets(SInt32 OffsetDelta, SInt32 TotalDelta, CElement_FakeAnimationBlock& AnimationBlock, SInt32 iElement)
+{
+	if (Settings && Settings->ImportSettings.FixAnimationsTest)
+	{
+		if (AnimationBlock.Times.Count != AnimationBlock.Keys.Count)
+			return;
+	}
+
+	//auto animationElement = GetAnimations();
+	//assert("count(anims) != M2Array.Count" && AnimationBlock.Times.Count == animationElement->Count);
+	//sLogger.Log("seq:%i count:%u anims:%u eq:%u", AnimationBlock.GlobalSequenceID, AnimationBlock.Times.Count,animationElement->Count, AnimationBlock.Times.Count == animationElement->Count ? 1 :0);
+
+	m_FixAnimationM2Array(OffsetDelta, TotalDelta, -1, AnimationBlock.Times, iElement);
+	m_FixAnimationM2Array(OffsetDelta, TotalDelta, -1, AnimationBlock.Keys, iElement);
+}
+
+void M2Lib::M2::m_FixFakeAnimationBlockOffsets_Old(SInt32 OffsetDelta, SInt32 TotalDelta, CElement_FakeAnimationBlock& AnimationBlock, SInt32 iElement)
 {
 	// TP is the best
 	if (AnimationBlock.Times.Count)

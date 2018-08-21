@@ -20,6 +20,11 @@ namespace M2Lib
 	class GlobalSettings;
 	class Skeleton;
 
+	namespace SkeletonChunk
+	{
+		class AFIDChunk;
+	}
+
 	// load, export, import merge, save: M2 file.
 	class M2
 	{
@@ -151,7 +156,8 @@ namespace M2Lib
 
 		std::map<M2Chunk::EM2Chunk, ChunkBase*> Chunks;
 
-		Skeleton* Skeleton;
+		M2Lib::Skeleton* Skeleton;
+		M2Lib::Skeleton* ParentSkeleton;
 		bool hasLodSkins;
 
 		UInt32 m_OriginalModelChunkSize;
@@ -175,6 +181,7 @@ namespace M2Lib
 		{
 			memset(Skins, 0, sizeof(Skins));
 			Skeleton = NULL;
+			ParentSkeleton = NULL;
 			m_OriginalModelChunkSize = 0;
 			pInM2I = NULL;
 			replaceM2 = NULL;
@@ -216,9 +223,12 @@ namespace M2Lib
 		void SetCasc(Casc* casc) { this->casc = casc; }
 
 		DataElement* GetAnimations();
+		DataElement* GetAnimationsLookup();
 		DataElement* GetBones();
 		DataElement* GetBoneLookups();
 		DataElement* GetAttachments();
+
+		SkeletonChunk::AFIDChunk* GetSkeletonAFIDChunk();
 
 	private:
 		// utilities and tests
@@ -248,6 +258,8 @@ namespace M2Lib
 		bool GetFileSkin(std::wstring& SkinFileNameResultBuffer, std::wstring const& M2FileName, UInt32 SkinIndex);
 		bool GetFileSkeleton(std::wstring& SkeletonFileNameResultBuffer, std::wstring const& M2FileName);
 
+		EError LoadSkeleton();
+
 		ChunkBase* GetChunk(M2Chunk::EM2Chunk ChunkId);
 		void RemoveChunk(M2Chunk::EM2Chunk ChunkId);
 		void PrepareChunks();
@@ -258,9 +270,14 @@ namespace M2Lib
 
 		// pre save header
 		void m_SaveElements_FindOffsets();
+
 		void m_FixAnimationOffsets(SInt32 OffsetDelta, SInt32 TotalDelta, M2Element::CElement_AnimationBlock& AnimationBlock, SInt32 iElement);
 		void m_FixAnimationM2Array(SInt32 OffsetDelta, SInt32 TotalDelta, SInt16 GlobalSequenceID, M2Array& Array, SInt32 iElement);
-		void m_FixFakeAnimationBlockOffsets(SInt32 OffsetDelta, M2Element::CElement_FakeAnimationBlock& AnimationBlock, SInt32 iElement);
+		void m_FixFakeAnimationBlockOffsets(SInt32 OffsetDelta, SInt32 TotalDelta, M2Element::CElement_FakeAnimationBlock& AnimationBlock, SInt32 iElement);
+
+		void m_FixAnimationOffsets_Old(SInt32 OffsetDelta, SInt32 TotalDelta, M2Element::CElement_AnimationBlock& AnimationBlock, SInt32 iElement);
+		void m_FixAnimationM2Array_Old(SInt32 OffsetDelta, SInt32 TotalDelta, SInt16 GlobalSequenceID, M2Array& Array, SInt32 iElement);
+		void m_FixFakeAnimationBlockOffsets_Old(SInt32 OffsetDelta, SInt32 TotalDelta, M2Element::CElement_FakeAnimationBlock& AnimationBlock, SInt32 iElement);
 
 		void m_SaveElements_CopyElementsToHeader();
 	};

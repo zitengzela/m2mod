@@ -12,6 +12,8 @@ namespace M2Lib
 		bool MergeAttachments = true;
 		bool MergeCameras = true;
 		bool FixSeams = false;
+
+		bool FixAnimationsTest = false;
 	};
 
 	class ExportSettings

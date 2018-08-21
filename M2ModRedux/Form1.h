@@ -177,6 +177,8 @@ namespace M2ModRedux
 					settings->ImportSettings.MergeCameras = Boolean::Parse(value->ToString());
 				if (auto value = RegistyStore::GetValue(RegistyStore::Value::FixSeams))
 					settings->ImportSettings.FixSeams = Boolean::Parse(value->ToString());
+				if (auto value = RegistyStore::GetValue(RegistyStore::Value::FixAnimationsTest))
+					settings->ImportSettings.FixAnimationsTest = Boolean::Parse(value->ToString());
 			}
 			catch (...)
 			{
@@ -200,6 +202,7 @@ namespace M2ModRedux
 		RegistyStore::SetValue(RegistyStore::Value::MergeBones, settings->ImportSettings.MergeBones);
 		RegistyStore::SetValue(RegistyStore::Value::MergeCameras, settings->ImportSettings.MergeCameras);
 		RegistyStore::SetValue(RegistyStore::Value::FixSeams, settings->ImportSettings.FixSeams);
+		RegistyStore::SetValue(RegistyStore::Value::FixAnimationsTest, settings->ImportSettings.FixAnimationsTest);
 	}
 
 	protected:

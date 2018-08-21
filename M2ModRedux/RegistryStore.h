@@ -25,6 +25,8 @@ namespace M2ModRedux
 			FixSeams,
 			ForceExportExpansion,
 
+			FixAnimationsTest,
+
 			WowPath,
 
 			NotShowAutoUpdate,
