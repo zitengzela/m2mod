@@ -31,11 +31,15 @@ namespace M2Lib
 			UInt16 GlobalVertexIndex;		// index into M2's global vertex list.
 		};
 
+		ASSERT_SIZE(CElement_Vertex, 2);
+
 		class CElement_TriangleIndex
 		{
 		public:
 			UInt32 VertexTriangleIndex;				// index into SKIN's vertex list.
 		};
+
+		ASSERT_SIZE(CElement_TriangleIndex, 4);
 
 		class CElement_BoneIndices
 		{
@@ -43,9 +47,11 @@ namespace M2Lib
 			union
 			{
 				UInt32 BoneIndicesPacked;
-				UInt8 BoneIndices[4];
+				UInt8 BoneIndices[BONES_PER_VERTEX];
 			};
 		};
+
+		ASSERT_SIZE(CElement_BoneIndices, 4);
 
 		// each subset has at least one of these, defines a texture, shader, render flags, etc. basically a render state and texture stage/unit state to use when drawing the subset. multiple instances of these can be defined per subset, enabling multi-texturing.
 		class CElement_Material
@@ -67,6 +73,8 @@ namespace M2Lib
 			SInt16 iTransparency;			// index into the transparency lookup list.
 			SInt16 iTextureAnimation;		// index into the texture lookup animation list.
 		};
+
+		ASSERT_SIZE(CElement_Material, 24);
 
 		// actually, more like a subset partition, as multiple entries of these with same ID may exist.
 		class CElement_SubMesh
@@ -107,11 +115,13 @@ namespace M2Lib
 			UInt16 BoneCount;				// number of bones to upload to GPU shader constant registers.
 			UInt16 BoneStart;				// first bone in bone lookup list to begin upload to GPU shader constant registers.
 			UInt16 MaxBonesPerVertex;		// always set from 0 to 4. maximum number of bones referenced by any one vertex in this sub mesh.
-			UInt16 SortIndex;				// appers to be some sort of draw order sort index or z-depth bias value.
-			Float32 CenterMass[3];			// average position of all vertices in this subset. found by summing positions of all vertices and then dividing by the number of vertices.
-			Float32 CenterBounds[3];		// bounding box center. if we make a minimum axis aligned bounding box around the set of vertices in this subset and get the center of that box, this is the result.
-			Float32 Radius;					// this is the distance of the vertex farthest from CenterBoundingBox.
+			UInt16 CenterBoneIndex;			// appers to be some sort of draw order sort index or z-depth bias value.
+			C3Vector CenterMass;			// average position of all vertices in this subset. found by summing positions of all vertices and then dividing by the number of vertices.
+			C3Vector SortCenter;			// bounding box center. if we make a minimum axis aligned bounding box around the set of vertices in this subset and get the center of that box, this is the result.
+			Float32 SortRadius;				// this is the distance of the vertex farthest from CenterBoundingBox.
 		};
+
+		ASSERT_SIZE(CElement_SubMesh, 48);
 
 		class CElement_Flags
 		{
@@ -123,6 +133,8 @@ namespace M2Lib
 			SInt16 ColorId;			// always set to 0 for first flags entry in file, always set to 65535/0xFFFF/-1 for subsequent entries after first.
 			UInt16 TransparencyId;	// always set to 0.
 		};
+
+		ASSERT_SIZE(CElement_Flags, 12);
 	}
 #pragma pack(pop)
 }

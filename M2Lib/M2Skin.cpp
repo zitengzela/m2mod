@@ -172,15 +172,9 @@ void M2Lib::M2Skin::BuildBoundingData()
 			BoundaryData boundary;
 			boundary.Calculate(vertices);
 
-			SubMesh.CenterMass[0] = boundary.CenterMass.X;
-			SubMesh.CenterMass[1] = boundary.CenterMass.Y;
-			SubMesh.CenterMass[2] = boundary.CenterMass.Z;
-
-			SubMesh.CenterBounds[0] = boundary.BoundingCenter.X;
-			SubMesh.CenterBounds[1] = boundary.BoundingCenter.Y;
-			SubMesh.CenterBounds[2] = boundary.BoundingCenter.Z;
-
-			SubMesh.Radius = boundary.BoundingRadius;
+			SubMesh.CenterMass = boundary.CenterMass;
+			SubMesh.SortCenter = boundary.SortCenter;
+			SubMesh.SortRadius = boundary.SortRadius;
 		}
 	}
 }
@@ -251,7 +245,7 @@ void M2Lib::M2Skin::CopyMaterials(M2Skin* pOther)
 		CElement_SubMesh* SubMeshOther = pOther->GetSubMesh(*comparisonDataItr->second, SubMeshOtherIndex);
 		assert(SubMeshOther);
 
-		SubMesh.SortIndex = SubMeshOther->SortIndex;
+		SubMesh.CenterBoneIndex = SubMeshOther->CenterBoneIndex;
 		// copy level from original mesh
 		//SubMesh.Level = SubMeshOther->Level;
 
@@ -357,27 +351,16 @@ M2Lib::M2SkinElement::CElement_SubMesh* M2Lib::M2Skin::GetSubMesh(SubmeshExtraDa
 	SubMeshIndexOut = -1;
 
 	UInt16 ID = TargetSubMeshData.ID;
-	C3Vector const& CenterBounds = TargetSubMeshData.Boundary.BoundingCenter;
+	C3Vector const& SortCenter = TargetSubMeshData.Boundary.SortCenter;
 	C3Vector const& CenterMass = TargetSubMeshData.Boundary.CenterMass;
 
 	for (UInt32 i = 0; i != SubMeshListLength; i++)
 	{
 		if (SubMeshList[i].ID == ID)
 		{
-			Float32 X = 0.0f;
-			Float32 Y = 0.0f;
-			Float32 Z = 0.0f;
-			Float32 Delta = 0.0f;
-
-			X = SubMeshList[i].CenterBounds[0] - CenterBounds.X;
-			Y = SubMeshList[i].CenterBounds[1] - CenterBounds.Y;
-			Z = SubMeshList[i].CenterBounds[2] - CenterBounds.Z;
-			Delta = (X * X) + (Y * Y) + (Z * Z);
-
-			X = SubMeshList[i].CenterMass[0] - CenterMass.X;
-			Y = SubMeshList[i].CenterMass[1] - CenterMass.Y;
-			Z = SubMeshList[i].CenterMass[2] - CenterMass.Z;
-			Delta += (X * X) + (Y * Y) + (Z * Z);
+			C3Vector SortDelta = SubMeshList[i].SortCenter - SortCenter;
+			C3Vector BoundingDelta = SubMeshList[i].CenterMass - CenterMass;
+			Float32 Delta = SortDelta.Length() + BoundingDelta.Length();
 
 			if (ClosestMatch == -1 || Delta < DeltaMin)
 			{
@@ -463,7 +446,7 @@ bool M2Lib::M2Skin::PrintInfo()
 	FileStream << "oMaterial:     " << Header.oMaterial << std::endl;
 	FileStream << std::endl;
 
-	FileStream << "Unknown1:      " << Header.Unknown1 << std::endl;
+	FileStream << "BoneCountMax:  " << Header.BoneCountMax << std::endl;
 	FileStream << std::endl;
 
 	FileStream << "nFlags:        " << Header.nFlags << std::endl;
@@ -492,10 +475,10 @@ bool M2Lib::M2Skin::PrintInfo()
 		FileStream << "BoneCount:    " << Subset.BoneCount << std::endl;
 		FileStream << "BoneStart:    " << Subset.BoneStart << std::endl;
 		FileStream << "MaxBonesPerVertex:     " << Subset.MaxBonesPerVertex << std::endl;
-		FileStream << "SortTriangleIndex:     " << Subset.SortIndex << std::endl;
-		FileStream << "CenterMass:   " << "( " << Subset.CenterMass[0] << ", " << Subset.CenterMass[1] << ", " << Subset.CenterMass[2] << " ) " << std::endl;
-		FileStream << "CenterBounds: " << "( " << Subset.CenterBounds[0] << ", " << Subset.CenterBounds[1] << ", " << Subset.CenterBounds[2] << " ) " << std::endl;
-		FileStream << "Radius:       " << Subset.Radius << std::endl;
+		FileStream << "SortTriangleIndex:     " << Subset.CenterBoneIndex << std::endl;
+		FileStream << "CenterMass:   " << "( " << Subset.CenterMass.X << ", " << Subset.CenterMass.Y << ", " << Subset.CenterMass.Z << " ) " << std::endl;
+		FileStream << "SortCenter:   " << "( " << Subset.SortCenter.X << ", " << Subset.SortCenter.Y << ", " << Subset.SortCenter.Z << " ) " << std::endl;
+		FileStream << "SortRadius:   " << Subset.SortRadius << std::endl;
 		FileStream << std::endl;
 	}
 
@@ -637,7 +620,7 @@ void M2Lib::M2Skin::m_SaveElements_CopyElementsToHeader()
 	Header.nMaterial = Elements[EElement_Material].Count;
 	Header.oMaterial = Elements[EElement_Material].Offset;
 
-	Header.Unknown1 = 0;
+	Header.BoneCountMax = 0;
 
 	if (pM2->GetExpansion() >= Expansion::Cataclysm)
 	{
@@ -670,7 +653,7 @@ void M2Lib::M2Skin::MakeGlossy(UInt32 GlossTextureId, std::vector<UInt32> const&
 			auto textureId = TextureLookup[Material.iTexture].TextureIndex;
 			auto& texture = pM2->Elements[M2Element::EElement_Texture].as<M2Element::CElement_Texture>()[textureId];
 			if (texture.Type == M2Element::CElement_Texture::ETextureType::Skin)
-				pM2->Header.Description.Flags &= ~0x80;	// fixes gloss but breaks dh tattoos
+				pM2->Header.Description.Flags.flag_unk_0x80 = 0;	// fixes gloss but breaks dh tattoos
 
 			int newLookup;
 

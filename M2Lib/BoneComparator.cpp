@@ -53,9 +53,9 @@ std::map<unsigned int, std::set<unsigned int>> M2Lib::BoneComparator::Diff()
 				{
 					CVertex& NewVertex = NewVertices[NewIndices[l]];
 
-					if (floatEq(NewVertex.Position[0], OldVertex.Position[0]) &&
-						floatEq(NewVertex.Position[1], OldVertex.Position[1]) &&
-						floatEq(NewVertex.Position[2], OldVertex.Position[2]))
+					if (floatEq(NewVertex.Position.X, OldVertex.Position.X) &&
+						floatEq(NewVertex.Position.Y, OldVertex.Position.Y) &&
+						floatEq(NewVertex.Position.Z, OldVertex.Position.Z))
 					{
 						for (int i = 0; i < 4; ++i)
 						{

@@ -6,10 +6,6 @@
 #include <vector>
 #include <map>
 
-#define VERTEX_PER_TRIANGLE 3
-#define BONES_PER_VERTEX 4
-#define BONES_PER_TRIANGLE (VERTEX_PER_TRIANGLE * BONES_PER_VERTEX)
-
 namespace M2Lib
 {
 	class M2;
@@ -49,7 +45,7 @@ namespace M2Lib
 			UInt32 nMaterial;
 			UInt32 oMaterial;
 
-			UInt32 Unknown1;	// non-zero only in ChickenMount01.skin
+			UInt32 BoneCountMax;	// non-zero only in ChickenMount01.skin
 
 			UInt32 nFlags;
 			UInt32 oFlags;

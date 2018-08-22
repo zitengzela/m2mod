@@ -47,7 +47,7 @@ M2Lib::Expansion M2Lib::M2::GetExpansion() const
 
 bool M2Lib::M2::CM2Header::IsLongHeader() const
 {
-	return (Description.Flags & 0x08) != 0;
+	return Description.Flags.flag_use_texture_combiner_combos;
 }
 
 M2Lib::M2::~M2()
@@ -178,8 +178,8 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 	if (!Header.IsLongHeader() || GetExpansion() < Expansion::Cataclysm)
 	{
 		sLogger.Log("Short header detected");
-		Header.Elements.nUnknown1 = 0;
-		Header.Elements.oUnknown1 = 0;
+		Header.Elements.nTextureCombinerCombo = 0;
+		Header.Elements.oTextureCombinerCombo = 0;
 	}
 
 	if (Header.Description.Version < 263 || Header.Description.Version > 274)
@@ -744,28 +744,24 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate(Char16 const* FileName)
 		UInt32 VertexEnd = pSubsetOut->VertexStart + pSubsetOut->VertexCount;
 		for (UInt32 k = pSubsetOut->VertexStart; k < VertexEnd; ++k)
 		{
-			CVertex& Vertex = Vertices[Indices[k]];
+			CVertex const& Vertex = Vertices[Indices[k]];
 
-			DataBinary.WriteFloat32(Vertex.Position[0]);
-			DataBinary.WriteFloat32(Vertex.Position[1]);
-			DataBinary.WriteFloat32(Vertex.Position[2]);
+			DataBinary.WriteFloat32(Vertex.Position.X);
+			DataBinary.WriteFloat32(Vertex.Position.Y);
+			DataBinary.WriteFloat32(Vertex.Position.Z);
 
-			DataBinary.WriteUInt8(Vertex.BoneWeights[0]);
-			DataBinary.WriteUInt8(Vertex.BoneWeights[1]);
-			DataBinary.WriteUInt8(Vertex.BoneWeights[2]);
-			DataBinary.WriteUInt8(Vertex.BoneWeights[3]);
+			for (UInt32 j = 0; j < BONES_PER_VERTEX; ++j)
+				DataBinary.WriteUInt8(Vertex.BoneWeights[j]);
 
-			DataBinary.WriteUInt8(Vertex.BoneIndices[0]);
-			DataBinary.WriteUInt8(Vertex.BoneIndices[1]);
-			DataBinary.WriteUInt8(Vertex.BoneIndices[2]);
-			DataBinary.WriteUInt8(Vertex.BoneIndices[3]);
+			for (UInt32 j = 0; j < BONES_PER_VERTEX; ++j)
+				DataBinary.WriteUInt8(Vertex.BoneIndices[j]);
 
-			DataBinary.WriteFloat32(Vertex.Normal[0]);
-			DataBinary.WriteFloat32(Vertex.Normal[1]);
-			DataBinary.WriteFloat32(Vertex.Normal[2]);
+			DataBinary.WriteFloat32(Vertex.Normal.X);
+			DataBinary.WriteFloat32(Vertex.Normal.Y);
+			DataBinary.WriteFloat32(Vertex.Normal.Z);
 
-			DataBinary.WriteFloat32(Vertex.Texture[0]);
-			DataBinary.WriteFloat32(Vertex.Texture[1]);
+			DataBinary.WriteFloat32(Vertex.Texture.X);
+			DataBinary.WriteFloat32(Vertex.Texture.Y);
 		}
 
 		// write triangles
@@ -915,8 +911,9 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16 const* FileName)
 	Elements[EElement_Vertex].SetDataSize(NewVertexList.size(), NewVertexList.size() * sizeof(CVertex), false);
 	memcpy(Elements[EElement_Vertex].Data.data(), &NewVertexList[0], NewVertexList.size() * sizeof(CVertex));
 
-	BoundaryData GlobalBoundary;
-	GlobalBoundary.Calculate(NewVertexList);
+	// Disable for now
+	//BoundaryData GlobalBoundary;
+	//GlobalBoundary.Calculate(NewVertexList);
 	//SetGlobalBoundingData(GlobalBoundary);
 
 	// fix seams
@@ -1065,27 +1062,17 @@ void M2Lib::M2::SetGlobalBoundingData(BoundaryData& Data)
 	Elements[EElement_BoundingVertex].SetDataSize(BOUNDING_VERTEX_COUNT, sizeof(CElement_BoundingVertices) * BOUNDING_VERTEX_COUNT, false);
 	auto boundingVertices = Elements[EElement_BoundingVertex].as<CElement_BoundingVertices>();
 	for (UInt32 i = 0; i < BOUNDING_VERTEX_COUNT; ++i)
-	{
-		boundingVertices[i].Position[0] = ExtraData.BoundingVertices[i].X;
-		boundingVertices[i].Position[1] = ExtraData.BoundingVertices[i].Y;
-		boundingVertices[i].Position[2] = ExtraData.BoundingVertices[i].Z;
-	}
+		boundingVertices[i].Position = ExtraData.BoundingVertices[i];
 
 	Elements[EElement_BoundingNormal].SetDataSize(BOUNDING_TRIANGLE_COUNT, sizeof(CElement_BoundingNormals) * BOUNDING_TRIANGLE_COUNT, false);
 	auto boundingNormals = Elements[EElement_BoundingNormal].as<CElement_BoundingNormals>();
 	for (UInt32 i = 0; i < BOUNDING_TRIANGLE_COUNT; ++i)
-	{
-		boundingNormals[i].Normal[0] = ExtraData.BoundingNormals[i].X;
-		boundingNormals[i].Normal[1] = ExtraData.BoundingNormals[i].Y;
-		boundingNormals[i].Normal[2] = ExtraData.BoundingNormals[i].Z;
-	}
+		boundingNormals[i].Normal = ExtraData.BoundingNormals[i];
 
 	Elements[EElement_BoundingTriangle].SetDataSize(BOUNDING_TRIANGLE_COUNT * 3, sizeof(CElement_BoundingTriangle) * BOUNDING_TRIANGLE_COUNT * 3, false);
 	auto boundingTriangles = Elements[EElement_BoundingTriangle].as<CElement_BoundingTriangle>();
 	for (UInt32 i = 0; i < BOUNDING_TRIANGLE_COUNT * 3; ++i)
-	{
 		boundingTriangles[i].Index = BoundaryData::ExtraData::BoundingTriangleVertexMap[i];
-	}
 }
 
 void M2Lib::M2::PrintInfo()
@@ -1110,7 +1097,7 @@ void M2Lib::M2::PrintInfo()
 	FileStream << " Value                    " << Elements[EElement_Name].as<Char8>() << std::endl;
 	FileStream << std::endl;
 
-	FileStream << "Flags                     " << Header.Description.Flags << std::endl;
+	FileStream << "Flags                     " << Header.Description.Flags.Raw << std::endl;
 	FileStream << std::endl;
 
 	FileStream << "nGlobalSequences          " << Header.Elements.nGlobalSequence << std::endl;
@@ -1263,19 +1250,19 @@ void M2Lib::M2::PrintInfo()
 	FileStream << std::endl;
 
 	FileStream << "Volumes " << std::endl;
-	FileStream << Header.Elements.CollisionVolume.Min[0] << std::endl;
-	FileStream << Header.Elements.CollisionVolume.Min[1] << std::endl;
-	FileStream << Header.Elements.CollisionVolume.Min[2] << std::endl;
-	FileStream << Header.Elements.CollisionVolume.Max[0] << std::endl;
-	FileStream << Header.Elements.CollisionVolume.Max[1] << std::endl;
-	FileStream << Header.Elements.CollisionVolume.Max[2] << std::endl;
+	FileStream << Header.Elements.CollisionVolume.Min.X << std::endl;
+	FileStream << Header.Elements.CollisionVolume.Min.Y << std::endl;
+	FileStream << Header.Elements.CollisionVolume.Min.Z << std::endl;
+	FileStream << Header.Elements.CollisionVolume.Max.X << std::endl;
+	FileStream << Header.Elements.CollisionVolume.Max.Y << std::endl;
+	FileStream << Header.Elements.CollisionVolume.Max.Z << std::endl;
 	FileStream << Header.Elements.CollisionVolume.Radius << std::endl;
-	FileStream << Header.Elements.BoundingVolume.Min[0] << std::endl;
-	FileStream << Header.Elements.BoundingVolume.Min[1] << std::endl;
-	FileStream << Header.Elements.BoundingVolume.Min[2] << std::endl;
-	FileStream << Header.Elements.BoundingVolume.Max[0] << std::endl;
-	FileStream << Header.Elements.BoundingVolume.Max[1] << std::endl;
-	FileStream << Header.Elements.BoundingVolume.Max[2] << std::endl;
+	FileStream << Header.Elements.BoundingVolume.Min.X << std::endl;
+	FileStream << Header.Elements.BoundingVolume.Min.Y << std::endl;
+	FileStream << Header.Elements.BoundingVolume.Min.Z << std::endl;
+	FileStream << Header.Elements.BoundingVolume.Max.X << std::endl;
+	FileStream << Header.Elements.BoundingVolume.Max.Y << std::endl;
+	FileStream << Header.Elements.BoundingVolume.Max.Z << std::endl;
 	FileStream << Header.Elements.BoundingVolume.Radius << std::endl;
 	FileStream << std::endl;
 
@@ -1334,9 +1321,9 @@ void M2Lib::M2::PrintInfo()
 	FileStream << " DataSize                 " << Elements[EElement_ParticleEmitter].Data.size() << std::endl;
 	FileStream << std::endl;
 
-	FileStream << "nUnknown1                 " << Header.Elements.nUnknown1 << std::endl;
-	FileStream << "oUnknown1                 " << Header.Elements.oUnknown1 << std::endl;
-	FileStream << " DataSize                 " << Elements[EElement_Unknown1].Data.size() << std::endl;
+	FileStream << "nTextureCombinerCombo     " << Header.Elements.nTextureCombinerCombo << std::endl;
+	FileStream << "oTextureCombinerCombo     " << Header.Elements.oTextureCombinerCombo << std::endl;
+	FileStream << " DataSize                 " << Elements[EElement_TextureCombinerCombo].Data.size() << std::endl;
 	FileStream << std::endl;
 
 	FileStream.close();
@@ -1635,74 +1622,42 @@ void M2Lib::M2::FixSeamsSubMesh(Float32 PositionalTolerance, Float32 AngularTole
 				if (SimilarVertices.size() > 1)
 				{
 					// sum positions and normals
-					Float32 NewPosition[3];
-					NewPosition[0] = 0.0f;
-					NewPosition[1] = 0.0f;
-					NewPosition[2] = 0.0f;
-
-					Float32 NewNormal[3];
-					NewNormal[0] = 0.0f;
-					NewNormal[1] = 0.0f;
-					NewNormal[2] = 0.0f;
+					C3Vector NewPosition, NewNormal;
 
 					for (UInt32 iSimilarVertex = 0; iSimilarVertex < SimilarVertices.size(); iSimilarVertex++)
 					{
 						CVertex* pSimilarVertex = SimilarVertices[iSimilarVertex];
 
-						NewPosition[0] += pSimilarVertex->Position[0];
-						NewPosition[1] += pSimilarVertex->Position[1];
-						NewPosition[2] += pSimilarVertex->Position[2];
-
-						NewNormal[0] += pSimilarVertex->Normal[0];
-						NewNormal[1] += pSimilarVertex->Normal[1];
-						NewNormal[2] += pSimilarVertex->Normal[2];
+						NewPosition = NewPosition + pSimilarVertex->Position;
+						NewNormal = NewNormal + pSimilarVertex->Normal;
 					}
 
 					// average position and normalize normal
 					Float32 invSimilarCount = 1.f / (Float32)SimilarVertices.size();
 
-					NewPosition[0] *= invSimilarCount;
-					NewPosition[1] *= invSimilarCount;
-					NewPosition[2] *= invSimilarCount;
+					NewPosition = NewPosition * invSimilarCount;
+					NewNormal = NewNormal * invSimilarCount;
 
-					NewNormal[0] *= invSimilarCount;
-					NewNormal[1] *= invSimilarCount;
-					NewNormal[2] *= invSimilarCount;
-
-					UInt8 NewBoneWeights[4];
-					NewBoneWeights[0] = SimilarVertices[0]->BoneWeights[0];
-					NewBoneWeights[1] = SimilarVertices[0]->BoneWeights[1];
-					NewBoneWeights[2] = SimilarVertices[0]->BoneWeights[2];
-					NewBoneWeights[3] = SimilarVertices[0]->BoneWeights[3];
-
-					UInt8 NewBoneIndices[4];
-					NewBoneIndices[0] = SimilarVertices[0]->BoneIndices[0];
-					NewBoneIndices[1] = SimilarVertices[0]->BoneIndices[1];
-					NewBoneIndices[2] = SimilarVertices[0]->BoneIndices[2];
-					NewBoneIndices[3] = SimilarVertices[0]->BoneIndices[3];
+					UInt8 NewBoneWeights[4], NewBoneIndices[4];
+					for (UInt32 i = 0; i < BONES_PER_VERTEX; ++i)
+					{
+						NewBoneWeights[i] = SimilarVertices[0]->BoneWeights[i];
+						NewBoneIndices[i] = SimilarVertices[0]->BoneIndices[i];
+					}
 
 					// assign new values back into similar vertices
 					for (UInt32 iSimilarVertex = 0; iSimilarVertex < SimilarVertices.size(); iSimilarVertex++)
 					{
 						CVertex* pSimilarVertex = SimilarVertices[iSimilarVertex];
 
-						pSimilarVertex->Position[0] = NewPosition[0];
-						pSimilarVertex->Position[1] = NewPosition[1];
-						pSimilarVertex->Position[2] = NewPosition[2];
+						pSimilarVertex->Position = NewPosition;
+						pSimilarVertex->Normal = NewNormal;
 
-						pSimilarVertex->BoneWeights[0] = NewBoneWeights[0];
-						pSimilarVertex->BoneWeights[1] = NewBoneWeights[1];
-						pSimilarVertex->BoneWeights[2] = NewBoneWeights[2];
-						pSimilarVertex->BoneWeights[3] = NewBoneWeights[3];
-
-						pSimilarVertex->BoneIndices[0] = NewBoneIndices[0];
-						pSimilarVertex->BoneWeights[1] = NewBoneWeights[1];
-						pSimilarVertex->BoneWeights[2] = NewBoneWeights[2];
-						pSimilarVertex->BoneWeights[3] = NewBoneWeights[3];
-
-						pSimilarVertex->Normal[0] = NewNormal[0];
-						pSimilarVertex->Normal[1] = NewNormal[1];
-						pSimilarVertex->Normal[2] = NewNormal[2];
+						for (UInt32 i = 0; i < BONES_PER_VERTEX; ++i)
+						{
+							pSimilarVertex->BoneWeights[i] = NewBoneWeights[i];
+							pSimilarVertex->BoneIndices[i] = NewBoneIndices[i];
+						}
 					}
 
 					SimilarVertices.clear();
@@ -1814,74 +1769,42 @@ void M2Lib::M2::FixSeamsBody(Float32 PositionalTolerance, Float32 AngularToleran
 				if (SimilarVertices.size())
 				{
 					// sum positions and normals
-					Float32 NewPosition[3];
-					NewPosition[0] = 0.0f;
-					NewPosition[1] = 0.0f;
-					NewPosition[2] = 0.0f;
-
-					Float32 NewNormal[3];
-					NewNormal[0] = 0.0f;
-					NewNormal[1] = 0.0f;
-					NewNormal[2] = 0.0f;
+					C3Vector NewPosition, NewNormal;
 
 					for (UInt32 iSimilarVertex = 0; iSimilarVertex < SimilarVertices.size(); iSimilarVertex++)
 					{
 						CVertex* pSimilarVertex = SimilarVertices[iSimilarVertex];
 
-						NewPosition[0] += pSimilarVertex->Position[0];
-						NewPosition[1] += pSimilarVertex->Position[1];
-						NewPosition[2] += pSimilarVertex->Position[2];
-
-						NewNormal[0] += pSimilarVertex->Normal[0];
-						NewNormal[1] += pSimilarVertex->Normal[1];
-						NewNormal[2] += pSimilarVertex->Normal[2];
+						NewPosition = NewPosition + pSimilarVertex->Position;
+						NewNormal = NewNormal + pSimilarVertex->Normal;
 					}
 
 					// average position and normalize normal
 					Float32 invSimilarCount = 1.0f / (Float32)SimilarVertices.size();
 
-					NewPosition[0] *= invSimilarCount;
-					NewPosition[1] *= invSimilarCount;
-					NewPosition[2] *= invSimilarCount;
+					NewPosition = NewPosition * invSimilarCount;
+					NewNormal = NewNormal * invSimilarCount;
 
-					NewNormal[0] *= invSimilarCount;
-					NewNormal[1] *= invSimilarCount;
-					NewNormal[2] *= invSimilarCount;
-
-					UInt8 NewBoneWeights[4];
-					NewBoneWeights[0] = SimilarVertices[0]->BoneWeights[0];
-					NewBoneWeights[1] = SimilarVertices[0]->BoneWeights[1];
-					NewBoneWeights[2] = SimilarVertices[0]->BoneWeights[2];
-					NewBoneWeights[3] = SimilarVertices[0]->BoneWeights[3];
-
-					UInt8 NewBoneIndices[4];
-					NewBoneIndices[0] = SimilarVertices[0]->BoneIndices[0];
-					NewBoneIndices[1] = SimilarVertices[0]->BoneIndices[1];
-					NewBoneIndices[2] = SimilarVertices[0]->BoneIndices[2];
-					NewBoneIndices[3] = SimilarVertices[0]->BoneIndices[3];
+					UInt8 NewBoneWeights[4], NewBoneIndices[4];
+					for (UInt32 i = 0; i < BONES_PER_VERTEX; ++i)
+					{
+						NewBoneWeights[i] = SimilarVertices[0]->BoneWeights[i];
+						NewBoneIndices[i] = SimilarVertices[0]->BoneIndices[i];
+					}
 
 					// assign new values back into similar vertices
 					for (UInt32 iSimilarVertex = 0; iSimilarVertex < SimilarVertices.size(); iSimilarVertex++)
 					{
 						CVertex* pSimilarVertex = SimilarVertices[iSimilarVertex];
 
-						pSimilarVertex->Position[0] = NewPosition[0];
-						pSimilarVertex->Position[1] = NewPosition[1];
-						pSimilarVertex->Position[2] = NewPosition[2];
+						pSimilarVertex->Position = NewPosition;
+						pSimilarVertex->Normal = NewNormal;
 
-						pSimilarVertex->Normal[0] = NewNormal[0];
-						pSimilarVertex->Normal[1] = NewNormal[1];
-						pSimilarVertex->Normal[2] = NewNormal[2];
-
-						pSimilarVertex->BoneWeights[0] = NewBoneWeights[0];
-						pSimilarVertex->BoneWeights[1] = NewBoneWeights[1];
-						pSimilarVertex->BoneWeights[2] = NewBoneWeights[2];
-						pSimilarVertex->BoneWeights[3] = NewBoneWeights[3];
-
-						pSimilarVertex->BoneIndices[0] = NewBoneIndices[0];
-						pSimilarVertex->BoneIndices[1] = NewBoneIndices[1];
-						pSimilarVertex->BoneIndices[2] = NewBoneIndices[2];
-						pSimilarVertex->BoneIndices[3] = NewBoneIndices[3];
+						for (UInt32 i = 0; i < BONES_PER_VERTEX; ++i)
+						{
+							pSimilarVertex->BoneWeights[i] = NewBoneWeights[i];
+							pSimilarVertex->BoneIndices[i] = NewBoneIndices[i];
+						}
 					}
 
 					// clear list
@@ -1891,7 +1814,6 @@ void M2Lib::M2::FixSeamsBody(Float32 PositionalTolerance, Float32 AngularToleran
 		}
 	}
 }
-
 
 void M2Lib::M2::FixSeamsClothing(Float32 PositionalTolerance, Float32 AngularTolerance)
 {
@@ -1960,23 +1882,14 @@ void M2Lib::M2::FixSeamsClothing(Float32 PositionalTolerance, Float32 AngularTol
 						CVertex* pVertexOther = &VertexList[iVertexGarb];
 						CVertex* pVertexBody = &VertexList[iVertexBody];
 
-						pVertexOther->Position[0] = pVertexBody->Position[0];
-						pVertexOther->Position[1] = pVertexBody->Position[1];
-						pVertexOther->Position[2] = pVertexBody->Position[2];
+						pVertexOther->Position = pVertexBody->Position;
+						pVertexOther->Normal = pVertexBody->Normal;
 
-						pVertexOther->Normal[0] = pVertexBody->Normal[0];
-						pVertexOther->Normal[1] = pVertexBody->Normal[1];
-						pVertexOther->Normal[2] = pVertexBody->Normal[2];
-
-						pVertexOther->BoneWeights[0] = pVertexBody->BoneWeights[0];
-						pVertexOther->BoneWeights[1] = pVertexBody->BoneWeights[1];
-						pVertexOther->BoneWeights[2] = pVertexBody->BoneWeights[2];
-						pVertexOther->BoneWeights[3] = pVertexBody->BoneWeights[3];
-
-						pVertexOther->BoneIndices[0] = pVertexBody->BoneIndices[0];
-						pVertexOther->BoneIndices[1] = pVertexBody->BoneIndices[1];
-						pVertexOther->BoneIndices[2] = pVertexBody->BoneIndices[2];
-						pVertexOther->BoneIndices[3] = pVertexBody->BoneIndices[3];
+						for (UInt32 i = 0; i < BONES_PER_VERTEX; ++i)
+						{
+							pVertexOther->BoneWeights[i] = pVertexBody->BoneWeights[i];
+							pVertexOther->BoneIndices[i] = pVertexBody->BoneIndices[i];
+						}
 					}
 				}
 			}
@@ -1993,9 +1906,7 @@ void M2Lib::M2::Scale(Float32 Scale)
 		for (UInt32 i = 0; i < VertexListLength; i++)
 		{
 			CVertex& Vertex = VertexList[i];
-			Vertex.Position[0] *= Scale;
-			Vertex.Position[1] *= Scale;
-			Vertex.Position[2] *= Scale;
+			Vertex.Position = Vertex.Position * Scale;
 		}
 	}
 
@@ -2205,8 +2116,8 @@ void M2Lib::M2::m_LoadElements_CopyHeaderToElements()
 
 	if (Header.IsLongHeader() && GetExpansion() >= Expansion::Cataclysm)
 	{
-		Elements[EElement_Unknown1].Count = Header.Elements.nUnknown1;
-		Elements[EElement_Unknown1].Offset = Header.Elements.oUnknown1;
+		Elements[EElement_TextureCombinerCombo].Count = Header.Elements.nTextureCombinerCombo;
+		Elements[EElement_TextureCombinerCombo].Offset = Header.Elements.oTextureCombinerCombo;
 	}
 }
 
@@ -2593,7 +2504,7 @@ void M2Lib::M2::m_FixAnimationM2Array_Old(SInt32 OffsetDelta, SInt32 TotalDelta,
 			for (UInt32 i = 0; i < Array.Count; ++i)
 			{
 				assert("Out of animation index" && i < animationElement->Count);
-				if (!animations[i].IsInternal())
+				if (!animations[i].IsInline())
 					continue;
 
 				//SubArrays[i].Shift(IS_LOCAL_ANIMATION(SubArrays[i].Offset) ? OffsetDelta : TotalDelta);
@@ -2646,7 +2557,7 @@ void M2Lib::M2::m_FixAnimationM2Array(SInt32 OffsetDelta, SInt32 TotalDelta, SIn
 			animation->Flags,
 			flags);*/
 
-		if (animation->Flags & 0x20)
+		if (animation->IsInline())
 		{
 			assert("Not external offset" && SubArrays[i].Offset > Elements[iElement].Offset + Elements[iElement].SizeOriginal);
 			SubArrays[i].Shift(TotalDelta);
@@ -2812,8 +2723,8 @@ void M2Lib::M2::m_SaveElements_CopyElementsToHeader()
 
 	if (Header.IsLongHeader() && GetExpansion() >= Expansion::Cataclysm)
 	{
-		Header.Elements.nUnknown1 = Elements[EElement_Unknown1].Count;
-		Header.Elements.oUnknown1 = Elements[EElement_Unknown1].Offset;
+		Header.Elements.nTextureCombinerCombo = Elements[EElement_TextureCombinerCombo].Count;
+		Header.Elements.oTextureCombinerCombo = Elements[EElement_TextureCombinerCombo].Offset;
 	}
 }
 

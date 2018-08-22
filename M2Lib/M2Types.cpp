@@ -31,29 +31,11 @@ M2Lib::CTriangle& M2Lib::CTriangle::operator = (const CTriangle& Other)
 
 M2Lib::CVertex::CVertex()
 {
-	Position[0] = 0.0f;
-	Position[1] = 0.0f;
-	Position[2] = 0.0f;
-
-	BoneWeights[0] = 0;
-	BoneWeights[1] = 0;
-	BoneWeights[2] = 0;
-	BoneWeights[3] = 0;
-
-	BoneIndices[0] = 0;
-	BoneIndices[1] = 0;
-	BoneIndices[2] = 0;
-	BoneIndices[3] = 0;
-
-	Normal[0] = 0.0f;
-	Normal[1] = 0.0f;
-	Normal[2] = 0.0f;
-
-	Texture[0] = 0.0f;
-	Texture[1] = 0.0f;
-
-	Texture2[0] = 0.0f;
-	Texture2[1] = 0.0f;
+	for (UInt32 i = 0; i < BONES_PER_VERTEX; ++i)
+	{
+		BoneWeights[i] = 0;
+		BoneIndices[i] = 0;
+	}
 }
 
 M2Lib::CVertex::CVertex(const CVertex& Other)
@@ -63,29 +45,17 @@ M2Lib::CVertex::CVertex(const CVertex& Other)
 
 M2Lib::CVertex& M2Lib::CVertex::operator = (const CVertex& Other)
 {
-	Position[0] = Other.Position[0];
-	Position[1] = Other.Position[1];
-	Position[2] = Other.Position[2];
+	Position = Other.Position;
+	Normal = Other.Normal;
 
-	BoneWeights[0] = Other.BoneWeights[0];
-	BoneWeights[1] = Other.BoneWeights[1];
-	BoneWeights[2] = Other.BoneWeights[2];
-	BoneWeights[3] = Other.BoneWeights[3];
+	for (UInt32 i = 0; i < BONES_PER_VERTEX; ++i)
+	{
+		BoneWeights[i] = Other.BoneWeights[i];
+		BoneIndices[i] = Other.BoneIndices[i];
+	}
 
-	BoneIndices[0] = Other.BoneIndices[0];
-	BoneIndices[1] = Other.BoneIndices[1];
-	BoneIndices[2] = Other.BoneIndices[2];
-	BoneIndices[3] = Other.BoneIndices[3];
-
-	Normal[0] = Other.Normal[0];
-	Normal[1] = Other.Normal[1];
-	Normal[2] = Other.Normal[2];
-
-	Texture[0] = Other.Texture[0];
-	Texture[1] = Other.Texture[1];
-
-	Texture2[0] = Other.Texture2[0];
-	Texture2[1] = Other.Texture2[1];
+	Texture = Other.Texture;
+	Texture2 = Other.Texture2;
 
 	return *this;
 }
@@ -97,46 +67,35 @@ bool M2Lib::CVertex::CompareSimilar(CVertex& A, CVertex& B, bool CompareTextures
 	PositionalTolerance = PositionalTolerance * PositionalTolerance;
 	if (PositionalTolerance > 0.0f)
 	{
-		Float32 Delta[3];
-		Delta[0] = A.Position[0] - B.Position[0];
-		Delta[1] = A.Position[1] - B.Position[1];
-		Delta[2] = A.Position[2] - B.Position[2];
-		Float32 Distance = ((Delta[0] * Delta[0]) + (Delta[1] * Delta[1]) + (Delta[2] * Delta[2]));
-		if (Distance > PositionalTolerance)
-		{
+		C3Vector Delta = A.Position - B.Position;
+		if (Delta.Length() > sqrtf(PositionalTolerance))
 			return false;
-		}
 	}
 	else
 	{
-		if ((A.Position[0] != B.Position[0]) || (A.Position[1] != B.Position[1]) || (A.Position[2] != B.Position[2]))
-		{
+		if (!floatEq(A.Position.X, B.Position.X) || !floatEq(A.Position.Y, B.Position.Y) || !floatEq(A.Position.Z, B.Position.Z))
 			return false;
-		}
 	}
 
 	// compare texture coordinates
 	if (CompareTextures)
 	{
-		if ((A.Texture[0] != B.Texture[0]) || (A.Texture[1] != B.Texture[1]))
-		{
+		if (!floatEq(A.Texture.X, B.Texture.X) || !floatEq(A.Texture.Y, B.Texture.Y))
 			return false;
-		}
 	}
 
 	// compare bones
 	if (CompareBones)
 	{
 		// order independent comparison
-		bool SameBones[4];
-		SameBones[0] = false;
-		SameBones[1] = false;
-		SameBones[2] = false;
-		SameBones[3] = false;
-		for (UInt32 i = 0; i < 4; i++)
+		bool SameBones[BONES_PER_VERTEX];
+		for (UInt32 i = 0; i < BONES_PER_VERTEX; ++i)
+			SameBones[i] = false;
+
+		for (UInt32 i = 0; i < BONES_PER_VERTEX; ++i)
 		{
 			bool HasSameBone = false;
-			for (UInt32 j = 0; j < 4; j++)
+			for (UInt32 j = 0; j < BONES_PER_VERTEX; ++j)
 			{
 				if (A.BoneIndices[i] == B.BoneIndices[j] && SameBones[j] == false)
 				{
@@ -146,9 +105,7 @@ bool M2Lib::CVertex::CompareSimilar(CVertex& A, CVertex& B, bool CompareTextures
 			}
 		}
 		if (!(SameBones[0] && SameBones[1] && SameBones[2] && SameBones[3]))
-		{
 			return false;
-		}
 	}
 
 	// compare normals
@@ -158,18 +115,14 @@ bool M2Lib::CVertex::CompareSimilar(CVertex& A, CVertex& B, bool CompareTextures
 	// arc cosine the dot product of the vectors to get the angle between them
 	if (AngularTolerance > 0.0f)
 	{
-		Float32 Dot = (A.Normal[0] * B.Normal[0]) + (A.Normal[1] * B.Normal[1]) + (A.Normal[2] * B.Normal[2]);
+		Float32 Dot = A.Normal.X * B.Normal.X + A.Normal.Y * B.Normal.Y + A.Normal.Z * B.Normal.Z;
 		if (acosf(Dot) > AngularTolerance)	// units are radians
-		{
 			return false;
-		}
 	}
 	else
 	{
-		if ((A.Normal[0] != B.Normal[0]) || (A.Normal[1] != B.Normal[1]) || (A.Normal[2] != B.Normal[2]))
-		{
+		if (!floatEq(A.Normal.X, B.Normal.Y) || !floatEq(A.Normal.Y, B.Normal.Y) || !floatEq(A.Normal.Z, B.Normal.Z))
 			return false;
-		}
 	}
 
 	return true;
@@ -286,64 +239,50 @@ const int M2Lib::BoundaryData::ExtraData::BoundingTriangleVertexMap[BOUNDING_TRI
 
 void M2Lib::BoundaryData::Calculate(std::vector<CVertex> const& vertices)
 {
-	CenterMass.X = 0.0f;
-	CenterMass.Y = 0.0f;
-	CenterMass.Z = 0.0f;
+	CenterMass = C3Vector();
 
 	bool FirstPass = true;
 	for (auto const& Vertex : vertices)
 	{
 		if (FirstPass)
 		{
-			BoundingMin.X = Vertex.Position[0];
-			BoundingMin.Y = Vertex.Position[1];
-			BoundingMin.Z = Vertex.Position[2];
-
-			BoundingMax.X = Vertex.Position[0];
-			BoundingMax.Y = Vertex.Position[1];
-			BoundingMax.Z = Vertex.Position[2];
+			BoundingMin = Vertex.Position;
+			BoundingMax = Vertex.Position;
 
 			FirstPass = false;
 		}
 		else
 		{
-			if (BoundingMin.X > Vertex.Position[0])
-				BoundingMin.X = Vertex.Position[0];
-			if (BoundingMin.Y > Vertex.Position[1])
-				BoundingMin.Y = Vertex.Position[1];
-			if (BoundingMin.Z > Vertex.Position[2])
-				BoundingMin.Z = Vertex.Position[2];
+			if (BoundingMin.X > Vertex.Position.X)
+				BoundingMin.X = Vertex.Position.X;
+			if (BoundingMin.Y > Vertex.Position.Y)
+				BoundingMin.Y = Vertex.Position.Y;
+			if (BoundingMin.Z > Vertex.Position.Z)
+				BoundingMin.Z = Vertex.Position.Z;
 
-			if (BoundingMax.X < Vertex.Position[0])
-				BoundingMax.X = Vertex.Position[0];
-			if (BoundingMax.Y < Vertex.Position[1])
-				BoundingMax.Y = Vertex.Position[1];
-			if (BoundingMax.Z < Vertex.Position[2])
-				BoundingMax.Z = Vertex.Position[2];
+			if (BoundingMax.X < Vertex.Position.X)
+				BoundingMax.X = Vertex.Position.X;
+			if (BoundingMax.Y < Vertex.Position.Y)
+				BoundingMax.Y = Vertex.Position.Y;
+			if (BoundingMax.Z < Vertex.Position.Z)
+				BoundingMax.Z = Vertex.Position.Z;
 		}
 
-		CenterMass.X += Vertex.Position[0];
-		CenterMass.Y += Vertex.Position[1];
-		CenterMass.Z += Vertex.Position[2];
+		CenterMass = CenterMass + Vertex.Position;
 	}
 
 	CenterMass = CenterMass / (Float32)vertices.size();
 
-	BoundingCenter = (BoundingMin + BoundingMax) / 2.0f;
+	SortCenter = (BoundingMin + BoundingMax) / 2.0f;
 
-	BoundingRadius = 0.0f;
+	SortRadius = 0.0f;
 	for (auto const& Vertex : vertices)
 	{
-		C3Vector PositionLocal;
-		Float32 Distance;
+		C3Vector PositionLocal = Vertex.Position - SortCenter;
 
-		PositionLocal.X = Vertex.Position[0] - BoundingCenter.X;
-		PositionLocal.Y = Vertex.Position[1] - BoundingCenter.Y;
-		PositionLocal.Z = Vertex.Position[2] - BoundingCenter.Z;
-
-		Distance = PositionLocal.Length();
-		if (Distance > BoundingRadius)
-			BoundingRadius = Distance;
+		Float32 Distance = PositionLocal.Length();
+		if (Distance > SortRadius)
+			SortRadius = Distance;
 	}
 }
 
@@ -365,7 +304,7 @@ M2Lib::BoundaryData::ExtraData M2Lib::BoundaryData::CalculateExtra() const
 
 	for (int i = 0; i < BOUNDING_TRIANGLE_COUNT; ++i)
 	{
-		Extra.BoundingNormals[i] = CalculateNormal(
+		Extra.BoundingNormals[i] = C3Vector::CalculateNormal(
 			Extra.BoundingVertices[ExtraData::BoundingTriangleVertexMap[i * 3]],
 			Extra.BoundingVertices[ExtraData::BoundingTriangleVertexMap[i * 3 + 1]],
 			Extra.BoundingVertices[ExtraData::BoundingTriangleVertexMap[i * 3 + 2]]
@@ -373,6 +312,14 @@ M2Lib::BoundaryData::ExtraData M2Lib::BoundaryData::CalculateExtra() const
 	}
 
 	return Extra;
+}
+
+M2Lib::C2Vector& M2Lib::C2Vector::operator = (const C2Vector& Other)
+{
+	X = Other.X;
+	Y = Other.Y;
+
+	return *this;
 }
 
 M2Lib::C3Vector& M2Lib::C3Vector::operator = (const C3Vector& Other)
@@ -449,7 +396,7 @@ void M2Lib::C3Vector::Normalize()
 	Z = std::min(Z / length, 1.0f);
 }
 
-M2Lib::C3Vector M2Lib::CalculateNormal(C3Vector v1, C3Vector v2, C3Vector v3)
+M2Lib::C3Vector M2Lib::C3Vector::CalculateNormal(C3Vector const& v1, C3Vector const& v2, C3Vector const& v3)
 {
 	C3Vector V = v2 - v1;
 	C3Vector W = v3 - v1;
@@ -459,7 +406,7 @@ M2Lib::C3Vector M2Lib::CalculateNormal(C3Vector v1, C3Vector v2, C3Vector v3)
 	return N;
 }
 
-bool M2Lib::floatEq(float a, float b)
+bool M2Lib::floatEq(Float32 a, Float32 b)
 {
 	return std::fabsf(a - b) < 1e-5;
 }

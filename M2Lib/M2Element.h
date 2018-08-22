@@ -39,7 +39,7 @@ namespace M2Lib
 			EElement_CameraLookup = 26,
 			EElement_RibbonEmitter = 27,
 			EElement_ParticleEmitter = 28,
-			EElement_Unknown1 = 29,
+			EElement_TextureCombinerCombo = 29,
 
 			EElement__Count__
 		};
@@ -99,9 +99,9 @@ namespace M2Lib
 
 			SInt16 Rarity;
 
-			UInt16 d1;
-			UInt32 d2;
-			UInt32 d3;
+			UInt16 Padding;
+			UInt32 BlendTimeIn;
+			UInt32 BlendTimeOut;
 
 			UInt32 PlaySpeed;
 
@@ -110,7 +110,7 @@ namespace M2Lib
 			SInt16 NextAnimation;		// index to next animation with same AnimationID, -1 if there are no more.
 			UInt16 NextIndex;			// this animation's index in the list of animations.
 
-			bool IsInternal() const { return (Flags & 0x20) != 0; }
+			bool IsInline() const { return (Flags & 0x20) != 0; }
 		};
 
 		ASSERT_SIZE(CElement_Animation, 64);
@@ -389,7 +389,7 @@ namespace M2Lib
 
 			enum EBlend : UInt16
 			{
-				EBlend_Opaque,
+				EBlend_Opaque = 0,
 				EBlend_Mod,
 				EBlend_Decal,
 				EBlend_Add,
@@ -466,13 +466,12 @@ namespace M2Lib
 
 		ASSERT_SIZE(CElement_BoundingTriangle, 2);
 
-
 		//
 		//
 		class CElement_BoundingVertices
 		{
 		public:
-			Float32 Position[3];
+			C3Vector Position;
 		};
 
 		ASSERT_SIZE(CElement_BoundingVertices, 12);
@@ -482,7 +481,7 @@ namespace M2Lib
 		class CElement_BoundingNormals
 		{
 		public:
-			Float32 Normal[3];
+			C3Vector Normal;
 		};
 
 		ASSERT_SIZE(CElement_BoundingNormals, 12);
@@ -550,7 +549,7 @@ namespace M2Lib
 				EID_AlteredSoulderL = 52,
 				EID_BeltBuckle = 53,
 				EID_SheathCrossbow = 54,
-				EID_Unknown55 = 55	// horns?
+				EID_HeadTop = 55	// horns?
 			};
 
 		public:

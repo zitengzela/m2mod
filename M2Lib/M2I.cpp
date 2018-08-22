@@ -93,32 +93,22 @@ M2Lib::EError M2Lib::M2I::Load(Char16 const* FileName, M2Lib::M2* pM2, bool Igno
 		{
 			CVertex InVertex;
 
-			InVertex.Position[0] = DataBinary.ReadFloat32();
-			InVertex.Position[1] = DataBinary.ReadFloat32();
-			InVertex.Position[2] = DataBinary.ReadFloat32();
+			InVertex.Position.X = DataBinary.ReadFloat32();
+			InVertex.Position.Y = DataBinary.ReadFloat32();
+			InVertex.Position.Z = DataBinary.ReadFloat32();
 
-			InVertex.BoneWeights[0] = DataBinary.ReadUInt8();
-			InVertex.BoneWeights[1] = DataBinary.ReadUInt8();
-			InVertex.BoneWeights[2] = DataBinary.ReadUInt8();
-			InVertex.BoneWeights[3] = DataBinary.ReadUInt8();
+			for (UInt32 k = 0; k < BONES_PER_VERTEX; ++k)
+				InVertex.BoneWeights[k] = DataBinary.ReadUInt8();
 
-			int WeightSum = InVertex.BoneWeights[0] + InVertex.BoneWeights[1] + InVertex.BoneWeights[2] + InVertex.BoneWeights[3];
-			if (WeightSum < 255)
-			{
-				int pause = 1;
-			}
+			for (UInt32 k = 0; k < BONES_PER_VERTEX; ++k)
+				InVertex.BoneIndices[k] = DataBinary.ReadUInt8();
 
-			InVertex.BoneIndices[0] = DataBinary.ReadUInt8();
-			InVertex.BoneIndices[1] = DataBinary.ReadUInt8();
-			InVertex.BoneIndices[2] = DataBinary.ReadUInt8();
-			InVertex.BoneIndices[3] = DataBinary.ReadUInt8();
+			InVertex.Normal.X = DataBinary.ReadFloat32();
+			InVertex.Normal.Y = DataBinary.ReadFloat32();
+			InVertex.Normal.Z = DataBinary.ReadFloat32();
 
-			InVertex.Normal[0] = DataBinary.ReadFloat32();
-			InVertex.Normal[1] = DataBinary.ReadFloat32();
-			InVertex.Normal[2] = DataBinary.ReadFloat32();
-
-			InVertex.Texture[0] = DataBinary.ReadFloat32();
-			InVertex.Texture[1] = DataBinary.ReadFloat32();
+			InVertex.Texture.X = DataBinary.ReadFloat32();
+			InVertex.Texture.Y = DataBinary.ReadFloat32();
 
 			UInt16 VertexIndex = VertexList.size();
 			VertexList.push_back(InVertex);
@@ -140,9 +130,8 @@ M2Lib::EError M2Lib::M2I::Load(Char16 const* FileName, M2Lib::M2* pM2, bool Igno
 			NewTriangle.TriangleIndex = iTriangle;
 			iTriangle++;
 
-			NewTriangle.Vertices[0] = DataBinary.ReadUInt16() + VertexStart;
-			NewTriangle.Vertices[1] = DataBinary.ReadUInt16() + VertexStart;
-			NewTriangle.Vertices[2] = DataBinary.ReadUInt16() + VertexStart;
+			for (UInt32 k = 0; k < VERTEX_PER_TRIANGLE; ++k)
+				NewTriangle.Vertices[k] = DataBinary.ReadUInt16() + VertexStart;
 
 			pNewSubMesh->Triangles.push_back(NewTriangle);
 		}

@@ -43,7 +43,34 @@ namespace M2Lib
 				UInt32 nName;
 				UInt32 oName;
 
-				UInt32 Flags;
+				union
+				{
+					UInt32 Raw;
+					struct {
+						UInt32 flag_tilt_x : 1;
+						UInt32 flag_tilt_y : 1;
+						UInt32 flag_unk_0x4 : 1;
+						UInt32 flag_use_texture_combiner_combos : 1; // add textureCombinerCombos array to end of data
+						UInt32 flag_unk_0x10 : 1;
+						UInt32 flag_load_phys_data : 1;
+						UInt32 flag_unk_0x40 : 1;
+						UInt32 flag_unk_0x80 : 1; // with this flag unset, demon hunter tattoos stop glowing
+						UInt32 flag_camera_related : 1;
+						UInt32 flag_new_particle_record : 1; // In CATA: new version of ParticleEmitters. By default, length of M2ParticleOld is 476. But if 0x200 is set or if version is bigger than 271, length of M2ParticleOld is 492.
+						UInt32 flag_unk_0x400 : 1;
+						UInt32 flag_texture_transforms_use_bone_sequences : 1; // >= WoD 0x800 -- When set, texture transforms are animated using the sequence being played on the bone found by index in tex_unit_lookup_table[textureTransformIndex], instead of using the sequence being played on the model's first bone. Example model: 6DU_HellfireRaid_FelSiege03_Creature
+						UInt32 flag_unk_0x1000 : 1;
+						UInt32 flag_unk_0x2000 : 1; // seen in various legion models
+						UInt32 flag_unk_0x4000 : 1;
+						UInt32 flag_unk_0x8000 : 1; // seen in UI_MainMenu_Legion
+						UInt32 flag_unk_0x10000 : 1;
+						UInt32 flag_unk_0x20000 : 1;
+						UInt32 flag_unk_0x40000 : 1;
+						UInt32 flag_unk_0x80000 : 1;
+						UInt32 flag_unk_0x100000 : 1;
+						UInt32 flag_unk_0x200000 : 1; // apparently: use 24500 upgraded model format: chunked .anim files, change in the exporter reordering sequence+bone blocks before name
+					};
+				} Flags;
 			} Description;
 
 			ASSERT_SIZE(CM2Description, 20);
@@ -139,8 +166,8 @@ namespace M2Lib
 				UInt32 nParticleEmitter;		// 492
 				UInt32 oParticleEmitter;
 
-				UInt32 nUnknown1;
-				UInt32 oUnknown1;
+				UInt32 nTextureCombinerCombo;
+				UInt32 oTextureCombinerCombo;
 
 			} Elements;
 

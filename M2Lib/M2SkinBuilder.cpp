@@ -350,7 +350,7 @@ bool M2Lib::M2SkinBuilder::Build(M2Skin* pResult, UInt32 BoneLoD, M2I* pM2I, CVe
 	pResult->Header.ID[3] = 'N';
 
 	//pResult->Header.LevelOfDetail = m_MaxBones;
-	pResult->Header.Unknown1 = 0;
+	pResult->Header.BoneCountMax = 0;
 	pResult->Header.Unknown2 = 0;
 	pResult->Header.Unknown3 = 0;
 

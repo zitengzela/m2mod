@@ -20,6 +20,10 @@ namespace M2Lib
 
 #pragma pack(push,1)
 
+#define VERTEX_PER_TRIANGLE 3
+#define BONES_PER_VERTEX 4
+#define BONES_PER_TRIANGLE (VERTEX_PER_TRIANGLE * BONES_PER_VERTEX)
+
 	// used when importing an M2I and building an M2. each triangle is given an index in addition to the 3 vertices. the index is used for quick lookup when dealing out triangles between bone partitions when building skins.
 	class CTriangle
 	{
@@ -31,38 +35,7 @@ namespace M2Lib
 		CTriangle();
 		CTriangle(const CTriangle& Other);
 		CTriangle& operator = (const CTriangle& Other);
-
 	};
-
-	// vertices are in this format.
-	class CVertex
-	{
-	public:
-		Float32 Position[3];
-		UInt8 BoneWeights[4];
-		UInt8 BoneIndices[4];
-		Float32 Normal[3];
-		Float32 Texture[2];
-		Float32 Texture2[2];
-
-
-	public:
-		CVertex();
-		CVertex(const CVertex& Other);
-		CVertex& operator = (const CVertex& Other);
-		static bool CompareSimilar(CVertex& A, CVertex& B, bool CompareTextures, bool CompareBones, Float32 PositionalTolerance, Float32 AngularTolerance);	// compares 2 vertices to see if they have the same position, bones, and texture coordinates. vertices between subsets that pass this test are most likely duplicates.
-
-	};
-
-	//
-	struct SVolume
-	{
-		Float32 Min[3];
-		Float32 Max[3];
-		Float32 Radius;
-	};
-
-	ASSERT_SIZE(SVolume, 28);
 
 	struct M2Array
 	{
@@ -91,7 +64,10 @@ namespace M2Lib
 	public:
 		Float32 X;
 		Float32 Y;
+
+		C2Vector& operator = (const C2Vector& Other);
 	};
+	ASSERT_SIZE(C2Vector, 8);
 
 	class C3Vector
 	{
@@ -111,9 +87,38 @@ namespace M2Lib
 		C3Vector CrossProduct(C3Vector const& other) const;
 		void Normalize();
 		Float32 Length() const;
+
+		static C3Vector CalculateNormal(C3Vector const& v1, C3Vector const& v2, C3Vector const& v3);
+	};
+	ASSERT_SIZE(C3Vector, 12);
+
+	// vertices are in this format.
+	class CVertex
+	{
+	public:
+		C3Vector Position;
+		UInt8 BoneWeights[BONES_PER_VERTEX];
+		UInt8 BoneIndices[BONES_PER_VERTEX];
+		C3Vector Normal;
+		C2Vector Texture;
+		C2Vector Texture2;
+
+	public:
+		CVertex();
+		CVertex(const CVertex& Other);
+		CVertex& operator = (const CVertex& Other);
+		static bool CompareSimilar(CVertex& A, CVertex& B, bool CompareTextures, bool CompareBones, Float32 PositionalTolerance, Float32 AngularTolerance);	// compares 2 vertices to see if they have the same position, bones, and texture coordinates. vertices between subsets that pass this test are most likely duplicates.
 	};
 
-	C3Vector CalculateNormal(C3Vector v1, C3Vector v2, C3Vector v3);
+	//
+	struct SVolume
+	{
+		C3Vector Min;
+		C3Vector Max;
+		Float32 Radius;
+	};
+
+	ASSERT_SIZE(SVolume, 28);
 
 #pragma pack(pop)
 
@@ -170,8 +175,9 @@ namespace M2Lib
 
 		C3Vector BoundingMin;
 		C3Vector BoundingMax;
-		C3Vector BoundingCenter;
-		Float32 BoundingRadius;
+
+		C3Vector SortCenter;
+		Float32 SortRadius;
 
 		C3Vector CenterMass;
 
@@ -195,5 +201,5 @@ namespace M2Lib
 		int MaterialOverride;
 	};
 
-	bool floatEq(float a, float b);
+	bool floatEq(Float32 a, Float32 b);
 }
