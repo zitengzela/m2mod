@@ -273,10 +273,6 @@ namespace M2Lib
 
 		ASSERT_SIZE(CElement_BoneLookup, 2);
 
-		typedef CVertex CElement_Vertex;
-
-		ASSERT_SIZE(CElement_Vertex, 48);
-
 		//
 		//
 		class CElement_Color

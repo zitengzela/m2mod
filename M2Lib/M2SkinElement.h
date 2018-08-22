@@ -25,13 +25,13 @@ namespace M2Lib
 		};
 
 #pragma pack(push, 1)
-		class CElement_Vertex
+		class CElement_VertexIndex
 		{
 		public:
 			UInt16 GlobalVertexIndex;		// index into M2's global vertex list.
 		};
 
-		ASSERT_SIZE(CElement_Vertex, 2);
+		ASSERT_SIZE(CElement_VertexIndex, 2);
 
 		class CElement_TriangleIndex
 		{

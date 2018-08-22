@@ -109,6 +109,7 @@ namespace M2Lib
 		CVertex& operator = (const CVertex& Other);
 		static bool CompareSimilar(CVertex& A, CVertex& B, bool CompareTextures, bool CompareBones, Float32 PositionalTolerance, Float32 AngularTolerance);	// compares 2 vertices to see if they have the same position, bones, and texture coordinates. vertices between subsets that pass this test are most likely duplicates.
 	};
+	ASSERT_SIZE(CVertex, 48);
 
 	struct CRange
 	{

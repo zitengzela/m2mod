@@ -102,8 +102,9 @@ M2Lib::EError M2Lib::M2I::Load(Char16 const* FileName, M2Lib::M2* pM2, bool Igno
 				InVertex.BoneIndices[k] = DataBinary.ReadUInt8();
 
 			InVertex.Normal = DataBinary.ReadC3Vector();
-
 			InVertex.Texture = DataBinary.ReadC2Vector();
+			if (Version >= MAKE_VERSION(8, 0))
+				InVertex.Texture2 = DataBinary.ReadC2Vector();
 
 			UInt16 VertexIndex = VertexList.size();
 			VertexList.push_back(InVertex);
