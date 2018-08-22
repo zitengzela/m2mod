@@ -21,17 +21,17 @@ M2Lib::EError M2Lib::M2I::Load(Char16 const* FileName, M2Lib::M2* pM2, bool Igno
 		return EError_FailedToImportM2I_FileCorrupt;
 
 	// load version
-	UInt16 VersionMajor;
-	UInt16 VersionMinor;
+	UInt32 Version = 0;
 	if (InSignature == Signature_M2I0)
 	{
-		VersionMajor = DataBinary.ReadUInt16();
-		VersionMinor = DataBinary.ReadUInt16();
-		if (VersionMajor != 4 || VersionMinor < 5 || VersionMinor > 9)
+		UInt16 VersionMajor = DataBinary.ReadUInt16();
+		UInt16 VersionMinor = DataBinary.ReadUInt16();
+
+		Version = MAKE_VERSION(VersionMajor, VersionMinor);
+
+		if (!(Version >= MAKE_VERSION(4, 5) && Version <= MAKE_VERSION(4, 9)) && Version != MAKE_VERSION(8, 0))
 			return EError_FailedToImportM2I_UnsupportedVersion;
 	}
-
-	UInt32 Version = MAKE_VERSION(VersionMajor, VersionMinor);
 
 	// load sub meshes, build new vertex list
 	UInt32 VertexStart = 0;
@@ -93,9 +93,7 @@ M2Lib::EError M2Lib::M2I::Load(Char16 const* FileName, M2Lib::M2* pM2, bool Igno
 		{
 			CVertex InVertex;
 
-			InVertex.Position.X = DataBinary.ReadFloat32();
-			InVertex.Position.Y = DataBinary.ReadFloat32();
-			InVertex.Position.Z = DataBinary.ReadFloat32();
+			InVertex.Position = DataBinary.ReadC3Vector();
 
 			for (UInt32 k = 0; k < BONES_PER_VERTEX; ++k)
 				InVertex.BoneWeights[k] = DataBinary.ReadUInt8();
@@ -103,12 +101,9 @@ M2Lib::EError M2Lib::M2I::Load(Char16 const* FileName, M2Lib::M2* pM2, bool Igno
 			for (UInt32 k = 0; k < BONES_PER_VERTEX; ++k)
 				InVertex.BoneIndices[k] = DataBinary.ReadUInt8();
 
-			InVertex.Normal.X = DataBinary.ReadFloat32();
-			InVertex.Normal.Y = DataBinary.ReadFloat32();
-			InVertex.Normal.Z = DataBinary.ReadFloat32();
+			InVertex.Normal = DataBinary.ReadC3Vector();
 
-			InVertex.Texture.X = DataBinary.ReadFloat32();
-			InVertex.Texture.Y = DataBinary.ReadFloat32();
+			InVertex.Texture = DataBinary.ReadC2Vector();
 
 			UInt16 VertexIndex = VertexList.size();
 			VertexList.push_back(InVertex);
@@ -193,9 +188,7 @@ M2Lib::EError M2Lib::M2I::Load(Char16 const* FileName, M2Lib::M2* pM2, bool Igno
 			auto& BoneToMod = Bones[ModBoneIndex];
 
 			BoneToMod.ParentBone = ParentBone;
-			BoneToMod.Position[0] = Position.X;
-			BoneToMod.Position[1] = Position.Y;
-			BoneToMod.Position[2] = Position.Z;
+			BoneToMod.Position = Position;
 
 			if (HasExtraData)
 			{
@@ -281,9 +274,7 @@ M2Lib::EError M2Lib::M2I::Load(Char16 const* FileName, M2Lib::M2* pM2, bool Igno
 				if (BoneRemap.find(pAttachmentToMod->ParentBone) != BoneRemap.end())
 					pAttachmentToMod->ParentBone = BoneRemap[pAttachmentToMod->ParentBone];
 
-				pAttachmentToMod->Position[0] = DataBinary.ReadFloat32();
-				pAttachmentToMod->Position[1] = DataBinary.ReadFloat32();
-				pAttachmentToMod->Position[2] = DataBinary.ReadFloat32();
+				pAttachmentToMod->Position = DataBinary.ReadC3Vector();
 				Float32 Scale = DataBinary.ReadFloat32();
 			}
 			else
@@ -351,29 +342,20 @@ M2Lib::EError M2Lib::M2I::Load(Char16 const* FileName, M2Lib::M2* pM2, bool Igno
 					FieldOfView_Keys[0] = value;
 				}
 				else
-				{
 					DataBinary.ReadFloat32();
-				}
+
 				pCameraToMod->ClipFar = DataBinary.ReadFloat32();
 				pCameraToMod->ClipNear = DataBinary.ReadFloat32();
-				pCameraToMod->Position[0] = DataBinary.ReadFloat32();
-				pCameraToMod->Position[1] = DataBinary.ReadFloat32();
-				pCameraToMod->Position[2] = DataBinary.ReadFloat32();
-				pCameraToMod->Target[0] = DataBinary.ReadFloat32();
-				pCameraToMod->Target[1] = DataBinary.ReadFloat32();
-				pCameraToMod->Target[2] = DataBinary.ReadFloat32();
+				pCameraToMod->Position = DataBinary.ReadC3Vector();
+				pCameraToMod->Target = DataBinary.ReadC3Vector();
 			}
 			else
 			{
 				DataBinary.ReadFloat32();
 				DataBinary.ReadFloat32();
 				DataBinary.ReadFloat32();
-				DataBinary.ReadFloat32();
-				DataBinary.ReadFloat32();
-				DataBinary.ReadFloat32();
-				DataBinary.ReadFloat32();
-				DataBinary.ReadFloat32();
-				DataBinary.ReadFloat32();
+				DataBinary.ReadC3Vector();
+				DataBinary.ReadC3Vector();
 			}
 		}
 	}

@@ -217,7 +217,7 @@ namespace M2Lib
 			CElement_AnimationBlock AnimationBlock_Position;	// Float32x3
 			CElement_AnimationBlock AnimationBlock_Rotation;	// SInt16x4
 			CElement_AnimationBlock AnimationBlock_Scale;		// Float32x3
-			Float32 Position[3];		//
+			C3Vector Position;
 		};
 
 		ASSERT_SIZE(CElement_Bone, 88);
@@ -555,7 +555,7 @@ namespace M2Lib
 		public:
 			UInt32 ID;					//
 			UInt32 ParentBone;			// parent bone.
-			Float32 Position[3];		// position relative to parent bone.
+			C3Vector Position;			// position relative to parent bone.
 			CElement_AnimationBlock AnimationBlock_Visibility;	// UInt16.
 		};
 
@@ -630,7 +630,7 @@ namespace M2Lib
 			Char8 ID[4];			// this event's ID.
 			UInt32 SoundID;			// database id of sound to play from SoundEntries.dbc.
 			UInt32 ParentBone;		// parent bone.
-			Float32 Position[3];	// position relative to parent bone.
+			C3Vector Position;		// position relative to parent bone.
 			UInt16 InterpolationType;
 			SInt16 GlobalSequenceID;
 			M2Array TimeLines;
@@ -645,7 +645,7 @@ namespace M2Lib
 		public:
 			UInt16 Type;
 			UInt16 ParentBone;
-			Float32 Position[3];
+			C3Vector Position;
 			CElement_AnimationBlock AnimationBlock_AmbientColor;		// Float32x3
 			CElement_AnimationBlock AnimationBlock_AmbientIntensity;	// Float32
 			CElement_AnimationBlock AnimationBlock_DiffuseColor;		// Float32x3
@@ -673,9 +673,9 @@ namespace M2Lib
 			Float32 ClipFar;
 			Float32 ClipNear;
 			CElement_AnimationBlock AnimationBlock_Position;		// Float32x3
-			Float32 Position[3];
+			C3Vector Position;
 			CElement_AnimationBlock AnimationBlock_Target;			// Float32x3
-			Float32 Target[3];
+			C3Vector Target;
 			CElement_AnimationBlock AnimationBlock_Roll;			// Float32
 			CElement_AnimationBlock AnimationBlock_FieldOfView;		// Float32	// v4
 		};
@@ -697,9 +697,9 @@ namespace M2Lib
 			Float32 ClipFar;
 			Float32 ClipNear;
 			CElement_AnimationBlock AnimationBlock_Position;		// Float32x3
-			Float32 Position[3];
+			C3Vector Position;
 			CElement_AnimationBlock AnimationBlock_Target;			// Float32x3
-			Float32 Target[3];
+			C3Vector Target;
 			CElement_AnimationBlock AnimationBlock_Roll;			// Float32
 		};
 
@@ -722,21 +722,22 @@ namespace M2Lib
 		public:
 			SInt32 ID;
 			SInt32 ParentBone;
-			Float32 Position[3];
+			C3Vector Position;
 			M2Array Texture;
 			M2Array RenderFlag;
 			CElement_AnimationBlock AnimationBlock_Color;		// Float32x3
 			CElement_AnimationBlock AnimationBlock_Opacity;		// UInt16
-			CElement_AnimationBlock AnimationBlock_Above;		// Float32, position of point A of ribbon leading edge.
-			CElement_AnimationBlock AnimationBlock_Below;		// Float32, position of point B of ribbon leading edge.
-			Float32 Resolution;
-			Float32 Length;
+			CElement_AnimationBlock AnimationBlock_HeightAbove;	// Float32, position of point A of ribbon leading edge.
+			CElement_AnimationBlock AnimationBlock_HeightBelow;	// Float32, position of point B of ribbon leading edge.
+			Float32 EdgesPerSecond;
+			Float32 EdgeLifetime;
 			Float32 EmissionAngle;		// use arcsin(val) to get the angle in degree.
-			UInt16 m_rows;
-			UInt16 m_cols;
-			CElement_AnimationBlock AnimationBlock_Unknown1;	// SInt32
+			UInt16 TextureRows;
+			UInt16 TextureCols;
+			CElement_AnimationBlock AnimationBlock_TexSlotTrack;	// SInt32
 			CElement_AnimationBlock AnimationBlock_Visibility;	// SInt16
-			UInt32 Unk;
+			SInt16 PriorityPlane;
+			UInt16 Padding;
 		};
 
 		ASSERT_SIZE(CElement_RibbonEmitter, 176);
@@ -748,23 +749,21 @@ namespace M2Lib
 		public:
 			UInt32 ID;				// always -1?
 			UInt32 Flags;
-			Float32 Position[3];	// position relative to parent bone.
+			C3Vector Position;		// position relative to parent bone.
 			UInt16 ParentBone;
 			UInt16 Texture;
 			M2Array FileNameModel;	// name of model to spawn *.mdx.
-
 			M2Array ChildEmitter;
 
 			UInt8 BlendingType;
 			UInt8 EmitterType;
-
 			UInt16 ParticleColorIndex;
-			UInt8 ParticleType;
-			UInt8 HeadOrTail;
 
-			UInt16 Rotation;
-			UInt16 Rows;
-			UInt16 Columns;
+			fixed_point<uint8_t, 2, 5> multiTextureParamX[2];
+
+			UInt16 TextureTileRotation;
+			UInt16 TextureDimensionsRows;
+			UInt16 TextureDimensionsColumns;
 
 			CElement_AnimationBlock AnimationBlock_EmitSpeed;		// Float32
 			CElement_AnimationBlock AnimationBlock_SpeedVariance;	// Float32
@@ -773,36 +772,44 @@ namespace M2Lib
 			CElement_AnimationBlock AnimationBlock_Gravity;			// Float32
 			CElement_AnimationBlock AnimationBlock_Lifespan;		// Float32
 			Float32 LifespanVary;
-			CElement_AnimationBlock AnimationBlock_EmitRate;		// Float32
+			CElement_AnimationBlock AnimationBlock_EmissionRate;	// Float32
 			Float32 EmissionRateVary;
-			CElement_AnimationBlock AnimationBlock_EmitLength;		// Float32
-			CElement_AnimationBlock AnimationBlock_EmitWidth;		// Float32
-			CElement_AnimationBlock AnimationBlock_GravityStrong;	// Float32
+			CElement_AnimationBlock AnimationBlock_EmissionAreaLength;	// Float32
+			CElement_AnimationBlock AnimationBlock_EmissionAreaWidth;	// Float32
+			CElement_AnimationBlock AnimationBlock_zSource;			// Float32
 
 			CElement_FakeAnimationBlock ColorTrack;
 			CElement_FakeAnimationBlock AlphaTrack;
 			CElement_FakeAnimationBlock ScaleTrack;
-			Float32 ScaleVary[2];
+			C2Vector ScaleVary;
 			CElement_FakeAnimationBlock HeadCellTrack;
 			CElement_FakeAnimationBlock TailCellTrack;
-			Float32 _unk2;	// particle related
-			Float32 Spread[2];
-			Float32 twinkleScale[2];
-			UInt32 _unk4;
-			Float32 drag;
+			Float32 TailLength;
+			Float32 TwinkleSpeed;
+			Float32 TwinklePercent;
+			CRange TwinkleScale;
+			Float32 BurstMultiplier;
+			Float32 Drag;
 			Float32 BaseSpin;
 			Float32 BaseSpinVary;
 			Float32 Spin;
 			Float32 SpinVary;
-			Float32 _unk6;
-			Float32 Rotation1[3];
-			Float32 Rotation2[3];
-			Float32 Translation[3];
-			Float32 FollowParams[4];
 
-			M2Array Unk;	// 12 bytes
-			CElement_AnimationBlock AnimationBlock_Visibility;		// UInt16
-			UInt32 _unk7[0x4];
+			M2Box Tumble;
+
+			C3Vector WindVector;
+			Float32 WindTime;
+			
+			Float32 FollowSpeed1;
+			Float32 FollowScale1;
+			Float32 FollowSpeed2;
+			Float32 FollowScale2;
+
+			M2Array SplinePoints;	// C3Vector
+			CElement_AnimationBlock AnimationBlock_EnabledIn;		// UInt16
+
+			vector_2fp_6_9 multiTextureParam0[2];
+			vector_2fp_6_9 multiTextureParam1[2];
 		};
 
 		ASSERT_SIZE(CElement_ParticleEmitter, 492);

@@ -110,6 +110,18 @@ namespace M2Lib
 		static bool CompareSimilar(CVertex& A, CVertex& B, bool CompareTextures, bool CompareBones, Float32 PositionalTolerance, Float32 AngularTolerance);	// compares 2 vertices to see if they have the same position, bones, and texture coordinates. vertices between subsets that pass this test are most likely duplicates.
 	};
 
+	struct CRange
+	{
+		Float32 Min;
+		Float32 Max;
+	};
+
+	struct M2Box
+	{
+		C3Vector ModelRotationSpeedMin;
+		C3Vector ModelRotationSpeedMax;
+	};
+
 	//
 	struct SVolume
 	{
@@ -119,6 +131,30 @@ namespace M2Lib
 	};
 
 	ASSERT_SIZE(SVolume, 28);
+
+	template<typename Base, size_t integer_bits, size_t decimal_bits>
+	struct fixed_point
+	{
+		static const float constexpr factor = integer_bits
+			? (1 << decimal_bits)
+			: (1 << (decimal_bits + 1)) - 1
+			;
+
+		union {
+			struct {
+				Base integer_and_decimal : integer_bits + decimal_bits;
+				Base sign : 1;
+			};
+			Base raw;
+		};
+	};
+
+	typedef fixed_point<uint16_t, 6, 9> fp_6_9;
+	struct vector_2fp_6_9
+	{
+		fp_6_9 x;
+		fp_6_9 y;
+	};
 
 #pragma pack(pop)
 
