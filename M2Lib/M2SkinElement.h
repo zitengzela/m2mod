@@ -60,18 +60,18 @@ namespace M2Lib
 			#define TRANSPARENT_SHADER_ID 16
 
 		public:
-			UInt16 Flags;					//
-			UInt16 shader_id;				//
-			UInt16 iSubMesh;				// the sub mesh index that this material is assigned to.
-			UInt16 iSubMesh2;				// same as above, don't know why this is repeated.
-			SInt16 iColor;					// index into the color list.
-			SInt16 iRenderFlags;			//
-			SInt16 layer;					//
-			SInt16 op_count;				// shader to use for this texture stage.
-			SInt16 iTexture;				// index into the texture lookup list.
-			SInt16 iTexutreUnit2;			// index into the texture unit lookup list.
-			SInt16 iTransparency;			// index into the transparency lookup list.
-			SInt16 iTextureAnimation;		// index into the texture lookup animation list.
+			UInt16 Flags;						//
+			UInt16 shader_id;					//
+			UInt16 iSubMesh;					// the sub mesh index that this material is assigned to.
+			UInt16 iSubMesh2;					// same as above, don't know why this is repeated.
+			SInt16 iColor;						// index into the color list.
+			SInt16 iRenderFlags;				//
+			SInt16 layer;						//
+			SInt16 op_count;					// shader to use for this texture stage.
+			SInt16 textureComboIndex;			// index into the texture lookup list.
+			SInt16 textureCoordComboIndex;		// index into the texture unit lookup list.
+			SInt16 textureWeightComboIndex;		// index into the transparency lookup list.
+			SInt16 textureTransformComboIndex;	// index into the texture lookup animation list.
 		};
 
 		ASSERT_SIZE(CElement_Material, 24);

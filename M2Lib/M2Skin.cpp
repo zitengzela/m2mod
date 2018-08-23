@@ -101,9 +101,6 @@ M2Lib::EError M2Lib::M2Skin::Save(const Char16* FileName)
 
 void M2Lib::M2Skin::BuildVertexBoneIndices()
 {
-	if (!pM2)
-		return;
-
 	CVertex* VertexList = pM2->Elements[M2Element::EElement_Vertex].as<CVertex>();
 
 	UInt16* BoneLookupList = pM2->Elements[M2Element::EElement_SkinnedBoneLookup].as<UInt16>();
@@ -120,14 +117,14 @@ void M2Lib::M2Skin::BuildVertexBoneIndices()
 	for (UInt32 i = 0; i < VertexLookupListLength; ++i)
 		BoneIndexList[i] = 0;
 
-	for (UInt32 iSubMesh = 0; iSubMesh < SubMeshListLength; iSubMesh++)
+	for (UInt32 iSubMesh = 0; iSubMesh < SubMeshListLength; ++iSubMesh)
 	{
 		CElement_SubMesh& SubMesh = SubMeshList[iSubMesh];
 
 		UInt32 MaxBonesPerVertex = 0;
 
 		UInt32 SubMeshVertexEnd = SubMesh.VertexStart + SubMesh.VertexCount;
-		for (UInt32 j = SubMesh.VertexStart; j < SubMeshVertexEnd; j++)
+		for (UInt32 j = SubMesh.VertexStart; j < SubMeshVertexEnd; ++j)
 		{
 			CVertex const& Vertex = VertexList[VertexLookupList[j]];
 			UInt8* BoneIndices8 = (UInt8*)&BoneIndexList[j];
@@ -234,7 +231,7 @@ void M2Lib::M2Skin::CopyMaterials(M2Skin* pOther)
 	UInt32 SubMeshListLength = Elements[EElement_SubMesh].Count;
 	CElement_SubMesh* SubMeshList = Elements[EElement_SubMesh].as<CElement_SubMesh>();
 
-	for (UInt32 iSubMesh = 0; iSubMesh < SubMeshListLength; iSubMesh++)
+	for (UInt32 iSubMesh = 0; iSubMesh < SubMeshListLength; ++iSubMesh)
 	{
 		CElement_SubMesh& SubMesh = SubMeshList[iSubMesh];
 
@@ -514,11 +511,11 @@ bool M2Lib::M2Skin::PrintInfo()
 
         FileStream << "layer:   " << Material.layer << std::endl;
         //FileStream << "op_count:   " << Material.op_count << std::endl;
-        FileStream << "iTexture:   " << Material.iTexture << std::endl;
-        FileStream << "iTexutreUnit2:   " << Material.iTexutreUnit2 << std::endl;
+        FileStream << "textureComboIndex:   " << Material.textureComboIndex << std::endl;
+        FileStream << "textureCoordComboIndex:   " << Material.textureCoordComboIndex << std::endl;
 
-        FileStream << "iTransparency:   " << Material.iTransparency << std::endl;
-        FileStream << "iTextureAnimation:   " << Material.iTextureAnimation << std::endl;
+        FileStream << "textureWeightComboIndex:   " << Material.textureWeightComboIndex << std::endl;
+        FileStream << "textureTransformComboIndex:   " << Material.textureTransformComboIndex << std::endl;
         FileStream << std::endl;
     }
 
@@ -650,7 +647,7 @@ void M2Lib::M2Skin::MakeGlossy(UInt32 GlossTextureId, std::vector<UInt32> const&
 			if (Material.iSubMesh != submeshId)
 				continue;
 
-			auto textureId = TextureLookup[Material.iTexture].TextureIndex;
+			auto textureId = TextureLookup[Material.textureComboIndex].TextureIndex;
 			auto& texture = pM2->Elements[M2Element::EElement_Texture].as<M2Element::CElement_Texture>()[textureId];
 			if (texture.Type == M2Element::CElement_Texture::ETextureType::Skin)
 				pM2->Header.Description.Flags.flag_unk_0x80 = 0;	// fixes gloss but breaks dh tattoos
@@ -671,7 +668,7 @@ void M2Lib::M2Skin::MakeGlossy(UInt32 GlossTextureId, std::vector<UInt32> const&
 			else
 				newLookup = LookupRemap[textureId];
 
-			Material.iTexture = newLookup;
+			Material.textureComboIndex = newLookup;
 			Material.op_count = 2;
 			Material.shader_id = GLOSS_SHADER_ID;
 
@@ -729,11 +726,11 @@ std::vector<M2Lib::M2Skin::MeshInfo> M2Lib::M2Skin::GetMeshInfo()
 			{
 				MeshInfo::TextureInfo TextureInfo;
 
-				auto& texture = TextureElement.as<M2Element::CElement_Texture>()[TextureLookup[Material->iTexture + k].TextureIndex];
+				auto& texture = TextureElement.as<M2Element::CElement_Texture>()[TextureLookup[Material->textureComboIndex + k].TextureIndex];
 				TextureInfo.pTexture = &texture;
 
 				if (texture.Type == M2Element::CElement_Texture::ETextureType::Final_Hardcoded)
-					TextureInfo.Name = pM2->GetTexturePath(TextureLookup[Material->iTexture + k].TextureIndex);
+					TextureInfo.Name = pM2->GetTexturePath(TextureLookup[Material->textureComboIndex + k].TextureIndex);
 
 				Info.Textures.push_back(TextureInfo);
 			}
@@ -772,9 +769,9 @@ void M2Lib::M2Skin::CopyMaterial(UInt32 SrcMeshIndex, UInt32 DstMeshIndex)
 		DstMaterial.iRenderFlags = SrcMaterial->iRenderFlags;
 		DstMaterial.layer = SrcMaterial->layer;
 		DstMaterial.op_count = SrcMaterial->op_count;
-		DstMaterial.iTexture = SrcMaterial->iTexture;
-		DstMaterial.iTexutreUnit2 = SrcMaterial->iTexutreUnit2;
-		DstMaterial.iTransparency = SrcMaterial->iTransparency;
-		DstMaterial.iTextureAnimation = SrcMaterial->iTextureAnimation;
+		DstMaterial.textureComboIndex = SrcMaterial->textureComboIndex;
+		DstMaterial.textureCoordComboIndex = SrcMaterial->textureCoordComboIndex;
+		DstMaterial.textureWeightComboIndex = SrcMaterial->textureWeightComboIndex;
+		DstMaterial.textureTransformComboIndex = SrcMaterial->textureTransformComboIndex;
 	}
 }

@@ -374,12 +374,6 @@ bool M2Lib::M2SkinBuilder::Build(M2Skin* pResult, UInt32 BoneLoD, M2I* pM2I, CVe
 	UInt16* Triangles = pResult->Elements[M2SkinElement::EElement_TriangleIndex].as<UInt16>();
 	memcpy(Triangles, m_Indices.data(), m_Indices.size() * sizeof(UInt16)); // triangles
 
-	// copy subsets
-	if (g_Verbose >= 2)
-	{
-		std::cout << "\t\tcopying subsets to element..." << std::endl;
-	}
-
 	UInt32 TotalPartitionCount = 0;
 	for (UInt32 i = 0; i < m_SubMeshList.size(); ++i)
 		for (UInt32 j = 0; j < m_SubMeshList[i]->SubsetPartitions.size(); ++j)

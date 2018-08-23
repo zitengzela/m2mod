@@ -419,10 +419,9 @@ void M2Lib::M2::DoExtraWork()
 		if (!Skin)
 			continue;
 
-		for (auto ExtraDataItr : Skin->ExtraDataBySubmeshIndex)
+		for (UInt32 MeshIndex = 0; MeshIndex < Skin->ExtraDataBySubmeshIndex.size(); ++MeshIndex)
 		{
-			auto MeshIndex = ExtraDataItr.first;
-			auto ExtraData = ExtraDataItr.second;
+			auto ExtraData = Skin->ExtraDataBySubmeshIndex[MeshIndex];
 
 			// copy materials will be done later
 			if (ExtraData->MaterialOverride >= 0)
@@ -434,8 +433,8 @@ void M2Lib::M2::DoExtraWork()
 				auto textureId = GetTextureIndex(ExtraData->CustomTextureName.c_str());
 				if (textureId == -1)
 					textureId = AddTexture(ExtraData->CustomTextureName.c_str(),
-					CElement_Texture::ETextureType::Final_Hardcoded,
-					CElement_Texture::ETextureFlags::None);
+						CElement_Texture::ETextureType::Final_Hardcoded,
+						CElement_Texture::ETextureFlags::None);
 
 				auto textureLookup = AddTextureLookup(textureId, false);
 				if (ExtraData->GlossTextureName.empty() && renderFlagsByStyle.find(ExtraData->TextureStyle) == renderFlagsByStyle.end())
@@ -450,7 +449,7 @@ void M2Lib::M2::DoExtraWork()
 					if (Materials[j].iSubMesh != MeshIndex)
 						continue;
 
-					Materials[j].iTexture = textureLookup;
+					Materials[j].textureComboIndex = textureLookup;
 					Materials[j].op_count = 1;
 					if (ExtraData->GlossTextureName.empty())
 					{
@@ -983,7 +982,7 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16 const* FileName)
 		{
 			// copy skin to result list
 			NewSkinList[iSkin] = pNewSkin;
-			iSkin++;
+			++iSkin;
 
 			// copy skin's bone lookup to the global bone lookup list
 			for (UInt32 i = 0; i < SkinBuilder.m_Bones.size(); i++)
