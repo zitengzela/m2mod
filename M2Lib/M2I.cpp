@@ -207,9 +207,7 @@ M2Lib::EError M2Lib::M2I::Load(Char16 const* FileName, M2Lib::M2* pM2, bool Igno
 		{
 			DataBinary.ReadUInt16();
 			DataBinary.ReadSInt16();
-			DataBinary.ReadFloat32();
-			DataBinary.ReadFloat32();
-			DataBinary.ReadFloat32();
+			DataBinary.ReadC3Vector();
 
 			if (Version >= MAKE_VERSION(4, 8))
 			{
@@ -282,9 +280,7 @@ M2Lib::EError M2Lib::M2I::Load(Char16 const* FileName, M2Lib::M2* pM2, bool Igno
 			{
 				DataBinary.ReadUInt16();
 
-				DataBinary.ReadFloat32();
-				DataBinary.ReadFloat32();
-				DataBinary.ReadFloat32();
+				DataBinary.ReadC3Vector();
 				DataBinary.ReadFloat32();
 			}
 		}
@@ -296,9 +292,7 @@ M2Lib::EError M2Lib::M2I::Load(Char16 const* FileName, M2Lib::M2* pM2, bool Igno
 		{
 			DataBinary.ReadUInt32();
 			DataBinary.ReadUInt16();
-			DataBinary.ReadFloat32();
-			DataBinary.ReadFloat32();
-			DataBinary.ReadFloat32();
+			DataBinary.ReadC3Vector();
 			DataBinary.ReadFloat32();
 		}
 	}
