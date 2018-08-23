@@ -168,17 +168,19 @@ namespace M2ModRedux
 					settings->WowPath = StringConverter((String^)value).ToStringA();
 
 				if (auto value = RegistyStore::GetValue(RegistyStore::Value::ForceExportExpansion))
-					settings->ExportSettings.ForceExpansion = (M2Lib::Expansion)Int32::Parse(value->ToString());
+					settings->ForceLoadExpansion = (M2Lib::Expansion)Int32::Parse(value->ToString());
 				if (auto value = RegistyStore::GetValue(RegistyStore::Value::MergeAttachments))
-					settings->ImportSettings.MergeAttachments = Boolean::Parse(value->ToString());
+					settings->MergeAttachments = Boolean::Parse(value->ToString());
 				if (auto value = RegistyStore::GetValue(RegistyStore::Value::MergeBones))
-					settings->ImportSettings.MergeBones = Boolean::Parse(value->ToString());
+					settings->MergeBones = Boolean::Parse(value->ToString());
 				if (auto value = RegistyStore::GetValue(RegistyStore::Value::MergeCameras))
-					settings->ImportSettings.MergeCameras = Boolean::Parse(value->ToString());
+					settings->MergeCameras = Boolean::Parse(value->ToString());
 				if (auto value = RegistyStore::GetValue(RegistyStore::Value::FixSeams))
-					settings->ImportSettings.FixSeams = Boolean::Parse(value->ToString());
+					settings->FixSeams = Boolean::Parse(value->ToString());
+				if (auto value = RegistyStore::GetValue(RegistyStore::Value::IgnoreOriginalMeshIndexes))
+					settings->IgnoreOriginalMeshIndexes = Boolean::Parse(value->ToString());
 				if (auto value = RegistyStore::GetValue(RegistyStore::Value::FixAnimationsTest))
-					settings->ImportSettings.FixAnimationsTest = Boolean::Parse(value->ToString());
+					settings->FixAnimationsTest = Boolean::Parse(value->ToString());
 			}
 			catch (...)
 			{
@@ -197,12 +199,13 @@ namespace M2ModRedux
 
 		RegistyStore::SetValue(RegistyStore::Value::WowPath, gcnew String(settings->WowPath.c_str()));
 
-		RegistyStore::SetValue(RegistyStore::Value::ForceExportExpansion, (SInt32)settings->ExportSettings.ForceExpansion);
-		RegistyStore::SetValue(RegistyStore::Value::MergeAttachments, settings->ImportSettings.MergeAttachments);
-		RegistyStore::SetValue(RegistyStore::Value::MergeBones, settings->ImportSettings.MergeBones);
-		RegistyStore::SetValue(RegistyStore::Value::MergeCameras, settings->ImportSettings.MergeCameras);
-		RegistyStore::SetValue(RegistyStore::Value::FixSeams, settings->ImportSettings.FixSeams);
-		RegistyStore::SetValue(RegistyStore::Value::FixAnimationsTest, settings->ImportSettings.FixAnimationsTest);
+		RegistyStore::SetValue(RegistyStore::Value::ForceExportExpansion, (SInt32)settings->ForceLoadExpansion);
+		RegistyStore::SetValue(RegistyStore::Value::MergeAttachments, settings->MergeAttachments);
+		RegistyStore::SetValue(RegistyStore::Value::MergeBones, settings->MergeBones);
+		RegistyStore::SetValue(RegistyStore::Value::MergeCameras, settings->MergeCameras);
+		RegistyStore::SetValue(RegistyStore::Value::FixSeams, settings->FixSeams);
+		RegistyStore::SetValue(RegistyStore::Value::IgnoreOriginalMeshIndexes, settings->IgnoreOriginalMeshIndexes);
+		RegistyStore::SetValue(RegistyStore::Value::FixAnimationsTest, settings->FixAnimationsTest);
 	}
 
 	protected:

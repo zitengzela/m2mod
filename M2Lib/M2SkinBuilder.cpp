@@ -409,7 +409,7 @@ bool M2Lib::M2SkinBuilder::Build(M2Skin* pResult, UInt32 BoneLoD, M2I* pM2I, CVe
 				//pSubsetOut->Unknown2 = pSubsetPartitionIn->Unknown2;
 
 				// store comparison data that is calculated from original mesh before it was separated
-				pResult->ExtraDataBySubmeshIndex[iSubsetPartition] = m_SubMeshList[i]->pExtraData;
+				pResult->ExtraDataBySubmeshIndex.push_back(m_SubMeshList[i]->pExtraData);
 
 				++iSubsetPartition;
 			}

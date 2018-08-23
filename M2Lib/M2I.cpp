@@ -5,7 +5,7 @@
 #include "M2.h"
 #include "Logger.h"
 
-M2Lib::EError M2Lib::M2I::Load(Char16 const* FileName, M2Lib::M2* pM2, bool IgnoreBones, bool IgnoreAttachments, bool IgnoreCameras)
+M2Lib::EError M2Lib::M2I::Load(Char16 const* FileName, M2Lib::M2* pM2, bool IgnoreBones, bool IgnoreAttachments, bool IgnoreCameras, bool IgnoreOriginalMeshIndexes)
 {
 	// open file stream
 	std::fstream FileStream;
@@ -77,6 +77,14 @@ M2Lib::EError M2Lib::M2I::Load(Char16 const* FileName, M2Lib::M2* pM2, bool Igno
 			}
 		}
 
+		if (Version >= MAKE_VERSION(8, 0))
+		{
+			if (!IgnoreOriginalMeshIndexes)
+				pNewSubMesh->ExtraData.OriginalSubmeshIndex = DataBinary.ReadSInt32();
+			else
+				DataBinary.ReadSInt32();
+		}
+
 		// FMN 2015-02-13: read level
 		pNewSubMesh->Level = DataBinary.ReadUInt16();
 
@@ -84,12 +92,10 @@ M2Lib::EError M2Lib::M2I::Load(Char16 const* FileName, M2Lib::M2* pM2, bool Igno
 		UInt32 InVertexCount = 0;
 		InVertexCount = DataBinary.ReadUInt32();
 		if (VertexList.size() + InVertexCount > 0xFFFF)
-		{
 			return EError_FailedToImportM2I_TooManyVertices;
-		}
 
 		std::vector<CVertex> submeshVertices;
-		for (UInt32 j = 0; j < InVertexCount; j++)
+		for (UInt32 j = 0; j < InVertexCount; ++j)
 		{
 			CVertex InVertex;
 
@@ -119,7 +125,7 @@ M2Lib::EError M2Lib::M2I::Load(Char16 const* FileName, M2Lib::M2* pM2, bool Igno
 		UInt32 InTriangleCount = 0;
 		InTriangleCount = DataBinary.ReadUInt32();
 
-		for (UInt32 j = 0; j < InTriangleCount; j++)
+		for (UInt32 j = 0; j < InTriangleCount; ++j)
 		{
 			CTriangle NewTriangle;
 
@@ -254,12 +260,12 @@ M2Lib::EError M2Lib::M2I::Load(Char16 const* FileName, M2Lib::M2* pM2, bool Igno
 		auto Attachments = attachmentElement->as<M2Element::CElement_Attachment>();
 		UInt32 AttachmentCountIn;
 		AttachmentCountIn = DataBinary.ReadUInt32();
-		for (UInt32 i = 0; i < AttachmentCountIn; i++)
+		for (UInt32 i = 0; i < AttachmentCountIn; ++i)
 		{
 			UInt32 InAttachmentID = 0;
 			InAttachmentID = DataBinary.ReadUInt32();
 			M2Element::CElement_Attachment* pAttachmentToMod = NULL;
-			for (UInt32 j = 0; j < AttachmentsCount; j++)
+			for (UInt32 j = 0; j < AttachmentsCount; ++j)
 			{
 				if (Attachments[j].ID == InAttachmentID)
 				{
@@ -303,7 +309,7 @@ M2Lib::EError M2Lib::M2I::Load(Char16 const* FileName, M2Lib::M2* pM2, bool Igno
 		UInt32 CameraCount = pM2->Elements[M2Element::EElement_Camera].Count;
 		auto Cameras = pM2->Elements[M2Element::EElement_Camera].as<M2Element::CElement_Camera>();
 		UInt32 CameraCountIn = DataBinary.ReadUInt32();
-		for (UInt32 i = 0; i < CameraCountIn; i++)
+		for (UInt32 i = 0; i < CameraCountIn; ++i)
 		{
 			auto hasData = true;
 			if (Version >= MAKE_VERSION(4, 9))
@@ -313,7 +319,7 @@ M2Lib::EError M2Lib::M2I::Load(Char16 const* FileName, M2Lib::M2* pM2, bool Igno
 			if (hasData)
 			{
 				auto InType = (M2Element::CElement_Camera::ECameraType)DataBinary.ReadSInt32();
-				for (UInt32 j = 0; j < CameraCount; j++)
+				for (UInt32 j = 0; j < CameraCount; ++j)
 				{
 					if (Cameras[j].Type == InType)
 					{

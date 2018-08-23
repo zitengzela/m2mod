@@ -46,7 +46,7 @@ namespace M2ModRedux {
 
 		void Setup(M2Lib::GlobalSettings* settings)
 		{
-			M2Lib::Expansion ExpansionIndex = settings->ExportSettings.ForceExpansion;
+			M2Lib::Expansion ExpansionIndex = settings->ForceLoadExpansion;
 			if (ExpansionIndex != M2Lib::Expansion::None)
 				forceExpansionComboBox->SelectedIndex = (SInt32)ExpansionIndex + 1;
 			else
@@ -54,11 +54,12 @@ namespace M2ModRedux {
 
 			wowPathTextBox->Text = gcnew String(settings->WowPath.c_str());
 
-			checkBoxMergeBones->Checked = settings->ImportSettings.MergeBones;
-			checkBoxMergeAttachments->Checked = settings->ImportSettings.MergeAttachments;
-			checkBoxMergeCameras->Checked = settings->ImportSettings.MergeCameras;
-			checkBoxFixSeams->Checked = settings->ImportSettings.FixSeams;
-			testFixAnimationsCheckBox->Checked = settings->ImportSettings.FixAnimationsTest;
+			checkBoxMergeBones->Checked = settings->MergeBones;
+			checkBoxMergeAttachments->Checked = settings->MergeAttachments;
+			checkBoxMergeCameras->Checked = settings->MergeCameras;
+			checkBoxFixSeams->Checked = settings->FixSeams;
+			checkBoxIgnoreOriginalMeshIndexes->Checked = settings->IgnoreOriginalMeshIndexes;
+			testFixAnimationsCheckBox->Checked = settings->FixAnimationsTest;
 		}
 
 		M2Lib::GlobalSettings ProduceSettings()
@@ -67,16 +68,17 @@ namespace M2ModRedux {
 
 			settings.WowPath = StringConverter(wowPathTextBox->Text->Trim()).ToStringA();
 
-			settings.ImportSettings.MergeBones = checkBoxMergeBones->Checked;
-			settings.ImportSettings.MergeAttachments = checkBoxMergeAttachments->Checked;
-			settings.ImportSettings.MergeCameras = checkBoxMergeCameras->Checked;
-			settings.ImportSettings.FixSeams = checkBoxFixSeams->Checked;
-			settings.ImportSettings.FixAnimationsTest = testFixAnimationsCheckBox->Checked;
+			settings.MergeBones = checkBoxMergeBones->Checked;
+			settings.MergeAttachments = checkBoxMergeAttachments->Checked;
+			settings.MergeCameras = checkBoxMergeCameras->Checked;
+			settings.FixSeams = checkBoxFixSeams->Checked;
+			settings.IgnoreOriginalMeshIndexes = checkBoxIgnoreOriginalMeshIndexes->Checked;
+			settings.FixAnimationsTest = testFixAnimationsCheckBox->Checked;
 
 			if (forceExpansionComboBox->SelectedIndex > 0)
-				settings.ExportSettings.ForceExpansion = (M2Lib::Expansion)(forceExpansionComboBox->SelectedIndex - 1);
+				settings.ForceLoadExpansion = (M2Lib::Expansion)(forceExpansionComboBox->SelectedIndex - 1);
 			else
-				settings.ExportSettings.ForceExpansion = (M2Lib::Expansion) - 1;
+				settings.ForceLoadExpansion = (M2Lib::Expansion) - 1;
 
 			return settings;
 		}
@@ -112,6 +114,7 @@ namespace M2ModRedux {
 	private: System::Windows::Forms::OpenFileDialog^  wowBrowseDialog;
 	private: System::Windows::Forms::GroupBox^  wowPathGroupBox;
 	private: System::Windows::Forms::CheckBox^  testFixAnimationsCheckBox;
+	private: System::Windows::Forms::CheckBox^  checkBoxIgnoreOriginalMeshIndexes;
 
 	private: System::ComponentModel::IContainer^  components;
 
@@ -134,6 +137,7 @@ namespace M2ModRedux {
 			this->label1 = (gcnew System::Windows::Forms::Label());
 			this->forceExpansionComboBox = (gcnew System::Windows::Forms::ComboBox());
 			this->groupBox3 = (gcnew System::Windows::Forms::GroupBox());
+			this->checkBoxIgnoreOriginalMeshIndexes = (gcnew System::Windows::Forms::CheckBox());
 			this->testFixAnimationsCheckBox = (gcnew System::Windows::Forms::CheckBox());
 			this->checkBoxFixSeams = (gcnew System::Windows::Forms::CheckBox());
 			this->checkBoxMergeCameras = (gcnew System::Windows::Forms::CheckBox());
@@ -176,6 +180,7 @@ namespace M2ModRedux {
 			this->groupBox3->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Bottom)
 				| System::Windows::Forms::AnchorStyles::Left)
 				| System::Windows::Forms::AnchorStyles::Right));
+			this->groupBox3->Controls->Add(this->checkBoxIgnoreOriginalMeshIndexes);
 			this->groupBox3->Controls->Add(this->testFixAnimationsCheckBox);
 			this->groupBox3->Controls->Add(this->checkBoxFixSeams);
 			this->groupBox3->Controls->Add(this->checkBoxMergeCameras);
@@ -187,13 +192,22 @@ namespace M2ModRedux {
 			this->groupBox3->TabIndex = 2;
 			this->groupBox3->TabStop = false;
 			this->groupBox3->Text = L"Import Settings";
+			this->checkBoxIgnoreOriginalMeshIndexes->AutoSize = true;
+			this->checkBoxIgnoreOriginalMeshIndexes->Location = System::Drawing::Point(131, 42);
+			this->checkBoxIgnoreOriginalMeshIndexes->Name = L"checkBoxIgnoreOriginalMeshIndexes";
+			this->checkBoxIgnoreOriginalMeshIndexes->Size = System::Drawing::Size(159, 17);
+			this->checkBoxIgnoreOriginalMeshIndexes->TabIndex = 21;
+			this->checkBoxIgnoreOriginalMeshIndexes->Text = L"Ignore original mesh indexes";
+			this->toolTip1->SetToolTip(this->checkBoxIgnoreOriginalMeshIndexes, L"Mesh indexes will be read from M2I and treated will be treated as mesh indexes fr"
+				L"om original skin file");
+			this->checkBoxIgnoreOriginalMeshIndexes->UseVisualStyleBackColor = true;
 			this->testFixAnimationsCheckBox->AutoSize = true;
-			this->testFixAnimationsCheckBox->Location = System::Drawing::Point(131, 42);
+			this->testFixAnimationsCheckBox->Location = System::Drawing::Point(131, 65);
 			this->testFixAnimationsCheckBox->Name = L"testFixAnimationsCheckBox";
 			this->testFixAnimationsCheckBox->Size = System::Drawing::Size(94, 17);
 			this->testFixAnimationsCheckBox->TabIndex = 20;
 			this->testFixAnimationsCheckBox->Text = L"Test Fix Anims";
-			this->toolTip1->SetToolTip(this->testFixAnimationsCheckBox, L"Seams between meshes will be eleminated, also normals will be averaged on edges");
+			this->toolTip1->SetToolTip(this->testFixAnimationsCheckBox, L"Internal testing. Check only if you know what you do");
 			this->testFixAnimationsCheckBox->UseVisualStyleBackColor = true;
 			this->checkBoxFixSeams->AutoSize = true;
 			this->checkBoxFixSeams->Location = System::Drawing::Point(131, 19);

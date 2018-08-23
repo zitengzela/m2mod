@@ -24,6 +24,7 @@ namespace M2ModRedux
 			MergeCameras,
 			FixSeams,
 			ForceExportExpansion,
+			IgnoreOriginalMeshIndexes,
 
 			FixAnimationsTest,
 

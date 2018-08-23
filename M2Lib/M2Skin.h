@@ -73,7 +73,7 @@ namespace M2Lib
 		CM2SkinHeader Header;
 		DataElement Elements[M2SkinElement::EElement__Count__];
 
-		std::map<UInt32, SubmeshExtraData const*> ExtraDataBySubmeshIndex;
+		std::vector<SubmeshExtraData const*> ExtraDataBySubmeshIndex;
 
 		// pointer to M2 that this skin belongs to.
 		M2* pM2;

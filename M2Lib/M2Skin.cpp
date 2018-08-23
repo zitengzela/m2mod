@@ -222,7 +222,6 @@ void M2Lib::M2Skin::BuildMaxBones()
 	}
 }
 
-
 void M2Lib::M2Skin::CopyMaterials(M2Skin* pOther)
 {
 	std::vector< CElement_Material > NewMaterialList;
@@ -235,11 +234,11 @@ void M2Lib::M2Skin::CopyMaterials(M2Skin* pOther)
 	{
 		CElement_SubMesh& SubMesh = SubMeshList[iSubMesh];
 
-		auto comparisonDataItr = ExtraDataBySubmeshIndex.find(iSubMesh);
-		assert(comparisonDataItr != ExtraDataBySubmeshIndex.end());
+		assert(iSubMesh < ExtraDataBySubmeshIndex.size());
+		auto comparisonData = ExtraDataBySubmeshIndex[iSubMesh];
 
 		SInt32 SubMeshOtherIndex;
-		CElement_SubMesh* SubMeshOther = pOther->GetSubMesh(*comparisonDataItr->second, SubMeshOtherIndex);
+		CElement_SubMesh* SubMeshOther = pOther->GetSubMesh(*comparisonData, SubMeshOtherIndex);
 		assert(SubMeshOther);
 
 		SubMesh.CenterBoneIndex = SubMeshOther->CenterBoneIndex;
@@ -342,6 +341,14 @@ M2Lib::M2SkinElement::CElement_SubMesh* M2Lib::M2Skin::GetSubMesh(SubmeshExtraDa
 {
 	UInt32 SubMeshListLength = Elements[EElement_SubMesh].Count;
 	CElement_SubMesh* SubMeshList = Elements[EElement_SubMesh].as<CElement_SubMesh>();
+
+	if (TargetSubMeshData.OriginalSubmeshIndex >= 0)
+	{
+		assert(TargetSubMeshData.OriginalSubmeshIndex < SubMeshListLength);
+
+		SubMeshIndexOut = TargetSubMeshData.OriginalSubmeshIndex;
+		return &SubMeshList[SubMeshIndexOut];
+	}
 
 	Float32 DeltaMin = 0.0f;
 	SInt32 ClosestMatch = -1;
@@ -708,10 +715,11 @@ std::vector<M2Lib::M2Skin::MeshInfo> M2Lib::M2Skin::GetMeshInfo()
 		Info.ID = Submeshes[i].ID;
 		Info.pSubMesh = &Submeshes[i];
 
-		auto comparisonDataItr = ExtraDataBySubmeshIndex.find(i);
-		assert(comparisonDataItr != ExtraDataBySubmeshIndex.end());
-		Info.Description = comparisonDataItr->second->Description;
-		
+		assert(i < ExtraDataBySubmeshIndex.size());
+		auto comparisonData = ExtraDataBySubmeshIndex[i];
+
+		Info.Description = comparisonData->Description;
+
 		for (UInt32 j = 0; j < Header.nMaterial; ++j)
 		{
 			if (Materials[j].iSubMesh != i)

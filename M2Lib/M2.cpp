@@ -30,8 +30,8 @@ M2Lib::DataElement* M2Lib::M2::GetLastElement()
 
 M2Lib::Expansion M2Lib::M2::GetExpansion() const
 {
-	if (Settings && Settings->ExportSettings.ForceExpansion  != Expansion::None)
-		return Settings->ExportSettings.ForceExpansion;
+	if (Settings && Settings->ForceLoadExpansion  != Expansion::None)
+		return Settings->ForceLoadExpansion;
 
 	if (Header.Description.Version < 264)
 		return Expansion::BurningCrusade;
@@ -409,6 +409,11 @@ M2Lib::EError M2Lib::M2::SaveSkins(wchar_t const* M2FileName)
 
 void M2Lib::M2::DoExtraWork()
 {
+	//auto RenderFlags = Elements[EElement_TextureFlags].as<CElement_TextureFlag>();
+	//sLogger.Log("Existing render flags:");
+	//for (UInt32 i = 0; i < Elements[EElement_TextureFlags].Count; ++i)
+	//	sLogger.Log("\tFlags: %u Blend: %u", RenderFlags[i].Flags, RenderFlags[i].Blend);
+
 	M2SkinElement::TextureLookupRemap textureRemap;
 
 	std::map<int, int> renderFlagsByStyle;
@@ -439,8 +444,10 @@ void M2Lib::M2::DoExtraWork()
 				auto textureLookup = AddTextureLookup(textureId, false);
 				if (ExtraData->GlossTextureName.empty() && renderFlagsByStyle.find(ExtraData->TextureStyle) == renderFlagsByStyle.end())
 				{
-					renderFlagsByStyle[ExtraData->TextureStyle] = AddTextureFlags(CElement_TextureFlag::EFlags_TwoSided,
-						(CElement_TextureFlag::EBlend)ExtraData->TextureStyle);
+					// 8.x: breaks model
+					//renderFlagsByStyle[ExtraData->TextureStyle] = AddTextureFlags(CElement_TextureFlag::EFlags_TwoSided,
+					//	(CElement_TextureFlag::EBlend)ExtraData->TextureStyle);
+					//	CElement_TextureFlag::EBlend::EBlend_Opaque);
 				}
 
 				auto Materials = Skin->Elements[M2SkinElement::EElement_Material].as<M2SkinElement::CElement_Material>();
@@ -449,12 +456,15 @@ void M2Lib::M2::DoExtraWork()
 					if (Materials[j].iSubMesh != MeshIndex)
 						continue;
 
-					Materials[j].textureComboIndex = textureLookup;
-					Materials[j].op_count = 1;
+					auto& Material = Materials[j];
+
+					Material.textureComboIndex = textureLookup;
+					Material.op_count = 1;
 					if (ExtraData->GlossTextureName.empty())
 					{
 						Materials[j].shader_id = TRANSPARENT_SHADER_ID;
-						Materials[j].iRenderFlags = renderFlagsByStyle[ExtraData->TextureStyle];
+						// 8.x: breaks model
+						//Materials[j].iRenderFlags = renderFlagsByStyle[ExtraData->TextureStyle];
 					}
 				}
 
@@ -485,11 +495,9 @@ void M2Lib::M2::DoExtraWork()
 			continue;
 
 		// copy materials
-		for (auto ExtraDataItr : Skin->ExtraDataBySubmeshIndex)
+		for (UInt32 MeshIndex = 0; MeshIndex < Skin->ExtraDataBySubmeshIndex.size(); ++MeshIndex)
 		{
-			auto MeshIndex = ExtraDataItr.first;
-			auto ExtraData = ExtraDataItr.second;
-
+			auto ExtraData = Skin->ExtraDataBySubmeshIndex[MeshIndex];
 			if (ExtraData->MaterialOverride < 0)
 				continue;
 
@@ -498,15 +506,21 @@ void M2Lib::M2::DoExtraWork()
 			else
 			{
 				// translate index from zero skin to current skin
-				for (auto LocalExtraDataItr : Skin->ExtraDataBySubmeshIndex)
-					if (LocalExtraDataItr.second->FirstLODMeshIndex == ExtraData->MaterialOverride)
+				for (UInt32 LocalMeshIndex = 0; LocalMeshIndex < Skin->ExtraDataBySubmeshIndex.size(); ++LocalMeshIndex)
+				{
+					auto LocalExtraData = Skin->ExtraDataBySubmeshIndex[LocalMeshIndex];
+					if (LocalExtraData->FirstLODMeshIndex == ExtraData->MaterialOverride)
 					{
-						Skin->CopyMaterial(LocalExtraDataItr.first, MeshIndex);
+						Skin->CopyMaterial(LocalMeshIndex, MeshIndex);
 						break;
 					}
+				}
 			}
 		}
 	}
+
+	if (needRemoveTXIDChunk)
+		RemoveTXIDChunk();
 }
 
 M2Lib::ChunkBase* M2Lib::M2::GetChunk(EM2Chunk ChunkId)
@@ -722,12 +736,7 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate(Char16 const* FileName)
 	{
 		M2SkinElement::CElement_SubMesh* pSubsetOut = &Subsets[i];
 
-		// write subset ID
-
-		UInt16 SubsetID = pSubsetOut->ID;
-		UInt16 SubsetLevel = pSubsetOut->Level;
-
-		DataBinary.WriteUInt16(SubsetID);
+		DataBinary.WriteUInt16(pSubsetOut->ID);
 		DataBinary.WriteASCIIString("");	// description
 		DataBinary.WriteSInt16(-1);			// material override
 		DataBinary.WriteUInt8(0);			// no custom texture
@@ -735,8 +744,9 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate(Char16 const* FileName)
 		DataBinary.WriteUInt16(0);			// texture style
 		DataBinary.WriteUInt8(0);			// no gloss texture
 		DataBinary.WriteASCIIString("");	// gloss texture
+		DataBinary.WriteUInt32(i);			// original subset index
 
-		DataBinary.WriteUInt16(SubsetLevel);
+		DataBinary.WriteUInt16(pSubsetOut->Level);
 
 		// write vertices
 		DataBinary.WriteUInt32(pSubsetOut->VertexCount);
@@ -867,10 +877,11 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate(Char16 const* FileName)
 
 M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16 const* FileName)
 {
-	bool IgnoreBones = Settings && !Settings->ImportSettings.MergeBones;
-	bool IgnoreAttachments = Settings && !Settings->ImportSettings.MergeAttachments;
-	bool IgnoreCameras = Settings && !Settings->ImportSettings.MergeCameras;
-	bool FixSeams = !Settings || Settings->ImportSettings.FixSeams;
+	bool IgnoreBones = Settings && !Settings->MergeBones;
+	bool IgnoreAttachments = Settings && !Settings->MergeAttachments;
+	bool IgnoreCameras = Settings && !Settings->MergeCameras;
+	bool FixSeams = !Settings || Settings->FixSeams;
+	bool IgnoreOriginalMeshIndexes = Settings && Settings->IgnoreOriginalMeshIndexes;
 
 	Float32 SubmeshPositionalTolerance = 0.0001f;
 	Float32 SubmeshAngularTolerance = 45.0f;
@@ -890,7 +901,7 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16 const* FileName)
 		delete pInM2I;
 	pInM2I = new M2I();
 
-	auto Error = pInM2I->Load(FileName, this, IgnoreBones, IgnoreAttachments, IgnoreCameras);
+	auto Error = pInM2I->Load(FileName, this, IgnoreBones, IgnoreAttachments, IgnoreCameras, IgnoreOriginalMeshIndexes);
 	if (Error != EError_OK)
 		return Error;
 
@@ -972,9 +983,9 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16 const* FileName)
 		assert(SkinBuilder.Build(pNewSkin, MaxBoneList[iLoD], pInM2I, Elements[EElement_Vertex].as<CVertex>(), BoneStart));
 		if (iLoD == 0)
 		{
-			// fill extra data with indexes from zero skin
-			for (auto data : pNewSkin->ExtraDataBySubmeshIndex)
-				const_cast<SubmeshExtraData*>(data.second)->FirstLODMeshIndex = data.first;
+			// fill extra data with mesh indexes from zero skin
+			for (UInt32 i = 0; i < pNewSkin->ExtraDataBySubmeshIndex.size(); ++i)
+				const_cast<SubmeshExtraData*>(pNewSkin->ExtraDataBySubmeshIndex[i])->FirstLODMeshIndex = i;
 		}
 
 		// if there are more bones than the next lowest level of detail
@@ -2547,7 +2558,7 @@ void M2Lib::M2::m_FixAnimationOffsets_Old(SInt32 OffsetDelta, SInt32 TotalDelta,
 
 void M2Lib::M2::m_FixAnimationOffsets(SInt32 OffsetDelta, SInt32 TotalDelta, CElement_AnimationBlock& AnimationBlock, SInt32 iElement)
 {
-	if (Settings && Settings->ImportSettings.FixAnimationsTest)
+	if (Settings && Settings->FixAnimationsTest)
 	{
 		if (AnimationBlock.Times.Count != AnimationBlock.Keys.Count)
 			return;
@@ -2563,7 +2574,7 @@ void M2Lib::M2::m_FixAnimationOffsets(SInt32 OffsetDelta, SInt32 TotalDelta, CEl
 
 void M2Lib::M2::m_FixFakeAnimationBlockOffsets(SInt32 OffsetDelta, SInt32 TotalDelta, CElement_FakeAnimationBlock& AnimationBlock, SInt32 iElement)
 {
-	if (Settings && Settings->ImportSettings.FixAnimationsTest)
+	if (Settings && Settings->FixAnimationsTest)
 	{
 		if (AnimationBlock.Times.Count != AnimationBlock.Keys.Count)
 			return;
@@ -2728,7 +2739,12 @@ UInt32 M2Lib::M2::AddTexture(const Char8* szTextureSource, CElement_Texture::ETe
 	}
 
 	if (rawPathTexture && textureChunk)
+	{
+		sLogger.Log("Texture %s is not indexed in CASC, TXID chunk will be removed from model", szTextureSource);
 		textureChunk->TextureFileDataIds.push_back(0);
+		// texture is not indexed, texture chunk needs to be removed
+		needRemoveTXIDChunk = true;
+	}
 	
 	auto texturePathPos = Element.Data.size();
 
@@ -2828,6 +2844,64 @@ std::string M2Lib::M2::GetTexturePath(UInt32 Index)
 		return "";
 
 	return casc->GetFileByFileDataId(textureChunk->TextureFileDataIds[Index]);
+}
+
+void M2Lib::M2::RemoveTXIDChunk()
+{
+	auto casc = GetCasc();
+	if (!casc)
+		return;
+
+	sLogger.Log("Erasing TXID chunk from model");
+
+	auto chunkItr = Chunks.find(EM2Chunk::Texture);
+	if (chunkItr == Chunks.end())
+	{
+		sLogger.Log("TXID chunk not found");
+		return;
+	}
+
+	auto chunk = (M2Chunk::TXIDChunk*)chunkItr->second;
+
+	UInt32 newDataLen = 0;
+	std::map<UInt32, std::string> PathsByTextureId;
+
+	auto& Element = Elements[EElement_Texture];
+	for (UInt32 i = 0; i < chunk->TextureFileDataIds.size(); ++i)
+	{
+		assert(i < Element.Count);
+		auto FileDataId = chunk->TextureFileDataIds[i];
+		if (!FileDataId)
+			continue;
+
+		auto path = casc->GetFileByFileDataId(FileDataId);
+		assert(!path.empty());
+
+		PathsByTextureId[i] = path;
+		newDataLen += path.length() + 1;
+	}
+
+	sLogger.Log("Total data for storing textures needed: %u", newDataLen);
+
+	if (!newDataLen)
+		return;
+
+	UInt32 pathOffset = 0;
+	UInt32 OldSize = Element.Data.size();
+	Element.Data.insert(Element.Data.end(), newDataLen, 0);
+	for (auto itr : PathsByTextureId)
+	{
+		auto texture = Element.at<CElement_Texture>(itr.first);
+		texture->TexturePath.Offset = Element.Offset + OldSize + pathOffset;
+		texture->TexturePath.Count = itr.second.length() + 1;
+
+		memcpy(&Element.Data[OldSize + pathOffset], itr.second.data(), itr.second.length());
+		pathOffset += itr.second.length() + 1;
+	}
+
+	sLogger.Log("Moved %u textures from chunk", PathsByTextureId.size());
+
+	Chunks.erase(chunkItr);
 }
 
 UInt32 M2Lib::M2::AddTextureLookup(UInt16 TextureId, bool ForceNewIndex /*= false*/)

@@ -186,6 +186,7 @@ namespace M2Lib
 		M2Lib::Skeleton* Skeleton;
 		M2Lib::Skeleton* ParentSkeleton;
 		bool hasLodSkins;
+		bool needRemoveTXIDChunk; // TXID chunk will be removed when model has textures that are not indexed in CASC storage
 
 		UInt32 m_OriginalModelChunkSize;
 		GlobalSettings* Settings;
@@ -213,6 +214,7 @@ namespace M2Lib
 			pInM2I = NULL;
 			replaceM2 = NULL;
 			hasLodSkins = false;
+			needRemoveTXIDChunk = false;
 			this->Settings = Settings;
 			casc = NULL;
 			OriginalSkinCount = 0;
@@ -245,6 +247,7 @@ namespace M2Lib
 		UInt32 AddTextureLookup(UInt16 TextureId, bool ForceNewIndex = false);
 		UInt32 GetTextureIndex(const Char8* szTextureSource);
 		std::string GetTexturePath(UInt32 Index);
+		void RemoveTXIDChunk();
 
 		Casc* GetCasc() const { return casc; }
 		void SetCasc(Casc* casc) { this->casc = casc; }

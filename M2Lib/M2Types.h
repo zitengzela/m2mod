@@ -235,7 +235,10 @@ namespace M2Lib
 		std::string CustomTextureName;
 		std::string GlossTextureName;
 
-		int MaterialOverride;
+		// index of mesh to override material from
+		SInt32 MaterialOverride;
+		// this is the index of mesh in element structure of original skin
+		SInt32 OriginalSubmeshIndex;
 	};
 
 	bool floatEq(Float32 a, Float32 b);
