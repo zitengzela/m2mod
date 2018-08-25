@@ -114,6 +114,7 @@ namespace M2ModRedux
 				loadCacheButton->Text = "Regenerate cache";
 
 			cascInfoTextBox->Text = gcnew String(text.c_str());
+			casc->RemoveReference();
 		}
 
 		private: void TestFiles()
@@ -166,6 +167,8 @@ namespace M2ModRedux
 
 				if (auto value = RegistyStore::GetValue(RegistyStore::Value::WowPath))
 					settings->WowPath = StringConverter((String^)value).ToStringA();
+				if (auto value = RegistyStore::GetValue(RegistyStore::Value::UnloadCascOnDereference))
+					settings->UnloadCascOnDereference = Boolean::Parse(value->ToString());
 
 				if (auto value = RegistyStore::GetValue(RegistyStore::Value::ForceExportExpansion))
 					settings->ForceLoadExpansion = (M2Lib::Expansion)Int32::Parse(value->ToString());
@@ -198,6 +201,7 @@ namespace M2ModRedux
 		RegistyStore::SetValue(RegistyStore::Value::ImportReplaceM2, this->textBoxReplaceM2->Text);
 
 		RegistyStore::SetValue(RegistyStore::Value::WowPath, gcnew String(settings->WowPath.c_str()));
+		RegistyStore::SetValue(RegistyStore::Value::UnloadCascOnDereference, settings->UnloadCascOnDereference);
 
 		RegistyStore::SetValue(RegistyStore::Value::ForceExportExpansion, (SInt32)settings->ForceLoadExpansion);
 		RegistyStore::SetValue(RegistyStore::Value::MergeAttachments, settings->MergeAttachments);
@@ -983,8 +987,40 @@ private: System::Windows::Forms::Button^  clearButton;
 		if (!_casc)
 		{
 			_casc = new M2Lib::Casc();
-			if (settings && !settings->WowPath.empty())
-				_casc->SetStoragePath(settings->WowPath);
+
+			static bool pathNotified = false;
+			if (settings->WowPath.empty() && !pathNotified)
+			{
+				if (!pathNotified)
+				{
+					pathNotified = true;
+
+					auto result = MessageBox::Show(L"Wow path not set. Would you like to specify it?", L"Warning", MessageBoxButtons::YesNo, MessageBoxIcon::Warning);
+					if (result == System::Windows::Forms::DialogResult::Yes)
+						settingsToolStripMenuItem_Click(this, EventArgs::Empty);
+				}
+			}
+
+			_casc->SetStoragePath(settings->WowPath);
+			_casc->SetReleaseOnDereference(settings->UnloadCascOnDereference);
+
+			static bool listfileNotified = false;
+			if (!listfileNotified && !File::Exists(gcnew String(M2Lib::Casc::DefaultListfilePath.c_str())) &&
+				!File::Exists(gcnew String(M2Lib::Casc::DefaultBinListfilePath.c_str())))
+			{
+				listfileNotified = true;
+				auto result = MessageBox::Show(L"Wow listfile not found. Would you like to specify it?", L"Warning", MessageBoxButtons::YesNo, MessageBoxIcon::Warning);
+				if (result == System::Windows::Forms::DialogResult::Yes)
+				{
+					auto dialog = gcnew OpenFileDialog();
+					dialog->InitialDirectory = gcnew String(M2Lib::FileSystemA::GetCurrentPath().c_str());
+					dialog->FileName = L"listfile.txt";
+					dialog->Filter = L"WoW Listfile|*.txt";
+					auto result = dialog->ShowDialog();
+					if (result == System::Windows::Forms::DialogResult::OK)
+						_casc->GenerateListFileCache(StringConverter(dialog->FileName).ToStringA());;
+				}
+			}
 		}
 
 		return _casc;
@@ -1208,6 +1244,7 @@ private: System::Windows::Forms::Button^  clearButton;
 			*settings = form->ProduceSettings();
 			if (auto casc = GetCasc())
 			{
+				casc->SetReleaseOnDereference(settings->UnloadCascOnDereference);
 				casc->SetStoragePath(settings->WowPath);
 				AnalyzeCasc();
 			}
@@ -1233,9 +1270,9 @@ private: System::Windows::Forms::Button^  clearButton;
 		auto casc = GetCasc();
 
 		if (!casc->CacheLoaded())
-			casc->LoadListFileCache();
+			casc->LoadListFileCache("");
 		else
-			casc->GenerateListFileCache();
+			casc->GenerateListFileCache("");
 
 		AnalyzeCasc();
 	}

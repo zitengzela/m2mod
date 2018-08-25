@@ -29,6 +29,7 @@ namespace M2ModRedux
 			FixAnimationsTest,
 
 			WowPath,
+			UnloadCascOnDereference,
 
 			NotShowAutoUpdate,
 			ActualVersion,

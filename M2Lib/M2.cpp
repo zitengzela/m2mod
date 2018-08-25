@@ -62,6 +62,9 @@ M2Lib::M2::~M2()
 
 	for (UInt32 i = 0; i < SKIN_COUNT; ++i)
 		delete Skins[i];
+
+	if (auto casc = GetCasc())
+		casc->RemoveReference();
 }
 
 UInt32 M2Lib::M2::GetHeaderSize() const
@@ -2143,6 +2146,12 @@ void M2Lib::M2::m_LoadElements_FindSizes(UInt32 ChunkSize)
 	assert(IS_LOCAL_ELEMENT_OFFSET(offset));
 #define VERIFY_OFFSET_NOTLOCAL( offset ) \
 	assert( !offset || offset >= Elements[iElement].OffsetOriginal + Elements[iElement].Data.size() );
+
+void M2Lib::M2::SetCasc(Casc * casc)
+{
+	this->casc = casc;
+	casc->AddRefence();
+}
 
 M2Lib::DataElement* M2Lib::M2::GetAnimations()
 {

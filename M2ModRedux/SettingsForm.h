@@ -53,6 +53,7 @@ namespace M2ModRedux {
 				forceExpansionComboBox->SelectedIndex = 0;
 
 			wowPathTextBox->Text = gcnew String(settings->WowPath.c_str());
+			checkBoxUnloadCascOnDereference->Checked = settings->UnloadCascOnDereference;
 
 			checkBoxMergeBones->Checked = settings->MergeBones;
 			checkBoxMergeAttachments->Checked = settings->MergeAttachments;
@@ -67,12 +68,14 @@ namespace M2ModRedux {
 			M2Lib::GlobalSettings settings;
 
 			settings.WowPath = StringConverter(wowPathTextBox->Text->Trim()).ToStringA();
+			settings.UnloadCascOnDereference = checkBoxUnloadCascOnDereference->Checked;
 
 			settings.MergeBones = checkBoxMergeBones->Checked;
 			settings.MergeAttachments = checkBoxMergeAttachments->Checked;
 			settings.MergeCameras = checkBoxMergeCameras->Checked;
 			settings.FixSeams = checkBoxFixSeams->Checked;
 			settings.IgnoreOriginalMeshIndexes = checkBoxIgnoreOriginalMeshIndexes->Checked;
+			settings.UnloadCascOnDereference = checkBoxUnloadCascOnDereference->Checked;
 			settings.FixAnimationsTest = testFixAnimationsCheckBox->Checked;
 
 			if (forceExpansionComboBox->SelectedIndex > 0)
@@ -115,6 +118,8 @@ namespace M2ModRedux {
 	private: System::Windows::Forms::GroupBox^  wowPathGroupBox;
 	private: System::Windows::Forms::CheckBox^  testFixAnimationsCheckBox;
 	private: System::Windows::Forms::CheckBox^  checkBoxIgnoreOriginalMeshIndexes;
+	private: System::Windows::Forms::CheckBox^  checkBoxUnloadCascOnDereference;
+
 
 	private: System::ComponentModel::IContainer^  components;
 
@@ -146,6 +151,7 @@ namespace M2ModRedux {
 			this->saveButton = (gcnew System::Windows::Forms::Button());
 			this->cancelButton = (gcnew System::Windows::Forms::Button());
 			this->toolTip1 = (gcnew System::Windows::Forms::ToolTip(this->components));
+			this->checkBoxUnloadCascOnDereference = (gcnew System::Windows::Forms::CheckBox());
 			this->wowPathTextBox = (gcnew System::Windows::Forms::TextBox());
 			this->wowBrowseButton = (gcnew System::Windows::Forms::Button());
 			this->wowBrowseDialog = (gcnew System::Windows::Forms::OpenFileDialog());
@@ -158,7 +164,7 @@ namespace M2ModRedux {
 				| System::Windows::Forms::AnchorStyles::Right));
 			this->groupBox1->Controls->Add(this->label1);
 			this->groupBox1->Controls->Add(this->forceExpansionComboBox);
-			this->groupBox1->Location = System::Drawing::Point(12, 73);
+			this->groupBox1->Location = System::Drawing::Point(12, 104);
 			this->groupBox1->Name = L"groupBox1";
 			this->groupBox1->Size = System::Drawing::Size(346, 53);
 			this->groupBox1->TabIndex = 0;
@@ -177,8 +183,7 @@ namespace M2ModRedux {
 			this->forceExpansionComboBox->Size = System::Drawing::Size(122, 21);
 			this->forceExpansionComboBox->TabIndex = 0;
 			this->toolTip1->SetToolTip(this->forceExpansionComboBox, L"All input M2\'s will be treated accordingly");
-			this->groupBox3->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Bottom)
-				| System::Windows::Forms::AnchorStyles::Left)
+			this->groupBox3->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
 				| System::Windows::Forms::AnchorStyles::Right));
 			this->groupBox3->Controls->Add(this->checkBoxIgnoreOriginalMeshIndexes);
 			this->groupBox3->Controls->Add(this->testFixAnimationsCheckBox);
@@ -186,9 +191,9 @@ namespace M2ModRedux {
 			this->groupBox3->Controls->Add(this->checkBoxMergeCameras);
 			this->groupBox3->Controls->Add(this->checkBoxMergeAttachments);
 			this->groupBox3->Controls->Add(this->checkBoxMergeBones);
-			this->groupBox3->Location = System::Drawing::Point(12, 127);
+			this->groupBox3->Location = System::Drawing::Point(12, 158);
 			this->groupBox3->Name = L"groupBox3";
-			this->groupBox3->Size = System::Drawing::Size(346, 94);
+			this->groupBox3->Size = System::Drawing::Size(346, 91);
 			this->groupBox3->TabIndex = 2;
 			this->groupBox3->TabStop = false;
 			this->groupBox3->Text = L"Import Settings";
@@ -248,7 +253,7 @@ namespace M2ModRedux {
 			this->toolTip1->SetToolTip(this->checkBoxMergeBones, L"Merge bones from M2I to result model");
 			this->checkBoxMergeBones->UseVisualStyleBackColor = true;
 			this->saveButton->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Bottom | System::Windows::Forms::AnchorStyles::Right));
-			this->saveButton->Location = System::Drawing::Point(188, 228);
+			this->saveButton->Location = System::Drawing::Point(188, 258);
 			this->saveButton->Name = L"saveButton";
 			this->saveButton->Size = System::Drawing::Size(81, 29);
 			this->saveButton->TabIndex = 3;
@@ -256,13 +261,24 @@ namespace M2ModRedux {
 			this->saveButton->UseVisualStyleBackColor = true;
 			this->saveButton->Click += gcnew System::EventHandler(this, &SettingsForm::saveButton_Click);
 			this->cancelButton->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Bottom | System::Windows::Forms::AnchorStyles::Right));
-			this->cancelButton->Location = System::Drawing::Point(275, 228);
+			this->cancelButton->Location = System::Drawing::Point(275, 258);
 			this->cancelButton->Name = L"cancelButton";
 			this->cancelButton->Size = System::Drawing::Size(81, 29);
 			this->cancelButton->TabIndex = 4;
 			this->cancelButton->Text = L"Cancel";
 			this->cancelButton->UseVisualStyleBackColor = true;
 			this->cancelButton->Click += gcnew System::EventHandler(this, &SettingsForm::cancelButton_Click);
+			this->checkBoxUnloadCascOnDereference->AutoSize = true;
+			this->checkBoxUnloadCascOnDereference->Checked = true;
+			this->checkBoxUnloadCascOnDereference->CheckState = System::Windows::Forms::CheckState::Checked;
+			this->checkBoxUnloadCascOnDereference->Location = System::Drawing::Point(9, 47);
+			this->checkBoxUnloadCascOnDereference->Name = L"checkBoxUnloadCascOnDereference";
+			this->checkBoxUnloadCascOnDereference->Size = System::Drawing::Size(184, 17);
+			this->checkBoxUnloadCascOnDereference->TabIndex = 22;
+			this->checkBoxUnloadCascOnDereference->Text = L"Unload storage when not needed";
+			this->toolTip1->SetToolTip(this->checkBoxUnloadCascOnDereference, L"CASC storage will be unloaded after Import/Export, but this will slow down applic"
+				L"ation");
+			this->checkBoxUnloadCascOnDereference->UseVisualStyleBackColor = true;
 			this->wowPathTextBox->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
 				| System::Windows::Forms::AnchorStyles::Right));
 			this->wowPathTextBox->Location = System::Drawing::Point(9, 21);
@@ -281,17 +297,18 @@ namespace M2ModRedux {
 			this->wowBrowseDialog->Filter = L"WoW Executable|*.exe";
 			this->wowPathGroupBox->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
 				| System::Windows::Forms::AnchorStyles::Right));
+			this->wowPathGroupBox->Controls->Add(this->checkBoxUnloadCascOnDereference);
 			this->wowPathGroupBox->Controls->Add(this->wowBrowseButton);
 			this->wowPathGroupBox->Controls->Add(this->wowPathTextBox);
 			this->wowPathGroupBox->Location = System::Drawing::Point(12, 12);
 			this->wowPathGroupBox->Name = L"wowPathGroupBox";
-			this->wowPathGroupBox->Size = System::Drawing::Size(346, 61);
+			this->wowPathGroupBox->Size = System::Drawing::Size(346, 75);
 			this->wowPathGroupBox->TabIndex = 2;
 			this->wowPathGroupBox->TabStop = false;
 			this->wowPathGroupBox->Text = L"WoW Path";
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
-			this->ClientSize = System::Drawing::Size(368, 262);
+			this->ClientSize = System::Drawing::Size(368, 292);
 			this->Controls->Add(this->wowPathGroupBox);
 			this->Controls->Add(this->cancelButton);
 			this->Controls->Add(this->saveButton);
@@ -315,7 +332,7 @@ namespace M2ModRedux {
 		{
 			if (!M2Lib::FileSystemA::IsFile(WowPath + "\\" + "Wow.exe"))
 			{
-				MessageBox::Show("Path must point to Wow.exe", "Error", MessageBoxButtons::OK, MessageBoxIcon::Error);
+				MessageBox::Show("Path must point to directory with Wow.exe", "Error", MessageBoxButtons::OK, MessageBoxIcon::Error);
 				return;
 			}
 		}

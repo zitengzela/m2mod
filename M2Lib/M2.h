@@ -250,7 +250,7 @@ namespace M2Lib
 		void RemoveTXIDChunk();
 
 		Casc* GetCasc() const { return casc; }
-		void SetCasc(Casc* casc) { this->casc = casc; }
+		void SetCasc(Casc* casc);
 
 		DataElement* GetAnimations();
 		DataElement* GetAnimationsLookup();

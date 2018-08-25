@@ -3,14 +3,55 @@
 #include "Logger.h"
 #include <CascLib.h>
 #include <common/Common.h>
+#include <CascCommon.h>
 #include <fstream>
 
 UInt32 M2Lib::Casc::Magic = 'BLSF';
 
+bool M2Lib::Casc::_ExtractFile(void* hFile, std::string const & OutPath)
+{
+	FILE* fp = NULL;
+	DWORD dwBytesRead = 1;
+	DWORD dwFilePos = CascSetFilePointer(hFile, 0, NULL, FILE_BEGIN);
+	BYTE Buffer[0x1000];
+
+	// Create/open the dump file
+	fopen_s(&fp, OutPath.c_str(), "wt");
+	if (!fp)
+		return false;
+
+	// Read data as long as we can, write as long as we can
+	while (dwBytesRead != 0)
+	{
+		// Read from the source file
+		if (!CascReadFile(hFile, Buffer, sizeof(Buffer), &dwBytesRead))
+		{
+			fclose(fp);
+			return false;
+		}
+
+		// Write to the destination file
+		if (fwrite(Buffer, 1, dwBytesRead, fp) != dwBytesRead)
+		{
+			fclose(fp);
+			return false;
+		}
+	}
+
+	// Restore the file pointer
+	CascSetFilePointer(hFile, dwFilePos, NULL, FILE_BEGIN);
+
+	// Close the dump file
+	fclose(fp);
+
+	return true;
+}
+
+const std::string M2Lib::Casc::DefaultBinListfilePath = FileSystemA::GetCurrentPath() + "\\" + "listfile.lsb";
+const std::string M2Lib::Casc::DefaultListfilePath = FileSystemA::GetCurrentPath() + "\\" + "listfile.txt";
+
 M2Lib::Casc::Casc()
 {
-	BinListFile = FileSystemA::GetCurrentPath() + "\\" + "listfile.lsb";
-	ListFile = FileSystemA::GetCurrentPath() + "\\" + "listfile.txt";
 }
 
 void M2Lib::Casc::SetStoragePath(std::string const& StoragePath)
@@ -19,11 +60,22 @@ void M2Lib::Casc::SetStoragePath(std::string const& StoragePath)
 		return;
 
 	this->StoragePath = StoragePath;
-	Unload();
+	
+	ReleaseStorage();
+	ClearCache();
+	sLogger.Log("CASC storage path set to: %s", StoragePath.c_str());
+}
+
+void M2Lib::Casc::SetReleaseOnDereference(bool On)
+{
+	releaseOnDereference = On;
 }
 
 bool M2Lib::Casc::InitializeStorage()
 {
+	if (StorageInitialized())
+		return true;
+
 	sLogger.Log("Initializing CASC storage at '%s'", StoragePath.c_str());
 	// Open the storage directory
 	if (!CascOpenStorage(StoragePath.c_str(), 0, &hStorage))
@@ -36,29 +88,28 @@ bool M2Lib::Casc::InitializeStorage()
 	return true;
 }
 
-void M2Lib::Casc::Unload()
+void M2Lib::Casc::ReleaseStorage()
 {
 	if (hStorage != NULL)
 		CascCloseStorage(hStorage);
 	hStorage = NULL;
-
-	ClearCache();
 }
 
-bool M2Lib::Casc::LoadListFileCache()
+bool M2Lib::Casc::LoadListFileCache(std::string const& ListfilePath)
 {
-	ClearCache();
+	if (CacheLoaded())
+		return true;
 
-	if (!FileSystemA::IsFile(BinListFile))
+	if (!FileSystemA::IsFile(DefaultBinListfilePath))
 	{
-		sLogger.Log("Listfile cache at %s not found, generating new one", BinListFile.c_str());
-		if (!GenerateListFileCache())
+		sLogger.Log("Listfile cache at %s not found, generating new one", DefaultBinListfilePath.c_str());
+		if (!GenerateListFileCache(ListfilePath))
 			sLogger.Log("Error: Failed to generate listfile cache");
 		return false;
 	}
 
 	std::fstream FileStream;
-	FileStream.open(BinListFile, std::ios::in | std::ios::binary);
+	FileStream.open(DefaultBinListfilePath, std::ios::in | std::ios::binary);
 	if (FileStream.fail())
 	{
 		sLogger.Log("Error: Failed to open listfile cache");
@@ -95,33 +146,35 @@ bool M2Lib::Casc::LoadListFileCache()
 	return true;
 }
 
-bool M2Lib::Casc::GenerateListFileCache()
+bool M2Lib::Casc::GenerateListFileCache(std::string const& ListfilePath)
 {
 	ClearCache();
 
-	sLogger.Log("Loading listfile at %s", ListFile.c_str());
+	auto Path = ListfilePath;
+
+	if (Path.empty())
+		Path = DefaultListfilePath;
+
+	sLogger.Log("Loading listfile at %s", Path.c_str());
 	std::fstream in;
-	in.open(ListFile, std::ios::in);
+	in.open(Path, std::ios::in);
 	if (in.fail())
 	{
 		sLogger.Log("Error: Failed to open listfile");
 		return false;
 	}
 
-	if (!StorageInitialized())
+	if (!InitializeStorage())
 	{
-		if (!InitializeStorage())
-		{
-			sLogger.Log("Failed to generate listfile cache: can't be validated without CASC storage");
-			return false;
-		}
+		sLogger.Log("Failed to generate listfile cache: can't be validated without CASC storage");
+		return false;
 	}
 
 	std::fstream out;
-	out.open(BinListFile, std::ios::out | std::ios::binary | std::ios::trunc);
+	out.open(DefaultBinListfilePath, std::ios::out | std::ios::binary | std::ios::trunc);
 	if (out.fail())
 	{
-		sLogger.Log("Error: Failed to open listfile cache for writing at %s", BinListFile.c_str());
+		sLogger.Log("Error: Failed to open listfile cache for writing at %s", DefaultBinListfilePath.c_str());
 		return false;
 	}
 
@@ -162,11 +215,52 @@ bool M2Lib::Casc::GenerateListFileCache()
 	return true;
 }
 
+bool M2Lib::Casc::ExtractFile(std::string const & File, std::string const& OutPath)
+{
+	if (!InitializeStorage())
+		return false;
+
+	HANDLE hFile;
+	if (!CascOpenFile(hStorage, File.c_str(), 0, CASC_OPEN_BY_NAME | CASC_STRICT_DATA_CHECK, &hFile))
+		return false;
+
+	if (!_ExtractFile(hFile, OutPath))
+	{
+		CascCloseFile(hFile);
+		return false;
+	}
+
+	CascCloseFile(hFile);
+	return true;
+}
+
+bool M2Lib::Casc::ExtractFile(UInt32 FileDataId, std::string const& OutPath)
+{
+	if (!InitializeStorage())
+		return false;
+
+	std::string File = GetFileByFileDataId(FileDataId);
+	if (File.empty())
+		return false;
+
+	HANDLE hFile;
+	if (!CascOpenFile(hStorage, File.c_str(), 0, CASC_OPEN_BY_NAME | CASC_STRICT_DATA_CHECK, &hFile))
+		return false;
+
+	if (!_ExtractFile(hFile, OutPath))
+	{
+		CascCloseFile(hFile);
+		return false;
+	}
+
+	CascCloseFile(hFile);
+	return true;
+}
+
 std::string M2Lib::Casc::GetFileByFileDataId(UInt32 FileDataId)
 {
-	if (!cacheLoaded)
-		if (!LoadListFileCache())
-			return "";
+	if (!LoadListFileCache(""))
+		return "";
 
 	auto itr = filesByFileDataId.find(FileDataId);
 	if (itr == filesByFileDataId.end())
@@ -178,27 +272,46 @@ std::string M2Lib::Casc::GetFileByFileDataId(UInt32 FileDataId)
 UInt32 M2Lib::Casc::GetFileDataIdByFile(std::string const & File)
 {
 	if (!cacheLoaded)
-		LoadListFileCache();
+		LoadListFileCache("");
 
+	UInt64 hash = CalcFileNameHash(File.c_str());
 	if (cacheLoaded)
 	{
-		auto itr = fileDataIdsByHash.find(CalcFileNameHash(File.c_str()));
+		auto itr = fileDataIdsByHash.find(hash);
 		if (itr != fileDataIdsByHash.end())
 			return itr->second;
 	}
 
-	if (!StorageInitialized())
-		if (!InitializeStorage())
-			return 0;
+	if (!InitializeStorage())
+		return 0;
 
 	UInt32 FileDataId = CascGetFileId(hStorage, File.c_str());
 	if (!FileDataId || FileDataId == CASC_INVALID_ID)
+	{
+		fileDataIdsByHash[hash] = 0;
 		return 0;
+	}
 
+	fileDataIdsByHash[hash] = FileDataId;
 	return FileDataId;
 }
 
 UInt64 M2Lib::Casc::CalculateHash(std::string const & FileName)
 {
 	return CalcFileNameHash(FileName.c_str());
+}
+
+void M2Lib::Casc::AddRefence()
+{
+	++referenceCount;
+}
+
+void M2Lib::Casc::RemoveReference()
+{
+	--referenceCount;
+	if (referenceCount <= 0)
+	{
+		referenceCount = 0;
+		ReleaseStorage();
+	}
 }

@@ -18,5 +18,6 @@ namespace M2Lib
 		bool FixAnimationsTest = false;
 
 		std::string WowPath;
+		bool UnloadCascOnDereference = true;
 	};
 }
