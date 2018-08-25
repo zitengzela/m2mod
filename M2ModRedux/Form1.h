@@ -58,8 +58,9 @@ namespace M2ModRedux
 	private: System::Windows::Forms::TabPage^  cascTabPage;
 	private: System::Windows::Forms::Label^  cascInfoLabel;
 	private: System::Windows::Forms::TextBox^  cascInfoTextBox;
-	private: System::Windows::Forms::Button^  loadCascButton;
-	private: System::Windows::Forms::Button^  loadCacheButton;
+
+	private: System::Windows::Forms::Button^  loadListfileButton;
+
 	private: System::Windows::Forms::TextBox^  testOutputTextBox;
 
 	private: System::Windows::Forms::TextBox^  testInputTextBox;
@@ -107,14 +108,7 @@ namespace M2ModRedux
 			else
 				text += std::to_string(casc->GetCacheSize()) + " files\r\n";
 
-			loadCascButton->Enabled = casc && !casc->StorageInitialized();
-			if (!casc->CacheLoaded())
-				loadCacheButton->Text = "Load cache";
-			else
-				loadCacheButton->Text = "Regenerate cache";
-
 			cascInfoTextBox->Text = gcnew String(text.c_str());
-			casc->RemoveReference();
 		}
 
 		private: void TestFiles()
@@ -335,8 +329,7 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->testOutputTextBox = (gcnew System::Windows::Forms::TextBox());
 				 this->testInputTextBox = (gcnew System::Windows::Forms::TextBox());
 				 this->fileTestLabel = (gcnew System::Windows::Forms::Label());
-				 this->loadCascButton = (gcnew System::Windows::Forms::Button());
-				 this->loadCacheButton = (gcnew System::Windows::Forms::Button());
+				 this->loadListfileButton = (gcnew System::Windows::Forms::Button());
 				 this->cascInfoTextBox = (gcnew System::Windows::Forms::TextBox());
 				 this->cascInfoLabel = (gcnew System::Windows::Forms::Label());
 				 this->tabLog = (gcnew System::Windows::Forms::TabPage());
@@ -365,7 +358,13 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->statusStrip1->SuspendLayout();
 				 this->menuStrip1->SuspendLayout();
 				 this->SuspendLayout();
+				 // 
+				 // openFileDialog1
+				 // 
 				 this->openFileDialog1->FileName = L"openFileDialog1";
+				 // 
+				 // toolTip1
+				 // 
 				 this->toolTip1->AutomaticDelay = 300;
 				 this->toolTip1->BackColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(38)), static_cast<System::Int32>(static_cast<System::Byte>(16)),
 					 static_cast<System::Int32>(static_cast<System::Byte>(4)));
@@ -373,6 +372,9 @@ private: System::Windows::Forms::Button^  clearButton;
 					 static_cast<System::Int32>(static_cast<System::Byte>(131)));
 				 this->toolTip1->UseAnimation = false;
 				 this->toolTip1->UseFading = false;
+				 // 
+				 // label1
+				 // 
 				 this->label1->AutoSize = true;
 				 this->label1->Location = System::Drawing::Point(20, 7);
 				 this->label1->Name = L"label1";
@@ -380,6 +382,9 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->label1->TabIndex = 3;
 				 this->label1->Text = L"InputM2";
 				 this->toolTip1->SetToolTip(this->label1, L"Required. Select an M2 for M2Mod to work with.");
+				 // 
+				 // buttonInputM2ExpBrowse
+				 // 
 				 this->buttonInputM2ExpBrowse->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Right));
 				 this->buttonInputM2ExpBrowse->Location = System::Drawing::Point(472, 3);
 				 this->buttonInputM2ExpBrowse->Name = L"buttonInputM2ExpBrowse";
@@ -389,6 +394,9 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->toolTip1->SetToolTip(this->buttonInputM2ExpBrowse, L"Browse...");
 				 this->buttonInputM2ExpBrowse->UseVisualStyleBackColor = true;
 				 this->buttonInputM2ExpBrowse->Click += gcnew System::EventHandler(this, &Form1::buttonInputM2Browse_Click);
+				 // 
+				 // buttonOutputM2IBrowse
+				 // 
 				 this->buttonOutputM2IBrowse->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Right));
 				 this->buttonOutputM2IBrowse->Location = System::Drawing::Point(473, 3);
 				 this->buttonOutputM2IBrowse->Name = L"buttonOutputM2IBrowse";
@@ -398,6 +406,9 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->toolTip1->SetToolTip(this->buttonOutputM2IBrowse, L"Browse...");
 				 this->buttonOutputM2IBrowse->UseVisualStyleBackColor = true;
 				 this->buttonOutputM2IBrowse->Click += gcnew System::EventHandler(this, &Form1::buttonOutputM2IBrowse_Click);
+				 // 
+				 // label7
+				 // 
 				 this->label7->AutoSize = true;
 				 this->label7->Location = System::Drawing::Point(10, 6);
 				 this->label7->Name = L"label7";
@@ -405,6 +416,9 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->label7->TabIndex = 6;
 				 this->label7->Text = L"OutputM2I";
 				 this->toolTip1->SetToolTip(this->label7, L"Optional. If set, M2Mod will convert InputM2 to an M2I and save it here.");
+				 // 
+				 // label3
+				 // 
 				 this->label3->AutoSize = true;
 				 this->label3->Location = System::Drawing::Point(17, 8);
 				 this->label3->Name = L"label3";
@@ -413,6 +427,9 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->label3->Text = L"InputM2I";
 				 this->toolTip1->SetToolTip(this->label3, L"Optional. If set, M2Mod will merge InputM2 with InputM2I to create a modified M2 "
 					 L"which will be saved to OutputM2.");
+				 // 
+				 // buttonInputM2IBrowse
+				 // 
 				 this->buttonInputM2IBrowse->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Right));
 				 this->buttonInputM2IBrowse->Location = System::Drawing::Point(472, 5);
 				 this->buttonInputM2IBrowse->Name = L"buttonInputM2IBrowse";
@@ -422,8 +439,11 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->toolTip1->SetToolTip(this->buttonInputM2IBrowse, L"Browse...");
 				 this->buttonInputM2IBrowse->UseVisualStyleBackColor = true;
 				 this->buttonInputM2IBrowse->Click += gcnew System::EventHandler(this, &Form1::buttonInputM2IBrowse_Click);
+				 // 
+				 // exportButtonGo
+				 // 
 				 this->exportButtonGo->Anchor = System::Windows::Forms::AnchorStyles::Bottom;
-				 this->exportButtonGo->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 8.25, System::Drawing::FontStyle::Bold, System::Drawing::GraphicsUnit::Point,
+				 this->exportButtonGo->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 8.25F, System::Drawing::FontStyle::Bold, System::Drawing::GraphicsUnit::Point,
 					 static_cast<System::Byte>(0)));
 				 this->exportButtonGo->Location = System::Drawing::Point(214, 208);
 				 this->exportButtonGo->Name = L"exportButtonGo";
@@ -433,6 +453,9 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->toolTip1->SetToolTip(this->exportButtonGo, L"Click this to perform operations.");
 				 this->exportButtonGo->UseVisualStyleBackColor = true;
 				 this->exportButtonGo->Click += gcnew System::EventHandler(this, &Form1::buttonGo_Click);
+				 // 
+				 // label5
+				 // 
 				 this->label5->AutoSize = true;
 				 this->label5->Location = System::Drawing::Point(20, 7);
 				 this->label5->Name = L"label5";
@@ -440,6 +463,9 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->label5->TabIndex = 3;
 				 this->label5->Text = L"InputM2";
 				 this->toolTip1->SetToolTip(this->label5, L"Required. Select an M2 for M2Mod to work with.");
+				 // 
+				 // buttonInputM2ImpBrowse
+				 // 
 				 this->buttonInputM2ImpBrowse->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Right));
 				 this->buttonInputM2ImpBrowse->Location = System::Drawing::Point(472, 3);
 				 this->buttonInputM2ImpBrowse->Name = L"buttonInputM2ImpBrowse";
@@ -449,9 +475,12 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->toolTip1->SetToolTip(this->buttonInputM2ImpBrowse, L"Browse...");
 				 this->buttonInputM2ImpBrowse->UseVisualStyleBackColor = true;
 				 this->buttonInputM2ImpBrowse->Click += gcnew System::EventHandler(this, &Form1::buttonInputM2Browse_Click);
+				 // 
+				 // importButtonGo
+				 // 
 				 this->importButtonGo->Anchor = System::Windows::Forms::AnchorStyles::Bottom;
 				 this->importButtonGo->Enabled = false;
-				 this->importButtonGo->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 8.25, System::Drawing::FontStyle::Bold, System::Drawing::GraphicsUnit::Point,
+				 this->importButtonGo->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 8.25F, System::Drawing::FontStyle::Bold, System::Drawing::GraphicsUnit::Point,
 					 static_cast<System::Byte>(0)));
 				 this->importButtonGo->Location = System::Drawing::Point(207, 10);
 				 this->importButtonGo->Name = L"importButtonGo";
@@ -461,9 +490,12 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->toolTip1->SetToolTip(this->importButtonGo, L"Produce M2");
 				 this->importButtonGo->UseVisualStyleBackColor = true;
 				 this->importButtonGo->Click += gcnew System::EventHandler(this, &Form1::importButtonGo_Click);
+				 // 
+				 // importButtonPreload
+				 // 
 				 this->importButtonPreload->Anchor = System::Windows::Forms::AnchorStyles::Bottom;
-				 this->importButtonPreload->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 8.25, System::Drawing::FontStyle::Bold, System::Drawing::GraphicsUnit::Point,
-					 static_cast<System::Byte>(0)));
+				 this->importButtonPreload->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 8.25F, System::Drawing::FontStyle::Bold,
+					 System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(0)));
 				 this->importButtonPreload->Location = System::Drawing::Point(54, 10);
 				 this->importButtonPreload->Name = L"importButtonPreload";
 				 this->importButtonPreload->Size = System::Drawing::Size(142, 38);
@@ -472,9 +504,12 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->toolTip1->SetToolTip(this->importButtonPreload, L"Load source M2 and import M2I");
 				 this->importButtonPreload->UseVisualStyleBackColor = true;
 				 this->importButtonPreload->Click += gcnew System::EventHandler(this, &Form1::importButtonPreload_Click);
+				 // 
+				 // importCancelButton
+				 // 
 				 this->importCancelButton->Anchor = System::Windows::Forms::AnchorStyles::Bottom;
 				 this->importCancelButton->Enabled = false;
-				 this->importCancelButton->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 8.25, System::Drawing::FontStyle::Bold, System::Drawing::GraphicsUnit::Point,
+				 this->importCancelButton->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 8.25F, System::Drawing::FontStyle::Bold, System::Drawing::GraphicsUnit::Point,
 					 static_cast<System::Byte>(0)));
 				 this->importCancelButton->Location = System::Drawing::Point(359, 10);
 				 this->importCancelButton->Name = L"importCancelButton";
@@ -484,6 +519,9 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->toolTip1->SetToolTip(this->importCancelButton, L"Cancel preload");
 				 this->importCancelButton->UseVisualStyleBackColor = true;
 				 this->importCancelButton->Click += gcnew System::EventHandler(this, &Form1::importCancelButton_Click);
+				 // 
+				 // manageMeshesButton
+				 // 
 				 this->manageMeshesButton->Location = System::Drawing::Point(9, 3);
 				 this->manageMeshesButton->Name = L"manageMeshesButton";
 				 this->manageMeshesButton->Size = System::Drawing::Size(107, 30);
@@ -492,6 +530,9 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->toolTip1->SetToolTip(this->manageMeshesButton, L"Open Mesh Management UI");
 				 this->manageMeshesButton->UseVisualStyleBackColor = true;
 				 this->manageMeshesButton->Click += gcnew System::EventHandler(this, &Form1::manageMeshesButton_Click);
+				 // 
+				 // textBoxInputM2Imp
+				 // 
 				 this->textBoxInputM2Imp->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
 					 | System::Windows::Forms::AnchorStyles::Right));
 				 this->textBoxInputM2Imp->Location = System::Drawing::Point(88, 3);
@@ -499,6 +540,9 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->textBoxInputM2Imp->Size = System::Drawing::Size(378, 20);
 				 this->textBoxInputM2Imp->TabIndex = 4;
 				 this->toolTip1->SetToolTip(this->textBoxInputM2Imp, L"Path to source M2");
+				 // 
+				 // textBoxInputM2I
+				 // 
 				 this->textBoxInputM2I->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
 					 | System::Windows::Forms::AnchorStyles::Right));
 				 this->textBoxInputM2I->Location = System::Drawing::Point(88, 5);
@@ -506,6 +550,9 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->textBoxInputM2I->Size = System::Drawing::Size(378, 20);
 				 this->textBoxInputM2I->TabIndex = 10;
 				 this->toolTip1->SetToolTip(this->textBoxInputM2I, L"Path to M2I");
+				 // 
+				 // textBoxReplaceM2
+				 // 
 				 this->textBoxReplaceM2->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
 					 | System::Windows::Forms::AnchorStyles::Right));
 				 this->textBoxReplaceM2->Location = System::Drawing::Point(8, 3);
@@ -513,6 +560,9 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->textBoxReplaceM2->Size = System::Drawing::Size(378, 20);
 				 this->textBoxReplaceM2->TabIndex = 13;
 				 this->toolTip1->SetToolTip(this->textBoxReplaceM2, L"Destination path for M2");
+				 // 
+				 // buttonReplaceM2Browse
+				 // 
 				 this->buttonReplaceM2Browse->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Right));
 				 this->buttonReplaceM2Browse->Location = System::Drawing::Point(392, 2);
 				 this->buttonReplaceM2Browse->Name = L"buttonReplaceM2Browse";
@@ -522,6 +572,9 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->toolTip1->SetToolTip(this->buttonReplaceM2Browse, L"Browse...");
 				 this->buttonReplaceM2Browse->UseVisualStyleBackColor = true;
 				 this->buttonReplaceM2Browse->Click += gcnew System::EventHandler(this, &Form1::buttonReplaceM2Browse_Click);
+				 // 
+				 // checkBoxReplaceM2
+				 // 
 				 this->checkBoxReplaceM2->AutoSize = true;
 				 this->checkBoxReplaceM2->Enabled = false;
 				 this->checkBoxReplaceM2->Location = System::Drawing::Point(7, 73);
@@ -532,6 +585,9 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->toolTip1->SetToolTip(this->checkBoxReplaceM2, L"If you are swapping models, select target M2 that you would like to swap from.");
 				 this->checkBoxReplaceM2->UseVisualStyleBackColor = true;
 				 this->checkBoxReplaceM2->CheckedChanged += gcnew System::EventHandler(this, &Form1::checkBoxReplaceM2_CheckedChanged);
+				 // 
+				 // tabControl
+				 // 
 				 this->tabControl->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Bottom)
 					 | System::Windows::Forms::AnchorStyles::Left)
 					 | System::Windows::Forms::AnchorStyles::Right));
@@ -545,6 +601,9 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->tabControl->SelectedIndex = 0;
 				 this->tabControl->Size = System::Drawing::Size(570, 277);
 				 this->tabControl->TabIndex = 25;
+				 // 
+				 // tabExport
+				 // 
 				 this->tabExport->Controls->Add(this->panelImputM2Exp);
 				 this->tabExport->Controls->Add(this->panelOutputM2I);
 				 this->tabExport->Controls->Add(this->exportButtonGo);
@@ -555,6 +614,9 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->tabExport->TabIndex = 0;
 				 this->tabExport->Text = L"Export";
 				 this->tabExport->UseVisualStyleBackColor = true;
+				 // 
+				 // panelImputM2Exp
+				 // 
 				 this->panelImputM2Exp->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
 					 | System::Windows::Forms::AnchorStyles::Right));
 				 this->panelImputM2Exp->Controls->Add(this->textBoxInputM2Exp);
@@ -564,12 +626,18 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->panelImputM2Exp->Name = L"panelImputM2Exp";
 				 this->panelImputM2Exp->Size = System::Drawing::Size(531, 24);
 				 this->panelImputM2Exp->TabIndex = 19;
+				 // 
+				 // textBoxInputM2Exp
+				 // 
 				 this->textBoxInputM2Exp->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
 					 | System::Windows::Forms::AnchorStyles::Right));
 				 this->textBoxInputM2Exp->Location = System::Drawing::Point(88, 3);
 				 this->textBoxInputM2Exp->Name = L"textBoxInputM2Exp";
 				 this->textBoxInputM2Exp->Size = System::Drawing::Size(378, 20);
 				 this->textBoxInputM2Exp->TabIndex = 4;
+				 // 
+				 // panelOutputM2I
+				 // 
 				 this->panelOutputM2I->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
 					 | System::Windows::Forms::AnchorStyles::Right));
 				 this->panelOutputM2I->Controls->Add(this->buttonOutputM2IBrowse);
@@ -579,12 +647,18 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->panelOutputM2I->Name = L"panelOutputM2I";
 				 this->panelOutputM2I->Size = System::Drawing::Size(532, 26);
 				 this->panelOutputM2I->TabIndex = 20;
+				 // 
+				 // textBoxOutputM2I
+				 // 
 				 this->textBoxOutputM2I->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
 					 | System::Windows::Forms::AnchorStyles::Right));
 				 this->textBoxOutputM2I->Location = System::Drawing::Point(89, 3);
 				 this->textBoxOutputM2I->Name = L"textBoxOutputM2I";
 				 this->textBoxOutputM2I->Size = System::Drawing::Size(378, 20);
 				 this->textBoxOutputM2I->TabIndex = 7;
+				 // 
+				 // tabImport
+				 // 
 				 this->tabImport->Controls->Add(this->checkBoxReplaceM2);
 				 this->tabImport->Controls->Add(this->panelReplaceM2);
 				 this->tabImport->Controls->Add(this->panel1);
@@ -598,6 +672,9 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->tabImport->TabIndex = 1;
 				 this->tabImport->Text = L"Import";
 				 this->tabImport->UseVisualStyleBackColor = true;
+				 // 
+				 // panelReplaceM2
+				 // 
 				 this->panelReplaceM2->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
 					 | System::Windows::Forms::AnchorStyles::Right));
 				 this->panelReplaceM2->Controls->Add(this->textBoxReplaceM2);
@@ -607,6 +684,9 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->panelReplaceM2->Name = L"panelReplaceM2";
 				 this->panelReplaceM2->Size = System::Drawing::Size(451, 25);
 				 this->panelReplaceM2->TabIndex = 25;
+				 // 
+				 // panel1
+				 // 
 				 this->panel1->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Bottom | System::Windows::Forms::AnchorStyles::Left)
 					 | System::Windows::Forms::AnchorStyles::Right));
 				 this->panel1->Controls->Add(this->importButtonGo);
@@ -616,12 +696,18 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->panel1->Name = L"panel1";
 				 this->panel1->Size = System::Drawing::Size(527, 62);
 				 this->panel1->TabIndex = 31;
+				 // 
+				 // extraworkPanel
+				 // 
 				 this->extraworkPanel->Controls->Add(this->manageMeshesButton);
 				 this->extraworkPanel->Enabled = false;
 				 this->extraworkPanel->Location = System::Drawing::Point(7, 101);
 				 this->extraworkPanel->Name = L"extraworkPanel";
 				 this->extraworkPanel->Size = System::Drawing::Size(530, 91);
 				 this->extraworkPanel->TabIndex = 30;
+				 // 
+				 // panelInputM2Import
+				 // 
 				 this->panelInputM2Import->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
 					 | System::Windows::Forms::AnchorStyles::Right));
 				 this->panelInputM2Import->Controls->Add(this->textBoxInputM2Imp);
@@ -631,6 +717,9 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->panelInputM2Import->Name = L"panelInputM2Import";
 				 this->panelInputM2Import->Size = System::Drawing::Size(531, 24);
 				 this->panelInputM2Import->TabIndex = 26;
+				 // 
+				 // panelInputM2I
+				 // 
 				 this->panelInputM2I->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
 					 | System::Windows::Forms::AnchorStyles::Right));
 				 this->panelInputM2I->Controls->Add(this->label3);
@@ -640,13 +729,15 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->panelInputM2I->Name = L"panelInputM2I";
 				 this->panelInputM2I->Size = System::Drawing::Size(531, 30);
 				 this->panelInputM2I->TabIndex = 23;
+				 // 
+				 // cascTabPage
+				 // 
 				 this->cascTabPage->Controls->Add(this->refreshButton);
 				 this->cascTabPage->Controls->Add(this->fileTestButton);
 				 this->cascTabPage->Controls->Add(this->testOutputTextBox);
 				 this->cascTabPage->Controls->Add(this->testInputTextBox);
 				 this->cascTabPage->Controls->Add(this->fileTestLabel);
-				 this->cascTabPage->Controls->Add(this->loadCascButton);
-				 this->cascTabPage->Controls->Add(this->loadCacheButton);
+				 this->cascTabPage->Controls->Add(this->loadListfileButton);
 				 this->cascTabPage->Controls->Add(this->cascInfoTextBox);
 				 this->cascTabPage->Controls->Add(this->cascInfoLabel);
 				 this->cascTabPage->Location = System::Drawing::Point(4, 22);
@@ -656,6 +747,9 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->cascTabPage->TabIndex = 3;
 				 this->cascTabPage->Text = L"CASC";
 				 this->cascTabPage->UseVisualStyleBackColor = true;
+				 // 
+				 // refreshButton
+				 // 
 				 this->refreshButton->Location = System::Drawing::Point(3, 2);
 				 this->refreshButton->Name = L"refreshButton";
 				 this->refreshButton->Size = System::Drawing::Size(75, 23);
@@ -663,6 +757,9 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->refreshButton->Text = L"Refresh";
 				 this->refreshButton->UseVisualStyleBackColor = true;
 				 this->refreshButton->Click += gcnew System::EventHandler(this, &Form1::refreshButton_Click);
+				 // 
+				 // fileTestButton
+				 // 
 				 this->fileTestButton->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Bottom | System::Windows::Forms::AnchorStyles::Left));
 				 this->fileTestButton->Location = System::Drawing::Point(30, 193);
 				 this->fileTestButton->Name = L"fileTestButton";
@@ -671,12 +768,18 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->fileTestButton->Text = L"Test";
 				 this->fileTestButton->UseVisualStyleBackColor = true;
 				 this->fileTestButton->Click += gcnew System::EventHandler(this, &Form1::fileTestButton_Click);
+				 // 
+				 // testOutputTextBox
+				 // 
 				 this->testOutputTextBox->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Bottom | System::Windows::Forms::AnchorStyles::Left)
 					 | System::Windows::Forms::AnchorStyles::Right));
 				 this->testOutputTextBox->Location = System::Drawing::Point(128, 195);
 				 this->testOutputTextBox->Name = L"testOutputTextBox";
 				 this->testOutputTextBox->Size = System::Drawing::Size(431, 20);
 				 this->testOutputTextBox->TabIndex = 7;
+				 // 
+				 // testInputTextBox
+				 // 
 				 this->testInputTextBox->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Bottom | System::Windows::Forms::AnchorStyles::Left)
 					 | System::Windows::Forms::AnchorStyles::Right));
 				 this->testInputTextBox->Location = System::Drawing::Point(128, 169);
@@ -684,6 +787,9 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->testInputTextBox->Size = System::Drawing::Size(431, 20);
 				 this->testInputTextBox->TabIndex = 6;
 				 this->testInputTextBox->KeyDown += gcnew System::Windows::Forms::KeyEventHandler(this, &Form1::testInputTextBox_KeyDown);
+				 // 
+				 // fileTestLabel
+				 // 
 				 this->fileTestLabel->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Bottom | System::Windows::Forms::AnchorStyles::Left));
 				 this->fileTestLabel->AutoSize = true;
 				 this->fileTestLabel->Location = System::Drawing::Point(6, 172);
@@ -691,22 +797,20 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->fileTestLabel->Size = System::Drawing::Size(121, 13);
 				 this->fileTestLabel->TabIndex = 5;
 				 this->fileTestLabel->Text = L"Input path or FileDataId:";
-				 this->loadCascButton->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Right));
-				 this->loadCascButton->Location = System::Drawing::Point(337, 3);
-				 this->loadCascButton->Name = L"loadCascButton";
-				 this->loadCascButton->Size = System::Drawing::Size(108, 23);
-				 this->loadCascButton->TabIndex = 4;
-				 this->loadCascButton->Text = L"Load Storage";
-				 this->loadCascButton->UseVisualStyleBackColor = true;
-				 this->loadCascButton->Click += gcnew System::EventHandler(this, &Form1::loadCascButton_Click);
-				 this->loadCacheButton->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Right));
-				 this->loadCacheButton->Location = System::Drawing::Point(451, 3);
-				 this->loadCacheButton->Name = L"loadCacheButton";
-				 this->loadCacheButton->Size = System::Drawing::Size(108, 23);
-				 this->loadCacheButton->TabIndex = 3;
-				 this->loadCacheButton->Text = L"Load Cache";
-				 this->loadCacheButton->UseVisualStyleBackColor = true;
-				 this->loadCacheButton->Click += gcnew System::EventHandler(this, &Form1::loadCacheButton_Click);
+				 // 
+				 // loadListfileButton
+				 // 
+				 this->loadListfileButton->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Right));
+				 this->loadListfileButton->Location = System::Drawing::Point(451, 3);
+				 this->loadListfileButton->Name = L"loadListfileButton";
+				 this->loadListfileButton->Size = System::Drawing::Size(108, 23);
+				 this->loadListfileButton->TabIndex = 3;
+				 this->loadListfileButton->Text = L"Load Listfile";
+				 this->loadListfileButton->UseVisualStyleBackColor = true;
+				 this->loadListfileButton->Click += gcnew System::EventHandler(this, &Form1::loadCacheButton_Click);
+				 // 
+				 // cascInfoTextBox
+				 // 
 				 this->cascInfoTextBox->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Bottom)
 					 | System::Windows::Forms::AnchorStyles::Left)
 					 | System::Windows::Forms::AnchorStyles::Right));
@@ -716,12 +820,18 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->cascInfoTextBox->ReadOnly = true;
 				 this->cascInfoTextBox->Size = System::Drawing::Size(556, 134);
 				 this->cascInfoTextBox->TabIndex = 1;
+				 // 
+				 // cascInfoLabel
+				 // 
 				 this->cascInfoLabel->AutoSize = true;
 				 this->cascInfoLabel->Location = System::Drawing::Point(84, 12);
 				 this->cascInfoLabel->Name = L"cascInfoLabel";
 				 this->cascInfoLabel->Size = System::Drawing::Size(59, 13);
 				 this->cascInfoLabel->TabIndex = 0;
 				 this->cascInfoLabel->Text = L"CASC Info:";
+				 // 
+				 // tabLog
+				 // 
 				 this->tabLog->Controls->Add(this->clearButton);
 				 this->tabLog->Controls->Add(this->logTextBox);
 				 this->tabLog->Location = System::Drawing::Point(4, 22);
@@ -731,6 +841,9 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->tabLog->TabIndex = 2;
 				 this->tabLog->Text = L"Log";
 				 this->tabLog->UseVisualStyleBackColor = true;
+				 // 
+				 // clearButton
+				 // 
 				 this->clearButton->Anchor = System::Windows::Forms::AnchorStyles::Bottom;
 				 this->clearButton->Location = System::Drawing::Point(241, 222);
 				 this->clearButton->Name = L"clearButton";
@@ -739,6 +852,9 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->clearButton->Text = L"Clear";
 				 this->clearButton->UseVisualStyleBackColor = true;
 				 this->clearButton->Click += gcnew System::EventHandler(this, &Form1::clearButton_Click);
+				 // 
+				 // logTextBox
+				 // 
 				 this->logTextBox->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Bottom)
 					 | System::Windows::Forms::AnchorStyles::Left)
 					 | System::Windows::Forms::AnchorStyles::Right));
@@ -749,6 +865,9 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->logTextBox->ScrollBars = System::Windows::Forms::ScrollBars::Vertical;
 				 this->logTextBox->Size = System::Drawing::Size(556, 216);
 				 this->logTextBox->TabIndex = 0;
+				 // 
+				 // statusStrip1
+				 // 
 				 this->statusStrip1->BackColor = System::Drawing::Color::Transparent;
 				 this->statusStrip1->Items->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(1) { this->toolStripStatusLabel1 });
 				 this->statusStrip1->Location = System::Drawing::Point(0, 298);
@@ -756,8 +875,14 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->statusStrip1->Size = System::Drawing::Size(569, 22);
 				 this->statusStrip1->TabIndex = 31;
 				 this->statusStrip1->Text = L"statusStrip1";
+				 // 
+				 // toolStripStatusLabel1
+				 // 
 				 this->toolStripStatusLabel1->Name = L"toolStripStatusLabel1";
 				 this->toolStripStatusLabel1->Size = System::Drawing::Size(0, 17);
+				 // 
+				 // menuStrip1
+				 // 
 				 this->menuStrip1->Items->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(2) {
 					 this->fileToolStripMenuItem,
 						 this->toolsToolStripMenuItem
@@ -767,6 +892,9 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->menuStrip1->Size = System::Drawing::Size(569, 24);
 				 this->menuStrip1->TabIndex = 32;
 				 this->menuStrip1->Text = L"menuStrip1";
+				 // 
+				 // fileToolStripMenuItem
+				 // 
 				 this->fileToolStripMenuItem->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(2) {
 					 this->settingsToolStripMenuItem,
 						 this->exitToolStripMenuItem
@@ -774,22 +902,37 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->fileToolStripMenuItem->Name = L"fileToolStripMenuItem";
 				 this->fileToolStripMenuItem->Size = System::Drawing::Size(37, 20);
 				 this->fileToolStripMenuItem->Text = L"File";
+				 // 
+				 // settingsToolStripMenuItem
+				 // 
 				 this->settingsToolStripMenuItem->Name = L"settingsToolStripMenuItem";
 				 this->settingsToolStripMenuItem->Size = System::Drawing::Size(116, 22);
 				 this->settingsToolStripMenuItem->Text = L"Settings";
 				 this->settingsToolStripMenuItem->Click += gcnew System::EventHandler(this, &Form1::settingsToolStripMenuItem_Click);
+				 // 
+				 // exitToolStripMenuItem
+				 // 
 				 this->exitToolStripMenuItem->Name = L"exitToolStripMenuItem";
 				 this->exitToolStripMenuItem->Size = System::Drawing::Size(116, 22);
 				 this->exitToolStripMenuItem->Text = L"Exit";
 				 this->exitToolStripMenuItem->Click += gcnew System::EventHandler(this, &Form1::exitToolStripMenuItem_Click);
+				 // 
+				 // toolsToolStripMenuItem
+				 // 
 				 this->toolsToolStripMenuItem->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(1) { this->compareBonesToolStripMenuItem });
 				 this->toolsToolStripMenuItem->Name = L"toolsToolStripMenuItem";
 				 this->toolsToolStripMenuItem->Size = System::Drawing::Size(47, 20);
 				 this->toolsToolStripMenuItem->Text = L"Tools";
+				 // 
+				 // compareBonesToolStripMenuItem
+				 // 
 				 this->compareBonesToolStripMenuItem->Name = L"compareBonesToolStripMenuItem";
 				 this->compareBonesToolStripMenuItem->Size = System::Drawing::Size(158, 22);
 				 this->compareBonesToolStripMenuItem->Text = L"Compare bones";
 				 this->compareBonesToolStripMenuItem->Click += gcnew System::EventHandler(this, &Form1::compareBonesToolStripMenuItem_Click);
+				 // 
+				 // Form1
+				 // 
 				 this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 				 this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 				 this->ClientSize = System::Drawing::Size(569, 320);
@@ -1257,22 +1400,18 @@ private: System::Windows::Forms::Button^  clearButton;
 	private: System::Void clearButton_Click(System::Object^  sender, System::EventArgs^  e) {
 		logTextBox->Text = "";
 	}
-	private: System::Void loadCascButton_Click(System::Object^  sender, System::EventArgs^  e) {
-		auto casc = GetCasc();
-		if (casc->StorageInitialized())
+	private: System::Void loadCacheButton_Click(System::Object^  sender, System::EventArgs^  e) {
+		
+		auto dialog = gcnew OpenFileDialog();
+		dialog->InitialDirectory = gcnew String(M2Lib::FileSystemA::GetCurrentPath().c_str());
+		dialog->FileName = L"listfile.txt";
+		dialog->Filter = L"WoW Listfile|*.txt";
+		auto result = dialog->ShowDialog();
+		if (result != System::Windows::Forms::DialogResult::OK)
 			return;
 
-		casc->InitializeStorage();
-
-		AnalyzeCasc();
-	}
-	private: System::Void loadCacheButton_Click(System::Object^  sender, System::EventArgs^  e) {
-		auto casc = GetCasc();
-
-		if (!casc->CacheLoaded())
-			casc->LoadListFileCache("");
-		else
-			casc->GenerateListFileCache("");
+		if (auto casc = GetCasc())
+			casc->GenerateListFileCache(StringConverter(dialog->FileName).ToStringA());
 
 		AnalyzeCasc();
 	}
