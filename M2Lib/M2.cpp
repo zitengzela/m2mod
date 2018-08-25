@@ -2884,7 +2884,12 @@ void M2Lib::M2::RemoveTXIDChunk()
 			continue;
 
 		auto path = casc->GetFileByFileDataId(FileDataId);
-		assert(!path.empty());
+		if (!path.empty())
+		{
+			sLogger.Log("Error: failed to get path for FileDataId = [%u] for texture #%u. Casc is not initialized or listfile is not loaded or not up to date", FileDataId, i);
+			sLogger.Log("Custom textures will not be loaded");
+			return;
+		}
 
 		PathsByTextureId[i] = path;
 		newDataLen += path.length() + 1;
