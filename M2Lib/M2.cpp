@@ -58,7 +58,6 @@ M2Lib::M2::~M2()
 	Chunks.clear();
 	delete Skeleton;
 	delete ParentSkeleton;
-	delete replaceM2;
 
 	for (UInt32 i = 0; i < SKIN_COUNT; ++i)
 		delete Skins[i];
@@ -236,7 +235,7 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 		for (int i = 0; i < LOD_SKIN_MAX_COUNT; ++i)
 		{
 			std::wstring FileNameSkin;
-			if (!GetFileSkin(FileNameSkin, _FileName, SKIN_COUNT - LOD_SKIN_MAX_COUNT + i))
+			if (!GetFileSkin(FileNameSkin, _FileName, SKIN_COUNT - LOD_SKIN_MAX_COUNT + i, false))
 				continue;
 
 			sLogger.Log("Loading skin '%s'...", std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(FileSystemW::GetBaseName(FileNameSkin)).c_str());
@@ -302,7 +301,7 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 M2Lib::EError M2Lib::M2::LoadSkeleton()
 {
 	std::wstring FileNameSkeleton;
-	if (GetFileSkeleton(FileNameSkeleton, _FileName))
+	if (GetFileSkeleton(FileNameSkeleton, _FileName, false))
 	{
 		auto sk = new M2Lib::Skeleton();
 		if (sk->Load(FileNameSkeleton.c_str()) == EError::EError_OK)
@@ -354,7 +353,7 @@ M2Lib::EError M2Lib::M2::LoadSkins()
 	for (UInt32 i = 0; i < Header.Elements.nSkin; ++i)
 	{
 		std::wstring FileNameSkin;
-		if (!GetFileSkin(FileNameSkin, _FileName, i))
+		if (!GetFileSkin(FileNameSkin, _FileName, i, false))
 			continue;
 
 		Skins[i] = new M2Skin(this);
@@ -378,14 +377,14 @@ M2Lib::EError M2Lib::M2::SaveSkins(wchar_t const* M2FileName)
 	for (UInt32 i = 0; i < SKIN_COUNT; ++i)
 	{
 		std::wstring FileNameSkin;
-		if (GetFileSkin(FileNameSkin, M2FileName, i))
+		if (GetFileSkin(FileNameSkin, M2FileName, i, true))
 			_wremove(FileNameSkin.c_str());
 	}
 
 	for (UInt32 i = 0; i < Header.Elements.nSkin; ++i)
 	{
 		std::wstring FileNameSkin;
-		if (!GetFileSkin(FileNameSkin, M2FileName, i))
+		if (!GetFileSkin(FileNameSkin, M2FileName, i, true))
 			continue;
 
 		if (EError Error = Skins[i]->Save(FileNameSkin.c_str()))
@@ -400,7 +399,7 @@ M2Lib::EError M2Lib::M2::SaveSkins(wchar_t const* M2FileName)
 	for (UInt32 i = 0; i < LodSkinCount; ++i)
 	{
 		std::wstring FileNameSkin;
-		if (!GetFileSkin(FileNameSkin, M2FileName, i + 4))
+		if (!GetFileSkin(FileNameSkin, M2FileName, i + 4, true))
 			continue;
 
 		if (EError Error = (Skins[1] ? Skins[1] : Skins[0])->Save(FileNameSkin.c_str()))
@@ -542,57 +541,67 @@ void M2Lib::M2::RemoveChunk(EM2Chunk ChunkId)
 		Chunks.erase(chunkItr);
 }
 
-void M2Lib::M2::PrepareChunks()
+void M2Lib::M2::CopyReplaceChunks()
 {
 	// TODO: leave only non-lod filedataids in skin chunk?
+	if (!replaceM2)
+		return;
 
 	sLogger.Log("Started preparing chunks for model");
-	if (replaceM2)
+	auto otherSkinChunk = (SFIDChunk*)replaceM2->GetChunk(EM2Chunk::Skin);
+	if (!otherSkinChunk)
 	{
-		auto otherSkinChunk = (SFIDChunk*)replaceM2->GetChunk(EM2Chunk::Skin);
-		if (!otherSkinChunk)
-		{
-			sLogger.Log("Model to replace does not have SKIN chunk, removing source one...");
-			RemoveChunk(EM2Chunk::Skin);
-		}
-		else
-		{
-			sLogger.Log("Copying skin chunk to source model...");
-			Chunks[EM2Chunk::Skin] = otherSkinChunk;
-			Header.Elements.nSkin = replaceM2->Header.Elements.nSkin;
-		}
+		sLogger.Log("Model to replace does not have SKIN chunk, removing source one...");
+		RemoveChunk(EM2Chunk::Skin);
+	}
+	else
+	{
+		sLogger.Log("Copying skin chunk to source model...");
+		if (Chunks[EM2Chunk::Skin])
+			delete Chunks[EM2Chunk::Skin];
 
-		auto otherSkeletonChunk = replaceM2->GetChunk(EM2Chunk::Skeleton);
-		if (!otherSkeletonChunk)
-		{
-			if (GetChunk(EM2Chunk::Skeleton))
-				sLogger.Log("Warning: replaced model does not have skeleton file, but source does. Replaced model will use source skeleton file which may cause explosions");
-		}
-		else
-		{
-			sLogger.Log("Copying skeleton chunk to source model...");
-			Chunks[EM2Chunk::Skeleton] = otherSkinChunk;
-		}
+		Chunks[EM2Chunk::Skin] = otherSkinChunk;
+		Header.Elements.nSkin = replaceM2->Header.Elements.nSkin;
+		replaceM2->RemoveChunk(EM2Chunk::Skin);
 	}
 
-	if (auto skinChunk = (SFIDChunk*)GetChunk(EM2Chunk::Skin))
+	auto otherSkeletonChunk = replaceM2->GetChunk(EM2Chunk::Skeleton);
+	if (!otherSkeletonChunk)
 	{
-		SInt32 SkinDiff = (replaceM2 ? replaceM2->Header.Elements.nSkin : OriginalSkinCount) - Header.Elements.nSkin;
-		if (SkinDiff > 0)
-		{
-			sLogger.Log("There was %u more skins in original M2, removing extra from skin chunk", SkinDiff);
-			for (UInt32 i = 0; i < (UInt32)SkinDiff; ++i)
-				skinChunk->SkinsFileDataIds.erase(skinChunk->SkinsFileDataIds.begin() + Header.Elements.nSkin);
-		}
-		else if (SkinDiff < 0)
-		{
-			sLogger.Log("Generated model has %u more skins than needed, removing extra", -SkinDiff);
-			Header.Elements.nSkin = replaceM2 ? replaceM2->Header.Elements.nSkin : OriginalSkinCount;
-		}
+		if (GetChunk(EM2Chunk::Skeleton))
+			sLogger.Log("Warning: replaced model does not have skeleton file, but source does. Replaced model will use source skeleton file which may cause explosions");
+	}
+	else
+	{
+		sLogger.Log("Copying skeleton chunk to source model...");
+		if (auto existingChunk = Chunks[EM2Chunk::Skeleton])
+			delete existingChunk;
+		Chunks[EM2Chunk::Skeleton] = otherSkeletonChunk;
+		replaceM2->RemoveChunk(EM2Chunk::Skeleton);
 	}
 }
 
-M2Lib::EError M2Lib::M2::Save(const Char16* FileName, M2* replaceM2)
+void M2Lib::M2::FixSkinChunk()
+{
+	auto skinChunk = (SFIDChunk*)GetChunk(EM2Chunk::Skin);
+	if (!skinChunk)
+		return;
+
+	SInt32 SkinDiff = OriginalSkinCount - Header.Elements.nSkin;
+	if (SkinDiff > 0)
+	{
+		sLogger.Log("There was %u more skins in original M2, removing extra from skin chunk", SkinDiff);
+		for (UInt32 i = 0; i < (UInt32)SkinDiff; ++i)
+			skinChunk->SkinsFileDataIds.erase(skinChunk->SkinsFileDataIds.begin() + Header.Elements.nSkin);
+	}
+	else if (SkinDiff < 0)
+	{
+		sLogger.Log("Generated model has %u more skins than needed, removing extra", -SkinDiff);
+		Header.Elements.nSkin = replaceM2 ? replaceM2->Header.Elements.nSkin : OriginalSkinCount;
+	}
+}
+
+M2Lib::EError M2Lib::M2::Save(const Char16* FileName)
 {
 	// check path
 	if (!FileName)
@@ -643,7 +652,7 @@ M2Lib::EError M2Lib::M2::Save(const Char16* FileName, M2* replaceM2)
 
 	FileStream.seekp(0, std::ios::end);
 
-	PrepareChunks();
+	FixSkinChunk();
 
 	for (auto chunk : Chunks)
 	{
@@ -673,7 +682,7 @@ M2Lib::EError M2Lib::M2::Save(const Char16* FileName, M2* replaceM2)
 	if (Skeleton)
 	{
 		std::wstring SkeletonFileName;
-		if (GetFileSkeleton(SkeletonFileName, FileName))
+		if (GetFileSkeleton(SkeletonFileName, FileName, true))
 		{
 			Error = Skeleton->Save(SkeletonFileName.c_str());
 			if (Error != EError_OK)
@@ -903,6 +912,8 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16 const* FileName)
 	if (pInM2I)
 		delete pInM2I;
 	pInM2I = new M2I();
+
+	CopyReplaceChunks();
 
 	auto Error = pInM2I->Load(FileName, this, IgnoreBones, IgnoreAttachments, IgnoreCameras, IgnoreOriginalMeshIndexes);
 	if (Error != EError_OK)
@@ -1460,9 +1471,14 @@ void M2Lib::M2::PrintReferencedFileInfo()
 }
 
 // Gets the .skin file names.
-bool M2Lib::M2::GetFileSkin(std::wstring& SkinFileNameResultBuffer, std::wstring const& M2FileName, UInt32 SkinIndex)
+bool M2Lib::M2::GetFileSkin(std::wstring& SkinFileNameResultBuffer, std::wstring const& M2FileName, UInt32 SkinIndex, bool Save)
 {
-	auto skinChunk = (M2Chunk::SFIDChunk*)GetChunk(EM2Chunk::Skin);
+	M2Chunk::SFIDChunk* skinChunk;
+	if (Save && replaceM2)
+		skinChunk = (M2Chunk::SFIDChunk*)replaceM2->GetChunk(EM2Chunk::Skin);
+	else
+		skinChunk =(M2Chunk::SFIDChunk*)GetChunk(EM2Chunk::Skin);
+
 	if (skinChunk && casc)
 	{
 		//sLogger.Log("Skin chunk detected");
@@ -1518,9 +1534,13 @@ bool M2Lib::M2::GetFileSkin(std::wstring& SkinFileNameResultBuffer, std::wstring
 	return true;
 }
 
-bool M2Lib::M2::GetFileSkeleton(std::wstring& SkeletonFileNameResultBuffer, std::wstring const& M2FileName)
+bool M2Lib::M2::GetFileSkeleton(std::wstring& SkeletonFileNameResultBuffer, std::wstring const& M2FileName, bool Save)
 {
-	auto chunk = (M2Chunk::SKIDChunk*)GetChunk(EM2Chunk::Skeleton);
+	M2Chunk::SKIDChunk* chunk = NULL;
+	if (Save && replaceM2)
+		chunk = (M2Chunk::SKIDChunk*)replaceM2->GetChunk(EM2Chunk::Skeleton);
+	if (!chunk)
+		chunk = (M2Chunk::SKIDChunk*)GetChunk(EM2Chunk::Skeleton);
 	if (!chunk)
 		return false;
 

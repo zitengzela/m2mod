@@ -576,7 +576,6 @@ private: System::Windows::Forms::Button^  clearButton;
 				 // checkBoxReplaceM2
 				 // 
 				 this->checkBoxReplaceM2->AutoSize = true;
-				 this->checkBoxReplaceM2->Enabled = false;
 				 this->checkBoxReplaceM2->Location = System::Drawing::Point(7, 73);
 				 this->checkBoxReplaceM2->Name = L"checkBoxReplaceM2";
 				 this->checkBoxReplaceM2->Size = System::Drawing::Size(81, 17);
@@ -1094,8 +1093,9 @@ private: System::Windows::Forms::Button^  clearButton;
 			importButtonGo->Enabled = true;
 			extraworkPanel->Enabled = true;
 			importCancelButton->Enabled = true;
-			checkBoxReplaceM2->Enabled = true;
-			panelReplaceM2->Enabled = checkBoxReplaceM2->Checked;
+
+			checkBoxReplaceM2->Enabled = false;
+			panelReplaceM2->Enabled = false;
 		}
 		else
 		{
@@ -1107,13 +1107,18 @@ private: System::Windows::Forms::Button^  clearButton;
 			extraworkPanel->Enabled = false;
 			importCancelButton->Enabled = false;
 
-			checkBoxReplaceM2->Enabled = false;
-			panelReplaceM2->Enabled = false;
+			checkBoxReplaceM2->Enabled = true;
+			panelReplaceM2->Enabled = checkBoxReplaceM2->Checked;
 
 			if (preloadM2)
 			{
 				delete preloadM2;
 				preloadM2 = NULL;
+			}
+			if (replaceM2)
+			{
+				delete replaceM2;
+				replaceM2 = NULL;
 			}
 
 			MeshManagementForm = nullptr;
@@ -1121,6 +1126,7 @@ private: System::Windows::Forms::Button^  clearButton;
 	}
 
 	private: M2Lib::M2* preloadM2 = NULL;
+	private: M2Lib::M2* replaceM2 = NULL;
 	private: M2Lib::GlobalSettings* settings = NULL;
 
 
@@ -1219,23 +1225,6 @@ private: System::Windows::Forms::Button^  clearButton;
 			}
 		}
 
-		M2Lib::M2* ReplaceM2 = NULL;
-		if (checkBoxReplaceM2->Checked)
-		{
-			ReplaceM2 = new M2Lib::M2();
-			auto Error = ReplaceM2->Load(StringConverter(textBoxReplaceM2->Text).ToStringW());
-			if (Error != M2Lib::EError_OK)
-			{
-				SetStatus(gcnew System::String(M2Lib::GetErrorText(Error)));
-				delete ReplaceM2;
-
-				delete preloadM2;
-				preloadM2 = NULL;
-				PreloadTransition(false);
-				return;
-			}
-		}
-
 		auto outputDirectory = Path::Combine(Path::GetDirectoryName(textBoxInputM2Exp->Text), "Export");
 		if (!Directory::Exists(outputDirectory))
 			Directory::CreateDirectory(outputDirectory);
@@ -1243,19 +1232,19 @@ private: System::Windows::Forms::Button^  clearButton;
 		auto ExportFileName = Path::Combine(outputDirectory, Path::GetFileName(checkBoxReplaceM2->Checked ? textBoxReplaceM2->Text : textBoxInputM2Exp->Text));
 
 		// export M2
-		auto Error = preloadM2->Save(StringConverter(ExportFileName).ToStringW(), ReplaceM2);
+		auto Error = preloadM2->Save(StringConverter(ExportFileName).ToStringW());
 		if (Error != M2Lib::EError_OK)
 		{
 			SetStatus(gcnew System::String(M2Lib::GetErrorText(Error)));
 			delete preloadM2;
-			delete ReplaceM2;
+			delete replaceM2;
 			preloadM2 = NULL;
 			PreloadTransition(false);
 			return;
 		}
 
 		delete preloadM2;
-		delete ReplaceM2;
+		delete replaceM2;
 		preloadM2 = NULL;
 
 		SetStatus("Import done.");
@@ -1269,6 +1258,8 @@ private: System::Windows::Forms::Button^  clearButton;
 
 		if (preloadM2)
 			delete preloadM2;
+		if (replaceM2)
+			delete replaceM2;
 
 		// Check fields.
 		if (textBoxInputM2I->Text->Length == 0)
@@ -1299,6 +1290,24 @@ private: System::Windows::Forms::Button^  clearButton;
 			return;
 		}
 
+		if (checkBoxReplaceM2->Checked)
+		{
+			replaceM2 = new M2Lib::M2();
+			auto Error = replaceM2->Load(StringConverter(textBoxReplaceM2->Text).ToStringW());
+			if (Error != M2Lib::EError_OK)
+			{
+				SetStatus(gcnew System::String(M2Lib::GetErrorText(Error)));
+				delete replaceM2;
+				replaceM2 = NULL;
+				delete preloadM2;
+				preloadM2 = NULL;
+				PreloadTransition(false);
+				return;
+			}
+
+			preloadM2->SetReplaceM2(replaceM2);
+		}
+
 		// import M2I
 		Error = preloadM2->ImportM2Intermediate(StringConverter(textBoxInputM2I->Text).ToStringW());
 		if (Error != M2Lib::EError_OK)
@@ -1306,6 +1315,8 @@ private: System::Windows::Forms::Button^  clearButton;
 			SetStatus(gcnew System::String(M2Lib::GetErrorText(Error)));
 			delete preloadM2;
 			preloadM2 = NULL;
+			delete replaceM2;
+			replaceM2 = NULL;
 			PreloadTransition(false);
 			return;
 		}
@@ -1322,8 +1333,14 @@ private: System::Windows::Forms::Button^  clearButton;
 			delete preloadM2;
 			preloadM2 = NULL;
 		}
+		if (replaceM2)
+		{
+			delete replaceM2;
+			replaceM2 = NULL;
+		}
 
 		SetStatus("Cancelled preload.");
+		PreloadTransition(false);
 	}
 
 	private: ElementManagementForm<MeshInfoControl>^ MeshManagementForm = nullptr;

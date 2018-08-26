@@ -230,8 +230,10 @@ namespace M2Lib
 		// loads an M2 from a file.
 		EError Load(const Char16* FileName);
 
+		void SetReplaceM2(M2* replaceM2 = NULL) { this->replaceM2 = replaceM2; }
+
 		// saves this M2 to a file.
-		EError Save(const Char16* FileName, M2* replaceM2 = NULL);
+		EError Save(const Char16* FileName);
 
 		// exports the loaded M2 as an M2I file.
 		EError ExportM2Intermediate(Char16 const* FileName);
@@ -285,14 +287,16 @@ namespace M2Lib
 		EError LoadSkins();
 		EError SaveSkins(wchar_t const* M2FileName);
 
-		bool GetFileSkin(std::wstring& SkinFileNameResultBuffer, std::wstring const& M2FileName, UInt32 SkinIndex);
-		bool GetFileSkeleton(std::wstring& SkeletonFileNameResultBuffer, std::wstring const& M2FileName);
+		bool GetFileSkin(std::wstring& SkinFileNameResultBuffer, std::wstring const& M2FileName, UInt32 SkinIndex, bool Save);
+		bool GetFileSkeleton(std::wstring& SkeletonFileNameResultBuffer, std::wstring const& M2FileName, bool Save);
 
 		EError LoadSkeleton();
 
 		ChunkBase* GetChunk(M2Chunk::EM2Chunk ChunkId);
 		void RemoveChunk(M2Chunk::EM2Chunk ChunkId);
-		void PrepareChunks();
+
+		void CopyReplaceChunks();
+		void FixSkinChunk();
 
 		// post load header
 		void m_LoadElements_CopyHeaderToElements();
