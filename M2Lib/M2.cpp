@@ -288,7 +288,7 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 		return Error;
 
 	// print info
-	PrintInfo();
+	//PrintInfo();
 	PrintReferencedFileInfo();
 
 	sLogger.Log("Finished loading M2");
@@ -1521,13 +1521,13 @@ bool M2Lib::M2::GetFileSkin(std::wstring& SkinFileNameResultBuffer, std::wstring
 bool M2Lib::M2::GetFileSkeleton(std::wstring& SkeletonFileNameResultBuffer, std::wstring const& M2FileName)
 {
 	auto chunk = (M2Chunk::SKIDChunk*)GetChunk(EM2Chunk::Skeleton);
+	if (!chunk)
+		return false;
+
 	auto casc = GetCasc();
-	if (!chunk || !casc)
+	if (!casc)
 	{
-		if (!chunk)
-			sLogger.Log("Skeleton chunk not found, trying default names");
-		else if (!casc)
-			sLogger.Log("CASC not provided, trying default names");
+		sLogger.Log("CASC not initialized, trying default names");
 
 		SkeletonFileNameResultBuffer = FileSystemW::GetParentDirectory(M2FileName) + L"\\" + FileSystemW::GetFileName(M2FileName) + L".skel";
 		return true;
@@ -2884,7 +2884,7 @@ void M2Lib::M2::RemoveTXIDChunk()
 			continue;
 
 		auto path = casc->GetFileByFileDataId(FileDataId);
-		if (!path.empty())
+		if (path.empty())
 		{
 			sLogger.Log("Error: failed to get path for FileDataId = [%u] for texture #%u. Casc is not initialized or listfile is not loaded or not up to date", FileDataId, i);
 			sLogger.Log("Custom textures will not be loaded");
