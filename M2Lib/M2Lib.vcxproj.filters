@@ -51,9 +51,6 @@
     <ClInclude Include="M2SkinElement.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Version.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="M2Chunk.h">
       <Filter>Header Files</Filter>
     </ClInclude>

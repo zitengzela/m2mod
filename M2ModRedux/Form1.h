@@ -49,11 +49,6 @@ namespace M2ModRedux
 			InitializeLogger();
 			LoadSettingsFromRegistry();
 			AnalyzeCasc();
-
-			auto updater = gcnew Updater();
-			auto func = gcnew Func<int>(updater, &Updater::Update);
-			Task::Run(func);
-
 		}
 	private: System::Windows::Forms::TabPage^  cascTabPage;
 	private: System::Windows::Forms::Label^  cascInfoLabel;
@@ -68,6 +63,7 @@ namespace M2ModRedux
 	private: System::Windows::Forms::Label^  fileTestLabel;
 	private: System::Windows::Forms::Button^  fileTestButton;
 	private: System::Windows::Forms::Button^  refreshButton;
+	private: System::Windows::Forms::ToolStripMenuItem^  checkUpdatesToolStripMenuItem;
 
 
 	public:
@@ -343,6 +339,7 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->exitToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 				 this->toolsToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 				 this->compareBonesToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
+				 this->checkUpdatesToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 				 this->tabControl->SuspendLayout();
 				 this->tabExport->SuspendLayout();
 				 this->panelImputM2Exp->SuspendLayout();
@@ -894,9 +891,9 @@ private: System::Windows::Forms::Button^  clearButton;
 				 // 
 				 // fileToolStripMenuItem
 				 // 
-				 this->fileToolStripMenuItem->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(2) {
+				 this->fileToolStripMenuItem->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(3) {
 					 this->settingsToolStripMenuItem,
-						 this->exitToolStripMenuItem
+						 this->checkUpdatesToolStripMenuItem, this->exitToolStripMenuItem
 				 });
 				 this->fileToolStripMenuItem->Name = L"fileToolStripMenuItem";
 				 this->fileToolStripMenuItem->Size = System::Drawing::Size(37, 20);
@@ -905,14 +902,14 @@ private: System::Windows::Forms::Button^  clearButton;
 				 // settingsToolStripMenuItem
 				 // 
 				 this->settingsToolStripMenuItem->Name = L"settingsToolStripMenuItem";
-				 this->settingsToolStripMenuItem->Size = System::Drawing::Size(116, 22);
+				 this->settingsToolStripMenuItem->Size = System::Drawing::Size(180, 22);
 				 this->settingsToolStripMenuItem->Text = L"Settings";
 				 this->settingsToolStripMenuItem->Click += gcnew System::EventHandler(this, &Form1::settingsToolStripMenuItem_Click);
 				 // 
 				 // exitToolStripMenuItem
 				 // 
 				 this->exitToolStripMenuItem->Name = L"exitToolStripMenuItem";
-				 this->exitToolStripMenuItem->Size = System::Drawing::Size(116, 22);
+				 this->exitToolStripMenuItem->Size = System::Drawing::Size(180, 22);
 				 this->exitToolStripMenuItem->Text = L"Exit";
 				 this->exitToolStripMenuItem->Click += gcnew System::EventHandler(this, &Form1::exitToolStripMenuItem_Click);
 				 // 
@@ -926,9 +923,16 @@ private: System::Windows::Forms::Button^  clearButton;
 				 // compareBonesToolStripMenuItem
 				 // 
 				 this->compareBonesToolStripMenuItem->Name = L"compareBonesToolStripMenuItem";
-				 this->compareBonesToolStripMenuItem->Size = System::Drawing::Size(158, 22);
+				 this->compareBonesToolStripMenuItem->Size = System::Drawing::Size(180, 22);
 				 this->compareBonesToolStripMenuItem->Text = L"Compare bones";
 				 this->compareBonesToolStripMenuItem->Click += gcnew System::EventHandler(this, &Form1::compareBonesToolStripMenuItem_Click);
+				 // 
+				 // checkUpdatesToolStripMenuItem
+				 // 
+				 this->checkUpdatesToolStripMenuItem->Name = L"checkUpdatesToolStripMenuItem";
+				 this->checkUpdatesToolStripMenuItem->Size = System::Drawing::Size(180, 22);
+				 this->checkUpdatesToolStripMenuItem->Text = L"Check updates";
+				 this->checkUpdatesToolStripMenuItem->Click += gcnew System::EventHandler(this, &Form1::checkUpdatesToolStripMenuItem_Click);
 				 // 
 				 // Form1
 				 // 
@@ -1447,5 +1451,10 @@ private: System::Windows::Forms::Button^  clearButton;
 	private: System::Void refreshButton_Click(System::Object^  sender, System::EventArgs^  e) {
 		AnalyzeCasc();
 	}
-};
+	private: System::Void checkUpdatesToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) {
+		auto updater = gcnew Updater();
+		auto func = gcnew Func<int>(updater, &Updater::CheckUpdates);
+		Task::Run(func);
+	}
+	};
 }

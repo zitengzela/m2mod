@@ -90,7 +90,6 @@
     <ClInclude Include="M2Types.h" />
     <ClInclude Include="Settings.h" />
     <ClInclude Include="SkeletonChunk.h" />
-    <ClInclude Include="Version.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BoneComparator.cpp" />

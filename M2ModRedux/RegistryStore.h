@@ -31,9 +31,6 @@ namespace M2ModRedux
 			WowPath,
 			UnloadCascOnDereference,
 
-			NotShowAutoUpdate,
-			ActualVersion,
-
 			OldCompareM2,
 			NewCompareM2
 		};

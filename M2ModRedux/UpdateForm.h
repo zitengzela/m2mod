@@ -5,14 +5,15 @@
 
 namespace M2ModRedux {
 
-	ref class Form1;
-
 	using namespace System;
 	using namespace System::ComponentModel;
 	using namespace System::Collections;
 	using namespace System::Windows::Forms;
 	using namespace System::Data;
 	using namespace System::Drawing;
+
+	ref class UpdateForm;
+	ref class Form1;
 
 	/// <summary>
 	/// Summary for UpdateForm
@@ -60,7 +61,7 @@ namespace M2ModRedux {
 	protected:
 	private: System::Windows::Forms::Label^  label1;
 	private: System::Windows::Forms::Button^  okButton;
-	public: System::Windows::Forms::CheckBox^  checkBox1;
+
 
 	private:
 		/// <summary>
@@ -78,7 +79,6 @@ namespace M2ModRedux {
 			this->linkLabel1 = (gcnew System::Windows::Forms::LinkLabel());
 			this->label1 = (gcnew System::Windows::Forms::Label());
 			this->okButton = (gcnew System::Windows::Forms::Button());
-			this->checkBox1 = (gcnew System::Windows::Forms::CheckBox());
 			this->SuspendLayout();
 			// 
 			// linkLabel1
@@ -115,23 +115,11 @@ namespace M2ModRedux {
 			this->okButton->UseVisualStyleBackColor = true;
 			this->okButton->Click += gcnew System::EventHandler(this, &UpdateForm::okButton_Click);
 			// 
-			// checkBox1
-			// 
-			this->checkBox1->Anchor = System::Windows::Forms::AnchorStyles::Top;
-			this->checkBox1->AutoSize = true;
-			this->checkBox1->Location = System::Drawing::Point(228, 156);
-			this->checkBox1->Name = L"checkBox1";
-			this->checkBox1->Size = System::Drawing::Size(108, 17);
-			this->checkBox1->TabIndex = 3;
-			this->checkBox1->Text = L"Don\'t show again";
-			this->checkBox1->UseVisualStyleBackColor = true;
-			// 
 			// UpdateForm
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->ClientSize = System::Drawing::Size(348, 185);
-			this->Controls->Add(this->checkBox1);
 			this->Controls->Add(this->okButton);
 			this->Controls->Add(this->label1);
 			this->Controls->Add(this->linkLabel1);

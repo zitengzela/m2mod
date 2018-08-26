@@ -10,18 +10,20 @@ namespace M2ModRedux
 
 	ref class Updater
 	{
-	public: int Update()
+		static String^ UpdateUrl = "https://bitbucket.org/suncurio/m2mod/src/8.x/M2ModRedux/Version.h";
+
+	public: String ^ GetRepoVersion()
 	{
 		auto client = gcnew System::Net::WebClient();
 		try
 		{
-			auto file = client->DownloadString(gcnew System::Uri("https://bitbucket.org/suncurio/m2mod/raw/master/M2Lib/Version.h"));
+			auto file = client->DownloadString(gcnew System::Uri(UpdateUrl));
 			if (file == String::Empty)
-				return 0;
+				return "";
 
 			auto matches = Regex::Matches(file, "#define\\s+([\\w_]+)\\s+(\\d+)", RegexOptions::Multiline);
 			if (matches->Count == 0)
-				return 0;
+				return "";
 
 			int versionMajor = -1, versionMinor = -1, versionPatch = -1;
 			for (int i = 0; i < matches->Count; ++i)
@@ -36,30 +38,35 @@ namespace M2ModRedux
 			}
 
 			if (versionMajor == -1 || versionMinor == -1 || versionPatch == -1)
-				return 0;
+				return "";
 
-			if (versionMajor != VERSION_MAJOR || versionMinor != VERSION_MINOR || versionPatch != VERSION_PATCH)
-			{
-				auto versionString = String::Format("{0}.{1}.{2}", versionMajor, versionMinor, versionPatch);
-				if (versionString != RegistyStore::GetValue(RegistyStore::Value::ActualVersion)->ToString()
-					|| !Boolean::Parse(RegistyStore::GetValue(RegistyStore::Value::NotShowAutoUpdate)->ToString()))
-				{
-					auto form = gcnew UpdateForm();
-					form->SetVersionData(versionString);
-					form->ShowDialog();
-					RegistyStore::SetValue(RegistyStore::Value::NotShowAutoUpdate, form->checkBox1->Checked);
-				}
-
-				RegistyStore::SetValue(RegistyStore::Value::ActualVersion, versionString);
-			}
+			return  String::Format("{0}.{1}.{2}", versionMajor, versionMinor, versionPatch);
 		}
 		catch (...)
 		{
-
 		}
 
+		return "";
+	}
 
-		
+	public: int CheckUpdates()
+	{
+		auto currentVersion = String::Format("{0}.{1}.{2}", VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH);
+		auto repoVersion = GetRepoVersion();
+		if (repoVersion == "")
+		{
+			MessageBox::Show("Failed to checkupdates", "Error", MessageBoxButtons::OK, MessageBoxIcon::Error);
+			return 0;
+		}
+		else if (repoVersion == currentVersion)
+		{
+			MessageBox::Show("Up to date", "", MessageBoxButtons::OK, MessageBoxIcon::Information);
+			return 0;
+		}
+
+		auto form = gcnew UpdateForm();
+		form->SetVersionData(repoVersion);
+		form->ShowDialog();
 		return 0;
 	}
 	};
