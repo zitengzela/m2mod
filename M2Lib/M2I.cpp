@@ -122,15 +122,14 @@ M2Lib::EError M2Lib::M2I::Load(Char16 const* FileName, M2Lib::M2* pM2, bool Igno
 		pNewSubMesh->ExtraData.Boundary.Calculate(submeshVertices);
 
 		// read triangles
-		UInt32 InTriangleCount = 0;
-		InTriangleCount = DataBinary.ReadUInt32();
+		UInt32 InTriangleCount = DataBinary.ReadUInt32();
 
 		for (UInt32 j = 0; j < InTriangleCount; ++j)
 		{
 			CTriangle NewTriangle;
 
 			NewTriangle.TriangleIndex = iTriangle;
-			iTriangle++;
+			++iTriangle;
 
 			for (UInt32 k = 0; k < VERTEX_PER_TRIANGLE; ++k)
 				NewTriangle.Vertices[k] = DataBinary.ReadUInt16() + VertexStart;

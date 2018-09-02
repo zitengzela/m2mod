@@ -64,9 +64,9 @@ M2Lib::CVertex& M2Lib::CVertex::operator = (const CVertex& Other)
 bool M2Lib::CVertex::CompareSimilar(CVertex& A, CVertex& B, bool CompareTextures, bool CompareBones, Float32 PositionalTolerance, Float32 AngularTolerance)
 {
 	// compare position
-	PositionalTolerance = PositionalTolerance * PositionalTolerance;
 	if (PositionalTolerance > 0.0f)
 	{
+		PositionalTolerance = PositionalTolerance * PositionalTolerance;
 		C3Vector Delta = A.Position - B.Position;
 		if (Delta.Length() > sqrtf(PositionalTolerance))
 			return false;
@@ -81,6 +81,9 @@ bool M2Lib::CVertex::CompareSimilar(CVertex& A, CVertex& B, bool CompareTextures
 	if (CompareTextures)
 	{
 		if (!floatEq(A.Texture.X, B.Texture.X) || !floatEq(A.Texture.Y, B.Texture.Y))
+			return false;
+
+		if (!floatEq(A.Texture2.X, B.Texture2.X) || !floatEq(A.Texture2.Y, B.Texture2.Y))
 			return false;
 	}
 

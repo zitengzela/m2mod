@@ -358,7 +358,7 @@ M2Lib::M2SkinElement::CElement_SubMesh* M2Lib::M2Skin::GetSubMesh(SubmeshExtraDa
 	C3Vector const& SortCenter = TargetSubMeshData.Boundary.SortCenter;
 	C3Vector const& CenterMass = TargetSubMeshData.Boundary.CenterMass;
 
-	for (UInt32 i = 0; i != SubMeshListLength; i++)
+	for (UInt32 i = 0; i < SubMeshListLength; ++i)
 	{
 		if (SubMeshList[i].ID == ID)
 		{

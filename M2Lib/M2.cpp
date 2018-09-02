@@ -786,14 +786,9 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate(Char16 const* FileName)
 		DataBinary.WriteUInt32(SubsetTriangleCountOut);
 
 		// FMN 2015-01-26: changing TriangleIndexstart, depending on ID. See http://forums.darknestfantasyerotica.com/showthread.php?20446-TUTORIAL-Here-is-how-WoD-.skin-works.&p=402561
-		UInt32 TriangleIndexStart = 0;
-
-		TriangleIndexStart = UInt32(pSubsetOut->TriangleIndexStart) + (pSubsetOut->Level << 16);
-
-		//UInt32 TriangleIndexEnd = pSubsetOut->TriangleIndexStart + pSubsetOut->TriangleIndexCount;
-		//for (UInt32 k = pSubsetOut->TriangleIndexStart; k < TriangleIndexEnd; k++)
+		UInt32 TriangleIndexStart = UInt32(pSubsetOut->TriangleIndexStart) + (pSubsetOut->Level << 16);
 		UInt32 TriangleIndexEnd = TriangleIndexStart + pSubsetOut->TriangleIndexCount;
-		for (UInt32 k = TriangleIndexStart; k < TriangleIndexEnd; k++)
+		for (UInt32 k = TriangleIndexStart; k < TriangleIndexEnd; ++k)
 		{
 			UInt16 TriangleIndexOut = Triangles[k] - pSubsetOut->VertexStart;
 			assert(TriangleIndexOut < pSubsetOut->VertexCount);
@@ -2571,7 +2566,8 @@ void M2Lib::M2::m_FixAnimationM2Array(SInt32 OffsetDelta, SInt32 TotalDelta, SIn
 
 		if (animation->IsInline())
 		{
-			assert("Not external offset" && SubArrays[i].Offset > Elements[iElement].Offset + Elements[iElement].SizeOriginal);
+			// we dont know actual particle emitter block size...
+			assert("Not external offset" && (iElement == EElement_ParticleEmitter || SubArrays[i].Offset > Elements[iElement].Offset + Elements[iElement].SizeOriginal));
 			SubArrays[i].Shift(TotalDelta);
 		}
 	}
