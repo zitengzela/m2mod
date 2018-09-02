@@ -17,15 +17,15 @@ using namespace M2Lib::M2Chunk;
 // level of detail for output messages
 int g_Verbose = 1;
 
-M2Lib::DataElement* M2Lib::M2::GetLastElement()
+UInt32 M2Lib::M2::GetLastElementIndex()
 {
-	for (int i = M2Element::EElement__Count__ - 1; i >= 0; --i)
+	for (SInt32 i = M2Element::EElement__Count__ - 1; i >= 0; --i)
 	{
 		if (!Elements[i].Data.empty())
-			return &Elements[i];
+			return i;
 	}
 
-	return NULL;
+	return M2Element::EElement__Count__;
 }
 
 M2Lib::Expansion M2Lib::M2::GetExpansion() const
@@ -855,11 +855,12 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate(Char16 const* FileName)
 			if (Camera.AnimationBlock_FieldOfView.Keys.Count > 0)
 			{
 				auto ExternalAnimations = (M2Array*)Elements[EElement_Camera].GetLocalPointer(Camera.AnimationBlock_FieldOfView.Keys.Offset);
-				auto LastElement = GetLastElement();
-				assert(LastElement != NULL);
-				assert(ExternalAnimations[0].Offset >= LastElement->Offset && ExternalAnimations[0].Offset < LastElement->Offset + LastElement->Data.size());
+				auto LastElementIndex = GetLastElementIndex();
+				assert(LastElementIndex != M2Element::EElement__Count__);
+				auto& LastElement = Elements[LastElementIndex];
+				assert(ExternalAnimations[0].Offset >= LastElement.Offset && ExternalAnimations[0].Offset < LastElement.Offset + LastElement.Data.size());
 
-				Float32* FieldOfView_Keys = (Float32*)LastElement->GetLocalPointer(ExternalAnimations[0].Offset);
+				Float32* FieldOfView_Keys = (Float32*)LastElement.GetLocalPointer(ExternalAnimations[0].Offset);
 				FoV = FieldOfView_Keys[0];
 			}
 			else
@@ -2567,7 +2568,7 @@ void M2Lib::M2::m_FixAnimationM2Array(SInt32 OffsetDelta, SInt32 TotalDelta, SIn
 		if (animation->IsInline())
 		{
 			// we dont know actual particle emitter block size...
-			assert("Not external offset" && (iElement == EElement_ParticleEmitter || SubArrays[i].Offset > Elements[iElement].Offset + Elements[iElement].SizeOriginal));
+			assert("Not external offset" && (iElement == GetLastElementIndex() || SubArrays[i].Offset > Elements[iElement].Offset + Elements[iElement].SizeOriginal));
 			SubArrays[i].Shift(TotalDelta);
 		}
 	}

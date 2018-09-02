@@ -333,11 +333,12 @@ M2Lib::EError M2Lib::M2I::Load(Char16 const* FileName, M2Lib::M2* pM2, bool Igno
 				{
 					auto ExternalAnimations = (M2Array*)pM2->Elements[M2Element::EElement_Camera].GetLocalPointer(pCameraToMod->AnimationBlock_FieldOfView.Keys.Offset);
 
-					auto LastElement = pM2->GetLastElement();
-					assert(LastElement != NULL);
-					assert(ExternalAnimations[0].Offset >= LastElement->Offset && ExternalAnimations[0].Offset < LastElement->Offset + LastElement->Data.size());
+					auto LastElementIndex = pM2->GetLastElementIndex();
+					assert(LastElementIndex != M2Element::EElement__Count__);
+					auto& LastElement = pM2->Elements[LastElementIndex];
+					assert(ExternalAnimations[0].Offset >= LastElement.Offset && ExternalAnimations[0].Offset < LastElement.Offset + LastElement.Data.size());
 
-					Float32* FieldOfView_Keys = (Float32*)LastElement->GetLocalPointer(ExternalAnimations[0].Offset);
+					Float32* FieldOfView_Keys = (Float32*)LastElement.GetLocalPointer(ExternalAnimations[0].Offset);
 					auto value = DataBinary.ReadFloat32();
 					FieldOfView_Keys[0] = value;
 				}

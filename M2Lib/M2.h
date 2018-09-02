@@ -198,7 +198,7 @@ namespace M2Lib
 	public:
 		CM2Header Header;		// used for loading and saving. not used when editing.
 		DataElement Elements[M2Element::EElement__Count__];
-		DataElement* GetLastElement();
+		UInt32 GetLastElementIndex();
 
 		#define SKIN_COUNT 7
 		#define LOD_SKIN_MAX_COUNT 3
