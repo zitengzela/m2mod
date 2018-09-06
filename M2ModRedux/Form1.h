@@ -43,7 +43,11 @@ namespace M2ModRedux
 
 			InitializeComponent();
 
-			this->Text = String::Format(L"M2Mod Redux {0}.{1}.{2}", VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH);
+			auto assemblyVersion = System::Reflection::Assembly::GetExecutingAssembly()->GetName()->Version;
+			auto buildDate = System::DateTime(2000, 1, 1).AddDays(assemblyVersion->Build).AddSeconds(assemblyVersion->Revision * 2);
+
+			this->Text = String::Format("M2Mod Redux {0}.{1}.{2} built at {3}", VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH, buildDate);
+
 			settings = new M2Lib::GlobalSettings();
 
 			InitializeLogger();
