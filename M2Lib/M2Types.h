@@ -107,7 +107,7 @@ namespace M2Lib
 		CVertex();
 		CVertex(const CVertex& Other);
 		CVertex& operator = (const CVertex& Other);
-		static bool CompareSimilar(CVertex& A, CVertex& B, bool CompareTextures, bool CompareBones, Float32 PositionalTolerance, Float32 AngularTolerance);	// compares 2 vertices to see if they have the same position, bones, and texture coordinates. vertices between subsets that pass this test are most likely duplicates.
+		static bool CompareSimilar(CVertex& A, CVertex& B, bool CompareTextures, bool CompareBones, bool CompareNormals, Float32 PositionalTolerance, Float32 AngularTolerance);	// compares 2 vertices to see if they have the same position, bones, and texture coordinates. vertices between subsets that pass this test are most likely duplicates.
 	};
 	ASSERT_SIZE(CVertex, 48);
 
@@ -241,5 +241,5 @@ namespace M2Lib
 		SInt32 OriginalSubmeshIndex;
 	};
 
-	bool floatEq(Float32 a, Float32 b);
+	bool floatEq(Float32 a, Float32 b, float Tolerance = 1e-4);
 }

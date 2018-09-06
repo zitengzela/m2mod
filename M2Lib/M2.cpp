@@ -10,6 +10,7 @@
 #include <locale>
 #include <string>
 #include <codecvt>
+#include <set>
 
 using namespace M2Lib::M2Element;
 using namespace M2Lib::M2Chunk;
@@ -889,6 +890,7 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16 const* FileName)
 	bool IgnoreAttachments = Settings && !Settings->MergeAttachments;
 	bool IgnoreCameras = Settings && !Settings->MergeCameras;
 	bool FixSeams = !Settings || Settings->FixSeams;
+	bool FixEdgeNormals = !Settings || Settings->FixEdgeNormals;
 	bool IgnoreOriginalMeshIndexes = Settings && Settings->IgnoreOriginalMeshIndexes;
 
 	Float32 SubmeshPositionalTolerance = 0.0001f;
@@ -960,6 +962,11 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16 const* FileName)
 
 		// close gaps between clothes and body
 		FixSeamsClothing(ClothingPositionalTolerance, ClothingAngularTolerance * DegreesToRadians);
+	}
+	else if (FixEdgeNormals)
+	{
+		// fix normals on edges between meshes
+		FixNormals();
 	}
 
 	//
@@ -1570,7 +1577,7 @@ void M2Lib::M2::FixSeamsSubMesh(Float32 PositionalTolerance, Float32 AngularTole
 
 	M2SkinElement::CElement_SubMesh* Subsets = Skins[0]->Elements[M2SkinElement::EElement_SubMesh].as<M2SkinElement::CElement_SubMesh>();
 	UInt32 SubsetCount = Skins[0]->Elements[M2SkinElement::EElement_SubMesh].Count;
-	for (UInt32 i = 0; i < SubsetCount; i++)
+	for (UInt32 i = 0; i < SubsetCount; ++i)
 	{
 		UInt16 ThisID = Subsets[i].ID;
 		bool MakeNew = true;
@@ -1586,9 +1593,7 @@ void M2Lib::M2::FixSeamsSubMesh(Float32 PositionalTolerance, Float32 AngularTole
 				}
 			}
 			if (!MakeNew)
-			{
 				break;
-			}
 		}
 		if (MakeNew)
 		{
@@ -1620,11 +1625,9 @@ void M2Lib::M2::FixSeamsSubMesh(Float32 PositionalTolerance, Float32 AngularTole
 					for (UInt32 iVertexB = pSubSet2->VertexStart; iVertexB < VertexBEnd; iVertexB++)
 					{
 						if (iVertexA == iVertexB)
-						{
 							continue;
-						}
 
-						if (CVertex::CompareSimilar(VertexList[iVertexA], VertexList[iVertexB], false, false, PositionalTolerance, AngularTolerance))
+						if (CVertex::CompareSimilar(VertexList[iVertexA], VertexList[iVertexB], false, false, true, PositionalTolerance, AngularTolerance))
 						{
 							if (!AddedVertexA)
 							{
@@ -1656,7 +1659,7 @@ void M2Lib::M2::FixSeamsSubMesh(Float32 PositionalTolerance, Float32 AngularTole
 					NewPosition = NewPosition * invSimilarCount;
 					NewNormal = NewNormal * invSimilarCount;
 
-					UInt8 NewBoneWeights[4], NewBoneIndices[4];
+					UInt8 NewBoneWeights[BONES_PER_VERTEX], NewBoneIndices[BONES_PER_VERTEX];
 					for (UInt32 i = 0; i < BONES_PER_VERTEX; ++i)
 					{
 						NewBoneWeights[i] = SimilarVertices[0]->BoneWeights[i];
@@ -1684,7 +1687,6 @@ void M2Lib::M2::FixSeamsSubMesh(Float32 PositionalTolerance, Float32 AngularTole
 		}
 	}
 }
-
 
 void M2Lib::M2::FixSeamsBody(Float32 PositionalTolerance, Float32 AngularTolerance)
 {
@@ -1768,7 +1770,7 @@ void M2Lib::M2::FixSeamsBody(Float32 PositionalTolerance, Float32 AngularToleran
 						UInt32 iVertexBEnd = CompiledSubMeshList[iSubMesh2][iSubSet2]->VertexStart + CompiledSubMeshList[iSubMesh2][iSubSet2]->VertexCount;
 						for (UInt32 iVertexB = CompiledSubMeshList[iSubMesh2][iSubSet2]->VertexStart; iVertexB < iVertexBEnd; iVertexB++)
 						{
-							if (CVertex::CompareSimilar(VertexList[iVertexA], VertexList[iVertexB], false, false, PositionalTolerance, AngularTolerance))
+							if (CVertex::CompareSimilar(VertexList[iVertexA], VertexList[iVertexB], false, false, true, PositionalTolerance, AngularTolerance))
 							{
 								// found a duplicate
 								if (!AddedVertex1)
@@ -1803,7 +1805,7 @@ void M2Lib::M2::FixSeamsBody(Float32 PositionalTolerance, Float32 AngularToleran
 					NewPosition = NewPosition * invSimilarCount;
 					NewNormal = NewNormal * invSimilarCount;
 
-					UInt8 NewBoneWeights[4], NewBoneIndices[4];
+					UInt8 NewBoneWeights[BONES_PER_VERTEX], NewBoneIndices[BONES_PER_VERTEX];
 					for (UInt32 i = 0; i < BONES_PER_VERTEX; ++i)
 					{
 						NewBoneWeights[i] = SimilarVertices[0]->BoneWeights[i];
@@ -1894,7 +1896,7 @@ void M2Lib::M2::FixSeamsClothing(Float32 PositionalTolerance, Float32 AngularTol
 			{
 				for (SInt32 iVertexBody = pSubMeshBody->VertexStart; iVertexBody < pSubMeshBody->VertexStart + pSubMeshBody->VertexCount; iVertexBody++)
 				{
-					if (CVertex::CompareSimilar(VertexList[iVertexGarb], VertexList[iVertexBody], false, false, PositionalTolerance, AngularTolerance))
+					if (CVertex::CompareSimilar(VertexList[iVertexGarb], VertexList[iVertexBody], false, false, true, PositionalTolerance, AngularTolerance))
 					{
 						// copy position, normal, and bone weights, and bone indices from body vertex to other(clothing) vertex
 						CVertex* pVertexOther = &VertexList[iVertexGarb];
@@ -1912,6 +1914,100 @@ void M2Lib::M2::FixSeamsClothing(Float32 PositionalTolerance, Float32 AngularTol
 				}
 			}
 		}
+	}
+}
+
+void M2Lib::M2::FixNormals()
+{
+	auto& SubMeshes = Skins[0]->Elements[M2SkinElement::EElement_SubMesh];
+	auto VertexList = Elements[EElement_Vertex].as<CVertex>();
+
+	std::vector<bool> processedIndices(Elements[EElement_Vertex].Count, false);
+
+	std::map<CVertex*, std::set<CVertex*>> SimilarVertices;
+
+	for (UInt32 i = 0; i < SubMeshes.Count; ++i)
+	{
+		auto SubmeshI = SubMeshes.at<M2SkinElement::CElement_SubMesh>(i);
+
+		for (UInt32 j = 0; j < SubMeshes.Count; ++j)
+		{
+			if (i == j)
+				continue;
+
+			auto SubmeshJ = SubMeshes.at<M2SkinElement::CElement_SubMesh>(j);
+
+			for (auto iVertex = SubmeshI->VertexStart; iVertex < SubmeshI->VertexStart + SubmeshI->VertexCount; ++iVertex)
+			{
+				if (processedIndices[iVertex])
+					continue;
+
+				auto vertexI = &VertexList[iVertex];
+
+				for (auto jVertex = SubmeshJ->VertexStart; jVertex < SubmeshJ->VertexStart + SubmeshJ->VertexCount; ++jVertex)
+				{
+					if (iVertex == jVertex)
+						continue;
+
+					if (processedIndices[jVertex])
+						continue;
+
+					auto vertexJ = &VertexList[jVertex];
+
+					static Float32 const tolerance = 1e-4;
+
+					/*if (!floatEq(vertexI->Position.X, vertexJ->Position.X, tolerance) ||
+						!floatEq(vertexI->Position.Y, vertexJ->Position.Y, tolerance) ||
+						!floatEq(vertexI->Position.Z, vertexJ->Position.Z, tolerance))
+						continue;*/
+
+					if (!CVertex::CompareSimilar(*vertexI, *vertexJ, true, true, false, -1.f, -1.f))
+						continue;
+
+					auto CenterMass = (vertexI->Position + vertexJ->Position) / 2.f;
+
+					bool found = false;
+					for (auto& itr : SimilarVertices)
+					{
+						//if ((itr.first->Position - CenterMass).Length() < 1e-5)
+						if (floatEq(itr.first->Position.X, CenterMass.X, tolerance) &&
+							floatEq(itr.first->Position.Y, CenterMass.Y, tolerance) &&
+							floatEq(itr.first->Position.Z, CenterMass.Z, tolerance))
+						{
+							found = true;
+							itr.second.insert(vertexI);
+							itr.second.insert(vertexJ);
+						}
+					}
+
+					if (!found)
+						SimilarVertices[vertexI].insert(vertexJ);
+
+					processedIndices[iVertex] = true;
+					processedIndices[jVertex] = true;
+				}
+			}
+		}
+	}
+
+	//sLogger.Log(">>> Similar groups: %u", SimilarVertices.size());
+
+	for (auto& itr : SimilarVertices)
+	{
+		//sLogger.Log(">>> Similar vertices: %u", itr.second.size());
+		if (itr.second.size() == 0)
+			continue;
+
+		C3Vector sum = itr.first->Normal;
+
+		for (auto& itr2 : itr.second)
+			sum = sum + itr2->Normal;
+
+		sum.Normalize();
+
+		itr.first->Normal = sum;
+		for (auto& itr2 : itr.second)
+			itr2->Normal = sum;
 	}
 }
 

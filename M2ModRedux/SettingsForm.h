@@ -59,6 +59,7 @@ namespace M2ModRedux {
 			checkBoxMergeAttachments->Checked = settings->MergeAttachments;
 			checkBoxMergeCameras->Checked = settings->MergeCameras;
 			checkBoxFixSeams->Checked = settings->FixSeams;
+			checkBoxFixEdgeNormals->Checked = settings->FixEdgeNormals;
 			checkBoxIgnoreOriginalMeshIndexes->Checked = settings->IgnoreOriginalMeshIndexes;
 			testFixAnimationsCheckBox->Checked = settings->FixAnimationsTest;
 		}
@@ -74,6 +75,7 @@ namespace M2ModRedux {
 			settings.MergeAttachments = checkBoxMergeAttachments->Checked;
 			settings.MergeCameras = checkBoxMergeCameras->Checked;
 			settings.FixSeams = checkBoxFixSeams->Checked;
+			settings.FixEdgeNormals = checkBoxFixEdgeNormals->Checked;
 			settings.IgnoreOriginalMeshIndexes = checkBoxIgnoreOriginalMeshIndexes->Checked;
 			settings.UnloadCascOnDereference = checkBoxUnloadCascOnDereference->Checked;
 			settings.FixAnimationsTest = testFixAnimationsCheckBox->Checked;
@@ -119,6 +121,8 @@ namespace M2ModRedux {
 	private: System::Windows::Forms::CheckBox^  testFixAnimationsCheckBox;
 	private: System::Windows::Forms::CheckBox^  checkBoxIgnoreOriginalMeshIndexes;
 	private: System::Windows::Forms::CheckBox^  checkBoxUnloadCascOnDereference;
+	private: System::Windows::Forms::CheckBox^  checkBoxFixEdgeNormals;
+
 
 
 	private: System::ComponentModel::IContainer^  components;
@@ -142,6 +146,7 @@ namespace M2ModRedux {
 			this->label1 = (gcnew System::Windows::Forms::Label());
 			this->forceExpansionComboBox = (gcnew System::Windows::Forms::ComboBox());
 			this->groupBox3 = (gcnew System::Windows::Forms::GroupBox());
+			this->checkBoxFixEdgeNormals = (gcnew System::Windows::Forms::CheckBox());
 			this->checkBoxIgnoreOriginalMeshIndexes = (gcnew System::Windows::Forms::CheckBox());
 			this->testFixAnimationsCheckBox = (gcnew System::Windows::Forms::CheckBox());
 			this->checkBoxFixSeams = (gcnew System::Windows::Forms::CheckBox());
@@ -185,6 +190,7 @@ namespace M2ModRedux {
 			this->toolTip1->SetToolTip(this->forceExpansionComboBox, L"All input M2\'s will be treated accordingly");
 			this->groupBox3->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
 				| System::Windows::Forms::AnchorStyles::Right));
+			this->groupBox3->Controls->Add(this->checkBoxFixEdgeNormals);
 			this->groupBox3->Controls->Add(this->checkBoxIgnoreOriginalMeshIndexes);
 			this->groupBox3->Controls->Add(this->testFixAnimationsCheckBox);
 			this->groupBox3->Controls->Add(this->checkBoxFixSeams);
@@ -193,12 +199,20 @@ namespace M2ModRedux {
 			this->groupBox3->Controls->Add(this->checkBoxMergeBones);
 			this->groupBox3->Location = System::Drawing::Point(12, 158);
 			this->groupBox3->Name = L"groupBox3";
-			this->groupBox3->Size = System::Drawing::Size(346, 91);
+			this->groupBox3->Size = System::Drawing::Size(346, 113);
 			this->groupBox3->TabIndex = 2;
 			this->groupBox3->TabStop = false;
 			this->groupBox3->Text = L"Import Settings";
+			this->checkBoxFixEdgeNormals->AutoSize = true;
+			this->checkBoxFixEdgeNormals->Location = System::Drawing::Point(131, 42);
+			this->checkBoxFixEdgeNormals->Name = L"checkBoxFixEdgeNormals";
+			this->checkBoxFixEdgeNormals->Size = System::Drawing::Size(108, 17);
+			this->checkBoxFixEdgeNormals->TabIndex = 22;
+			this->checkBoxFixEdgeNormals->Text = L"Fix Edge Normals";
+			this->toolTip1->SetToolTip(this->checkBoxFixEdgeNormals, L"Normals will be averaged on edges between meshes");
+			this->checkBoxFixEdgeNormals->UseVisualStyleBackColor = true;
 			this->checkBoxIgnoreOriginalMeshIndexes->AutoSize = true;
-			this->checkBoxIgnoreOriginalMeshIndexes->Location = System::Drawing::Point(131, 42);
+			this->checkBoxIgnoreOriginalMeshIndexes->Location = System::Drawing::Point(131, 65);
 			this->checkBoxIgnoreOriginalMeshIndexes->Name = L"checkBoxIgnoreOriginalMeshIndexes";
 			this->checkBoxIgnoreOriginalMeshIndexes->Size = System::Drawing::Size(159, 17);
 			this->checkBoxIgnoreOriginalMeshIndexes->TabIndex = 21;
@@ -207,7 +221,7 @@ namespace M2ModRedux {
 				L"om original skin file");
 			this->checkBoxIgnoreOriginalMeshIndexes->UseVisualStyleBackColor = true;
 			this->testFixAnimationsCheckBox->AutoSize = true;
-			this->testFixAnimationsCheckBox->Location = System::Drawing::Point(131, 65);
+			this->testFixAnimationsCheckBox->Location = System::Drawing::Point(131, 90);
 			this->testFixAnimationsCheckBox->Name = L"testFixAnimationsCheckBox";
 			this->testFixAnimationsCheckBox->Size = System::Drawing::Size(94, 17);
 			this->testFixAnimationsCheckBox->TabIndex = 20;
@@ -253,7 +267,7 @@ namespace M2ModRedux {
 			this->toolTip1->SetToolTip(this->checkBoxMergeBones, L"Merge bones from M2I to result model");
 			this->checkBoxMergeBones->UseVisualStyleBackColor = true;
 			this->saveButton->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Bottom | System::Windows::Forms::AnchorStyles::Right));
-			this->saveButton->Location = System::Drawing::Point(188, 258);
+			this->saveButton->Location = System::Drawing::Point(188, 288);
 			this->saveButton->Name = L"saveButton";
 			this->saveButton->Size = System::Drawing::Size(81, 29);
 			this->saveButton->TabIndex = 3;
@@ -261,7 +275,7 @@ namespace M2ModRedux {
 			this->saveButton->UseVisualStyleBackColor = true;
 			this->saveButton->Click += gcnew System::EventHandler(this, &SettingsForm::saveButton_Click);
 			this->cancelButton->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Bottom | System::Windows::Forms::AnchorStyles::Right));
-			this->cancelButton->Location = System::Drawing::Point(275, 258);
+			this->cancelButton->Location = System::Drawing::Point(275, 288);
 			this->cancelButton->Name = L"cancelButton";
 			this->cancelButton->Size = System::Drawing::Size(81, 29);
 			this->cancelButton->TabIndex = 4;
@@ -308,7 +322,7 @@ namespace M2ModRedux {
 			this->wowPathGroupBox->Text = L"WoW Path";
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
-			this->ClientSize = System::Drawing::Size(368, 292);
+			this->ClientSize = System::Drawing::Size(368, 322);
 			this->Controls->Add(this->wowPathGroupBox);
 			this->Controls->Add(this->cancelButton);
 			this->Controls->Add(this->saveButton);

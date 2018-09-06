@@ -61,14 +61,13 @@ M2Lib::CVertex& M2Lib::CVertex::operator = (const CVertex& Other)
 }
 
 // compares 2 vertices to see if they have the same position, bones, and texture coordinates. vertices between subsets that pass this test are most likely duplicates.
-bool M2Lib::CVertex::CompareSimilar(CVertex& A, CVertex& B, bool CompareTextures, bool CompareBones, Float32 PositionalTolerance, Float32 AngularTolerance)
+bool M2Lib::CVertex::CompareSimilar(CVertex& A, CVertex& B, bool CompareTextures, bool CompareBones, bool CompareNormals, Float32 PositionalTolerance, Float32 AngularTolerance)
 {
 	// compare position
 	if (PositionalTolerance > 0.0f)
 	{
-		PositionalTolerance = PositionalTolerance * PositionalTolerance;
 		C3Vector Delta = A.Position - B.Position;
-		if (Delta.Length() > sqrtf(PositionalTolerance))
+		if (Delta.Length() > PositionalTolerance)
 			return false;
 	}
 	else
@@ -116,16 +115,19 @@ bool M2Lib::CVertex::CompareSimilar(CVertex& A, CVertex& B, bool CompareTextures
 	// we want to determine what side of the PlaneA that the PointB lies on
 	// it's just as simple as getting the dot product of the two vectors and checking the sign of the result
 	// arc cosine the dot product of the vectors to get the angle between them
-	if (AngularTolerance > 0.0f)
+	if (CompareNormals)
 	{
-		Float32 Dot = A.Normal.X * B.Normal.X + A.Normal.Y * B.Normal.Y + A.Normal.Z * B.Normal.Z;
-		if (acosf(Dot) > AngularTolerance)	// units are radians
-			return false;
-	}
-	else
-	{
-		if (!floatEq(A.Normal.X, B.Normal.Y) || !floatEq(A.Normal.Y, B.Normal.Y) || !floatEq(A.Normal.Z, B.Normal.Z))
-			return false;
+		if (AngularTolerance > 0.0f)
+		{
+			Float32 Dot = A.Normal.X * B.Normal.X + A.Normal.Y * B.Normal.Y + A.Normal.Z * B.Normal.Z;
+			if (acosf(Dot) > AngularTolerance)	// units are radians
+				return false;
+		}
+		else
+		{
+			if (!floatEq(A.Normal.X, B.Normal.Y) || !floatEq(A.Normal.Y, B.Normal.Y) || !floatEq(A.Normal.Z, B.Normal.Z))
+				return false;
+		}
 	}
 
 	return true;
@@ -410,7 +412,7 @@ M2Lib::C3Vector M2Lib::C3Vector::CalculateNormal(C3Vector const& v1, C3Vector co
 	return N;
 }
 
-bool M2Lib::floatEq(Float32 a, Float32 b)
+bool M2Lib::floatEq(Float32 a, Float32 b, float Tolerance)
 {
-	return std::fabsf(a - b) < 1e-5;
+	return std::fabsf(a - b) < Tolerance;
 }

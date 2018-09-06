@@ -271,6 +271,8 @@ namespace M2Lib
 		void FixSeamsBody(Float32 PositionalTolerance, Float32 AngularTolerance);
 		// closes small gaps between clothing and body and copies normals from body to clothing.
 		void FixSeamsClothing(Float32 PositionalTolerance, Float32 AngularTolerance);
+		// averages normals on mesh edges
+		void FixNormals();
 
 		void DoExtraWork();
 

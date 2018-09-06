@@ -12,6 +12,7 @@ namespace M2Lib
 		bool MergeAttachments = true;
 		bool MergeCameras = true;
 		bool FixSeams = false;
+		bool FixEdgeNormals = false;
 		bool IgnoreOriginalMeshIndexes = false;
 		Expansion ForceLoadExpansion = Expansion::None;
 

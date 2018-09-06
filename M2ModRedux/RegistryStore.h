@@ -23,6 +23,7 @@ namespace M2ModRedux
 			MergeAttachments,
 			MergeCameras,
 			FixSeams,
+			FixEdgeNormals,
 			ForceExportExpansion,
 			IgnoreOriginalMeshIndexes,
 
