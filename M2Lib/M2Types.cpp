@@ -102,12 +102,15 @@ bool M2Lib::CVertex::CompareSimilar(CVertex& A, CVertex& B, bool CompareTextures
 			{
 				if (A.BoneIndices[i] == B.BoneIndices[j] && SameBones[j] == false)
 				{
-					SameBones[j] = true;
-					break;
+					if (floatEq(A.BoneWeights[i], B.BoneWeights[j]) || A.BoneIndices[i] == 0)
+					{
+						SameBones[j] = true;
+						break;
+					}
 				}
 			}
 		}
-		if (!(SameBones[0] && SameBones[1] && SameBones[2] && SameBones[3]))
+		if (!SameBones[0] || !SameBones[1] || !SameBones[2] || !SameBones[3])
 			return false;
 	}
 
@@ -120,7 +123,7 @@ bool M2Lib::CVertex::CompareSimilar(CVertex& A, CVertex& B, bool CompareTextures
 	{
 		if (AngularTolerance > 0.0f)
 		{
-			Float32 Dot = A.Normal.X * B.Normal.X + A.Normal.Y * B.Normal.Y + A.Normal.Z * B.Normal.Z;
+			Float32 Dot = (A.Normal.X * B.Normal.X + A.Normal.Y * B.Normal.Y + A.Normal.Z * B.Normal.Z) / A.Normal.Length() / B.Normal.Length();
 			if (acosf(Dot) > AngularTolerance)	// units are radians
 				return false;
 		}

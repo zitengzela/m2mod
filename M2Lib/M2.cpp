@@ -942,13 +942,6 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16 const* FileName)
 	bool FixEdgeNormals = !Settings || Settings->FixEdgeNormals;
 	bool IgnoreOriginalMeshIndexes = Settings && Settings->IgnoreOriginalMeshIndexes;
 
-	Float32 SubmeshPositionalTolerance = 0.0001f;
-	Float32 SubmeshAngularTolerance = 45.0f;
-	Float32 BodyPositionalTolerance = 0.0001f;
-	Float32 BodyAngularTolerance = 90.0f;
-	Float32 ClothingPositionalTolerance = 0.0001f;
-	Float32 ClothingAngularTolerance = 90.0f;
-
 	if (!FileName)
 		return EError_FailedToImportM2I_NoFileSpecified;
 
@@ -1015,7 +1008,7 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16 const* FileName)
 	else if (FixEdgeNormals)
 	{
 		// fix normals on edges between meshes
-		FixNormals();
+		FixNormals(NormalAngularTolerance * DegreesToRadians);
 	}
 
 	//
@@ -2019,7 +2012,7 @@ void M2Lib::M2::FixSeamsClothing(Float32 PositionalTolerance, Float32 AngularTol
 	}
 }
 
-void M2Lib::M2::FixNormals()
+void M2Lib::M2::FixNormals(Float32 AngularTolerance)
 {
 	auto& SubMeshes = Skins[0]->Elements[M2SkinElement::EElement_SubMesh];
 	auto VertexList = Elements[EElement_Vertex].as<CVertex>();
@@ -2063,7 +2056,7 @@ void M2Lib::M2::FixNormals()
 						!floatEq(vertexI->Position.Z, vertexJ->Position.Z, tolerance))
 						continue;*/
 
-					if (!CVertex::CompareSimilar(*vertexI, *vertexJ, true, true, false, -1.f, -1.f))
+					if (!CVertex::CompareSimilar(*vertexI, *vertexJ, false, true, true, -1.f, AngularTolerance))
 						continue;
 
 					auto CenterMass = (vertexI->Position + vertexJ->Position) / 2.f;

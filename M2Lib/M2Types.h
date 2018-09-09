@@ -24,6 +24,14 @@ namespace M2Lib
 #define BONES_PER_VERTEX 4
 #define BONES_PER_TRIANGLE (VERTEX_PER_TRIANGLE * BONES_PER_VERTEX)
 
+	static Float32 SubmeshPositionalTolerance = 0.0001f;
+	static Float32 SubmeshAngularTolerance = 45.0f;
+	static Float32 BodyPositionalTolerance = 0.0001f;
+	static Float32 BodyAngularTolerance = 90.0f;
+	static Float32 ClothingPositionalTolerance = 0.0001f;
+	static Float32 ClothingAngularTolerance = 90.0f;
+	static Float32 NormalAngularTolerance = 10.0f;
+
 	// used when importing an M2I and building an M2. each triangle is given an index in addition to the 3 vertices. the index is used for quick lookup when dealing out triangles between bone partitions when building skins.
 	class CTriangle
 	{
