@@ -161,6 +161,11 @@ namespace M2ModRedux
 
 				if (auto value = RegistyStore::GetValue(RegistyStore::Value::WowPath))
 					settings->WowPath = StringConverter((String^)value).ToStringA();
+				if (auto value = RegistyStore::GetValue(RegistyStore::Value::WorkingDirectory))
+					settings->WorkingDirectory = StringConverter((String^)value).ToStringA();
+				if (auto value = RegistyStore::GetValue(RegistyStore::Value::OutputDirectory))
+					settings->OutputDirectory = StringConverter((String^)value).ToStringA();
+
 				if (auto value = RegistyStore::GetValue(RegistyStore::Value::UnloadCascOnDereference))
 					settings->UnloadCascOnDereference = Boolean::Parse(value->ToString());
 
@@ -180,6 +185,8 @@ namespace M2ModRedux
 					settings->IgnoreOriginalMeshIndexes = Boolean::Parse(value->ToString());
 				if (auto value = RegistyStore::GetValue(RegistyStore::Value::FixAnimationsTest))
 					settings->FixAnimationsTest = Boolean::Parse(value->ToString());
+				if (auto value = RegistyStore::GetValue(RegistyStore::Value::DisplayErrors))
+					settings->DisplayErrors = Boolean::Parse(value->ToString());
 			}
 			catch (...)
 			{
@@ -197,6 +204,9 @@ namespace M2ModRedux
 		RegistyStore::SetValue(RegistyStore::Value::ImportReplaceM2, this->textBoxReplaceM2->Text);
 
 		RegistyStore::SetValue(RegistyStore::Value::WowPath, gcnew String(settings->WowPath.c_str()));
+		RegistyStore::SetValue(RegistyStore::Value::WorkingDirectory, gcnew String(settings->WorkingDirectory.c_str()));
+		RegistyStore::SetValue(RegistyStore::Value::OutputDirectory, gcnew String(settings->OutputDirectory.c_str()));
+
 		RegistyStore::SetValue(RegistyStore::Value::UnloadCascOnDereference, settings->UnloadCascOnDereference);
 
 		RegistyStore::SetValue(RegistyStore::Value::ForceExportExpansion, (SInt32)settings->ForceLoadExpansion);
@@ -207,6 +217,7 @@ namespace M2ModRedux
 		RegistyStore::SetValue(RegistyStore::Value::FixEdgeNormals, settings->FixEdgeNormals);
 		RegistyStore::SetValue(RegistyStore::Value::IgnoreOriginalMeshIndexes, settings->IgnoreOriginalMeshIndexes);
 		RegistyStore::SetValue(RegistyStore::Value::FixAnimationsTest, settings->FixAnimationsTest);
+		RegistyStore::SetValue(RegistyStore::Value::DisplayErrors, settings->DisplayErrors);
 	}
 
 	protected:
@@ -225,10 +236,7 @@ namespace M2ModRedux
 	private: System::Windows::Forms::OpenFileDialog^  openFileDialog1;
 	private: System::Windows::Forms::SaveFileDialog^  saveFileDialog1;
 	private: System::Windows::Forms::ToolTip^  toolTip1;
-private: System::Windows::Forms::TabControl^  tabControl;
-
-
-
+	private: System::Windows::Forms::TabControl^  tabControl;
 	private: System::Windows::Forms::TabPage^  tabExport;
 	private: System::Windows::Forms::Panel^  panelImputM2Exp;
 	private: System::Windows::Forms::TextBox^  textBoxInputM2Exp;
@@ -911,7 +919,7 @@ private: System::Windows::Forms::Button^  clearButton;
 			M2Lib::EError Error = M2.Load(StringConverter(textBoxInputM2Exp->Text).ToStringW());
 			if (Error != M2Lib::EError_OK)
 			{
-				SetStatus(gcnew String(M2Lib::GetErrorText(Error)));
+				SetStatus(gcnew String(M2Lib::GetErrorText(Error).c_str()));
 				exportButtonGo->Enabled = true;
 				return;
 			}
@@ -920,7 +928,7 @@ private: System::Windows::Forms::Button^  clearButton;
 			Error = M2.ExportM2Intermediate(StringConverter(textBoxOutputM2I->Text).ToStringW());
 			if (Error != M2Lib::EError_OK)
 			{
-				SetStatus(gcnew System::String(M2Lib::GetErrorText(Error)));
+				SetStatus(gcnew System::String(M2Lib::GetErrorText(Error).c_str()));
 				exportButtonGo->Enabled = true;
 				return;
 			}
@@ -1024,20 +1032,26 @@ private: System::Windows::Forms::Button^  clearButton;
 		return _casc;
 	}
 
-	private: delegate void LoggerDelegate(char const*);
+	private: delegate void LoggerDelegate(int LogLevel, char const*);
 
-	private: static void Log(char const* data)
+	private: static void Log(int LogLevel, char const* data)
 	{
 		if (Instance)
-			Instance->_Log(data);
+			Instance->_Log(LogLevel, data);
 	}
 
-	private: void _Log(char const* data)
+	private: void _Log(int LogLevel, char const* data)
 	{
+		auto text = gcnew String(data);
 		if (logTextBox->Text->Length)
-			logTextBox->Text += "\r\n" + gcnew String(data);
+			logTextBox->Text += "\r\n" + text;
 		else
-			logTextBox->Text = gcnew String(data);
+			logTextBox->Text = text;
+
+		if (LogLevel == M2Lib::LOG_ERROR)
+			MessageBox::Show(text, "Error", MessageBoxButtons::OK, MessageBoxIcon::Error);
+		else if (LogLevel == M2Lib::LOG_WARNING)
+			MessageBox::Show(text, "Warning", MessageBoxButtons::OK, MessageBoxIcon::Warning);
 	}
 
 	private: System::Void importButtonGo_Click(System::Object^  sender, System::EventArgs^  e) {
@@ -1074,17 +1088,41 @@ private: System::Windows::Forms::Button^  clearButton;
 			}
 		}
 
-		auto outputDirectory = Path::Combine(Path::GetDirectoryName(textBoxInputM2Exp->Text), "Export");
-		if (!Directory::Exists(outputDirectory))
-			Directory::CreateDirectory(outputDirectory);
-		
-		auto ExportFileName = Path::Combine(outputDirectory, Path::GetFileName(checkBoxReplaceM2->Checked ? textBoxReplaceM2->Text : textBoxInputM2Exp->Text));
+		auto fileName = Path::GetFileName(checkBoxReplaceM2->Checked ? textBoxReplaceM2->Text : textBoxInputM2Exp->Text);
+		String^ ExportFileName;
+		if (settings && !settings->OutputDirectory.empty())
+		{
+			auto outputDirectory = gcnew String(settings->OutputDirectory.c_str());
 
+			auto casc = GetCasc();
+			auto path = casc ? casc->FindByPartialFileName(StringConverter(fileName).ToStringA()) : "";
+			if (path.empty())
+			{
+				SetStatus("Failed to determine model relative path in storage");
+				delete preloadM2;
+				delete replaceM2;
+				preloadM2 = NULL;
+				PreloadTransition(false);
+				return;
+			}
+
+			ExportFileName = Path::Combine(outputDirectory, gcnew String(path.c_str()));
+		}
+		else
+		{
+			auto outputDirectory = Path::Combine(Path::GetDirectoryName(textBoxInputM2Exp->Text), "Export");
+			ExportFileName = Path::Combine(outputDirectory, fileName);
+		}
+
+		auto directory = Directory::GetParent(ExportFileName)->FullName;
+		if (!Directory::Exists(directory))
+			Directory::CreateDirectory(directory);
+		
 		// export M2
 		auto Error = preloadM2->Save(StringConverter(ExportFileName).ToStringW());
 		if (Error != M2Lib::EError_OK)
 		{
-			SetStatus(gcnew System::String(M2Lib::GetErrorText(Error)));
+			SetStatus(gcnew System::String(M2Lib::GetErrorText(Error).c_str()));
 			delete preloadM2;
 			delete replaceM2;
 			preloadM2 = NULL;
@@ -1132,7 +1170,7 @@ private: System::Windows::Forms::Button^  clearButton;
 		M2Lib::EError Error = preloadM2->Load(StringConverter(textBoxInputM2Imp->Text).ToStringW());
 		if (Error != M2Lib::EError_OK)
 		{
-			SetStatus(gcnew System::String(M2Lib::GetErrorText(Error)));
+			SetStatus(gcnew System::String(M2Lib::GetErrorText(Error).c_str()));
 			delete preloadM2;
 			preloadM2 = NULL;
 			PreloadTransition(false);
@@ -1145,7 +1183,7 @@ private: System::Windows::Forms::Button^  clearButton;
 			auto Error = replaceM2->Load(StringConverter(textBoxReplaceM2->Text).ToStringW());
 			if (Error != M2Lib::EError_OK)
 			{
-				SetStatus(gcnew System::String(M2Lib::GetErrorText(Error)));
+				SetStatus(gcnew System::String(M2Lib::GetErrorText(Error).c_str()));
 				delete replaceM2;
 				replaceM2 = NULL;
 				delete preloadM2;
@@ -1161,7 +1199,7 @@ private: System::Windows::Forms::Button^  clearButton;
 		Error = preloadM2->ImportM2Intermediate(StringConverter(textBoxInputM2I->Text).ToStringW());
 		if (Error != M2Lib::EError_OK)
 		{
-			SetStatus(gcnew System::String(M2Lib::GetErrorText(Error)));
+			SetStatus(gcnew System::String(M2Lib::GetErrorText(Error).c_str()));
 			delete preloadM2;
 			preloadM2 = NULL;
 			delete replaceM2;

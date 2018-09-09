@@ -5,7 +5,14 @@
 
 namespace M2Lib
 {
-	typedef void(__stdcall *LoggerCallback)(char const*);
+	typedef void(__stdcall *LoggerCallback)(int LogLevel, char const*);
+
+	enum LogLevel
+	{
+		LOG_INFO = 1,
+		LOG_ERROR = 2,
+		LOG_WARNING = 3,
+	};
 
 	class Logger
 	{
@@ -13,6 +20,8 @@ namespace M2Lib
 		Logger() {}
 
 		std::list<LoggerCallback> AttachedCallbacks;
+
+		void Log(int LogLevel, char const* format, va_list args);
 
 	public:
 		static Logger & getInstance()
@@ -23,7 +32,10 @@ namespace M2Lib
 
 		void AttachCallback(LoggerCallback callback);
 		void Remove(LoggerCallback callback);
-		void Log(char const* format, ...);
+
+		void LogInfo(char const* format, ...);
+		void LogError(char const* format, ...);
+		void LogWarning(char const* format, ...);
 	};
 }
 

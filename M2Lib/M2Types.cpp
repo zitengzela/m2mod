@@ -3,6 +3,7 @@
 #include <math.h>
 #include <assert.h>
 #include <algorithm>
+#include <codecvt>
 
 M2Lib::CTriangle::CTriangle()
 {
@@ -133,84 +134,67 @@ bool M2Lib::CVertex::CompareSimilar(CVertex& A, CVertex& B, bool CompareTextures
 	return true;
 }
 
-const char* M2Lib::GetErrorText(EError Error)
+std::string M2Lib::GetErrorText(EError Error)
 {
 	switch (Error)
 	{
-	case EError_OK:
-		return "ok";
-
-	case EError_FAIL:
-		return "error: unspecified error.";
-
-	case EError_PathTooLong:
-		return "error: file path is too long.";
-
-	case EError_FailedToLoadM2_NoFileSpecified:
-		return "error: failed to load M2, no file was specified.";
-
-	case EError_FailedToLoadM2_CouldNotOpenFile:
-		return "error: failed to load M2, could not open file.";
-
-	case EError_FailedToLoadM2_FileCorrupt:
-		return "error: failed to load M2, file is corrupt.";
-
-	case EError_FailedToLoadM2_VersionNotSupported:
-		return "error: failed to load M2, format version is not supported.";
-
-	case EError_FailedToExportM2I_NoFileSpecified:
-		return "error: failed to export M2I, no file was specified.";
-
-	case EError_FailedToExportM2I_CouldNotOpenFile:
-		return "error: failed to export M2I, could not open file.";
-
-	case EError_FailedToExportM2I_M2NotLoaded:
-		return "error: failed to export M2I, no M2 was loaded.";
-
-	case EError_FailedToImportM2I_NoFileSpecified:
-		return "error: failed to import M2I, no file was specified.";
-
-	case EError_FailedToImportM2I_CouldNotOpenFile:
-		return "error: failed to import M2I, could not open file.";
-
-	case EError_FailedToImportM2I_FileCorrupt:
-		return "error: failed to import M2I, file is corrupt.";
-
-	case EError_FailedToImportM2I_UnsupportedVersion:
-		return "error: failed to import M2I, version number unsupported.";
-
-	case EError_FailedToImportM2I_TooManyVertices:
-		return "error: failed to import M2I, it has too many vertices (more than 65535).";
-
-	case EError_FailedToImportM2I_SkinHasTooManyIndices:
-		return "error: failed to import M2I, generated skin has too many indices (more than 65535).";
-
-	case EError_FailedToSaveM2:
-		return "error: failed to save M2, unspecified error.";
-
-	case EError_FailedToSaveM2_NoFileSpecified:
-		return "error: failed to save M2, no file was specified.";
-
-	case EError_FailedToLoadSKIN_NoFileSpecified:
-		return "error: failed to load SKIN, file not specified.";
-
-	case EError_FailedToLoadSKIN_CouldNotOpenFile:
-		return "error: failed to load SKIN, could not open file. make sure you put the M2 and skins in the same folder.";
-
-	case EError_FailedToLoadSKIN_FileMissingOrCorrupt:
-		return "error: failed to load SKIN, file is missing or corrupt.";
-
-	case EError_FailedToSaveSKIN:
-		return "error: faled to save SKIN, unspecified error.";
-
-	case EError_FailedToSaveSKIN_NoFileSpecified:
-		return "error: faled to save SKIN, no file was specified.";
-	case EError_FailedToSaveM2BR_Ambiguous:
-		return "error: failed to save M2BR file, remap is ambiguous.";
-
+		case EError_OK:
+			return "ok";
+		case EError_FAIL:
+			return "error: unspecified error.";
+		case EError_PathTooLong:
+			return "error: file path is too long.";
+		case EError_FailedToLoadM2_NoFileSpecified:
+			return "error: failed to load M2, no file was specified.";
+		case EError_FailedToLoadM2_CouldNotOpenFile:
+			return "error: failed to load M2, could not open file.";
+		case EError_FailedToLoadM2_FileCorrupt:
+			return "error: failed to load M2, file is corrupt.";
+		case EError_FailedToLoadM2_VersionNotSupported:
+			return "error: failed to load M2, format version is not supported.";
+		case EError_FailedToExportM2I_NoFileSpecified:
+			return "error: failed to export M2I, no file was specified.";
+		case EError_FailedToExportM2I_CouldNotOpenFile:
+			return "error: failed to export M2I, could not open file.";
+		case EError_FailedToExportM2I_M2NotLoaded:
+			return "error: failed to export M2I, no M2 was loaded.";
+		case EError_FailedToImportM2I_NoFileSpecified:
+			return "error: failed to import M2I, no file was specified.";
+		case EError_FailedToImportM2I_CouldNotOpenFile:
+			return "error: failed to import M2I, could not open file.";
+		case EError_FailedToImportM2I_FileCorrupt:
+			return "error: failed to import M2I, file is corrupt.";
+		case EError_FailedToImportM2I_UnsupportedVersion:
+			return "error: failed to import M2I, version number unsupported.";
+		case EError_FailedToImportM2I_TooManyVertices:
+			return "error: failed to import M2I, it has too many vertices (more than 65535).";
+		case EError_FailedToImportM2I_SkinHasTooManyIndices:
+			return "error: failed to import M2I, generated skin has too many indices (more than 65535).";
+		case EError_FailedToSaveM2:
+			return "error: failed to save M2, unspecified error.";
+		case EError_FailedToSaveM2_NoFileSpecified:
+			return "error: failed to save M2, no file was specified.";
+		case EError_FailedToLoadSKIN_NoFileSpecified:
+			return "error: failed to load SKIN, file not specified.";
+		case EError_FailedToLoadSKIN_CouldNotOpenFile:
+			return "error: failed to load SKIN, could not open file. make sure you put the M2 and skins in the same folder.";
+		case EError_FailedToLoadSKIN_FileMissingOrCorrupt:
+			return "error: failed to load SKIN, file is missing or corrupt.";
+		case EError_FailedToSaveSKIN:
+			return "error: faled to save SKIN, unspecified error.";
+		case EError_FailedToSaveSKIN_NoFileSpecified:
+			return "error: faled to save SKIN, no file was specified.";
+		case EError_FailedToSaveM2BR_Ambiguous:
+			return "error: failed to save M2BR file, remap is ambiguous.";
+		case EError_FailedToLoadSkeleton_NoFileSpecified:
+			return "error faled to save SKELETON, no file was specified.";
+		case EError_FailedToLoadSkeleton_CouldNotOpenFile:
+			return "error: failed to load SKELETON, could not open file.";
+		default:
+			break;
 	}
 
-	return "error: unrecognized error";
+	return "error: unrecognized error " + std::to_string(Error);
 }
 
 M2Lib::SubmeshExtraData::SubmeshExtraData()
@@ -415,4 +399,14 @@ M2Lib::C3Vector M2Lib::C3Vector::CalculateNormal(C3Vector const& v1, C3Vector co
 bool M2Lib::floatEq(Float32 a, Float32 b, float Tolerance)
 {
 	return std::fabsf(a - b) < Tolerance;
+}
+
+std::wstring M2Lib::StringToWString(std::string const& str)
+{
+	return std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(str);
+}
+
+std::string M2Lib::WStringToString(std::wstring const& str)
+{
+	return std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(str);
 }

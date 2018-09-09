@@ -1,6 +1,7 @@
 #include "Skeleton.h"
 #include "DataBinary.h"
 #include "Logger.h"
+#include "FileSystem.h"
 
 using namespace M2Lib;
 using namespace M2Lib::SkeletonChunk;
@@ -9,20 +10,20 @@ EError Skeleton::Load(const Char16* FileName)
 {
 	// check path
 	if (!FileName)
-		return EError_FailedToLoadM2_NoFileSpecified;
+		return EError_FailedToLoadSkeleton_NoFileSpecified;
 	
 	// open file stream
 	std::fstream FileStream;
 	FileStream.open(FileName, std::ios::in | std::ios::binary);
 	if (FileStream.fail())
-		return EError_FailedToLoadM2_CouldNotOpenFile;
+		return EError_FailedToLoadSkeleton_CouldNotOpenFile;
 
 	// find file size
 	FileStream.seekg(0, std::ios::end);
 	UInt32 FileSize = (UInt32)FileStream.tellg();
 	FileStream.seekg(0, std::ios::beg);
 
-	sLogger.Log("Loading skeleton chunks...");
+	sLogger.LogInfo("Loading skeleton chunks...");
 	while (FileStream.tellg() < FileSize)
 	{
 		UInt32 ChunkId;
@@ -47,7 +48,7 @@ EError Skeleton::Load(const Char16* FileName)
 				break;
 		}
 
-		sLogger.Log("Loaded %s skeleton chunk, size %u", ChunkIdToStr(ChunkId, false).c_str(), ChunkSize);
+		sLogger.LogInfo("Loaded %s skeleton chunk, size %u", ChunkIdToStr(ChunkId, false).c_str(), ChunkSize);
 
 		UInt32 savePos = FileStream.tellg();
 		Chunk->Load(FileStream, ChunkSize);
@@ -55,7 +56,7 @@ EError Skeleton::Load(const Char16* FileName)
 
 		Chunks[eChunk] = Chunk;
 	}
-	sLogger.Log("Finished loading skeleton chunks");
+	sLogger.LogInfo("Finished loading skeleton chunks");
 
 	return EError::EError_OK;
 }
@@ -65,6 +66,10 @@ EError Skeleton::Save(const Char16* FileName)
 	// check path
 	if (!FileName)
 		return EError_FailedToSaveM2_NoFileSpecified;
+
+	auto directory = FileSystemW::GetParentDirectory(FileName);
+	if (!FileSystemW::IsDirectory(directory) && !FileSystemW::CreateDirectory(directory))
+		return EError_FailedToSaveM2;
 
 	// open file stream
 	std::fstream FileStream;

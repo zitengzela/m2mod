@@ -45,6 +45,8 @@ namespace M2Lib
 
 		bool ExtractFile(std::string const& File, std::string const& OutPath);
 		bool ExtractFile(UInt32 FileDataId, std::string const& OutPath);
+
+		std::string FindByPartialFileName(std::string const& Name);
 		std::string GetFileByFileDataId(UInt32 FileDataId);
 		UInt32 GetFileDataIdByFile(std::string const& File);
 		static UInt64 CalculateHash(std::string const& File);

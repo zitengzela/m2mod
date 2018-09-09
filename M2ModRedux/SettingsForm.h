@@ -53,6 +53,9 @@ namespace M2ModRedux {
 				forceExpansionComboBox->SelectedIndex = 0;
 
 			wowPathTextBox->Text = gcnew String(settings->WowPath.c_str());
+			workingDirectoryTextBox->Text = gcnew String(settings->WorkingDirectory.c_str());
+			outputDirectoryTextBox->Text = gcnew String(settings->OutputDirectory.c_str());
+
 			checkBoxUnloadCascOnDereference->Checked = settings->UnloadCascOnDereference;
 
 			checkBoxMergeBones->Checked = settings->MergeBones;
@@ -62,6 +65,7 @@ namespace M2ModRedux {
 			checkBoxFixEdgeNormals->Checked = settings->FixEdgeNormals;
 			checkBoxIgnoreOriginalMeshIndexes->Checked = settings->IgnoreOriginalMeshIndexes;
 			testFixAnimationsCheckBox->Checked = settings->FixAnimationsTest;
+			checkBoxDisplayErrors->Checked = settings->DisplayErrors;
 		}
 
 		M2Lib::GlobalSettings ProduceSettings()
@@ -69,6 +73,9 @@ namespace M2ModRedux {
 			M2Lib::GlobalSettings settings;
 
 			settings.WowPath = StringConverter(wowPathTextBox->Text->Trim()).ToStringA();
+			settings.WorkingDirectory = StringConverter(workingDirectoryTextBox->Text->Trim()).ToStringA();
+			settings.OutputDirectory = StringConverter(outputDirectoryTextBox->Text->Trim()).ToStringA();
+
 			settings.UnloadCascOnDereference = checkBoxUnloadCascOnDereference->Checked;
 
 			settings.MergeBones = checkBoxMergeBones->Checked;
@@ -79,6 +86,7 @@ namespace M2ModRedux {
 			settings.IgnoreOriginalMeshIndexes = checkBoxIgnoreOriginalMeshIndexes->Checked;
 			settings.UnloadCascOnDereference = checkBoxUnloadCascOnDereference->Checked;
 			settings.FixAnimationsTest = testFixAnimationsCheckBox->Checked;
+			settings.DisplayErrors = checkBoxDisplayErrors->Checked;
 
 			if (forceExpansionComboBox->SelectedIndex > 0)
 				settings.ForceLoadExpansion = (M2Lib::Expansion)(forceExpansionComboBox->SelectedIndex - 1);
@@ -122,6 +130,25 @@ namespace M2ModRedux {
 	private: System::Windows::Forms::CheckBox^  checkBoxIgnoreOriginalMeshIndexes;
 	private: System::Windows::Forms::CheckBox^  checkBoxUnloadCascOnDereference;
 	private: System::Windows::Forms::CheckBox^  checkBoxFixEdgeNormals;
+	private: System::Windows::Forms::GroupBox^  workingDirectoryGroupBox;
+
+	private: System::Windows::Forms::Button^  workingDirectoryBrowseButton;
+
+
+
+
+	private: System::Windows::Forms::TextBox^  workingDirectoryTextBox;
+private: System::Windows::Forms::FolderBrowserDialog^  directoryBrowserDialog;
+private: System::Windows::Forms::GroupBox^  outputDirectoryGroupBox;
+private: System::Windows::Forms::Button^  outputDirectoryBrowseButton;
+private: System::Windows::Forms::TextBox^  outputDirectoryTextBox;
+private: System::Windows::Forms::CheckBox^  checkBoxDisplayErrors;
+
+
+
+
+
+
 
 
 
@@ -146,6 +173,7 @@ namespace M2ModRedux {
 			this->label1 = (gcnew System::Windows::Forms::Label());
 			this->forceExpansionComboBox = (gcnew System::Windows::Forms::ComboBox());
 			this->groupBox3 = (gcnew System::Windows::Forms::GroupBox());
+			this->checkBoxDisplayErrors = (gcnew System::Windows::Forms::CheckBox());
 			this->checkBoxFixEdgeNormals = (gcnew System::Windows::Forms::CheckBox());
 			this->checkBoxIgnoreOriginalMeshIndexes = (gcnew System::Windows::Forms::CheckBox());
 			this->testFixAnimationsCheckBox = (gcnew System::Windows::Forms::CheckBox());
@@ -157,19 +185,28 @@ namespace M2ModRedux {
 			this->cancelButton = (gcnew System::Windows::Forms::Button());
 			this->toolTip1 = (gcnew System::Windows::Forms::ToolTip(this->components));
 			this->checkBoxUnloadCascOnDereference = (gcnew System::Windows::Forms::CheckBox());
-			this->wowPathTextBox = (gcnew System::Windows::Forms::TextBox());
-			this->wowBrowseButton = (gcnew System::Windows::Forms::Button());
-			this->wowBrowseDialog = (gcnew System::Windows::Forms::OpenFileDialog());
 			this->wowPathGroupBox = (gcnew System::Windows::Forms::GroupBox());
+			this->wowBrowseButton = (gcnew System::Windows::Forms::Button());
+			this->wowPathTextBox = (gcnew System::Windows::Forms::TextBox());
+			this->workingDirectoryGroupBox = (gcnew System::Windows::Forms::GroupBox());
+			this->workingDirectoryBrowseButton = (gcnew System::Windows::Forms::Button());
+			this->workingDirectoryTextBox = (gcnew System::Windows::Forms::TextBox());
+			this->outputDirectoryGroupBox = (gcnew System::Windows::Forms::GroupBox());
+			this->outputDirectoryBrowseButton = (gcnew System::Windows::Forms::Button());
+			this->outputDirectoryTextBox = (gcnew System::Windows::Forms::TextBox());
+			this->wowBrowseDialog = (gcnew System::Windows::Forms::OpenFileDialog());
+			this->directoryBrowserDialog = (gcnew System::Windows::Forms::FolderBrowserDialog());
 			this->groupBox1->SuspendLayout();
 			this->groupBox3->SuspendLayout();
 			this->wowPathGroupBox->SuspendLayout();
+			this->workingDirectoryGroupBox->SuspendLayout();
+			this->outputDirectoryGroupBox->SuspendLayout();
 			this->SuspendLayout();
 			this->groupBox1->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
 				| System::Windows::Forms::AnchorStyles::Right));
 			this->groupBox1->Controls->Add(this->label1);
 			this->groupBox1->Controls->Add(this->forceExpansionComboBox);
-			this->groupBox1->Location = System::Drawing::Point(12, 104);
+			this->groupBox1->Location = System::Drawing::Point(12, 209);
 			this->groupBox1->Name = L"groupBox1";
 			this->groupBox1->Size = System::Drawing::Size(346, 53);
 			this->groupBox1->TabIndex = 0;
@@ -190,6 +227,7 @@ namespace M2ModRedux {
 			this->toolTip1->SetToolTip(this->forceExpansionComboBox, L"All input M2\'s will be treated accordingly");
 			this->groupBox3->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
 				| System::Windows::Forms::AnchorStyles::Right));
+			this->groupBox3->Controls->Add(this->checkBoxDisplayErrors);
 			this->groupBox3->Controls->Add(this->checkBoxFixEdgeNormals);
 			this->groupBox3->Controls->Add(this->checkBoxIgnoreOriginalMeshIndexes);
 			this->groupBox3->Controls->Add(this->testFixAnimationsCheckBox);
@@ -197,19 +235,29 @@ namespace M2ModRedux {
 			this->groupBox3->Controls->Add(this->checkBoxMergeCameras);
 			this->groupBox3->Controls->Add(this->checkBoxMergeAttachments);
 			this->groupBox3->Controls->Add(this->checkBoxMergeBones);
-			this->groupBox3->Location = System::Drawing::Point(12, 158);
+			this->groupBox3->Location = System::Drawing::Point(12, 264);
 			this->groupBox3->Name = L"groupBox3";
-			this->groupBox3->Size = System::Drawing::Size(346, 113);
+			this->groupBox3->Size = System::Drawing::Size(346, 116);
 			this->groupBox3->TabIndex = 2;
 			this->groupBox3->TabStop = false;
 			this->groupBox3->Text = L"Import Settings";
+			this->checkBoxDisplayErrors->AutoSize = true;
+			this->checkBoxDisplayErrors->Checked = true;
+			this->checkBoxDisplayErrors->CheckState = System::Windows::Forms::CheckState::Checked;
+			this->checkBoxDisplayErrors->Location = System::Drawing::Point(9, 88);
+			this->checkBoxDisplayErrors->Name = L"checkBoxDisplayErrors";
+			this->checkBoxDisplayErrors->Size = System::Drawing::Size(90, 17);
+			this->checkBoxDisplayErrors->TabIndex = 23;
+			this->checkBoxDisplayErrors->Text = L"Display Errors";
+			this->toolTip1->SetToolTip(this->checkBoxDisplayErrors, L"Errors will be displayed in popups");
+			this->checkBoxDisplayErrors->UseVisualStyleBackColor = true;
 			this->checkBoxFixEdgeNormals->AutoSize = true;
 			this->checkBoxFixEdgeNormals->Location = System::Drawing::Point(131, 42);
 			this->checkBoxFixEdgeNormals->Name = L"checkBoxFixEdgeNormals";
 			this->checkBoxFixEdgeNormals->Size = System::Drawing::Size(108, 17);
 			this->checkBoxFixEdgeNormals->TabIndex = 22;
 			this->checkBoxFixEdgeNormals->Text = L"Fix Edge Normals";
-			this->toolTip1->SetToolTip(this->checkBoxFixEdgeNormals, L"Normals will be averaged on edges between meshes");
+			this->toolTip1->SetToolTip(this->checkBoxFixEdgeNormals, L"Normals will be averaged on similar vertices between meshes");
 			this->checkBoxFixEdgeNormals->UseVisualStyleBackColor = true;
 			this->checkBoxIgnoreOriginalMeshIndexes->AutoSize = true;
 			this->checkBoxIgnoreOriginalMeshIndexes->Location = System::Drawing::Point(131, 65);
@@ -217,11 +265,11 @@ namespace M2ModRedux {
 			this->checkBoxIgnoreOriginalMeshIndexes->Size = System::Drawing::Size(159, 17);
 			this->checkBoxIgnoreOriginalMeshIndexes->TabIndex = 21;
 			this->checkBoxIgnoreOriginalMeshIndexes->Text = L"Ignore original mesh indexes";
-			this->toolTip1->SetToolTip(this->checkBoxIgnoreOriginalMeshIndexes, L"Mesh indexes will be read from M2I and treated will be treated as mesh indexes fr"
-				L"om original skin file");
+			this->toolTip1->SetToolTip(this->checkBoxIgnoreOriginalMeshIndexes, L"Materials for meshes will be selected comparing centers of mass between original "
+				L"and modified meshes, not by index tunneled from original M2\r\n");
 			this->checkBoxIgnoreOriginalMeshIndexes->UseVisualStyleBackColor = true;
 			this->testFixAnimationsCheckBox->AutoSize = true;
-			this->testFixAnimationsCheckBox->Location = System::Drawing::Point(131, 90);
+			this->testFixAnimationsCheckBox->Location = System::Drawing::Point(131, 88);
 			this->testFixAnimationsCheckBox->Name = L"testFixAnimationsCheckBox";
 			this->testFixAnimationsCheckBox->Size = System::Drawing::Size(94, 17);
 			this->testFixAnimationsCheckBox->TabIndex = 20;
@@ -267,7 +315,7 @@ namespace M2ModRedux {
 			this->toolTip1->SetToolTip(this->checkBoxMergeBones, L"Merge bones from M2I to result model");
 			this->checkBoxMergeBones->UseVisualStyleBackColor = true;
 			this->saveButton->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Bottom | System::Windows::Forms::AnchorStyles::Right));
-			this->saveButton->Location = System::Drawing::Point(188, 288);
+			this->saveButton->Location = System::Drawing::Point(188, 392);
 			this->saveButton->Name = L"saveButton";
 			this->saveButton->Size = System::Drawing::Size(81, 29);
 			this->saveButton->TabIndex = 3;
@@ -275,7 +323,7 @@ namespace M2ModRedux {
 			this->saveButton->UseVisualStyleBackColor = true;
 			this->saveButton->Click += gcnew System::EventHandler(this, &SettingsForm::saveButton_Click);
 			this->cancelButton->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Bottom | System::Windows::Forms::AnchorStyles::Right));
-			this->cancelButton->Location = System::Drawing::Point(275, 288);
+			this->cancelButton->Location = System::Drawing::Point(275, 392);
 			this->cancelButton->Name = L"cancelButton";
 			this->cancelButton->Size = System::Drawing::Size(81, 29);
 			this->cancelButton->TabIndex = 4;
@@ -293,12 +341,18 @@ namespace M2ModRedux {
 			this->toolTip1->SetToolTip(this->checkBoxUnloadCascOnDereference, L"CASC storage will be unloaded after Import/Export, but this will slow down applic"
 				L"ation");
 			this->checkBoxUnloadCascOnDereference->UseVisualStyleBackColor = true;
-			this->wowPathTextBox->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
+			this->wowPathGroupBox->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
 				| System::Windows::Forms::AnchorStyles::Right));
-			this->wowPathTextBox->Location = System::Drawing::Point(9, 21);
-			this->wowPathTextBox->Name = L"wowPathTextBox";
-			this->wowPathTextBox->Size = System::Drawing::Size(289, 20);
-			this->wowPathTextBox->TabIndex = 5;
+			this->wowPathGroupBox->Controls->Add(this->checkBoxUnloadCascOnDereference);
+			this->wowPathGroupBox->Controls->Add(this->wowBrowseButton);
+			this->wowPathGroupBox->Controls->Add(this->wowPathTextBox);
+			this->wowPathGroupBox->Location = System::Drawing::Point(12, 10);
+			this->wowPathGroupBox->Name = L"wowPathGroupBox";
+			this->wowPathGroupBox->Size = System::Drawing::Size(346, 69);
+			this->wowPathGroupBox->TabIndex = 2;
+			this->wowPathGroupBox->TabStop = false;
+			this->wowPathGroupBox->Text = L"WoW Path";
+			this->toolTip1->SetToolTip(this->wowPathGroupBox, L"Path to directory containing Wow.exe");
 			this->wowBrowseButton->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Right));
 			this->wowBrowseButton->Location = System::Drawing::Point(304, 20);
 			this->wowBrowseButton->Name = L"wowBrowseButton";
@@ -307,22 +361,69 @@ namespace M2ModRedux {
 			this->wowBrowseButton->Text = L"...";
 			this->wowBrowseButton->UseVisualStyleBackColor = true;
 			this->wowBrowseButton->Click += gcnew System::EventHandler(this, &SettingsForm::wowBrowseButton_Click);
+			this->wowPathTextBox->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
+				| System::Windows::Forms::AnchorStyles::Right));
+			this->wowPathTextBox->Location = System::Drawing::Point(9, 21);
+			this->wowPathTextBox->Name = L"wowPathTextBox";
+			this->wowPathTextBox->Size = System::Drawing::Size(289, 20);
+			this->wowPathTextBox->TabIndex = 5;
+			this->workingDirectoryGroupBox->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
+				| System::Windows::Forms::AnchorStyles::Right));
+			this->workingDirectoryGroupBox->Controls->Add(this->workingDirectoryBrowseButton);
+			this->workingDirectoryGroupBox->Controls->Add(this->workingDirectoryTextBox);
+			this->workingDirectoryGroupBox->Location = System::Drawing::Point(12, 85);
+			this->workingDirectoryGroupBox->Name = L"workingDirectoryGroupBox";
+			this->workingDirectoryGroupBox->Size = System::Drawing::Size(346, 56);
+			this->workingDirectoryGroupBox->TabIndex = 23;
+			this->workingDirectoryGroupBox->TabStop = false;
+			this->workingDirectoryGroupBox->Text = L"Working directory";
+			this->toolTip1->SetToolTip(this->workingDirectoryGroupBox, L"Directory containing extracted Wow files");
+			this->workingDirectoryBrowseButton->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Right));
+			this->workingDirectoryBrowseButton->Location = System::Drawing::Point(304, 20);
+			this->workingDirectoryBrowseButton->Name = L"workingDirectoryBrowseButton";
+			this->workingDirectoryBrowseButton->Size = System::Drawing::Size(37, 22);
+			this->workingDirectoryBrowseButton->TabIndex = 6;
+			this->workingDirectoryBrowseButton->Text = L"...";
+			this->workingDirectoryBrowseButton->UseVisualStyleBackColor = true;
+			this->workingDirectoryBrowseButton->Click += gcnew System::EventHandler(this, &SettingsForm::workingDirectoryBrowseButton_Click);
+			this->workingDirectoryTextBox->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
+				| System::Windows::Forms::AnchorStyles::Right));
+			this->workingDirectoryTextBox->Location = System::Drawing::Point(9, 21);
+			this->workingDirectoryTextBox->Name = L"workingDirectoryTextBox";
+			this->workingDirectoryTextBox->Size = System::Drawing::Size(289, 20);
+			this->workingDirectoryTextBox->TabIndex = 5;
+			this->outputDirectoryGroupBox->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
+				| System::Windows::Forms::AnchorStyles::Right));
+			this->outputDirectoryGroupBox->Controls->Add(this->outputDirectoryBrowseButton);
+			this->outputDirectoryGroupBox->Controls->Add(this->outputDirectoryTextBox);
+			this->outputDirectoryGroupBox->Location = System::Drawing::Point(12, 147);
+			this->outputDirectoryGroupBox->Name = L"outputDirectoryGroupBox";
+			this->outputDirectoryGroupBox->Size = System::Drawing::Size(346, 56);
+			this->outputDirectoryGroupBox->TabIndex = 24;
+			this->outputDirectoryGroupBox->TabStop = false;
+			this->outputDirectoryGroupBox->Text = L"Output directory";
+			this->toolTip1->SetToolTip(this->outputDirectoryGroupBox, L"M2Mod output files will be placed in this directory");
+			this->outputDirectoryBrowseButton->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Right));
+			this->outputDirectoryBrowseButton->Location = System::Drawing::Point(304, 20);
+			this->outputDirectoryBrowseButton->Name = L"outputDirectoryBrowseButton";
+			this->outputDirectoryBrowseButton->Size = System::Drawing::Size(37, 22);
+			this->outputDirectoryBrowseButton->TabIndex = 6;
+			this->outputDirectoryBrowseButton->Text = L"...";
+			this->outputDirectoryBrowseButton->UseVisualStyleBackColor = true;
+			this->outputDirectoryBrowseButton->Click += gcnew System::EventHandler(this, &SettingsForm::outputDirectoryBrowseButton_Click);
+			this->outputDirectoryTextBox->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
+				| System::Windows::Forms::AnchorStyles::Right));
+			this->outputDirectoryTextBox->Location = System::Drawing::Point(9, 21);
+			this->outputDirectoryTextBox->Name = L"outputDirectoryTextBox";
+			this->outputDirectoryTextBox->Size = System::Drawing::Size(289, 20);
+			this->outputDirectoryTextBox->TabIndex = 5;
 			this->wowBrowseDialog->FileName = L"Wow.exe";
 			this->wowBrowseDialog->Filter = L"WoW Executable|*.exe";
-			this->wowPathGroupBox->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
-				| System::Windows::Forms::AnchorStyles::Right));
-			this->wowPathGroupBox->Controls->Add(this->checkBoxUnloadCascOnDereference);
-			this->wowPathGroupBox->Controls->Add(this->wowBrowseButton);
-			this->wowPathGroupBox->Controls->Add(this->wowPathTextBox);
-			this->wowPathGroupBox->Location = System::Drawing::Point(12, 12);
-			this->wowPathGroupBox->Name = L"wowPathGroupBox";
-			this->wowPathGroupBox->Size = System::Drawing::Size(346, 75);
-			this->wowPathGroupBox->TabIndex = 2;
-			this->wowPathGroupBox->TabStop = false;
-			this->wowPathGroupBox->Text = L"WoW Path";
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
-			this->ClientSize = System::Drawing::Size(368, 322);
+			this->ClientSize = System::Drawing::Size(368, 426);
+			this->Controls->Add(this->outputDirectoryGroupBox);
+			this->Controls->Add(this->workingDirectoryGroupBox);
 			this->Controls->Add(this->wowPathGroupBox);
 			this->Controls->Add(this->cancelButton);
 			this->Controls->Add(this->saveButton);
@@ -335,6 +436,10 @@ namespace M2ModRedux {
 			this->groupBox3->PerformLayout();
 			this->wowPathGroupBox->ResumeLayout(false);
 			this->wowPathGroupBox->PerformLayout();
+			this->workingDirectoryGroupBox->ResumeLayout(false);
+			this->workingDirectoryGroupBox->PerformLayout();
+			this->outputDirectoryGroupBox->ResumeLayout(false);
+			this->outputDirectoryGroupBox->PerformLayout();
 			this->ResumeLayout(false);
 
 		}
@@ -351,6 +456,24 @@ namespace M2ModRedux {
 			}
 		}
 
+		if (workingDirectoryTextBox->Text->Length > 0)
+		{
+			if (!Directory::Exists(workingDirectoryTextBox->Text))
+			{
+				MessageBox::Show("Working directory does not exist", "Error", MessageBoxButtons::OK, MessageBoxIcon::Error);
+				return;
+			}
+		}
+
+		if (outputDirectoryTextBox->Text->Length > 0)
+		{
+			if (!Directory::Exists(outputDirectoryTextBox->Text))
+			{
+				MessageBox::Show("Output directory does not exist", "Error", MessageBoxButtons::OK, MessageBoxIcon::Error);
+				return;
+			}
+		}
+
 		DialogResult = Windows::Forms::DialogResult::OK;
 	}
 	private: System::Void cancelButton_Click(System::Object^  sender, System::EventArgs^  e) {
@@ -363,9 +486,29 @@ namespace M2ModRedux {
 
 		auto result = wowBrowseDialog->ShowDialog();
 		if (result == System::Windows::Forms::DialogResult::OK)
-		{
 			wowPathTextBox->Text = Path::GetDirectoryName(wowBrowseDialog->FileName);
-		}
+	}
+	private: System::Void workingDirectoryBrowseButton_Click(System::Object^  sender, System::EventArgs^  e) {
+		auto path = workingDirectoryTextBox->Text;
+		if (path->Length > 0 && Directory::Exists(path))
+			directoryBrowserDialog->SelectedPath = path;
+
+		directoryBrowserDialog->Description = "Select working directory:";
+
+		auto result = directoryBrowserDialog->ShowDialog();
+		if (result == System::Windows::Forms::DialogResult::OK)
+			workingDirectoryTextBox->Text = directoryBrowserDialog->SelectedPath;
+	}
+	private: System::Void outputDirectoryBrowseButton_Click(System::Object^  sender, System::EventArgs^  e) {
+		auto path = outputDirectoryTextBox->Text;
+		if (path->Length > 0 && Directory::Exists(path))
+			directoryBrowserDialog->SelectedPath = path;
+
+		directoryBrowserDialog->Description = "Select output directory:";
+
+		auto result = directoryBrowserDialog->ShowDialog();
+		if (result == System::Windows::Forms::DialogResult::OK)
+			outputDirectoryTextBox->Text = directoryBrowserDialog->SelectedPath;
 	}
 };
 }

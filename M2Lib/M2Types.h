@@ -193,9 +193,12 @@ namespace M2Lib
 		EError_FailedToSaveSKIN_NoFileSpecified,
 
 		EError_FailedToSaveM2BR_Ambiguous,
+
+		EError_FailedToLoadSkeleton_NoFileSpecified,
+		EError_FailedToLoadSkeleton_CouldNotOpenFile,
 	};
 
-	const char* GetErrorText(EError Error);
+	std::string GetErrorText(EError Error);
 
 	struct BoundaryData
 	{
@@ -242,4 +245,7 @@ namespace M2Lib
 	};
 
 	bool floatEq(Float32 a, Float32 b, float Tolerance = 1e-4);
+
+	std::wstring StringToWString(std::string const& str);
+	std::string WStringToString(std::wstring const& str);
 }

@@ -28,8 +28,11 @@ namespace M2ModRedux
 			IgnoreOriginalMeshIndexes,
 
 			FixAnimationsTest,
+			DisplayErrors,
 
 			WowPath,
+			WorkingDirectory,
+			OutputDirectory,
 			UnloadCascOnDereference,
 
 			OldCompareM2,

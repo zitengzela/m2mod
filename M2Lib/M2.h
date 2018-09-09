@@ -225,8 +225,6 @@ namespace M2Lib
 		UInt32 GetHeaderSize() const;
 		Expansion GetExpansion() const;
 
-		std::wstring GetModelDirectory() const;
-
 		// loads an M2 from a file.
 		EError Load(const Char16* FileName);
 
@@ -291,8 +289,10 @@ namespace M2Lib
 
 		bool GetFileSkin(std::wstring& SkinFileNameResultBuffer, std::wstring const& M2FileName, UInt32 SkinIndex, bool Save);
 		bool GetFileSkeleton(std::wstring& SkeletonFileNameResultBuffer, std::wstring const& M2FileName, bool Save);
+		bool GetFileParentSkeleton(std::wstring& SkeletonFileNameResultBuffer, std::wstring const& M2FileName, bool Save);
 
 		EError LoadSkeleton();
+		EError SaveSkeleton(std::wstring const& M2FileName);
 
 		ChunkBase* GetChunk(M2Chunk::EM2Chunk ChunkId);
 		void RemoveChunk(M2Chunk::EM2Chunk ChunkId);
@@ -318,3 +318,4 @@ namespace M2Lib
 		void m_SaveElements_CopyElementsToHeader();
 	};
 }
+

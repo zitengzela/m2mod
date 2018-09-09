@@ -255,14 +255,14 @@ namespace M2ModRedux {
 		auto Error = oldM2.Load(StringConverter(oldM2TextBox->Text).ToStringW());
 		if (Error != M2Lib::EError_OK)
 		{
-			MessageBox::Show(String::Format("Failed to load '{0}': {1}", oldM2TextBox->Text, gcnew String(M2Lib::GetErrorText(Error))), "Error", Windows::Forms::MessageBoxButtons::OK, Windows::Forms::MessageBoxIcon::Error);
+			MessageBox::Show(String::Format("Failed to load '{0}': {1}", oldM2TextBox->Text, gcnew String(M2Lib::GetErrorText(Error).c_str())), "Error", Windows::Forms::MessageBoxButtons::OK, Windows::Forms::MessageBoxIcon::Error);
 			return;
 		}
 
 		Error = newM2.Load(StringConverter(newM2TextBox->Text).ToStringW());
 		if (Error != M2Lib::EError_OK)
 		{
-			MessageBox::Show(String::Format("Failed to load '{0}': {1}", newM2TextBox->Text, gcnew String(M2Lib::GetErrorText(Error))), "Error", Windows::Forms::MessageBoxButtons::OK, Windows::Forms::MessageBoxIcon::Error);
+			MessageBox::Show(String::Format("Failed to load '{0}': {1}", newM2TextBox->Text, gcnew String(M2Lib::GetErrorText(Error).c_str())), "Error", Windows::Forms::MessageBoxButtons::OK, Windows::Forms::MessageBoxIcon::Error);
 			return;
 		}
 

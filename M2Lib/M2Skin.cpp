@@ -15,7 +15,7 @@ extern int g_Verbose;
 M2Lib::EError M2Lib::M2Skin::Load(Char16 const* FileName)
 {
 	if (!FileName)
-		return EError_FailedToLoadM2_NoFileSpecified;
+		return EError_FailedToLoadSKIN_NoFileSpecified;
 
 	_FileName = FileName;
 
@@ -58,6 +58,10 @@ M2Lib::EError M2Lib::M2Skin::Load(Char16 const* FileName)
 
 M2Lib::EError M2Lib::M2Skin::Save(const Char16* FileName)
 {
+	auto directory = FileSystemW::GetParentDirectory(FileName);
+	if (!FileSystemW::IsDirectory(directory) && !FileSystemW::CreateDirectory(directory))
+		return EError_FailedToSaveM2;
+
 	// FMN 2015-02-03: changing Level, depending on TriangleIndexstart. See http://forums.darknestfantasyerotica.com/showthread.php?20446-TUTORIAL-Here-is-how-WoD-.skin-works.&p=402561
 	CElement_SubMesh* SubMeshList = Elements[EElement_SubMesh].as<CElement_SubMesh>();
 	UInt32 TriangleIndexStartPrevious = 0;
@@ -97,7 +101,6 @@ M2Lib::EError M2Lib::M2Skin::Save(const Char16* FileName)
 
 	return EError_OK;
 }
-
 
 void M2Lib::M2Skin::BuildVertexBoneIndices()
 {

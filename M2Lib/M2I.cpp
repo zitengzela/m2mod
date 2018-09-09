@@ -176,7 +176,7 @@ M2Lib::EError M2Lib::M2I::Load(Char16 const* FileName, M2Lib::M2* pM2, bool Igno
 			}
 			else
 			{
-				sLogger.Log("Extra bones detected: skipping");
+				sLogger.LogInfo("Extra bones detected: skipping");
 				continue;
 			}
 			/*else if (HasExtraData)

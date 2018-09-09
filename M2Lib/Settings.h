@@ -17,8 +17,12 @@ namespace M2Lib
 		Expansion ForceLoadExpansion = Expansion::None;
 
 		bool FixAnimationsTest = false;
+		bool DisplayErrors = true;
 
 		std::string WowPath;
+		std::string WorkingDirectory;
+		std::string OutputDirectory;
+
 		bool UnloadCascOnDereference = true;
 	};
 }
