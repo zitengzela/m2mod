@@ -2017,13 +2017,11 @@ void M2Lib::M2::FixNormals(Float32 AngularTolerance)
 	auto& SubMeshes = pSkin->Elements[M2SkinElement::EElement_SubMesh];
 	auto VertexList = Elements[EElement_Vertex].as<CVertex>();
 
-	std::vector<bool> processedIndices(Elements[EElement_Vertex].Count, false);
-
-	std::map<CVertex*, std::set<CVertex*>> SimilarVertices;
-
 	for (UInt32 i = 0; i < SubMeshes.Count; ++i)
 	{
 		auto SubmeshI = SubMeshes.at<M2SkinElement::CElement_SubMesh>(i);
+		if (!IsAlignedSubset(SubmeshI->ID))
+			continue;
 		
 		auto EdgesI = pSkin->GetEdges(SubmeshI);
 
@@ -2042,6 +2040,8 @@ void M2Lib::M2::FixNormals(Float32 AngularTolerance)
 				continue;
 
 			auto SubmeshJ = SubMeshes.at<M2SkinElement::CElement_SubMesh>(j);
+			if (!IsAlignedSubset(SubmeshJ->ID))
+				continue;
 
 			auto EdgesJ = pSkin->GetEdges(SubmeshJ);
 			std::unordered_set<UInt16> verticesJ;
@@ -2053,17 +2053,13 @@ void M2Lib::M2::FixNormals(Float32 AngularTolerance)
 
 			for (auto iVertex : verticesI)
 			{
-				if (processedIndices[iVertex])
-					continue;
-
 				auto vertexI = &VertexList[iVertex];
+
+				std::set<CVertex*> similarVertices;
 
 				for (auto jVertex : verticesJ)
 				{
 					if (iVertex == jVertex)
-						continue;
-
-					if (processedIndices[jVertex])
 						continue;
 
 					auto vertexJ = &VertexList[jVertex];
@@ -2078,47 +2074,23 @@ void M2Lib::M2::FixNormals(Float32 AngularTolerance)
 					if (!CVertex::CompareSimilar(*vertexI, *vertexJ, false, false, false, -1.f, AngularTolerance))
 						continue;
 
-					auto CenterMass = (vertexI->Position + vertexJ->Position) / 2.f;
+					similarVertices.insert(vertexJ);
+				}
 
-					bool found = false;
-					for (auto& itr : SimilarVertices)
-					{
-						//if ((itr.first->Position - CenterMass).Length() < 1e-5)
-						if (floatEq(itr.first->Position.X, CenterMass.X, tolerance) &&
-							floatEq(itr.first->Position.Y, CenterMass.Y, tolerance) &&
-							floatEq(itr.first->Position.Z, CenterMass.Z, tolerance))
-						{
-							found = true;
-							itr.second.insert(vertexI);
-							itr.second.insert(vertexJ);
-						}
-					}
+				if (similarVertices.size() > 0)
+				{
+					C3Vector newNormal = vertexI->Normal;
+					for (auto itr : similarVertices)
+						newNormal = newNormal + itr->Normal;
 
-					if (!found)
-						SimilarVertices[vertexI].insert(vertexJ);
+					newNormal.Normalize();
+
+					vertexI->Normal = newNormal;
+					for (auto itr : similarVertices)
+						itr->Normal = newNormal;
 				}
 			}
 		}
-	}
-
-	//sLogger.LogInfo(">>> Similar groups: %u", SimilarVertices.size());
-
-	for (auto& itr : SimilarVertices)
-	{
-		//sLogger.LogInfo(">>> Similar vertices: %u", itr.second.size());
-		if (itr.second.size() == 0)
-			continue;
-
-		C3Vector sum = itr.first->Normal;
-
-		for (auto& itr2 : itr.second)
-			sum = sum + itr2->Normal;
-
-		sum.Normalize();
-
-		itr.first->Normal = sum;
-		for (auto& itr2 : itr.second)
-			itr2->Normal = sum;
 	}
 }
 

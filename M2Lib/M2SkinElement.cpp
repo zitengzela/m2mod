@@ -88,15 +88,15 @@ bool M2Lib::IsAlignedSubset(UInt32 SubsetId)
 
 	switch (SubsetId / 100)
 	{
+		case 4:
 		case 8:
+		case 13:
+		case 22:
+			return true;
+		default:
 			break;
 
 	}
-	// 0803
-	// 0402
-	// 1104
-	// 1302
-	// 2202
 
 	return false;
 }
