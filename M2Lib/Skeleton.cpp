@@ -12,6 +12,8 @@ EError Skeleton::Load(const Char16* FileName)
 	if (!FileName)
 		return EError_FailedToLoadSkeleton_NoFileSpecified;
 	
+	sLogger.LogInfo("Loading skeleton at %s", WStringToString(FileName).c_str());
+
 	// open file stream
 	std::fstream FileStream;
 	FileStream.open(FileName, std::ios::in | std::ios::binary);
@@ -76,6 +78,8 @@ EError Skeleton::Save(const Char16* FileName)
 	FileStream.open(FileName, std::ios::out | std::ios::trunc | std::ios::binary);
 	if (FileStream.fail())
 		return EError_FailedToSaveM2;
+
+	sLogger.LogInfo("Saving skeleton to %s", WStringToString(FileName).c_str());
 
 	// SKS1 chunk must be loaded before other animation-dependent chunks (checked client)
 	std::list<ESkeletonChunk> ExplicitOrder = { ESkeletonChunk::SKL1, ESkeletonChunk::SKS1 };

@@ -72,14 +72,6 @@ namespace M2Lib
 				UInt32 Unknown1;	// aka max bones
 				UInt32 Unknown2;	// aka category
 
-				UInt32 HasFlags;
-				UInt16 FlagsValue1;
-				UInt16 FlagsValue2;
-				UInt16 FlagsValue3;
-				UInt16 FlagsValue4;
-				UInt16 FlagsValue5;
-				UInt16 FlagsValue6;
-
 			public:
 				CSubsetPartition(CBonePartition* pBonePartitionIn);
 
@@ -97,7 +89,6 @@ namespace M2Lib
 		public:
 			// this subset's ID within the model.
 			UInt16 ID;
-			UInt16 Level;
 			//
 			std::vector< CSubsetPartition* > SubsetPartitions;
 			//

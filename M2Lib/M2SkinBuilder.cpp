@@ -5,7 +5,6 @@
 #include <cstring>
 #include <iostream>
 
-
 extern int g_Verbose;
 
 bool M2Lib::M2SkinBuilder::CBonePartition::AddTriangle(CVertex* GlobalVertexList, CTriangle* pTriangle)
@@ -111,14 +110,6 @@ M2Lib::M2SkinBuilder::CSubMesh::CSubsetPartition::CSubsetPartition(CBonePartitio
 
 	Unknown1 = 0;
 	Unknown2 = 0;
-
-	HasFlags = 0;
-	FlagsValue1 = 0;
-	FlagsValue2 = 0;
-	FlagsValue3 = 0;
-	FlagsValue4 = 0;
-	FlagsValue5 = 0;
-	FlagsValue6 = 0;
 }
 
 bool M2Lib::M2SkinBuilder::CSubMesh::CSubsetPartition::AddTriangle(CTriangle* pTriangle)
@@ -253,7 +244,6 @@ bool M2Lib::M2SkinBuilder::Build(M2Skin* pResult, UInt32 BoneLoD, M2I* pM2I, CVe
 		CSubMesh* pNewSubset = new CSubMesh();
 		pNewSubset->ID = pM2I->SubMeshList[i]->ID;
 		pNewSubset->pExtraData = &pM2I->SubMeshList[i]->ExtraData;
-		pNewSubset->Level = pM2I->SubMeshList[i]->Level;
 
 		// add sub mesh partitions
 		for (UInt32 k = 0; k < m_BonePartitions.size(); k++)
@@ -394,10 +384,10 @@ bool M2Lib::M2SkinBuilder::Build(M2Skin* pResult, UInt32 BoneLoD, M2I* pM2I, CVe
 				M2SkinElement::CElement_SubMesh* pSubsetOut = &SubsetsOut[iSubsetPartition];
 
 				pSubsetOut->ID = m_SubMeshList[i]->ID;
-				pSubsetOut->Level = m_SubMeshList[i]->Level;
+				pSubsetOut->Level = pSubsetPartitionIn->TriangleIndexStart >> 16;
 				pSubsetOut->VertexStart = pSubsetPartitionIn->VertexStart;
 				pSubsetOut->VertexCount = pSubsetPartitionIn->VertexCount;
-				pSubsetOut->TriangleIndexStart = pSubsetPartitionIn->TriangleIndexStart;
+				pSubsetOut->TriangleIndexStart = pSubsetPartitionIn->TriangleIndexStart & 0xFFFF;
 				pSubsetOut->TriangleIndexCount = pSubsetPartitionIn->TriangleIndexCount;
 				pSubsetOut->BoneStart = pSubsetPartitionIn->pBonePartition->BoneStart;
 				pSubsetOut->BoneCount = pSubsetPartitionIn->pBonePartition->Bones.size();

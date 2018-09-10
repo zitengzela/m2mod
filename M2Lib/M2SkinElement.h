@@ -3,14 +3,56 @@
 #include "BaseTypes.h"
 #include "M2Types.h"
 #include <map>
+#include <unordered_set>
 
 namespace M2Lib
 {
 	class M2Skin;
 
+	enum SubsetType
+	{
+		Subset_Body = 0,
+		Subset_Armor = 1,
+		Subset_Cloak = 2,
+		Subset_Hair = 3,
+		Subset_Facial = 4,
+		Subset_Unknown = 5
+	};
+
 	namespace M2SkinElement
 	{
 		typedef std::map<int, int> TextureLookupRemap;
+
+		class Edge
+		{
+		public:
+			Edge(UInt16 VertexA, UInt16 VertexB)
+			{
+				if (VertexA < VertexB)
+				{
+					A = VertexA;
+					B = VertexB;
+				}
+				else
+				{
+					A = VertexB;
+					B = VertexA;
+				}
+			}
+
+			bool operator==(const Edge& other) const
+			{
+				return A == other.A && B == other.B;
+			}
+
+			UInt32 GetHash() const
+			{
+				return (UInt32(A) << 16) | UInt32(B);
+			}
+
+			UInt16 A;
+			UInt16 B;
+		};
 
 		enum EElement
 		{
@@ -119,6 +161,10 @@ namespace M2Lib
 			C3Vector CenterMass;			// average position of all vertices in this subset. found by summing positions of all vertices and then dividing by the number of vertices.
 			C3Vector SortCenter;			// bounding box center. if we make a minimum axis aligned bounding box around the set of vertices in this subset and get the center of that box, this is the result.
 			Float32 SortRadius;				// this is the distance of the vertex farthest from CenterBoundingBox.
+
+			// FMN 2015-01-26: changing TriangleIndexstart, depending on ID. See http://forums.darknestfantasyerotica.com/showthread.php?20446-TUTORIAL-Here-is-how-WoD-.skin-works.&p=402561
+			UInt32 GetStartTrianlgeIndex() const { return TriangleIndexStart + (UInt32(Level) << 16); }
+			UInt32 GetEndTriangleIndex() const { return GetStartTrianlgeIndex() + TriangleIndexCount; }
 		};
 
 		ASSERT_SIZE(CElement_SubMesh, 48);
@@ -136,5 +182,24 @@ namespace M2Lib
 
 		ASSERT_SIZE(CElement_Flags, 12);
 	}
+
+	UInt32 GetSubSetType(UInt32 SubsetId);
+	bool IsAlignedSubset(UInt32 SubsetId);
+
 #pragma pack(pop)
 }
+
+namespace std
+{
+	template<>
+	struct hash<M2Lib::M2SkinElement::Edge>
+	{
+		std::size_t operator()(const M2Lib::M2SkinElement::Edge& obj) const
+		{
+			uint32_t hash = (((UInt32)obj.A) << 16) | (UInt32)obj.B;
+
+			return std::hash<uint32_t>()(hash);
+		}
+	};
+}
+

@@ -2,11 +2,13 @@
 #include "M2.h"
 #include "M2Element.h"
 #include "FileSystem.h"
+#include "Logger.h"
 #include <math.h>
 #include <iostream>
 #include <fstream>
 #include <list>
 #include <assert.h>
+#include <unordered_map>
 
 using namespace M2Lib::M2SkinElement;
 
@@ -24,6 +26,8 @@ M2Lib::EError M2Lib::M2Skin::Load(Char16 const* FileName)
 	FileStream.open(FileName, std::ios::binary | std::ios::in);
 	if (FileStream.fail())
 		return EError_FailedToLoadSKIN_CouldNotOpenFile;
+
+	sLogger.LogInfo("Loading skin at %s", WStringToString(FileName).c_str());
 
 	// find file size
 	FileStream.seekg(0, std::ios::end);
@@ -62,20 +66,7 @@ M2Lib::EError M2Lib::M2Skin::Save(const Char16* FileName)
 	if (!FileSystemW::IsDirectory(directory) && !FileSystemW::CreateDirectory(directory))
 		return EError_FailedToSaveM2;
 
-	// FMN 2015-02-03: changing Level, depending on TriangleIndexstart. See http://forums.darknestfantasyerotica.com/showthread.php?20446-TUTORIAL-Here-is-how-WoD-.skin-works.&p=402561
-	CElement_SubMesh* SubMeshList = Elements[EElement_SubMesh].as<CElement_SubMesh>();
-	UInt32 TriangleIndexStartPrevious = 0;
-	UInt16 level = 0;
-
-	for (UInt32 i = 0; i != Elements[EElement_SubMesh].Count; i++)
-	{
-		if (SubMeshList[i].TriangleIndexStart < TriangleIndexStartPrevious)
-			++level;
-
-		SubMeshList[i].Level = level;
-
-		TriangleIndexStartPrevious = SubMeshList[i].TriangleIndexStart;
-	}
+	sLogger.LogInfo("Saving skin to %s", WStringToString(FileName).c_str());
 
 	// open file stream
 	std::fstream FileStream;
@@ -785,4 +776,52 @@ void M2Lib::M2Skin::CopyMaterial(UInt32 SrcMeshIndex, UInt32 DstMeshIndex)
 		DstMaterial.textureWeightComboIndex = SrcMaterial->textureWeightComboIndex;
 		DstMaterial.textureTransformComboIndex = SrcMaterial->textureTransformComboIndex;
 	}
+}
+
+std::unordered_set<M2Lib::M2SkinElement::Edge> M2Lib::M2Skin::GetEdges(CElement_SubMesh* submesh)
+{
+	UInt16* Triangles = Elements[M2SkinElement::EElement_TriangleIndex].as<UInt16>();
+	UInt16* Indices = Elements[M2SkinElement::EElement_VertexLookup].as<UInt16>();
+
+	auto result = std::unordered_set<Edge>();
+	std::unordered_map<UInt32, int> map;
+
+	UInt32 TriangleIndexStart = submesh->GetStartTrianlgeIndex();
+	UInt32 TriangleIndexEnd = submesh->GetEndTriangleIndex();
+	for (UInt32 k = TriangleIndexStart; k < TriangleIndexEnd; k += 3)
+	{
+		assert(k + 2 < Elements[M2SkinElement::EElement_TriangleIndex].Count);
+
+		UInt16 indexA = Indices[Triangles[k]];
+		UInt16 indexB = Indices[Triangles[k + 1]];
+		UInt16 indexC = Indices[Triangles[k + 2]];
+
+		auto edgeA = Edge(indexA, indexB);
+		auto edgeB = Edge(indexA, indexC);
+		auto edgeC = Edge(indexC, indexB);
+
+		auto itr = map.find(edgeA.GetHash());
+		if (itr == map.end())
+			map[edgeA.GetHash()] = 1;
+		else
+			++itr->second;
+
+		itr = map.find(edgeB.GetHash());
+		if (itr == map.end())
+			map[edgeB.GetHash()] = 1;
+		else
+			++itr->second;
+
+		itr = map.find(edgeC.GetHash());
+		if (itr == map.end())
+			map[edgeC.GetHash()] = 1;
+		else
+			++itr->second;
+	}
+
+	for (auto itr : map)
+		if (itr.second == 1)
+			result.insert(Edge((itr.first >> 16) & 0xFFFF, itr.first & 0xFFFF));
+
+	return result;
 }

@@ -71,8 +71,6 @@ UInt32 M2Lib::M2::GetHeaderSize() const
 
 M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 {
-	sLogger.LogInfo("Loading file %s", WStringToString(FileName).c_str());
-
 	// check path
 	if (!FileName)
 	{
@@ -90,6 +88,8 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 		sLogger.LogError("Error: Failed to open file %s", WStringToString(FileName).c_str());
 		return EError_FailedToLoadM2_CouldNotOpenFile;
 	}
+
+	sLogger.LogInfo("Loading model at %s", WStringToString(FileName).c_str());
 
 	// find file size
 	FileStream.seekg(0, std::ios::end);
@@ -673,6 +673,8 @@ M2Lib::EError M2Lib::M2::Save(const Char16* FileName)
 	if (FileStream.fail())
 		return EError_FailedToSaveM2;
 
+	sLogger.LogInfo("Saving model to %s", WStringToString(FileName).c_str());
+
 	// fill elements header data
 	m_SaveElements_FindOffsets();
 	m_SaveElements_CopyElementsToHeader();
@@ -757,8 +759,6 @@ M2Lib::EError M2Lib::M2::Save(const Char16* FileName)
 	return EError_OK;
 }
 
-
-
 M2Lib::EError M2Lib::M2::ExportM2Intermediate(Char16 const* FileName)
 {
 	// open file stream
@@ -835,9 +835,8 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate(Char16 const* FileName)
 		UInt32 SubsetTriangleCountOut = pSubsetOut->TriangleIndexCount / 3;
 		DataBinary.WriteUInt32(SubsetTriangleCountOut);
 
-		// FMN 2015-01-26: changing TriangleIndexstart, depending on ID. See http://forums.darknestfantasyerotica.com/showthread.php?20446-TUTORIAL-Here-is-how-WoD-.skin-works.&p=402561
-		UInt32 TriangleIndexStart = UInt32(pSubsetOut->TriangleIndexStart) + (pSubsetOut->Level << 16);
-		UInt32 TriangleIndexEnd = TriangleIndexStart + pSubsetOut->TriangleIndexCount;
+		UInt32 TriangleIndexStart = pSubsetOut->GetStartTrianlgeIndex();
+		UInt32 TriangleIndexEnd = pSubsetOut->GetEndTriangleIndex();
 		for (UInt32 k = TriangleIndexStart; k < TriangleIndexEnd; ++k)
 		{
 			UInt16 TriangleIndexOut = Triangles[k] - pSubsetOut->VertexStart;
@@ -2014,7 +2013,8 @@ void M2Lib::M2::FixSeamsClothing(Float32 PositionalTolerance, Float32 AngularTol
 
 void M2Lib::M2::FixNormals(Float32 AngularTolerance)
 {
-	auto& SubMeshes = Skins[0]->Elements[M2SkinElement::EElement_SubMesh];
+	auto pSkin = Skins[0];
+	auto& SubMeshes = pSkin->Elements[M2SkinElement::EElement_SubMesh];
 	auto VertexList = Elements[EElement_Vertex].as<CVertex>();
 
 	std::vector<bool> processedIndices(Elements[EElement_Vertex].Count, false);
@@ -2024,6 +2024,17 @@ void M2Lib::M2::FixNormals(Float32 AngularTolerance)
 	for (UInt32 i = 0; i < SubMeshes.Count; ++i)
 	{
 		auto SubmeshI = SubMeshes.at<M2SkinElement::CElement_SubMesh>(i);
+		
+		auto EdgesI = pSkin->GetEdges(SubmeshI);
+
+		//sLogger.LogInfo("Mesh %u Edges %u", SubmeshI->ID, EdgesI.size());
+
+		std::unordered_set<UInt16> verticesI;
+		for (auto& edge : EdgesI)
+		{
+			verticesI.insert(edge.A);
+			verticesI.insert(edge.B);
+		}
 
 		for (UInt32 j = 0; j < SubMeshes.Count; ++j)
 		{
@@ -2032,14 +2043,22 @@ void M2Lib::M2::FixNormals(Float32 AngularTolerance)
 
 			auto SubmeshJ = SubMeshes.at<M2SkinElement::CElement_SubMesh>(j);
 
-			for (auto iVertex = SubmeshI->VertexStart; iVertex < SubmeshI->VertexStart + SubmeshI->VertexCount; ++iVertex)
+			auto EdgesJ = pSkin->GetEdges(SubmeshJ);
+			std::unordered_set<UInt16> verticesJ;
+			for (auto& edge : EdgesJ)
+			{
+				verticesJ.insert(edge.A);
+				verticesJ.insert(edge.B);
+			}
+
+			for (auto iVertex : verticesI)
 			{
 				if (processedIndices[iVertex])
 					continue;
 
 				auto vertexI = &VertexList[iVertex];
 
-				for (auto jVertex = SubmeshJ->VertexStart; jVertex < SubmeshJ->VertexStart + SubmeshJ->VertexCount; ++jVertex)
+				for (auto jVertex : verticesJ)
 				{
 					if (iVertex == jVertex)
 						continue;
@@ -2056,7 +2075,7 @@ void M2Lib::M2::FixNormals(Float32 AngularTolerance)
 						!floatEq(vertexI->Position.Z, vertexJ->Position.Z, tolerance))
 						continue;*/
 
-					if (!CVertex::CompareSimilar(*vertexI, *vertexJ, false, true, true, -1.f, AngularTolerance))
+					if (!CVertex::CompareSimilar(*vertexI, *vertexJ, false, false, false, -1.f, AngularTolerance))
 						continue;
 
 					auto CenterMass = (vertexI->Position + vertexJ->Position) / 2.f;
@@ -2077,9 +2096,6 @@ void M2Lib::M2::FixNormals(Float32 AngularTolerance)
 
 					if (!found)
 						SimilarVertices[vertexI].insert(vertexJ);
-
-					processedIndices[iVertex] = true;
-					processedIndices[jVertex] = true;
 				}
 			}
 		}

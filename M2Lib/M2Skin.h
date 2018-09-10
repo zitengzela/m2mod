@@ -15,8 +15,6 @@ namespace M2Lib
 		class CElement_Texture;
 	}
 
-	//using namespace M2SkinElement;
-
 	class M2Skin
 	{
 		friend class M2;
@@ -111,6 +109,8 @@ namespace M2Lib
 
 		void CopyMaterial(UInt32 SrcMeshIndex, UInt32 DstMeshIndex);
 
+		std::unordered_set<M2SkinElement::Edge> GetEdges(M2SkinElement::CElement_SubMesh* submesh);
+
 		class MeshInfo
 		{
 		public:
@@ -152,8 +152,4 @@ namespace M2Lib
 		}
 
 	};
-
-
-
-
 }
