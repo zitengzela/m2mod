@@ -8,7 +8,7 @@ void M2Lib::M2Chunk::PFIDChunk::Load(std::fstream& FileStream, UInt32 Size)
 {
 	assert(Size == 4 && "Bad PFID chunk size");
 
-	FileStream.read((char*)PhysFileId, 4);
+	FileStream.read((char*)&PhysFileId, 4);
 }
 
 void M2Lib::M2Chunk::PFIDChunk::Save(std::fstream& FileStream)
