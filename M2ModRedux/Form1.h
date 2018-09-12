@@ -1088,7 +1088,7 @@ private: System::Windows::Forms::Button^  clearButton;
 			}
 		}
 
-		auto fileName = Path::GetFileName(checkBoxReplaceM2->Checked ? textBoxReplaceM2->Text : textBoxInputM2Exp->Text);
+		auto fileName = Path::GetFileName(checkBoxReplaceM2->Checked ? textBoxReplaceM2->Text : textBoxInputM2Imp->Text);
 		String^ ExportFileName;
 		if (settings && !settings->OutputDirectory.empty())
 		{
@@ -1110,7 +1110,7 @@ private: System::Windows::Forms::Button^  clearButton;
 		}
 		else
 		{
-			auto outputDirectory = Path::Combine(Path::GetDirectoryName(textBoxInputM2Exp->Text), "Export");
+			auto outputDirectory = Path::Combine(Path::GetDirectoryName(textBoxInputM2Imp->Text), "Export");
 			ExportFileName = Path::Combine(outputDirectory, fileName);
 		}
 
