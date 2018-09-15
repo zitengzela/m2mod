@@ -151,6 +151,7 @@ namespace M2ModRedux {
 		//Control->Anchor = (AnchorStyles)((int)AnchorStyles::Left || (int)AnchorStyles::Right);
 		//Control->Anchor = AnchorStyles::Right + AnchorStyles::Left;
 		Control->Width = splitContainer1->Panel1->Width - 25;
+		Control->Anchor |= AnchorStyles::Right;
 
 		ElementInfoList.Add(Control);
 		splitContainer1->Panel1->Controls->Add(Control);

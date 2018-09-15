@@ -81,7 +81,8 @@ bool M2Lib::Casc::InitializeStorage()
 	// Open the storage directory
 	if (!CascOpenStorage(StoragePath.c_str(), 0, &hStorage))
 	{
-		sLogger.LogError("Failed to load CASC storage: error %u", GetLastError());
+		//sLogger.LogError("Failed to load CASC storage: error %u", GetLastError());
+		sLogger.LogInfo("Failed to load CASC storage: error %u", GetLastError());
 		return false;
 	}
 

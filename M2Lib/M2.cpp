@@ -2036,9 +2036,6 @@ void M2Lib::M2::FixNormals(Float32 AngularTolerance)
 
 		for (UInt32 j = 0; j < SubMeshes.Count; ++j)
 		{
-			if (i == j)
-				continue;
-
 			auto SubmeshJ = SubMeshes.at<M2SkinElement::CElement_SubMesh>(j);
 			if (!IsAlignedSubset(SubmeshJ->ID))
 				continue;

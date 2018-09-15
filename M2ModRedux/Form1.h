@@ -1180,6 +1180,7 @@ private: System::Windows::Forms::Button^  clearButton;
 		if (checkBoxReplaceM2->Checked)
 		{
 			replaceM2 = new M2Lib::M2();
+			replaceM2->SetCasc(GetCasc());
 			auto Error = replaceM2->Load(StringConverter(textBoxReplaceM2->Text).ToStringW());
 			if (Error != M2Lib::EError_OK)
 			{

@@ -197,6 +197,8 @@ namespace M2ModRedux {
 	{
 		auto const& info = infos[index];
 
+		auto& SubmeshExtraData = pM2->Skins[0]->ExtraDataBySubmeshIndex[index];
+
 		groupBox1->Text = gcnew String("#" + (index + 1) + ": ");
 		String^ text = gcnew String("ID = " + info.ID);
 		if (info.Description.size())
@@ -206,6 +208,8 @@ namespace M2ModRedux {
 
 		for (auto& material : info.Materials)
 			text += "Material: op_count = " + material->op_count + "\n";
+
+		text += "Original skin index: " + SubmeshExtraData->OriginalSubmeshIndex + "\n";
 
 		for (unsigned int i = 0; i < info.Textures.size(); ++i)
 		{
@@ -234,7 +238,6 @@ namespace M2ModRedux {
 
 		srcMaterialComboBox->Items->AddRange(SrcMaterials.ToArray());
 
-		auto& SubmeshExtraData = pM2->Skins[0]->ExtraDataBySubmeshIndex[index];
 		if (SubmeshExtraData->MaterialOverride >= 0)
 		{
 			copyMaterialCheckBox->Checked = true;
