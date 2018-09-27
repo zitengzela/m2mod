@@ -2102,6 +2102,11 @@ void M2Lib::M2::FixNormals(Float32 AngularTolerance)
 					for (auto itr : similarVertices)
 						newNormal = newNormal + itr->Normal;
 
+					// if normal is zero, then possibly something is wrong
+					// perhaps it's two surfaces on each other
+					if (floatEq(newNormal.Length(), 0.0f))
+						continue;
+
 					newNormal.Normalize();
 
 					vertexI->Normal = newNormal;
