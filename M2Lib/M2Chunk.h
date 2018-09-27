@@ -15,6 +15,7 @@ namespace M2Lib
 			Bone = 'BFID',
 			Skeleton = 'SKID',
 			Texture = 'TXID',
+			TXAC = 'TXAC'
 		};
 
 		class PFIDChunk : public ChunkBase
@@ -76,6 +77,23 @@ namespace M2Lib
 			void Save(std::fstream& FileStream) override;
 
 			std::vector<UInt32> TextureFileDataIds;
+		};
+
+		class TXACChunk : public ChunkBase
+		{
+		public:
+			struct texture_ac
+			{
+				char unk[2]; // likely used in CM2SceneRender::SetupTextureTransforms and uploaded to the shader directly. 0 otherwise.
+			};
+
+			TXACChunk(UInt32 TextureFlagsCount, UInt32 ParticleEmitterCount);
+
+			void Load(std::fstream& FileStream, UInt32 Size) override;
+			void Save(std::fstream& FileStream) override;
+
+			std::vector<texture_ac> TextureFlagsAC;
+			std::vector<texture_ac> ParticleEmitterAC;
 		};
 
 		class MD21Chunk : public RawChunk

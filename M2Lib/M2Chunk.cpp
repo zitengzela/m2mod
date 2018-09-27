@@ -1,5 +1,6 @@
 #include "M2Chunk.h"
 #include "M2.h"
+#include "Logger.h"
 #include <fstream>
 #include <assert.h>
 #include <algorithm>
@@ -104,4 +105,28 @@ void M2Lib::M2Chunk::TXIDChunk::Save(std::fstream & FileStream)
 {
 	for (UInt32 i = 0; i < TextureFileDataIds.size(); ++i)
 		FileStream.write((char*)&TextureFileDataIds[i], 4);
+}
+
+M2Lib::M2Chunk::TXACChunk::TXACChunk(UInt32 TextureFlagsCount, UInt32 ParticleEmitterCount)
+{
+	TextureFlagsAC.resize(TextureFlagsCount);
+	ParticleEmitterAC.resize(ParticleEmitterCount);
+}
+
+void M2Lib::M2Chunk::TXACChunk::Load(std::fstream & FileStream, UInt32 Size)
+{
+	assert(Size == (TextureFlagsAC.size() + ParticleEmitterAC.size()) * sizeof(texture_ac) && "Bad TXAC chunk size");
+
+	for (UInt32 i = 0; i < TextureFlagsAC.size(); ++i)
+		FileStream.read((char*)&TextureFlagsAC[i], sizeof(texture_ac));
+	for (UInt32 i = 0; i < ParticleEmitterAC.size(); ++i)
+		FileStream.read((char*)&ParticleEmitterAC[i], sizeof(texture_ac));
+}
+
+void M2Lib::M2Chunk::TXACChunk::Save(std::fstream & FileStream)
+{
+	for (UInt32 i = 0; i < TextureFlagsAC.size(); ++i)
+		FileStream.write((char*)&TextureFlagsAC[i], sizeof(texture_ac));
+	for (UInt32 i = 0; i < ParticleEmitterAC.size(); ++i)
+		FileStream.write((char*)&ParticleEmitterAC[i], sizeof(texture_ac));
 }

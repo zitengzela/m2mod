@@ -146,6 +146,10 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 				case EM2Chunk::Skeleton: Chunk = new SKIDChunk(); break;
 				case EM2Chunk::Skin: Chunk = new SFIDChunk(); break;
 				case EM2Chunk::Texture: Chunk = new TXIDChunk(); break;
+				case EM2Chunk::TXAC:
+					PostProcessChunks[eChunk] = { (UInt32)FileStream.tellg(), ChunkSize };
+					FileStream.seekg(ChunkSize, std::ios::cur);
+					continue;
 				default:
 					Chunk = new RawChunk();
 					break;
@@ -255,14 +259,11 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 		ChunkBase* Chunk = NULL;
 		switch (PostChunk.first)
 		{
-			default:
-			{
-				Chunk = new RawChunk();
-				Chunk->Load(FileStream, PostChunk.second.Size);
-				break;
-			}
+			case EM2Chunk::TXAC: Chunk = new TXACChunk(Header.Elements.nTextureFlags, Header.Elements.nParticleEmitter); break;
+			default: Chunk = new RawChunk(); break;
 		}
 
+		Chunk->Load(FileStream, PostChunk.second.Size);
 		Chunks[PostChunk.first] = Chunk;
 	}
 
@@ -490,10 +491,8 @@ void M2Lib::M2::DoExtraWork()
 				auto textureLookup = AddTextureLookup(textureId, false);
 				if (ExtraData->GlossTextureName.empty() && renderFlagsByStyle.find(ExtraData->TextureStyle) == renderFlagsByStyle.end())
 				{
-					// 8.x: breaks model
-					//renderFlagsByStyle[ExtraData->TextureStyle] = AddTextureFlags(CElement_TextureFlag::EFlags_TwoSided,
-					//	(CElement_TextureFlag::EBlend)ExtraData->TextureStyle);
-					//	CElement_TextureFlag::EBlend::EBlend_Opaque);
+					renderFlagsByStyle[ExtraData->TextureStyle] = AddTextureFlags(CElement_TextureFlag::EFlags_TwoSided,
+						(CElement_TextureFlag::EBlend)ExtraData->TextureStyle);
 				}
 
 				auto Materials = Skin->Elements[M2SkinElement::EElement_Material].as<M2SkinElement::CElement_Material>();
@@ -509,8 +508,7 @@ void M2Lib::M2::DoExtraWork()
 					if (ExtraData->GlossTextureName.empty())
 					{
 						Materials[j].shader_id = TRANSPARENT_SHADER_ID;
-						// 8.x: breaks model
-						//Materials[j].iRenderFlags = renderFlagsByStyle[ExtraData->TextureStyle];
+						Materials[j].iRenderFlags = renderFlagsByStyle[ExtraData->TextureStyle];
 					}
 				}
 
@@ -1255,7 +1253,7 @@ void M2Lib::M2::PrintInfo()
 	FileStream << "oTextureFlags             " << Header.Elements.oTextureFlags << std::endl;
 	FileStream << " DataSize                 " << Elements[EElement_TextureFlags].Data.size() << std::endl;
 	CElement_TextureFlag* TextureFlags = Elements[EElement_TextureFlags].as<CElement_TextureFlag>();
-    for (UInt32 i = 0; i < Header.Elements.nTransparency; ++i)
+    for (UInt32 i = 0; i < Header.Elements.nTextureFlags; ++i)
     {
         auto flag = TextureFlags[i];
         FileStream << "\t-- " << i << std::endl;
@@ -3015,6 +3013,14 @@ UInt32 M2Lib::M2::AddTextureFlags(CElement_TextureFlag::EFlags Flags, CElement_T
 	CElement_TextureFlag& newFlags = Element.as<CElement_TextureFlag>()[newIndex];
 	newFlags.Flags = Flags;
 	newFlags.Blend = Blend;
+
+	if (auto TXACChunk = (M2Chunk::TXACChunk*)GetChunk(EM2Chunk::TXAC))
+	{
+		M2Chunk::TXACChunk::texture_ac newAc;
+		newAc.unk[0] = 0;
+		newAc.unk[1] = 0;
+		TXACChunk->TextureFlagsAC.push_back(newAc);
+	}
 
 	++Element.Count;
 	return newIndex;
