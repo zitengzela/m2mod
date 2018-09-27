@@ -1457,7 +1457,7 @@ void M2Lib::M2::PrintReferencedFileInfo()
 			if (textuteFileDataId)
 				++count;
 
-		sLogger.LogInfo("Total texture files referenced: %u", count);
+		sLogger.LogInfo("Total texture referenced in chunk: %u", count);
 		for (auto textuteFileDataId : textureChunk->TextureFileDataIds)
 			if (textuteFileDataId)
 				sLogger.LogInfo("\t[%u] %s", textuteFileDataId, pathInfo(textuteFileDataId).c_str());
@@ -1490,6 +1490,30 @@ void M2Lib::M2::PrintReferencedFileInfo()
 				else if (!textureElement.TexturePath.Offset && !FileDataId)
 					sLogger.LogInfo("\tError: texture #%u path must be present in either in element or chunk, but it is not", i);
 			}
+		}
+	}
+	else
+	{
+		auto& TextureElement = Elements[EElement_Texture];
+		CElement_Texture* Textures = TextureElement.as<CElement_Texture>();
+
+		int count = 0;
+
+		for (UInt32 j = 0; j < TextureElement.Count; ++j)
+		{
+			if (Textures[j].TexturePath.Offset)
+				++count;
+		}
+
+		sLogger.LogInfo("Total texture referenced inplace: %u", count);
+
+		for (UInt32 j = 0; j < TextureElement.Count; ++j)
+		{
+			if (!Textures[j].TexturePath.Offset)
+				continue;
+
+			auto path = TextureElement.GetLocalPointer(Textures[j].TexturePath.Offset);
+			sLogger.LogInfo("\t%s", path);
 		}
 	}
 
@@ -3091,7 +3115,10 @@ void M2Lib::M2::RemoveTXIDChunk()
 	sLogger.LogInfo("Total data for storing textures needed: %u", newDataLen);
 
 	if (!newDataLen)
+	{
+		Chunks.erase(chunkItr);
 		return;
+	}
 
 	UInt32 pathOffset = 0;
 	UInt32 OldSize = Element.Data.size();
