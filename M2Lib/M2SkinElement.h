@@ -21,7 +21,7 @@ namespace M2Lib
 
 	namespace M2SkinElement
 	{
-		typedef std::map<int, int> TextureLookupRemap;
+		typedef std::map<UInt32, UInt32> TextureLookupRemap;
 
 		class Edge
 		{

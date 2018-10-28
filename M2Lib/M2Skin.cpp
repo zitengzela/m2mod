@@ -3,6 +3,7 @@
 #include "M2Element.h"
 #include "FileSystem.h"
 #include "Logger.h"
+#include "Shaders.h"
 #include <math.h>
 #include <iostream>
 #include <fstream>
@@ -600,7 +601,6 @@ void M2Lib::M2Skin::m_SaveElements_FindOffsets()
 	}
 }
 
-
 void M2Lib::M2Skin::m_SaveElements_CopyElementsToHeader()
 {
 	Header.nVertex = Elements[EElement_VertexLookup].Count;
@@ -630,11 +630,12 @@ void M2Lib::M2Skin::m_SaveElements_CopyElementsToHeader()
 	Header.Unknown3 = 0;
 }
 
-void M2Lib::M2Skin::MakeGlossy(UInt32 GlossTextureId, std::vector<UInt32> const& MeshIndexes, TextureLookupRemap& LookupRemap)
+bool M2Lib::M2Skin::AddShader(UInt16 ShaderId, UInt32 const* MeshTextureIds, std::vector<UInt32> const& MeshIndexes, TextureLookupRemap& LookupRemap)
 {
+	UInt32 OpCountForShader = ShaderId == TRANSPARENT_SHADER_ID ? 1 : GetOpCountForShader(ShaderId);
+
 	auto Submeshes = Elements[EElement_SubMesh].as<CElement_SubMesh>();
 	auto Materials = Elements[EElement_Material].as<CElement_Material>();
-	auto ShadowBatches = Elements[EElement_Flags].as<CElement_Flags>();
 	auto TextureLookup = pM2->Elements[M2Element::EElement_TextureLookup].as<M2Element::CElement_TextureLookup>();
 
 	for (auto submeshId : MeshIndexes)
@@ -648,50 +649,65 @@ void M2Lib::M2Skin::MakeGlossy(UInt32 GlossTextureId, std::vector<UInt32> const&
 			if (Material.iSubMesh != submeshId)
 				continue;
 
-			auto textureId = TextureLookup[Material.textureComboIndex].TextureIndex;
+			auto textureId = MeshTextureIds[0] != -1 ? MeshTextureIds[0] : TextureLookup[Material.textureComboIndex].TextureIndex;
 			auto& texture = pM2->Elements[M2Element::EElement_Texture].as<M2Element::CElement_Texture>()[textureId];
 			if (texture.Type == M2Element::CElement_Texture::ETextureType::Skin)
 				pM2->Header.Description.Flags.flag_unk_0x80 = 0;	// fixes gloss but breaks dh tattoos
 
 			int newLookup;
 
-			if (LookupRemap.find(textureId) == LookupRemap.end())
+			// TODO: for now always add new lookups, this code does not work as intended
+			if (true || LookupRemap.find(textureId) == LookupRemap.end())
 			{
 				int replaceId = -1;
 				//if (pM2->Elements[M2Element::EElement_Texture].as<M2Element::CElement_Texture>()[textureId].Type == M2Element::CElement_Texture::ETextureType::Skin)
 				//	replaceId = pM2->CloneTexture(textureId);
 
-				// add two new lookups successively to use with op_count
+				// add new lookups successively to use with op_count
 				newLookup = pM2->AddTextureLookup(replaceId != -1 ? replaceId : textureId, true);
-				pM2->AddTextureLookup(GlossTextureId, true);
+				for (UInt32 j = 1; j < OpCountForShader; ++j)
+					pM2->AddTextureLookup(MeshTextureIds[j], true);
 				LookupRemap[textureId] = newLookup;
 			}
 			else
 				newLookup = LookupRemap[textureId];
 
 			Material.textureComboIndex = newLookup;
-			Material.op_count = 2;
-			Material.shader_id = GLOSS_SHADER_ID;
-
-			for (UInt32 j = 0; j < Elements[EElement_Flags].Count; ++j)
-			{
-				auto& batch = ShadowBatches[j];
-				if (batch.iSubMesh != submeshId)
-					continue;
-
-				//batch.Flags1 |= 0x100;
-			}
+			Material.op_count = OpCountForShader;
+			Material.shader_id = ShaderId;
 		}
 	}
+
+	return true;
 }
 
-void M2Lib::M2Skin::MakeGlossy(Char8 const* szGlossTexturePath, std::vector<UInt32> const& MeshIndexes, TextureLookupRemap& LookupRemap)
+bool M2Lib::M2Skin::AddShader(UInt16 ShaderId, SInt16 const* TextureTypes, std::string const* MeshTextures, std::vector<UInt32> const& MeshIndexes, TextureLookupRemap& LookupRemap)
 {
-	SInt32 GlossTextureId = pM2->GetTextureIndex(szGlossTexturePath);
-	if (GlossTextureId == -1)
-		GlossTextureId = pM2->AddTexture(szGlossTexturePath, M2Element::CElement_Texture::ETextureType::Final_Hardcoded, M2Element::CElement_Texture::ETextureFlags::None);
+	UInt32 MeshTextureIds[MAX_SUBMESH_TEXTURES];
+	UInt32 OpCountForShader = ShaderId == TRANSPARENT_SHADER_ID ? 1 : GetOpCountForShader(ShaderId);
 
-	MakeGlossy(GlossTextureId, MeshIndexes, LookupRemap);
+	for (UInt32 i = 0; i < OpCountForShader; ++i)
+	{
+		if (TextureTypes[i] == -1)
+		{
+			if (i != 0)
+			{
+				sLogger.LogError("Failed to apply shader data: texture not set for op#%u (total %u ops)", i, OpCountForShader);
+				return false;
+			}
+
+			MeshTextureIds[i] = -1;
+			continue;
+		}
+
+		SInt32 TextureId = pM2->GetTextureIndex((M2Element::CElement_Texture::ETextureType)TextureTypes[i], MeshTextures[i].c_str());
+		if (TextureId == -1)
+			TextureId = pM2->AddTexture((M2Element::CElement_Texture::ETextureType)TextureTypes[i], M2Element::CElement_Texture::ETextureFlags::None, MeshTextures[i].c_str());
+
+		MeshTextureIds[i] = TextureId;
+	}
+
+	return AddShader(ShaderId, MeshTextureIds, MeshIndexes, LookupRemap);
 }
 
 std::vector<M2Lib::M2Skin::MeshInfo> M2Lib::M2Skin::GetMeshInfo()

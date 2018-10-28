@@ -83,6 +83,7 @@
     <ClInclude Include="M2Chunk.h" />
     <ClInclude Include="M2Element.h" />
     <ClInclude Include="M2I.h" />
+    <ClInclude Include="Shaders.h" />
     <ClInclude Include="Skeleton.h" />
     <ClInclude Include="M2Skin.h" />
     <ClInclude Include="M2SkinBuilder.h" />
@@ -107,6 +108,7 @@
     <ClCompile Include="M2SkinBuilder.cpp" />
     <ClCompile Include="M2SkinElement.cpp" />
     <ClCompile Include="M2Types.cpp" />
+    <ClCompile Include="Shaders.cpp" />
     <ClCompile Include="Skeleton.cpp" />
     <ClCompile Include="SkeletonChunk.cpp" />
   </ItemGroup>

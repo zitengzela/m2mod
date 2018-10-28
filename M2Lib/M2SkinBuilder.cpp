@@ -2,6 +2,7 @@
 #include "M2I.h"
 #include "M2.h"
 #include "M2Skin.h"
+#include "Logger.h"
 #include <cstring>
 #include <iostream>
 

@@ -204,9 +204,9 @@ M2Lib::SubmeshExtraData::SubmeshExtraData()
 {
 	ID = 0;
 	FirstLODMeshIndex = -1;
-	MaterialOverride = -1;
-	TextureStyle = 2;
-	OriginalSubmeshIndex = -1;
+
+	for (UInt32 i = 0; i < MAX_SUBMESH_TEXTURES; ++i)
+		TextureType[i] = -1;
 }
 
 const int M2Lib::BoundaryData::ExtraData::BoundingTriangleVertexMap[BOUNDING_TRIANGLE_COUNT * 3] =

@@ -211,6 +211,8 @@ namespace M2ModRedux {
 
 		text += "Original skin index: " + SubmeshExtraData->OriginalSubmeshIndex + "\n";
 
+		text += "Shader: " + String::Format("0x{0:X}", SubmeshExtraData->ShaderId) + "\n";
+
 		for (unsigned int i = 0; i < info.Textures.size(); ++i)
 		{
 			auto& texture = info.Textures[i];
@@ -243,15 +245,15 @@ namespace M2ModRedux {
 			copyMaterialCheckBox->Checked = true;
 			srcMaterialComboBox->SelectedIndex = SubmeshExtraData->MaterialOverride + 1;
 		}
-		if (!SubmeshExtraData->CustomTextureName.empty())
+		if (!SubmeshExtraData->TextureName[0].empty())
 		{
 			customTextureCheckBox->Checked = true;
-			customTextureTextBox->Text = gcnew String(SubmeshExtraData->CustomTextureName.c_str());
+			customTextureTextBox->Text = gcnew String(SubmeshExtraData->TextureName[0].c_str());
 		}
-		if (!SubmeshExtraData->GlossTextureName.empty())
+		if (!SubmeshExtraData->TextureName[1].empty())
 		{
 			makeGlossyCheckBox->Checked = true;
-			glossTextureTextBox->Text = gcnew String(SubmeshExtraData->GlossTextureName.c_str());
+			glossTextureTextBox->Text = gcnew String(SubmeshExtraData->TextureName[1].c_str());
 		}
 	}
 

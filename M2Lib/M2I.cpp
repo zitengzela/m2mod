@@ -29,7 +29,7 @@ M2Lib::EError M2Lib::M2I::Load(Char16 const* FileName, M2Lib::M2* pM2, bool Igno
 
 		Version = MAKE_VERSION(VersionMajor, VersionMinor);
 
-		if (!(Version >= MAKE_VERSION(4, 5) && Version <= MAKE_VERSION(4, 9)) && Version != MAKE_VERSION(8, 0))
+		if (!(Version >= MAKE_VERSION(4, 5) && Version <= MAKE_VERSION(4, 9)) && !(Version >= MAKE_VERSION(8, 0) && Version <= MAKE_VERSION(8, 1)))
 			return EError_FailedToImportM2I_UnsupportedVersion;
 	}
 
@@ -53,27 +53,66 @@ M2Lib::EError M2Lib::M2I::Load(Char16 const* FileName, M2Lib::M2* pM2, bool Igno
 		{
 			pNewSubMesh->ExtraData.MaterialOverride = DataBinary.ReadSInt16();
 			
-			if (Version >= MAKE_VERSION(4, 9))
+			if (Version >= MAKE_VERSION(8, 1))
 			{
-				if (DataBinary.ReadUInt8() != 0)
+				pNewSubMesh->ExtraData.ShaderId = DataBinary.ReadSInt32();
+
+				pNewSubMesh->ExtraData.BlendMode = DataBinary.ReadSInt16();
+				pNewSubMesh->ExtraData.RenderFlags = DataBinary.ReadUInt16();
+
+				for (UInt32 j = 0; j < MAX_SUBMESH_TEXTURES; ++j)
 				{
-					pNewSubMesh->ExtraData.CustomTextureName = DataBinary.ReadASCIIString();
-					pNewSubMesh->ExtraData.TextureStyle = DataBinary.ReadUInt16();
+					pNewSubMesh->ExtraData.TextureType[j] = DataBinary.ReadSInt16();
+					pNewSubMesh->ExtraData.TextureName[j] = DataBinary.ReadASCIIString();
 				}
-				else
-				{
-					DataBinary.ReadASCIIString();
-					DataBinary.ReadUInt16();
-				}
-				if (DataBinary.ReadUInt8() != 0)
-					pNewSubMesh->ExtraData.GlossTextureName = DataBinary.ReadASCIIString();
-				else
-					DataBinary.ReadASCIIString();
 			}
 			else
 			{
-				pNewSubMesh->ExtraData.CustomTextureName = DataBinary.ReadASCIIString();
-				pNewSubMesh->ExtraData.GlossTextureName = DataBinary.ReadASCIIString();
+				if (Version >= MAKE_VERSION(4, 9))
+				{
+					if (DataBinary.ReadUInt8() != 0)
+					{
+						pNewSubMesh->ExtraData.ShaderId = TRANSPARENT_SHADER_ID;
+						pNewSubMesh->ExtraData.TextureType[0] = (SInt32)M2Element::CElement_Texture::ETextureType::Final_Hardcoded;
+						pNewSubMesh->ExtraData.TextureName[0] = DataBinary.ReadASCIIString();
+
+						pNewSubMesh->ExtraData.RenderFlags = (SInt32)M2Element::CElement_TextureFlag::EFlags::EFlags_TwoSided;
+						pNewSubMesh->ExtraData.BlendMode = DataBinary.ReadUInt16();
+					}
+					else
+					{
+						DataBinary.ReadASCIIString();
+						DataBinary.ReadUInt16();
+					}
+
+					if (DataBinary.ReadUInt8() != 0)
+					{
+						pNewSubMesh->ExtraData.ShaderId = GLOSS_SHADER_ID;
+
+						pNewSubMesh->ExtraData.TextureType[1] = (SInt32)M2Element::CElement_Texture::ETextureType::Final_Hardcoded;
+						pNewSubMesh->ExtraData.TextureName[1] = DataBinary.ReadASCIIString();
+					}
+					else
+						DataBinary.ReadASCIIString();
+				}
+				else
+				{
+					pNewSubMesh->ExtraData.TextureName[0] = DataBinary.ReadASCIIString();
+					if (pNewSubMesh->ExtraData.TextureName[0].length() > 0)
+					{
+						pNewSubMesh->ExtraData.ShaderId = TRANSPARENT_SHADER_ID;
+						pNewSubMesh->ExtraData.TextureType[0] = (SInt32)M2Element::CElement_Texture::ETextureType::Final_Hardcoded;
+						pNewSubMesh->ExtraData.RenderFlags = (SInt32)M2Element::CElement_TextureFlag::EFlags::EFlags_TwoSided;
+						pNewSubMesh->ExtraData.BlendMode = (SInt32)M2Element::CElement_TextureFlag::EBlend::EBlend_Decal;
+					}
+
+					pNewSubMesh->ExtraData.TextureName[1] = DataBinary.ReadASCIIString();
+					if (pNewSubMesh->ExtraData.TextureName[1].length() > 0)
+					{
+						pNewSubMesh->ExtraData.ShaderId = GLOSS_SHADER_ID;
+						pNewSubMesh->ExtraData.TextureType[1] = (SInt32)M2Element::CElement_Texture::ETextureType::Final_Hardcoded;
+					}
+				}
 			}
 		}
 
@@ -86,7 +125,8 @@ M2Lib::EError M2Lib::M2I::Load(Char16 const* FileName, M2Lib::M2* pM2, bool Igno
 		}
 
 		// FMN 2015-02-13: read level
-		pNewSubMesh->Level = DataBinary.ReadUInt16();
+		DataBinary.ReadUInt16();
+		pNewSubMesh->Level = 0; 
 
 		// read vertices
 		UInt32 InVertexCount = 0;

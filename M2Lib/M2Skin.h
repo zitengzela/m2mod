@@ -104,8 +104,8 @@ namespace M2Lib
 		// gathers list of flags that affect a given sub mesh within this skin.
 		void GetSubMeshFlags(UInt32 SubMeshIndex, std::vector< M2SkinElement::CElement_Flags* >& Result);
 
-		void MakeGlossy(Char8 const* szGlossTexturePath, std::vector<UInt32> const& MeshIndexes, M2SkinElement::TextureLookupRemap& LookupRemap);
-		void MakeGlossy(UInt32 GlossTextureId, std::vector<UInt32> const& MeshIndexes, M2SkinElement::TextureLookupRemap& LookupRemap);
+		bool AddShader(UInt16 ShaderId, SInt16 const* TextureTypes, std::string const* MeshTextures, std::vector<UInt32> const& MeshIndexes, M2SkinElement::TextureLookupRemap& LookupRemap);
+		bool AddShader(UInt16 ShaderId, UInt32 const* MeshTextureIds, std::vector<UInt32> const& MeshIndexes, M2SkinElement::TextureLookupRemap& LookupRemap);
 
 		void CopyMaterial(UInt32 SrcMeshIndex, UInt32 DstMeshIndex);
 

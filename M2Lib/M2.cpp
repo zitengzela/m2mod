@@ -461,15 +461,17 @@ void M2Lib::M2::DoExtraWork()
 	//for (UInt32 i = 0; i < Elements[EElement_TextureFlags].Count; ++i)
 	//	sLogger.LogInfo("\tFlags: %u Blend: %u", RenderFlags[i].Flags, RenderFlags[i].Blend);
 
-	M2SkinElement::TextureLookupRemap textureRemap;
+	std::map<std::pair<SInt16, SInt16>, UInt32> renderFlagsByStyle;
 
-	std::map<int, int> renderFlagsByStyle;
-	// first assign textures and gloss
+	M2SkinElement::TextureLookupRemap textureRemap;
+	// first assign shader data
 	for (UInt32 i = 0; i < SKIN_COUNT; ++i)
 	{
 		auto Skin = Skins[i];
 		if (!Skin)
 			continue;
+
+		auto Materials = Skin->Elements[M2SkinElement::EElement_Material].as<M2SkinElement::CElement_Material>();
 
 		for (UInt32 MeshIndex = 0; MeshIndex < Skin->ExtraDataBySubmeshIndex.size(); ++MeshIndex)
 		{
@@ -479,56 +481,30 @@ void M2Lib::M2::DoExtraWork()
 			if (ExtraData->MaterialOverride >= 0)
 				continue;
 
-			// assign custom texture
-			if (ExtraData->CustomTextureName.length() > 0)
+			auto ShaderId = ExtraData->ShaderId;
+			if (ShaderId == -1 && ExtraData->TextureType[0] != -1)
+				ShaderId = TRANSPARENT_SHADER_ID;
+
+			if (ExtraData->BlendMode != -1)
 			{
-				auto textureId = GetTextureIndex(ExtraData->CustomTextureName.c_str());
-				if (textureId == -1)
-					textureId = AddTexture(ExtraData->CustomTextureName.c_str(),
-						CElement_Texture::ETextureType::Final_Hardcoded,
-						CElement_Texture::ETextureFlags::None);
+				auto key = std::pair<SInt16, SInt16>(ExtraData->RenderFlags, ExtraData->BlendMode);
+				if (renderFlagsByStyle.find(key) == renderFlagsByStyle.end())
+					renderFlagsByStyle[key] = AddTextureFlags((CElement_TextureFlag::EFlags)ExtraData->RenderFlags, (CElement_TextureFlag::EBlend)ExtraData->BlendMode);
 
-				auto textureLookup = AddTextureLookup(textureId, false);
-				if (ExtraData->GlossTextureName.empty() && renderFlagsByStyle.find(ExtraData->TextureStyle) == renderFlagsByStyle.end())
-				{
-					renderFlagsByStyle[ExtraData->TextureStyle] = AddTextureFlags(CElement_TextureFlag::EFlags_TwoSided,
-						(CElement_TextureFlag::EBlend)ExtraData->TextureStyle);
-				}
-
-				auto Materials = Skin->Elements[M2SkinElement::EElement_Material].as<M2SkinElement::CElement_Material>();
 				for (UInt32 j = 0; j < Skin->Header.nMaterial; ++j)
 				{
 					if (Materials[j].iSubMesh != MeshIndex)
 						continue;
 
-					auto& Material = Materials[j];
-
-					Material.textureComboIndex = textureLookup;
-					Material.op_count = 1;
-					if (ExtraData->GlossTextureName.empty())
-					{
-						Materials[j].shader_id = TRANSPARENT_SHADER_ID;
-						Materials[j].iRenderFlags = renderFlagsByStyle[ExtraData->TextureStyle];
-					}
-				}
-
-				auto Batches = Skin->Elements[M2SkinElement::EElement_Flags].as<M2SkinElement::CElement_Flags>();
-				for (UInt32 j = 0; j < Skin->Header.nFlags; ++j)
-				{
-					if (Batches[j].iSubMesh != MeshIndex)
-						continue;
-
-					if (Batches[j].TextureId >= 0)
-						Batches[j].TextureId = textureId;
+					Materials[j].iRenderFlags = renderFlagsByStyle[key];
 				}
 			}
 
-			// make glossy
-			if (!ExtraData->GlossTextureName.empty())
-			{
-				std::vector<UInt32> MeshIndexes = { MeshIndex };
-				Skin->MakeGlossy(ExtraData->GlossTextureName.c_str(), MeshIndexes, textureRemap);
-			}
+			if (ShaderId == -1)
+				continue;
+
+			if (!Skin->AddShader(ShaderId, ExtraData->TextureType, ExtraData->TextureName, { MeshIndex }, textureRemap))
+				break;
 		}
 	}
 
@@ -788,23 +764,29 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate(Char16 const* FileName)
 
 	// save version
 	DataBinary.WriteUInt16(8);
-	DataBinary.WriteUInt16(0);
+	DataBinary.WriteUInt16(1);
 
 	// save subsets
 	DataBinary.WriteUInt32(SubsetCount);
-	for (UInt32 i = 0; i < SubsetCount; i++)
+	for (UInt32 i = 0; i < SubsetCount; ++i)
 	{
 		M2SkinElement::CElement_SubMesh* pSubsetOut = &Subsets[i];
 
-		DataBinary.WriteUInt16(pSubsetOut->ID);
-		DataBinary.WriteASCIIString("");	// description
-		DataBinary.WriteSInt16(-1);			// material override
-		DataBinary.WriteUInt8(0);			// no custom texture
-		DataBinary.WriteASCIIString("");	// custom texture
-		DataBinary.WriteUInt16(0);			// texture style
-		DataBinary.WriteUInt8(0);			// no gloss texture
-		DataBinary.WriteASCIIString("");	// gloss texture
-		DataBinary.WriteUInt32(i);			// original subset index
+		DataBinary.WriteUInt16(pSubsetOut->ID);	// mesh id
+		DataBinary.WriteASCIIString("");		// description
+		DataBinary.WriteSInt16(-1);				// material override
+
+		DataBinary.WriteSInt32(-1);				// shader id
+		DataBinary.WriteSInt16(-1);				// blend type
+		DataBinary.WriteUInt16(0);				// render flags
+		
+		for (UInt32 j = 0; j < MAX_SUBMESH_TEXTURES; ++j)
+		{
+			DataBinary.WriteUInt16(-1);			// texture type
+			DataBinary.WriteASCIIString("");	// texture
+		}
+
+		DataBinary.WriteUInt32(i);				// original subset index
 
 		DataBinary.WriteUInt16(pSubsetOut->Level);
 
@@ -1499,8 +1481,13 @@ void M2Lib::M2::PrintReferencedFileInfo()
 
 		for (UInt32 j = 0; j < TextureElement.Count; ++j)
 		{
-			if (Textures[j].TexturePath.Offset)
-				++count;
+			if (!Textures[j].TexturePath.Offset)
+				continue;
+
+			auto path = (const char*)TextureElement.GetLocalPointer(Textures[j].TexturePath.Offset);
+			if (strlen(path) <= 1)
+				continue;
+			++count;
 		}
 
 		sLogger.LogInfo("Total texture referenced inplace: %u", count);
@@ -1510,7 +1497,10 @@ void M2Lib::M2::PrintReferencedFileInfo()
 			if (!Textures[j].TexturePath.Offset)
 				continue;
 
-			auto path = TextureElement.GetLocalPointer(Textures[j].TexturePath.Offset);
+			auto path = (const char*)TextureElement.GetLocalPointer(Textures[j].TexturePath.Offset);
+			if (strlen(path) <= 1)
+				continue;
+
 			sLogger.LogInfo("\t%s", path);
 		}
 	}
@@ -2940,8 +2930,11 @@ void M2Lib::M2::m_SaveElements_CopyElementsToHeader()
 	}
 }
 
-UInt32 M2Lib::M2::AddTexture(const Char8* szTextureSource, CElement_Texture::ETextureType Type, CElement_Texture::ETextureFlags Flags)
+UInt32 M2Lib::M2::AddTexture(CElement_Texture::ETextureType Type, CElement_Texture::ETextureFlags Flags, char const* szTextureSource)
 {
+	if (Type != CElement_Texture::ETextureType::Final_Hardcoded)
+		szTextureSource = "";
+
 	auto& Element = Elements[EElement_Texture];
 
 	// shift offsets for existing textures
@@ -2954,45 +2947,56 @@ UInt32 M2Lib::M2::AddTexture(const Char8* szTextureSource, CElement_Texture::ETe
 
 	// add element placeholder for new texture
 	Element.Data.insert(Element.Data.begin() + Element.Count * sizeof(CElement_Texture), sizeof(CElement_Texture), 0);
-	
-	bool rawPathTexture = true;
-	auto casc = GetCasc();
+
+	bool inplacePath = true;
 	auto textureChunk = (TXIDChunk*)GetChunk(EM2Chunk::Texture);
-	if (casc && textureChunk)
+
+	if (textureChunk)
 	{
-		if (auto FileDataId = casc->GetFileDataIdByFile(szTextureSource))
+		Casc* casc = GetCasc();
+		if (!strlen(szTextureSource))
 		{
-			rawPathTexture = false;
+			inplacePath = false;
+			textureChunk->TextureFileDataIds.push_back(0);
+		}
+		else if (auto FileDataId = casc ? casc->GetFileDataIdByFile(szTextureSource) : 0)
+		{
+			inplacePath = false;
 			textureChunk->TextureFileDataIds.push_back(FileDataId);
 		}
-	}
-
-	if (rawPathTexture && textureChunk)
-	{
-		sLogger.LogInfo("Texture %s is not indexed in CASC, TXID chunk will be removed from model", szTextureSource);
-		textureChunk->TextureFileDataIds.push_back(0);
-		// texture is not indexed, texture chunk needs to be removed
-		needRemoveTXIDChunk = true;
-	}
-	
-	auto texturePathPos = Element.Data.size();
-
-	if (rawPathTexture)
-	{
-		// add placeholder for texture path
-		Element.Data.insert(Element.Data.end(), strlen(szTextureSource) + 1, 0);
+		else
+			textureChunk->TextureFileDataIds.push_back(0);
 	}
 
 	auto newIndex = Element.Count;
 
-	CElement_Texture& newTexture = Element.as<CElement_Texture>()[newIndex];
-	newTexture.Type = Type;
-	newTexture.Flags = Flags;
-	newTexture.TexturePath.Count = rawPathTexture ? strlen(szTextureSource) + 1 : 0;
-	newTexture.TexturePath.Offset = rawPathTexture ? Element.Offset + texturePathPos : 0;
+	if (inplacePath)
+	{
+		if (textureChunk)
+		{
+			sLogger.LogInfo("Texture %s is not indexed in CASC, TXID chunk will be removed from model", szTextureSource);
+			// texture is not indexed, texture chunk needs to be removed
+			needRemoveTXIDChunk = true;
+		}
 
-	if (rawPathTexture)
+		auto texturePathPos = Element.Data.size();
+		// add placeholder for texture path
+		Element.Data.insert(Element.Data.end(), strlen(szTextureSource) + 1, 0);
+
+		CElement_Texture& newTexture = Element.as<CElement_Texture>()[newIndex];
+		newTexture.Type = Type;
+		newTexture.Flags = Flags;
+		newTexture.TexturePath.Count = strlen(szTextureSource) + 1;
+		newTexture.TexturePath.Offset = Element.Offset + texturePathPos;
+
 		memcpy(&Element.Data[texturePathPos], szTextureSource, newTexture.TexturePath.Count);
+	}
+	else
+	{
+		CElement_Texture& newTexture = Element.as<CElement_Texture>()[newIndex];
+		newTexture.Type = Type;
+		newTexture.Flags = Flags;
+	}
 
 	++Element.Count;
 
@@ -3006,7 +3010,7 @@ UInt32 M2Lib::M2::CloneTexture(UInt16 TextureId)
 	auto& texture = Elements[EElement_Texture].as<CElement_Texture>()[TextureId];
 	std::string texturePath = (char*)Elements[EElement_Texture].GetLocalPointer(texture.TexturePath.Offset);
 
-	return AddTexture(texturePath.c_str(), texture.Type, texture.Flags);
+	return AddTexture(texture.Type, texture.Flags, texturePath.c_str());
 }
 
 UInt32 M2Lib::M2::AddTextureFlags(CElement_TextureFlag::EFlags Flags, CElement_TextureFlag::EBlend Blend)
@@ -3031,18 +3035,21 @@ UInt32 M2Lib::M2::AddTextureFlags(CElement_TextureFlag::EFlags Flags, CElement_T
 	return newIndex;
 }
 
-UInt32 M2Lib::M2::GetTextureIndex(const Char8* szTextureSource)
+UInt32 M2Lib::M2::GetTextureIndex(M2Element::CElement_Texture::ETextureType Type, const Char8* szTextureSource)
 {
-	if (auto textureChunk = (M2Chunk::TXIDChunk*)GetChunk(EM2Chunk::Texture))
+	if (Type == CElement_Texture::ETextureType::Final_Hardcoded)
 	{
-		if (casc)
+		if (auto textureChunk = (M2Chunk::TXIDChunk*)GetChunk(EM2Chunk::Texture))
 		{
-			// if file not found - can be custom texture
-			if (auto FileDataId = casc->GetFileDataIdByFile(szTextureSource))
+			if (casc)
 			{
-				for (UInt32 i = 0; i < textureChunk->TextureFileDataIds.size(); ++i)
-					if (textureChunk->TextureFileDataIds[i] == FileDataId)
-						return i;
+				// if file not found - can be custom texture
+				if (auto FileDataId = casc->GetFileDataIdByFile(szTextureSource))
+				{
+					for (UInt32 i = 0; i < textureChunk->TextureFileDataIds.size(); ++i)
+						if (textureChunk->TextureFileDataIds[i] == FileDataId)
+							return i;
+				}
 			}
 		}
 	}
@@ -3051,6 +3058,12 @@ UInt32 M2Lib::M2::GetTextureIndex(const Char8* szTextureSource)
 	for (UInt32 i = 0; i < Element.Count; ++i)
 	{
 		auto& texture = Element.as<CElement_Texture>()[i];
+		if (texture.Type != Type)
+			continue;
+
+		if (Type != CElement_Texture::ETextureType::Final_Hardcoded)
+			return i;
+
 		if (texture.TexturePath.Offset)
 		{
 			auto pTexturePath = (Char8 const*)Element.GetLocalPointer(texture.TexturePath.Offset);
@@ -3065,7 +3078,7 @@ UInt32 M2Lib::M2::GetTextureIndex(const Char8* szTextureSource)
 std::string M2Lib::M2::GetTexturePath(UInt32 Index)
 {
 	auto& TextureElement = Elements[EElement_Texture];
-	assert("Texture index too large" && Index < TextureElement.Count);
+	assert(__FUNCTION__ "Texture index too large" && Index < TextureElement.Count);
 
 	auto texture = TextureElement.at<CElement_Texture>(Index);
 
@@ -3106,6 +3119,11 @@ void M2Lib::M2::RemoveTXIDChunk()
 	auto& Element = Elements[EElement_Texture];
 	for (UInt32 i = 0; i < chunk->TextureFileDataIds.size(); ++i)
 	{
+		if (i >= Element.Count)
+		{
+			sLogger.LogError("%u %u", i, Element.Count);
+		}
+
 		assert(i < Element.Count);
 		auto FileDataId = chunk->TextureFileDataIds[i];
 		if (!FileDataId)

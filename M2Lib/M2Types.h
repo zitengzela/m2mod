@@ -233,6 +233,8 @@ namespace M2Lib
 		ExtraData CalculateExtra() const;
 	};
 
+#define MAX_SUBMESH_TEXTURES 4
+
 	struct SubmeshExtraData
 	{
 		SubmeshExtraData();
@@ -242,14 +244,18 @@ namespace M2Lib
 		std::string Description;
 		BoundaryData Boundary;
 
-		UInt16 TextureStyle;
-		std::string CustomTextureName;
-		std::string GlossTextureName;
+		SInt32 ShaderId = -1;
+
+		SInt16 TextureType[MAX_SUBMESH_TEXTURES];
+		std::string TextureName[MAX_SUBMESH_TEXTURES];
+		
+		SInt16 RenderFlags = 0;
+		SInt16 BlendMode = -1;
 
 		// index of mesh to override material from
-		SInt32 MaterialOverride;
+		SInt32 MaterialOverride = -1;
 		// this is the index of mesh in element structure of original skin
-		SInt32 OriginalSubmeshIndex;
+		SInt32 OriginalSubmeshIndex = -1;
 	};
 
 	bool floatEq(Float32 a, Float32 b, float Tolerance = 1e-4);
