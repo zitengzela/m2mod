@@ -129,11 +129,14 @@ namespace M2ModRedux
 			}
 			else
 			{
-				FileDataId = casc->GetFileDataIdByFile(StringConverter(testInputTextBox->Text).ToStringA());
-				if (!FileDataId)
+				auto info = casc->FindByPartialFileName(StringConverter(testInputTextBox->Text).ToStringA());
+				if (!info.FileDataId)
 					testOutputTextBox->Text = "Not found in storage";
 				else
-					testOutputTextBox->Text = FileDataId.ToString();
+				{
+					testInputTextBox->Text = gcnew String(info.Path.c_str());
+					testOutputTextBox->Text = info.FileDataId.ToString();
+				}
 			}
 
 			AnalyzeCasc();
@@ -1264,8 +1267,8 @@ private: System::Windows::Forms::Button^  clearButton;
 			auto outputDirectory = gcnew String(settings->OutputDirectory.c_str());
 
 			auto casc = GetCasc();
-			auto path = casc ? casc->FindByPartialFileName(StringConverter(fileName).ToStringA()) : "";
-			if (path.empty())
+			auto info = casc ? casc->FindByPartialFileName(StringConverter(fileName).ToStringA()) : M2Lib::Casc::FileInfo();
+			if (info.Path.empty())
 			{
 				SetStatus("Failed to determine model relative path in storage");
 				delete preloadM2;
@@ -1275,7 +1278,7 @@ private: System::Windows::Forms::Button^  clearButton;
 				return;
 			}
 
-			ExportFileName = Path::Combine(outputDirectory, gcnew String(path.c_str()));
+			ExportFileName = Path::Combine(outputDirectory, gcnew String(info.Path.c_str()));
 		}
 		else
 		{

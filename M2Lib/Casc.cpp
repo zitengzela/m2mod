@@ -259,24 +259,26 @@ bool M2Lib::Casc::ExtractFile(UInt32 FileDataId, std::string const& OutPath)
 	return true;
 }
 
-std::string M2Lib::Casc::FindByPartialFileName(std::string const & Name)
+M2Lib::Casc::FileInfo M2Lib::Casc::FindByPartialFileName(std::string const & Name)
 {
 	if (!LoadListFileCache(""))
-		return "";
+		return { 0, "" };
 
 	auto NameCopy = Name;
+	NameCopy = FileSystemA::NormalizePath(NameCopy);
 	std::transform(NameCopy.begin(), NameCopy.end(), NameCopy.begin(), ::tolower);
 
 	for (auto itr : filesByFileDataId)
 	{
 		std::string str = itr.second;
+		str = FileSystemA::NormalizePath(str);
 		std::transform(str.begin(), str.end(), str.begin(), ::tolower);
 
 		if (str.find(NameCopy) != std::string::npos)
-			return str;
+			return { itr.first, itr.second };
 	}
 
-	return "";
+	return { 0, "" };
 }
 
 std::string M2Lib::Casc::GetFileByFileDataId(UInt32 FileDataId)

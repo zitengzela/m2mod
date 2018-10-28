@@ -18,7 +18,7 @@ std::basic_string<T> M2Lib::FileSystem<T>::Combine(T const* Path, ...)
 	const T * element;
 	va_list argList;
 
-	auto result = FixPath(Path);
+	auto result = NormalizePath(Path);
 
 	va_start(argList, Path);
 	while ((element = va_arg(argList, const T *)) != NULL)
@@ -40,7 +40,7 @@ template
 std::basic_string<wchar_t> M2Lib::FileSystem<wchar_t>::Combine(wchar_t const* Path, ...);
 
 template <class T>
-std::basic_string<T> M2Lib::FileSystem<T>::FixPath(std::basic_string<T> const& path)
+std::basic_string<T> M2Lib::FileSystem<T>::NormalizePath(std::basic_string<T> const& path)
 {
 	auto copy = path;
 
@@ -68,7 +68,7 @@ std::basic_string<char> M2Lib::FileSystem<char>::GetCurrentPath()
 template<class T>
 std::basic_string<T> M2Lib::FileSystem<T>::GetParentDirectory(std::basic_string<T> path)
 {
-	path = FixPath(path);
+	path = NormalizePath(path);
 	auto lastSlash = path.find_last_of(PathSeparator);
 	if (lastSlash != std::string::npos)
 		return path.substr(0, lastSlash);
@@ -84,7 +84,7 @@ std::basic_string<wchar_t> M2Lib::FileSystem<wchar_t>::GetParentDirectory(std::b
 template<class T>
 std::basic_string<T> M2Lib::FileSystem<T>::GetBaseName(std::basic_string<T> path)
 {
-	path = FixPath(path);
+	path = NormalizePath(path);
 	auto lastSlash = path.find_last_of(PathSeparator);
 	if (lastSlash != std::string::npos)
 		return path.substr(lastSlash + 1);
@@ -100,7 +100,7 @@ std::basic_string<wchar_t> M2Lib::FileSystem<wchar_t>::GetBaseName(std::basic_st
 template<class T>
 std::basic_string<T> M2Lib::FileSystem<T>::GetFileName(std::basic_string<T> path)
 {
-	path = FixPath(path);
+	path = NormalizePath(path);
 	auto BaseName = GetBaseName(path);
 	auto lastDot = BaseName.find_last_of('.');
 	if (lastDot != std::string::npos)
@@ -117,7 +117,7 @@ std::basic_string<wchar_t> M2Lib::FileSystem<wchar_t>::GetFileName(std::basic_st
 template<class T>
 std::basic_string<T> M2Lib::FileSystem<T>::GetExtension(std::basic_string<T> path)
 {
-	path = FixPath(path);
+	path = NormalizePath(path);
 	auto BaseName = GetBaseName(path);
 	auto lastDot = BaseName.find_last_of('.');
 	if (lastDot != std::string::npos)

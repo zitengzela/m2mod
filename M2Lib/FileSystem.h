@@ -9,9 +9,8 @@ namespace M2Lib
 	{
 		static T PathSeparator;
 
-		static std::basic_string<T> FixPath(std::basic_string<T> const& path);
-
 	public:
+		static std::basic_string<T> NormalizePath(std::basic_string<T> const& path);
 		static std::basic_string<T> Combine(T const* Path, ...);
 
 		static std::basic_string<T> GetCurrentPath();
