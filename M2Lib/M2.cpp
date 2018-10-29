@@ -3107,7 +3107,7 @@ void M2Lib::M2::RemoveTXIDChunk()
 	auto chunkItr = Chunks.find(EM2Chunk::Texture);
 	if (chunkItr == Chunks.end())
 	{
-		sLogger.LogInfo("TXID chunk not found");
+		sLogger.LogInfo("TXID chunk not present, skipping");
 		return;
 	}
 
@@ -3119,11 +3119,6 @@ void M2Lib::M2::RemoveTXIDChunk()
 	auto& Element = Elements[EElement_Texture];
 	for (UInt32 i = 0; i < chunk->TextureFileDataIds.size(); ++i)
 	{
-		if (i >= Element.Count)
-		{
-			sLogger.LogError("%u %u", i, Element.Count);
-		}
-
 		assert(i < Element.Count);
 		auto FileDataId = chunk->TextureFileDataIds[i];
 		if (!FileDataId)
@@ -3133,7 +3128,7 @@ void M2Lib::M2::RemoveTXIDChunk()
 		if (path.empty())
 		{
 			sLogger.LogError("Error: failed to get path for FileDataId = [%u] for texture #%u. Casc is not initialized or listfile is not loaded or not up to date", FileDataId, i);
-			sLogger.LogError("Custom textures will not be loaded");
+			sLogger.LogError("Custom textures will not work ingame");
 			return;
 		}
 
@@ -3141,7 +3136,7 @@ void M2Lib::M2::RemoveTXIDChunk()
 		newDataLen += path.length() + 1;
 	}
 
-	sLogger.LogInfo("Total data for storing textures needed: %u", newDataLen);
+	sLogger.LogInfo("Total bytes for storing textures will be used: %u", newDataLen);
 
 	if (!newDataLen)
 	{

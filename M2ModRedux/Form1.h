@@ -161,6 +161,8 @@ namespace M2ModRedux
 					this->textBoxInputM2I->Text = (String^)value;
 				if (auto value = RegistyStore::GetValue(RegistyStore::Value::ImportReplaceM2))
 					this->textBoxReplaceM2->Text = (String^)value;
+				if (auto value = RegistyStore::GetValue(RegistyStore::Value::ReplaceM2Checked))
+					this->checkBoxReplaceM2->Checked = Boolean::Parse(value->ToString());
 
 				if (auto value = RegistyStore::GetValue(RegistyStore::Value::WowPath))
 					settings->WowPath = StringConverter((String^)value).ToStringA();
@@ -205,6 +207,7 @@ namespace M2ModRedux
 		RegistyStore::SetValue(RegistyStore::Value::ImportInM2, this->textBoxInputM2Imp->Text);
 		RegistyStore::SetValue(RegistyStore::Value::ImportM2I, this->textBoxInputM2I->Text);
 		RegistyStore::SetValue(RegistyStore::Value::ImportReplaceM2, this->textBoxReplaceM2->Text);
+		RegistyStore::SetValue(RegistyStore::Value::ReplaceM2Checked, this->checkBoxReplaceM2->Checked);
 
 		RegistyStore::SetValue(RegistyStore::Value::WowPath, gcnew String(settings->WowPath.c_str()));
 		RegistyStore::SetValue(RegistyStore::Value::WorkingDirectory, gcnew String(settings->WorkingDirectory.c_str()));
@@ -1271,9 +1274,6 @@ private: System::Windows::Forms::Button^  clearButton;
 			if (info.Path.empty())
 			{
 				SetStatus("Failed to determine model relative path in storage");
-				delete preloadM2;
-				delete replaceM2;
-				preloadM2 = NULL;
 				PreloadTransition(false);
 				return;
 			}
@@ -1295,16 +1295,9 @@ private: System::Windows::Forms::Button^  clearButton;
 		if (Error != M2Lib::EError_OK)
 		{
 			SetStatus(gcnew System::String(M2Lib::GetErrorText(Error).c_str()));
-			delete preloadM2;
-			delete replaceM2;
-			preloadM2 = NULL;
 			PreloadTransition(false);
 			return;
 		}
-
-		delete preloadM2;
-		delete replaceM2;
-		preloadM2 = NULL;
 
 		SetStatus("Import done.");
 		PreloadTransition(false);
@@ -1316,9 +1309,15 @@ private: System::Windows::Forms::Button^  clearButton;
 		SetStatus("Preloading...");
 
 		if (preloadM2)
+		{
 			delete preloadM2;
+			preloadM2 = NULL;
+		}
 		if (replaceM2)
+		{
 			delete replaceM2;
+			replaceM2 = NULL;
+		}
 
 		// Check fields.
 		if (textBoxInputM2I->Text->Length == 0)
@@ -1343,8 +1342,6 @@ private: System::Windows::Forms::Button^  clearButton;
 		if (Error != M2Lib::EError_OK)
 		{
 			SetStatus(gcnew System::String(M2Lib::GetErrorText(Error).c_str()));
-			delete preloadM2;
-			preloadM2 = NULL;
 			PreloadTransition(false);
 			return;
 		}
@@ -1357,10 +1354,6 @@ private: System::Windows::Forms::Button^  clearButton;
 			if (Error != M2Lib::EError_OK)
 			{
 				SetStatus(gcnew System::String(M2Lib::GetErrorText(Error).c_str()));
-				delete replaceM2;
-				replaceM2 = NULL;
-				delete preloadM2;
-				preloadM2 = NULL;
 				PreloadTransition(false);
 				return;
 			}
@@ -1373,10 +1366,6 @@ private: System::Windows::Forms::Button^  clearButton;
 		if (Error != M2Lib::EError_OK)
 		{
 			SetStatus(gcnew System::String(M2Lib::GetErrorText(Error).c_str()));
-			delete preloadM2;
-			preloadM2 = NULL;
-			delete replaceM2;
-			replaceM2 = NULL;
 			PreloadTransition(false);
 			return;
 		}
@@ -1387,18 +1376,6 @@ private: System::Windows::Forms::Button^  clearButton;
 	}
 
 	private: System::Void importCancelButton_Click(System::Object^  sender, System::EventArgs^  e) {
-		PreloadTransition(false);
-		if (preloadM2)
-		{
-			delete preloadM2;
-			preloadM2 = NULL;
-		}
-		if (replaceM2)
-		{
-			delete replaceM2;
-			replaceM2 = NULL;
-		}
-
 		SetStatus("Cancelled preload.");
 		PreloadTransition(false);
 	}

@@ -18,6 +18,7 @@ namespace M2ModRedux
 			ImportM2I,
 			ImportOutM2,
 			ImportReplaceM2,
+			ReplaceM2Checked,
 
 			MergeBones,
 			MergeAttachments,
