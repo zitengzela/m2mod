@@ -23,7 +23,7 @@ namespace M2Lib
 		{
 		public:
 			// maximum number of bones allowed per partition.
-			UInt32* pBoneLoD;
+			UInt32 MaxBones;
 			// list of bones in this partition, indices into the global bone list. later gets consolidated into the global bone lookup list.
 			std::vector< UInt16 > Bones;
 			// here we keep a map of triangle index to triangle for all triangles that have successfully been added to this bone partition. this is result caching to speed up building of subset partitions when dealing out subset triangles between subset partitions.
@@ -33,9 +33,9 @@ namespace M2Lib
 			UInt32 BoneStart;
 
 		public:
-			CBonePartition(UInt32* pBoneLoDIn)
-				: pBoneLoD(pBoneLoDIn)
-				, BoneStart(0)
+			CBonePartition(UInt32 BoneLOD)
+				: MaxBones(BoneLOD),
+				BoneStart(0)
 			{
 			}
 
@@ -118,10 +118,6 @@ namespace M2Lib
 		};
 
 	public:
-		// bone partition level of detail, this is the maximum number of bones allowed to be used per subset partition per draw call. it is a limitation imposed by the number of shader constant registers available on the GPU.
-		// 256, 75, 53, 21
-		UInt32 m_MaxBones;
-
 		// each skin has it's own vertex list. common vertices accross subsets get duplicated (i think) so they appear as many times as they are used in multiple subsets. this is because each subset occupies a sub-range of this list.
 		std::vector< UInt16 > m_Vertices;
 		// bone lookup list used by this skin. the bone lookup lists from all the skins get consolidated into one big bone lookup list that is stored in the M2.
@@ -132,13 +128,8 @@ namespace M2Lib
 		// list of subsets that make up this skin.
 		std::vector< CSubMesh* > m_SubMeshList;
 
-		// list of bone partitions used within this skin.
-		std::vector< CBonePartition* > m_BonePartitions;
-
-
 	public:
 		M2SkinBuilder()
-			: m_MaxBones(256)
 		{
 		}
 
@@ -147,11 +138,6 @@ namespace M2Lib
 			for (UInt32 i = 0; i < m_SubMeshList.size(); i++)
 			{
 				delete m_SubMeshList[i];
-			}
-
-			for (UInt32 i = 0; i < m_BonePartitions.size(); i++)
-			{
-				delete m_BonePartitions[i];
 			}
 		}
 

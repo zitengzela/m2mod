@@ -147,9 +147,7 @@ namespace M2Lib
 					return i;
 			}
 
-			assert(false && "Bone lookup failed");
-			return 0;
+			return -1;
 		}
-
 	};
 }

@@ -12,9 +12,6 @@
 using namespace M2Lib::M2Element;
 using namespace M2Lib::M2Chunk;
 
-// level of detail for output messages
-int g_Verbose = 1;
-
 UInt32 M2Lib::M2::GetLastElementIndex()
 {
 	for (SInt32 i = M2Element::EElement__Count__ - 1; i >= 0; --i)
@@ -953,7 +950,6 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16 const* FileName)
 	// build skin 0
 	// only build skin 0 for now, so we can fix seams and then build skin for real later
 	M2SkinBuilder SkinBuilder;
-	std::vector< UInt16 > NewBoneLookup;
 	M2Skin* pNewSkin0 = new M2Skin(this);
 	assert(SkinBuilder.Build(pNewSkin0, 256, pInM2I, &NewVertexList[0], 0));
 
@@ -1011,7 +1007,7 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16 const* FileName)
 	//MaxBoneList[5] = 64;
 	//MaxBoneList[6] = 64;
 
-	NewBoneLookup.clear();
+	std::vector<UInt16> NewBoneLookup;
 	SInt32 BoneStart = 0;
 	UInt32 iSkin = 0;
 
@@ -1030,8 +1026,7 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16 const* FileName)
 		if (SkinBuilder.m_Bones.size() > MaxBoneList[iLoD + 1])
 		{
 			// copy skin to result list
-			NewSkinList[iSkin] = pNewSkin;
-			++iSkin;
+			NewSkinList[iSkin++] = pNewSkin;
 
 			// copy skin's bone lookup to the global bone lookup list
 			for (UInt32 i = 0; i < SkinBuilder.m_Bones.size(); i++)

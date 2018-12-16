@@ -13,8 +13,6 @@
 
 using namespace M2Lib::M2SkinElement;
 
-extern int g_Verbose;
-
 M2Lib::EError M2Lib::M2Skin::Load(Char16 const* FileName)
 {
 	if (!FileName)
@@ -103,14 +101,14 @@ void M2Lib::M2Skin::BuildVertexBoneIndices()
 	UInt32 VertexLookupListLength = Elements[EElement_VertexLookup].Count;
 	UInt16* VertexLookupList = Elements[EElement_VertexLookup].as<UInt16>();
 
-	Elements[EElement_BoneIndices].SetDataSize(VertexLookupListLength, VertexLookupListLength * sizeof(UInt32), false);
-	UInt32* BoneIndexList = Elements[EElement_BoneIndices].as<UInt32>();
+	Elements[EElement_BoneIndices].SetDataSize(VertexLookupListLength, VertexLookupListLength * sizeof(CElement_BoneIndices), false);
+	CElement_BoneIndices* BoneIndexList = Elements[EElement_BoneIndices].as<CElement_BoneIndices>();
 
 	UInt32 SubMeshListLength = Elements[EElement_SubMesh].Count;
 	CElement_SubMesh* SubMeshList = Elements[EElement_SubMesh].as<CElement_SubMesh>();
 
 	for (UInt32 i = 0; i < VertexLookupListLength; ++i)
-		BoneIndexList[i] = 0;
+		BoneIndexList[i].Clear();
 
 	for (UInt32 iSubMesh = 0; iSubMesh < SubMeshListLength; ++iSubMesh)
 	{
@@ -122,10 +120,18 @@ void M2Lib::M2Skin::BuildVertexBoneIndices()
 		for (UInt32 j = SubMesh.VertexStart; j < SubMeshVertexEnd; ++j)
 		{
 			CVertex const& Vertex = VertexList[VertexLookupList[j]];
-			UInt8* BoneIndices8 = (UInt8*)&BoneIndexList[j];
 
 			for (int i = 0; i < BONES_PER_VERTEX; ++i)
-				BoneIndices8[i] = Vertex.BoneWeights[i] ? m_ReverseBoneLookup(Vertex.BoneIndices[i], &BoneLookupList[SubMesh.BoneStart], SubMesh.BoneCount) : i;
+			{
+				auto res = m_ReverseBoneLookup(Vertex.BoneIndices[i], &BoneLookupList[SubMesh.BoneStart], SubMesh.BoneCount);
+				if (Vertex.BoneWeights[i] && res == -1)
+				{
+					sLogger.LogError("%u/%u Bone index = %u, Submesh.ID = %u", iSubMesh, SubMeshListLength, Vertex.BoneIndices[i], SubMesh.ID);
+					sLogger.LogError("%u/%u Submesh.BoneStart = %u, Submesh.BoneCount = %u", iSubMesh, SubMeshListLength, SubMesh.BoneStart, SubMesh.BoneCount);
+					assert(false);
+				}
+				BoneIndexList[j].BoneIndices[i] = Vertex.BoneWeights[i] ? res : i;
+			}
 
 			UInt32 MaxBonesPerThisVertex = 0;
 			for (int i = 0; i < BONES_PER_VERTEX; ++i)

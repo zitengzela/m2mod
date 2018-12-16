@@ -91,6 +91,8 @@ namespace M2Lib
 				UInt32 BoneIndicesPacked;
 				UInt8 BoneIndices[BONES_PER_VERTEX];
 			};
+
+			void Clear() { BoneIndicesPacked = 0; }
 		};
 
 		ASSERT_SIZE(CElement_BoneIndices, 4);
