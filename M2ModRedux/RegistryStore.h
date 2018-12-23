@@ -37,7 +37,8 @@ namespace M2ModRedux
 			UnloadCascOnDereference,
 
 			OldCompareM2,
-			NewCompareM2
+			NewCompareM2,
+			CompareWeightThreshold,
 		};
 
 		static RegistyStore()

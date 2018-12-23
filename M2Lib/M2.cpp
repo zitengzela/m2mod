@@ -1453,14 +1453,14 @@ void M2Lib::M2::PrintReferencedFileInfo()
 					localTexturePath = (char const*)Elements[EElement_Texture].GetLocalPointer(textureElement.TexturePath.Offset);
 				auto FileDataId = textureChunk->TextureFileDataIds[i];
 
-				if (textureElement.TexturePath.Offset && FileDataId)
+				if (textureElement.TexturePath.Offset && FileDataId && textureElement.TexturePath.Count > 1)
 				{
 					auto cascPath = pathInfo(FileDataId);
 					sLogger.LogInfo("\tWarning: Texture #%u file is stored in both chunk and texture element.\r\n"
 						"\t\tElement path: %s\r\n"
 						"\t\tChunk path: [%u] %s", i, localTexturePath, FileDataId, pathInfo(FileDataId).c_str());
 				}
-				else if (textureElement.TexturePath.Offset)
+				else if (textureElement.TexturePath.Offset && textureElement.TexturePath.Count > 1)
 					sLogger.LogInfo("\tWarning: texture #%u '%s' is referenced in texture element but not in chunk (legacy model?)", i, localTexturePath);
 				else if (!textureElement.TexturePath.Offset && !FileDataId)
 					sLogger.LogInfo("\tError: texture #%u path must be present in either in element or chunk, but it is not", i);

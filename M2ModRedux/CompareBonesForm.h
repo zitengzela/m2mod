@@ -43,6 +43,8 @@ namespace M2ModRedux {
 				oldM2TextBox->Text = (String^)Value;
 			if (auto Value = RegistyStore::GetValue(RegistyStore::Value::NewCompareM2))
 				newM2TextBox->Text = (String^)Value;
+			if (auto Value = RegistyStore::GetValue(RegistyStore::Value::CompareWeightThreshold))
+				weightThresholdTextBox->Text = (String^)Value;
 		}
 
 	protected:
@@ -71,6 +73,10 @@ namespace M2ModRedux {
 
 	private: System::Windows::Forms::Button^  compareButton;
 	private: System::Windows::Forms::Button^  saveButton;
+	private: System::Windows::Forms::TextBox^  weightThresholdTextBox;
+
+	private: System::Windows::Forms::Label^  weightThresholdLabel;
+
 
 
 	private:
@@ -95,6 +101,8 @@ namespace M2ModRedux {
 			this->resultsTextBox = (gcnew System::Windows::Forms::TextBox());
 			this->compareButton = (gcnew System::Windows::Forms::Button());
 			this->saveButton = (gcnew System::Windows::Forms::Button());
+			this->weightThresholdTextBox = (gcnew System::Windows::Forms::TextBox());
+			this->weightThresholdLabel = (gcnew System::Windows::Forms::Label());
 			this->SuspendLayout();
 			// 
 			// oldM2TextBox
@@ -160,20 +168,20 @@ namespace M2ModRedux {
 			this->resultsTextBox->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Bottom)
 				| System::Windows::Forms::AnchorStyles::Left)
 				| System::Windows::Forms::AnchorStyles::Right));
-			this->resultsTextBox->Location = System::Drawing::Point(17, 103);
+			this->resultsTextBox->Location = System::Drawing::Point(17, 91);
 			this->resultsTextBox->Multiline = true;
 			this->resultsTextBox->Name = L"resultsTextBox";
 			this->resultsTextBox->ScrollBars = System::Windows::Forms::ScrollBars::Vertical;
-			this->resultsTextBox->Size = System::Drawing::Size(497, 103);
+			this->resultsTextBox->Size = System::Drawing::Size(497, 115);
 			this->resultsTextBox->TabIndex = 8;
 			this->resultsTextBox->TextChanged += gcnew System::EventHandler(this, &CompareBonesForm::resultsTextBox_TextChanged);
 			// 
 			// compareButton
 			// 
 			this->compareButton->Anchor = System::Windows::Forms::AnchorStyles::Top;
-			this->compareButton->Location = System::Drawing::Point(201, 67);
+			this->compareButton->Location = System::Drawing::Point(61, 65);
 			this->compareButton->Name = L"compareButton";
-			this->compareButton->Size = System::Drawing::Size(59, 30);
+			this->compareButton->Size = System::Drawing::Size(59, 20);
 			this->compareButton->TabIndex = 9;
 			this->compareButton->Text = L"Compare";
 			this->compareButton->UseVisualStyleBackColor = true;
@@ -183,19 +191,39 @@ namespace M2ModRedux {
 			// 
 			this->saveButton->Anchor = System::Windows::Forms::AnchorStyles::Top;
 			this->saveButton->Enabled = false;
-			this->saveButton->Location = System::Drawing::Point(266, 67);
+			this->saveButton->Location = System::Drawing::Point(126, 65);
 			this->saveButton->Name = L"saveButton";
-			this->saveButton->Size = System::Drawing::Size(59, 30);
+			this->saveButton->Size = System::Drawing::Size(59, 20);
 			this->saveButton->TabIndex = 10;
 			this->saveButton->Text = L"Save";
 			this->saveButton->UseVisualStyleBackColor = true;
 			this->saveButton->Click += gcnew System::EventHandler(this, &CompareBonesForm::saveButton_Click);
+			// 
+			// weightThresholdTextBox
+			// 
+			this->weightThresholdTextBox->Anchor = System::Windows::Forms::AnchorStyles::Top;
+			this->weightThresholdTextBox->Location = System::Drawing::Point(407, 66);
+			this->weightThresholdTextBox->Name = L"weightThresholdTextBox";
+			this->weightThresholdTextBox->Size = System::Drawing::Size(44, 20);
+			this->weightThresholdTextBox->TabIndex = 11;
+			// 
+			// weightThresholdLabel
+			// 
+			this->weightThresholdLabel->Anchor = System::Windows::Forms::AnchorStyles::Top;
+			this->weightThresholdLabel->AutoSize = true;
+			this->weightThresholdLabel->Location = System::Drawing::Point(310, 69);
+			this->weightThresholdLabel->Name = L"weightThresholdLabel";
+			this->weightThresholdLabel->Size = System::Drawing::Size(91, 13);
+			this->weightThresholdLabel->TabIndex = 12;
+			this->weightThresholdLabel->Text = L"Weight Threshold";
 			// 
 			// CompareBonesForm
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->ClientSize = System::Drawing::Size(529, 218);
+			this->Controls->Add(this->weightThresholdLabel);
+			this->Controls->Add(this->weightThresholdTextBox);
 			this->Controls->Add(this->saveButton);
 			this->Controls->Add(this->compareButton);
 			this->Controls->Add(this->resultsTextBox);
@@ -250,6 +278,7 @@ namespace M2ModRedux {
 
 		RegistyStore::SetValue(RegistyStore::Value::OldCompareM2, oldM2TextBox->Text);
 		RegistyStore::SetValue(RegistyStore::Value::NewCompareM2, newM2TextBox->Text);
+		RegistyStore::SetValue(RegistyStore::Value::CompareWeightThreshold, weightThresholdTextBox->Text);
 
 		M2Lib::M2 oldM2, newM2;
 		auto Error = oldM2.Load(StringConverter(oldM2TextBox->Text).ToStringW());
@@ -266,37 +295,77 @@ namespace M2ModRedux {
 			return;
 		}
 
-		M2Lib::BoneComparator comparator(&oldM2, &newM2);
-
 		resultsTextBox->Text = "";
-		auto result = comparator.Diff();
+		auto result = M2Lib::BoneComparator::Diff(&oldM2, &newM2);
 		if (result.empty())
 		{
 			MessageBox::Show("Empty result from bone comparator");
 			return;
 		}
 
+		float weightTreshold;
+		if (!float::TryParse(weightThresholdTextBox->Text, weightTreshold))
+		{
+			weightTreshold = 0.0;
+			weightThresholdTextBox->Text = "0";
+		}
+
+		auto compareStatus = M2Lib::BoneComparator::GetDifferenceStatus(result, weightTreshold);
+
+		if (compareStatus == M2Lib::BoneComparator::CompareStatus::Identical)
+		{
+			resultsTextBox->Text += "# Old and new model bones are identical\r\n";
+			return;
+		}
+		else if (compareStatus == M2Lib::BoneComparator::CompareStatus::IdenticalWithinThreshold)
+		{
+			resultsTextBox->Text += "# Old and new model bones are identical within given threshold " + weightTreshold.ToString("0.00") + "\r\n";
+			return;
+		}
+
 		resultsTextBox->Text += "# Old M2: " + oldM2TextBox->Text + "\r\n";
 		resultsTextBox->Text += "# New M2: " + newM2TextBox->Text + "\r\n";
+		resultsTextBox->Text += "# Weight threshold: " + weightThresholdTextBox->Text + "\r\n";
 		resultsTextBox->Text += "# Use this file with Blender\r\n";
 		resultsTextBox->Text += "# \r\n";
-		resultsTextBox->Text += "# Format: [old bone]: [new bone]\r\n";
-		resultsTextBox->Text += "# Remove extra bone candidates to make sure only one bone present before saving\r\n";
-		resultsTextBox->Text += "# If any <no candidate> lines present - remove, but most likely this file will be useless\r\n";
+		resultsTextBox->Text += "# Output [old bone]: [new bone #1] (probability weight) [new bone #2] (probability weight) ...\r\n";
+		resultsTextBox->Text += "# To use this file in Blender you MUST remove extra bone candidates to make sure only one bone present\r\n";
+		resultsTextBox->Text += "# Bring contents to format: [old bone]: [new bone]\r\n";
+		resultsTextBox->Text += "# E.g.:\r\n";
+		resultsTextBox->Text += "# 13: 14\r\n";
+		resultsTextBox->Text += "#\r\n";
+		resultsTextBox->Text += "# If any <no candidate> lines present - remove, but most likely you won't be able to use this file for conversion\r\n";
+
 		for (auto itr : result)
 		{
-			if (itr.second.size() == 1 && *itr.second.begin() == itr.first)
+			auto weighted = itr.second;
+
+			if (weighted.size() == 1 && weighted.begin()->first == itr.first)
 				continue;
 
 			resultsTextBox->Text += itr.first.ToString() + ": ";
-			if (itr.second.empty())
+
+			for (auto itr = weighted.begin(); itr != weighted.end();)
+			{
+				if (weightTreshold > 0 && weightTreshold > itr->second)
+					weighted.erase(itr++);
+				else
+					++itr;
+			}
+
+			if (weighted.empty())
 				resultsTextBox->Text += "<no candidate>";
 			else
-				for (auto itr2 : itr.second)
-					resultsTextBox->Text += itr2.ToString() + " ";
+			{
+				for (auto candidate : weighted)
+				{
+					resultsTextBox->Text += candidate.first.ToString() + "(" + candidate.second.ToString("0.00") + ") ";
+				}
+			}
 			resultsTextBox->Text += "\r\n";
 		}
 	}
+
 	private: System::Void resultsTextBox_TextChanged(System::Object^  sender, System::EventArgs^  e) {
 		saveButton->Enabled = resultsTextBox->Text->Length > 0;
 	}
