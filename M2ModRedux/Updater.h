@@ -7,13 +7,16 @@ namespace M2ModRedux
 
 	using namespace System::Windows::Forms;
 	using namespace System::Text::RegularExpressions;
+	using namespace System::Net;
 
 	ref class Updater
 	{
-		static String^ UpdateUrl = "https://bitbucket.org/suncurio/m2mod/src/8.x/M2ModRedux/Version.h";
+		static String^ UpdateUrl = "https://bitbucket.org/suncurio/m2mod/raw/8.x/M2ModRedux/Version.h";
 
 	public: String ^ GetRepoVersion()
 	{
+		ServicePointManager::SecurityProtocol =  SecurityProtocolType::Tls12;
+
 		auto client = gcnew System::Net::WebClient();
 		try
 		{
