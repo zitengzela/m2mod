@@ -4,7 +4,7 @@
 #include "Settings.h"
 #include "Skeleton.h"
 #include "FileSystem.h"
-#include "Casc.h"
+#include "FileStorage.h"
 #include "Logger.h"
 #include <sstream>
 #include <set>
@@ -56,9 +56,6 @@ M2Lib::M2::~M2()
 
 	for (UInt32 i = 0; i < SKIN_COUNT; ++i)
 		delete Skins[i];
-
-	if (auto casc = GetCasc())
-		casc->RemoveReference();
 }
 
 UInt32 M2Lib::M2::GetHeaderSize() const
@@ -2351,10 +2348,9 @@ void M2Lib::M2::m_LoadElements_FindSizes(UInt32 ChunkSize)
 #define VERIFY_OFFSET_NOTLOCAL( offset ) \
 	assert( !offset || offset >= Elements[iElement].OffsetOriginal + Elements[iElement].Data.size() );
 
-void M2Lib::M2::SetCasc(Casc * casc)
+void M2Lib::M2::SetCasc(FileStorage* casc)
 {
 	this->casc = casc;
-	casc->AddRefence();
 }
 
 M2Lib::DataElement* M2Lib::M2::GetAnimations()
@@ -2948,7 +2944,7 @@ UInt32 M2Lib::M2::AddTexture(CElement_Texture::ETextureType Type, CElement_Textu
 
 	if (textureChunk)
 	{
-		Casc* casc = GetCasc();
+		FileStorage* casc = GetCasc();
 		if (!strlen(szTextureSource))
 		{
 			inplacePath = false;
@@ -3062,7 +3058,7 @@ UInt32 M2Lib::M2::GetTextureIndex(M2Element::CElement_Texture::ETextureType Type
 		if (texture.TexturePath.Offset)
 		{
 			auto pTexturePath = (Char8 const*)Element.GetLocalPointer(texture.TexturePath.Offset);
-			if (Casc::CalculateHash(pTexturePath) == Casc::CalculateHash(szTextureSource))
+			if (FileStorage::CalculateHash(pTexturePath) == FileStorage::CalculateHash(szTextureSource))
 				return i;
 		}
 	}
@@ -3122,7 +3118,7 @@ void M2Lib::M2::RemoveTXIDChunk()
 		auto path = casc->GetFileByFileDataId(FileDataId);
 		if (path.empty())
 		{
-			sLogger.LogError("Error: failed to get path for FileDataId = [%u] for texture #%u. Casc is not initialized or listfile is not loaded or not up to date", FileDataId, i);
+			sLogger.LogError("Error: failed to get path for FileDataId = [%u] for texture #%u. FileStorage is not initialized or listfile is not loaded or not up to date", FileDataId, i);
 			sLogger.LogError("Custom textures will not work ingame");
 			return;
 		}

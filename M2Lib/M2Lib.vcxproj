@@ -13,14 +13,14 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{881DD3B6-0C01-44BA-86A4-09C9ADC86ECB}</ProjectGuid>
     <RootNamespace>M2Lib</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
@@ -28,7 +28,7 @@
     <WholeProgramOptimization>false</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
     <CLRSupport>false</CLRSupport>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -75,7 +75,7 @@
     <ClInclude Include="BoneComparator.h" />
     <ClInclude Include="ChunkBase.h" />
     <ClInclude Include="DataBinary.h" />
-    <ClInclude Include="Casc.h" />
+    <ClInclude Include="FileStorage.h" />
     <ClInclude Include="FileSystem.h" />
     <ClInclude Include="Logger.h" />
     <ClInclude Include="M2.h" />
@@ -94,7 +94,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BoneComparator.cpp" />
-    <ClCompile Include="Casc.cpp" />
+    <ClCompile Include="FileStorage.cpp" />
     <ClCompile Include="ChunkBase.cpp" />
     <ClCompile Include="DataBinary.cpp" />
     <ClCompile Include="FileSystem.cpp" />

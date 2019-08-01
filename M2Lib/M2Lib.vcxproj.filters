@@ -69,9 +69,6 @@
     <ClInclude Include="SkeletonChunk.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Casc.h">
-      <Filter>Casc</Filter>
-    </ClInclude>
     <ClInclude Include="FileSystem.h">
       <Filter>FileSystem</Filter>
     </ClInclude>
@@ -80,6 +77,9 @@
     </ClInclude>
     <ClInclude Include="Shaders.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FileStorage.h">
+      <Filter>Casc</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -125,9 +125,6 @@
     <ClCompile Include="ChunkBase.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Casc.cpp">
-      <Filter>Casc</Filter>
-    </ClCompile>
     <ClCompile Include="FileSystem.cpp">
       <Filter>FileSystem</Filter>
     </ClCompile>
@@ -136,6 +133,9 @@
     </ClCompile>
     <ClCompile Include="Shaders.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FileStorage.cpp">
+      <Filter>Casc</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

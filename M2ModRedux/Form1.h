@@ -6,7 +6,7 @@
 # define M2IFilter L"M2I Files|*.m2i|All Files|*.*"
 #endif
 
-#include "Casc.h"
+#include "FileStorage.h"
 #include "Logger.h"
 #include "ElementManagementForm.h"
 #include "MeshInfoControl.h"
@@ -52,11 +52,10 @@ namespace M2ModRedux
 
 			InitializeLogger();
 			LoadSettingsFromRegistry();
-			AnalyzeCasc();
 		}
 	private: System::Windows::Forms::TabPage^  cascTabPage;
-	private: System::Windows::Forms::Label^  cascInfoLabel;
-	private: System::Windows::Forms::TextBox^  cascInfoTextBox;
+
+
 
 	private: System::Windows::Forms::Button^  loadListfileButton;
 
@@ -66,7 +65,7 @@ namespace M2ModRedux
 
 	private: System::Windows::Forms::Label^  fileTestLabel;
 	private: System::Windows::Forms::Button^  fileTestButton;
-	private: System::Windows::Forms::Button^  refreshButton;
+
 	private: System::Windows::Forms::ToolStripMenuItem^  checkUpdatesToolStripMenuItem;
 
 
@@ -83,32 +82,6 @@ namespace M2ModRedux
 			GC::Collect();
 
 			sLogger.AttachCallback(callback);
-		}
-
-		private: void AnalyzeCasc()
-		{
-			std::string text = "Storage path: ";
-			if (settings && settings->WowPath.length())
-				text += settings->WowPath + "\r\n";
-			else
-				text += "<not specified>\r\n";
-
-			auto casc = GetCasc();
-			text += "Casc status: ";
-			if (settings->WowPath.empty())
-				text += "<storage not specified>\r\n";
-			else if (!casc->StorageInitialized())
-				text += "<not loaded>\r\n";
-			else
-				text += "<loaded>\r\n";
-
-			text += "Cache size: ";
-			if (!casc->CacheLoaded())
-				text += "<not loaded>\r\n";
-			else
-				text += std::to_string(casc->GetCacheSize()) + " files\r\n";
-
-			cascInfoTextBox->Text = gcnew String(text.c_str());
 		}
 
 		private: void TestFiles()
@@ -139,8 +112,6 @@ namespace M2ModRedux
 				}
 			}
 
-			AnalyzeCasc();
-
 			testOutputTextBox->Focus();
 			testOutputTextBox->SelectAll();
 		}
@@ -164,15 +135,10 @@ namespace M2ModRedux
 				if (auto value = RegistyStore::GetValue(RegistyStore::Value::ReplaceM2Checked))
 					this->checkBoxReplaceM2->Checked = Boolean::Parse(value->ToString());
 
-				if (auto value = RegistyStore::GetValue(RegistyStore::Value::WowPath))
-					settings->WowPath = StringConverter((String^)value).ToStringA();
 				if (auto value = RegistyStore::GetValue(RegistyStore::Value::WorkingDirectory))
 					settings->WorkingDirectory = StringConverter((String^)value).ToStringA();
 				if (auto value = RegistyStore::GetValue(RegistyStore::Value::OutputDirectory))
 					settings->OutputDirectory = StringConverter((String^)value).ToStringA();
-
-				if (auto value = RegistyStore::GetValue(RegistyStore::Value::UnloadCascOnDereference))
-					settings->UnloadCascOnDereference = Boolean::Parse(value->ToString());
 
 				if (auto value = RegistyStore::GetValue(RegistyStore::Value::ForceExportExpansion))
 					settings->ForceLoadExpansion = (M2Lib::Expansion)Int32::Parse(value->ToString());
@@ -209,11 +175,8 @@ namespace M2ModRedux
 		RegistyStore::SetValue(RegistyStore::Value::ImportReplaceM2, this->textBoxReplaceM2->Text);
 		RegistyStore::SetValue(RegistyStore::Value::ReplaceM2Checked, this->checkBoxReplaceM2->Checked);
 
-		RegistyStore::SetValue(RegistyStore::Value::WowPath, gcnew String(settings->WowPath.c_str()));
 		RegistyStore::SetValue(RegistyStore::Value::WorkingDirectory, gcnew String(settings->WorkingDirectory.c_str()));
 		RegistyStore::SetValue(RegistyStore::Value::OutputDirectory, gcnew String(settings->OutputDirectory.c_str()));
-
-		RegistyStore::SetValue(RegistyStore::Value::UnloadCascOnDereference, settings->UnloadCascOnDereference);
 
 		RegistyStore::SetValue(RegistyStore::Value::ForceExportExpansion, (SInt32)settings->ForceLoadExpansion);
 		RegistyStore::SetValue(RegistyStore::Value::MergeAttachments, settings->MergeAttachments);
@@ -306,7 +269,7 @@ private: System::Windows::Forms::Button^  clearButton;
 			 void InitializeComponent(void)
 			 {
 				 this->components = (gcnew System::ComponentModel::Container());
-				 System::ComponentModel::ComponentResourceManager^  resources = (gcnew System::ComponentModel::ComponentResourceManager(Form1::typeid));
+				 System::ComponentModel::ComponentResourceManager^ resources = (gcnew System::ComponentModel::ComponentResourceManager(Form1::typeid));
 				 this->openFileDialog1 = (gcnew System::Windows::Forms::OpenFileDialog());
 				 this->saveFileDialog1 = (gcnew System::Windows::Forms::SaveFileDialog());
 				 this->toolTip1 = (gcnew System::Windows::Forms::ToolTip(this->components));
@@ -341,14 +304,11 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->panelInputM2Import = (gcnew System::Windows::Forms::Panel());
 				 this->panelInputM2I = (gcnew System::Windows::Forms::Panel());
 				 this->cascTabPage = (gcnew System::Windows::Forms::TabPage());
-				 this->refreshButton = (gcnew System::Windows::Forms::Button());
 				 this->fileTestButton = (gcnew System::Windows::Forms::Button());
 				 this->testOutputTextBox = (gcnew System::Windows::Forms::TextBox());
 				 this->testInputTextBox = (gcnew System::Windows::Forms::TextBox());
 				 this->fileTestLabel = (gcnew System::Windows::Forms::Label());
 				 this->loadListfileButton = (gcnew System::Windows::Forms::Button());
-				 this->cascInfoTextBox = (gcnew System::Windows::Forms::TextBox());
-				 this->cascInfoLabel = (gcnew System::Windows::Forms::Label());
 				 this->tabLog = (gcnew System::Windows::Forms::TabPage());
 				 this->clearButton = (gcnew System::Windows::Forms::Button());
 				 this->logTextBox = (gcnew System::Windows::Forms::TextBox());
@@ -749,14 +709,11 @@ private: System::Windows::Forms::Button^  clearButton;
 				 // 
 				 // cascTabPage
 				 // 
-				 this->cascTabPage->Controls->Add(this->refreshButton);
 				 this->cascTabPage->Controls->Add(this->fileTestButton);
 				 this->cascTabPage->Controls->Add(this->testOutputTextBox);
 				 this->cascTabPage->Controls->Add(this->testInputTextBox);
 				 this->cascTabPage->Controls->Add(this->fileTestLabel);
 				 this->cascTabPage->Controls->Add(this->loadListfileButton);
-				 this->cascTabPage->Controls->Add(this->cascInfoTextBox);
-				 this->cascTabPage->Controls->Add(this->cascInfoLabel);
 				 this->cascTabPage->Location = System::Drawing::Point(4, 22);
 				 this->cascTabPage->Name = L"cascTabPage";
 				 this->cascTabPage->Padding = System::Windows::Forms::Padding(3);
@@ -765,20 +722,10 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->cascTabPage->Text = L"CASC";
 				 this->cascTabPage->UseVisualStyleBackColor = true;
 				 // 
-				 // refreshButton
-				 // 
-				 this->refreshButton->Location = System::Drawing::Point(3, 2);
-				 this->refreshButton->Name = L"refreshButton";
-				 this->refreshButton->Size = System::Drawing::Size(75, 23);
-				 this->refreshButton->TabIndex = 9;
-				 this->refreshButton->Text = L"Refresh";
-				 this->refreshButton->UseVisualStyleBackColor = true;
-				 this->refreshButton->Click += gcnew System::EventHandler(this, &Form1::refreshButton_Click);
-				 // 
 				 // fileTestButton
 				 // 
 				 this->fileTestButton->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Bottom | System::Windows::Forms::AnchorStyles::Left));
-				 this->fileTestButton->Location = System::Drawing::Point(30, 193);
+				 this->fileTestButton->Location = System::Drawing::Point(30, 54);
 				 this->fileTestButton->Name = L"fileTestButton";
 				 this->fileTestButton->Size = System::Drawing::Size(75, 23);
 				 this->fileTestButton->TabIndex = 8;
@@ -790,7 +737,7 @@ private: System::Windows::Forms::Button^  clearButton;
 				 // 
 				 this->testOutputTextBox->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Bottom | System::Windows::Forms::AnchorStyles::Left)
 					 | System::Windows::Forms::AnchorStyles::Right));
-				 this->testOutputTextBox->Location = System::Drawing::Point(128, 195);
+				 this->testOutputTextBox->Location = System::Drawing::Point(128, 56);
 				 this->testOutputTextBox->Name = L"testOutputTextBox";
 				 this->testOutputTextBox->Size = System::Drawing::Size(431, 20);
 				 this->testOutputTextBox->TabIndex = 7;
@@ -799,7 +746,7 @@ private: System::Windows::Forms::Button^  clearButton;
 				 // 
 				 this->testInputTextBox->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Bottom | System::Windows::Forms::AnchorStyles::Left)
 					 | System::Windows::Forms::AnchorStyles::Right));
-				 this->testInputTextBox->Location = System::Drawing::Point(128, 169);
+				 this->testInputTextBox->Location = System::Drawing::Point(128, 30);
 				 this->testInputTextBox->Name = L"testInputTextBox";
 				 this->testInputTextBox->Size = System::Drawing::Size(431, 20);
 				 this->testInputTextBox->TabIndex = 6;
@@ -809,7 +756,7 @@ private: System::Windows::Forms::Button^  clearButton;
 				 // 
 				 this->fileTestLabel->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Bottom | System::Windows::Forms::AnchorStyles::Left));
 				 this->fileTestLabel->AutoSize = true;
-				 this->fileTestLabel->Location = System::Drawing::Point(6, 172);
+				 this->fileTestLabel->Location = System::Drawing::Point(6, 33);
 				 this->fileTestLabel->Name = L"fileTestLabel";
 				 this->fileTestLabel->Size = System::Drawing::Size(121, 13);
 				 this->fileTestLabel->TabIndex = 5;
@@ -825,27 +772,6 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->loadListfileButton->Text = L"Load Listfile";
 				 this->loadListfileButton->UseVisualStyleBackColor = true;
 				 this->loadListfileButton->Click += gcnew System::EventHandler(this, &Form1::loadCacheButton_Click);
-				 // 
-				 // cascInfoTextBox
-				 // 
-				 this->cascInfoTextBox->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Bottom)
-					 | System::Windows::Forms::AnchorStyles::Left)
-					 | System::Windows::Forms::AnchorStyles::Right));
-				 this->cascInfoTextBox->Location = System::Drawing::Point(3, 29);
-				 this->cascInfoTextBox->Multiline = true;
-				 this->cascInfoTextBox->Name = L"cascInfoTextBox";
-				 this->cascInfoTextBox->ReadOnly = true;
-				 this->cascInfoTextBox->Size = System::Drawing::Size(556, 134);
-				 this->cascInfoTextBox->TabIndex = 1;
-				 // 
-				 // cascInfoLabel
-				 // 
-				 this->cascInfoLabel->AutoSize = true;
-				 this->cascInfoLabel->Location = System::Drawing::Point(84, 12);
-				 this->cascInfoLabel->Name = L"cascInfoLabel";
-				 this->cascInfoLabel->Size = System::Drawing::Size(59, 13);
-				 this->cascInfoLabel->TabIndex = 0;
-				 this->cascInfoLabel->Text = L"CASC Info:";
 				 // 
 				 // tabLog
 				 // 
@@ -1156,49 +1082,10 @@ private: System::Windows::Forms::Button^  clearButton;
 	private: M2Lib::GlobalSettings* settings = NULL;
 
 
-	private: M2Lib::Casc* _casc = NULL;
-	private: M2Lib::Casc* GetCasc()
+	private: M2Lib::FileStorage* _casc = NULL;
+	private: M2Lib::FileStorage* GetCasc()
 	{
-		if (!_casc)
-		{
-			_casc = new M2Lib::Casc();
-
-			static bool pathNotified = false;
-			if (settings->WowPath.empty() && !pathNotified)
-			{
-				if (!pathNotified)
-				{
-					pathNotified = true;
-
-					auto result = MessageBox::Show(L"Wow path not set. Would you like to specify it?", L"Warning", MessageBoxButtons::YesNo, MessageBoxIcon::Warning);
-					if (result == System::Windows::Forms::DialogResult::Yes)
-						settingsToolStripMenuItem_Click(this, EventArgs::Empty);
-				}
-			}
-
-			_casc->SetStoragePath(settings->WowPath);
-			_casc->SetReleaseOnDereference(settings->UnloadCascOnDereference);
-
-			static bool listfileNotified = false;
-			if (!listfileNotified && !File::Exists(gcnew String(M2Lib::Casc::DefaultListfilePath.c_str())) &&
-				!File::Exists(gcnew String(M2Lib::Casc::DefaultBinListfilePath.c_str())))
-			{
-				listfileNotified = true;
-				auto result = MessageBox::Show(L"Wow listfile not found. Would you like to specify it?", L"Warning", MessageBoxButtons::YesNo, MessageBoxIcon::Warning);
-				if (result == System::Windows::Forms::DialogResult::Yes)
-				{
-					auto dialog = gcnew OpenFileDialog();
-					dialog->InitialDirectory = gcnew String(M2Lib::FileSystemA::GetCurrentPath().c_str());
-					dialog->FileName = L"listfile.txt";
-					dialog->Filter = L"WoW Listfile|*.txt";
-					auto result = dialog->ShowDialog();
-					if (result == System::Windows::Forms::DialogResult::OK)
-						_casc->GenerateListFileCache(StringConverter(dialog->FileName).ToStringA());;
-				}
-			}
-		}
-
-		return _casc;
+		return M2Lib::FileStorage::GetInstance();
 	}
 
 	private: delegate void LoggerDelegate(int LogLevel, char const*);
@@ -1270,7 +1157,7 @@ private: System::Windows::Forms::Button^  clearButton;
 			auto outputDirectory = gcnew String(settings->OutputDirectory.c_str());
 
 			auto casc = GetCasc();
-			auto info = casc ? casc->FindByPartialFileName(StringConverter(fileName).ToStringA()) : M2Lib::Casc::FileInfo();
+			auto info = casc ? casc->FindByPartialFileName(StringConverter(fileName).ToStringA()) : M2Lib::FileStorage::FileInfo();
 			if (info.Path.empty())
 			{
 				SetStatus("Failed to determine model relative path in storage");
@@ -1439,12 +1326,6 @@ private: System::Windows::Forms::Button^  clearButton;
 		if (form->ShowDialog() == Windows::Forms::DialogResult::OK)
 		{
 			*settings = form->ProduceSettings();
-			if (auto casc = GetCasc())
-			{
-				casc->SetReleaseOnDereference(settings->UnloadCascOnDereference);
-				casc->SetStoragePath(settings->WowPath);
-				AnalyzeCasc();
-			}
 		}
 	}
 	private: System::Void compareBonesToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) {
@@ -1458,16 +1339,13 @@ private: System::Windows::Forms::Button^  clearButton;
 		
 		auto dialog = gcnew OpenFileDialog();
 		dialog->InitialDirectory = gcnew String(M2Lib::FileSystemA::GetCurrentPath().c_str());
-		dialog->FileName = L"listfile.txt";
-		dialog->Filter = L"WoW Listfile|*.txt";
+		dialog->FileName = L"listfile.csv";
+		dialog->Filter = L"WoW Listfile|*.csv";
 		auto result = dialog->ShowDialog();
 		if (result != System::Windows::Forms::DialogResult::OK)
 			return;
 
-		if (auto casc = GetCasc())
-			casc->GenerateListFileCache(StringConverter(dialog->FileName).ToStringA());
-
-		AnalyzeCasc();
+		M2Lib::FileStorage::GetInstance()->LoadCSV(StringConverter(dialog->FileName).ToStringA());
 	}
 	private: System::Void fileTestButton_Click(System::Object^  sender, System::EventArgs^  e) {
 		TestFiles();
@@ -1482,7 +1360,6 @@ private: System::Windows::Forms::Button^  clearButton;
 		TestFiles();
 	}
 	private: System::Void refreshButton_Click(System::Object^  sender, System::EventArgs^  e) {
-		AnalyzeCasc();
 	}
 	private: System::Void checkUpdatesToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) {
 		auto updater = gcnew Updater();

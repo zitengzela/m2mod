@@ -3,6 +3,7 @@
 #include "BaseTypes.h"
 #include <vector>
 #include <assert.h>
+#include <string>
 
 namespace M2Lib
 {

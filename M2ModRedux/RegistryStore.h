@@ -31,10 +31,8 @@ namespace M2ModRedux
 			FixAnimationsTest,
 			DisplayErrors,
 
-			WowPath,
 			WorkingDirectory,
 			OutputDirectory,
-			UnloadCascOnDereference,
 
 			OldCompareM2,
 			NewCompareM2,

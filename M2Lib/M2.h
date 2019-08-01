@@ -16,7 +16,7 @@
 
 namespace M2Lib
 {
-	class Casc;
+	class FileStorage;
 	class GlobalSettings;
 	class Skeleton;
 
@@ -193,7 +193,7 @@ namespace M2Lib
 
 		M2I* pInM2I;
 		M2* replaceM2;
-		Casc* casc;
+		FileStorage* casc;
 
 	public:
 		CM2Header Header;		// used for loading and saving. not used when editing.
@@ -249,8 +249,8 @@ namespace M2Lib
 		std::string GetTexturePath(UInt32 Index);
 		void RemoveTXIDChunk();
 
-		Casc* GetCasc() const { return casc; }
-		void SetCasc(Casc* casc);
+		FileStorage* GetCasc() const { return casc; }
+		void SetCasc(FileStorage* casc);
 
 		DataElement* GetAnimations();
 		DataElement* GetAnimationsLookup();

@@ -19,10 +19,7 @@ namespace M2Lib
 		bool FixAnimationsTest = false;
 		bool DisplayErrors = true;
 
-		std::string WowPath;
 		std::string WorkingDirectory;
 		std::string OutputDirectory;
-
-		bool UnloadCascOnDereference = true;
 	};
 }
