@@ -6,42 +6,59 @@
 
 namespace M2Lib
 {
+	struct FileInfo
+	{
+		UInt32 FileDataId = 0;
+		std::string Path;
+
+		static const FileInfo Empty;
+
+		bool operator==(const FileInfo& other) const
+		{
+			return FileDataId == other.FileDataId && Path == other.Path;
+		}
+
+		explicit operator bool() const
+		{
+			return !IsEmpty();
+		}
+
+		bool IsEmpty() const { return *this == Empty; }
+	};
+
 	class FileStorage
 	{
 	private:
-		void ClearCache() { filesByFileDataId.clear(); fileDataIdsByHash.clear(); }
+		void ClearStorage() { fileInfosByFileDataId.clear(); fileInfosByNameHash.clear(); }
 
-		std::map<UInt32, std::string> filesByFileDataId;
-		std::map<UInt64, UInt32> fileDataIdsByHash;
+		std::map<UInt32, FileInfo> fileInfosByFileDataId;
+		std::map<UInt64, FileInfo> fileInfosByNameHash;
 
 		FileStorage();
+		bool ParseCsv(std::string const& Path, bool CheckExisting = false);
 
 	public:
-		struct FileInfo
-		{
-			UInt32 FileDataId = -1;
-			std::string Path;
-		};
-
 		static FileStorage* GetInstance()
 		{
-			static FileStorage* casc = new FileStorage();
-			if (!casc->Loaded())
-				casc->LoadCSV(DefaultListfilePath);
+			static FileStorage* storage = new FileStorage();
+			if (!storage->Loaded())
+				storage->LoadStorage(DefaultListfilePath);
 
-			return casc;
+			return storage;
 		}
 
-		bool LoadCSV(std::string const& Path);
+		bool LoadListFileAddons(UInt32& totalAddons);
+		bool LoadStorage(std::string const& ListfilePath);
 
 		static const std::string DefaultListfilePath;
-	
-		bool Loaded() const { return GetStorageSize() > 0; }
-		UInt32 GetStorageSize() const { return filesByFileDataId.size(); }
+		static const std::string ListfileAddonsPath;
 
-		FileInfo FindByPartialFileName(std::string const& Name);
-		std::string GetFileByFileDataId(UInt32 FileDataId);
-		UInt32 GetFileDataIdByFile(std::string const& File);
-		static UInt64 CalculateHash(std::string const& File);
+		bool Loaded() const { return GetStorageSize() > 0; }
+		UInt32 GetStorageSize() const { return fileInfosByFileDataId.size(); }
+
+		FileInfo const& GetFileInfoByPartialPath(std::string const& Name);
+		FileInfo const& GetFileInfoByFileDataId(UInt32 FileDataId);
+		FileInfo const& GetFileInfoByPath(std::string const& Path);
+		static UInt64 CalculateHash(std::string const& Path);
 	};
 }

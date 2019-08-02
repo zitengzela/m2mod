@@ -22,11 +22,11 @@ namespace M2ModRedux
 		{
 			auto file = client->DownloadString(gcnew System::Uri(UpdateUrl));
 			if (file == String::Empty)
-				return "";
+				return nullptr;
 
 			auto matches = Regex::Matches(file, "#define\\s+([\\w_]+)\\s+(\\d+)", RegexOptions::Multiline);
 			if (matches->Count == 0)
-				return "";
+				return nullptr;
 
 			int versionMajor = -1, versionMinor = -1, versionPatch = -1;
 			for (int i = 0; i < matches->Count; ++i)
@@ -41,22 +41,22 @@ namespace M2ModRedux
 			}
 
 			if (versionMajor == -1 || versionMinor == -1 || versionPatch == -1)
-				return "";
+				return nullptr;
 
-			return  String::Format("{0}.{1}.{2}", versionMajor, versionMinor, versionPatch);
+			return String::Format("{0}.{1}.{2}", versionMajor, versionMinor, versionPatch);
 		}
 		catch (...)
 		{
 		}
 
-		return "";
+		return nullptr;
 	}
 
 	public: int CheckUpdates()
 	{
 		auto currentVersion = String::Format("{0}.{1}.{2}", VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH);
 		auto repoVersion = GetRepoVersion();
-		if (repoVersion == "")
+		if (String::IsNullOrEmpty(repoVersion))
 		{
 			MessageBox::Show("Failed to checkupdates", "Error", MessageBoxButtons::OK, MessageBoxIcon::Error);
 			return 0;

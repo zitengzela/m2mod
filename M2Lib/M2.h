@@ -193,7 +193,6 @@ namespace M2Lib
 
 		M2I* pInM2I;
 		M2* replaceM2;
-		FileStorage* casc;
 
 	public:
 		CM2Header Header;		// used for loading and saving. not used when editing.
@@ -216,7 +215,6 @@ namespace M2Lib
 			hasLodSkins = false;
 			needRemoveTXIDChunk = false;
 			this->Settings = Settings;
-			casc = NULL;
 			OriginalSkinCount = 0;
 		}
 
@@ -248,9 +246,6 @@ namespace M2Lib
 		UInt32 GetTextureIndex(M2Element::CElement_Texture::ETextureType Type, const Char8* szTextureSource);
 		std::string GetTexturePath(UInt32 Index);
 		void RemoveTXIDChunk();
-
-		FileStorage* GetCasc() const { return casc; }
-		void SetCasc(FileStorage* casc);
 
 		DataElement* GetAnimations();
 		DataElement* GetAnimationsLookup();

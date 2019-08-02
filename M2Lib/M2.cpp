@@ -203,14 +203,11 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 		return EError_FailedToLoadM2_FileCorrupt;
 	}
 
-	if (auto casc = GetCasc())
+	if (auto chunk = (SFIDChunk*)GetChunk(EM2Chunk::Skin))
 	{
-		if (auto chunk = (SFIDChunk*)GetChunk(EM2Chunk::Skin))
-		{
-			sLogger.LogInfo("Used skin files:");
-			for (auto fileDataId : chunk->SkinsFileDataIds)
-				sLogger.LogInfo("\t[%u] %s", fileDataId, casc->GetFileByFileDataId(fileDataId).c_str());
-		}
+		sLogger.LogInfo("Used skin files:");
+		for (auto fileDataId : chunk->SkinsFileDataIds)
+			sLogger.LogInfo("\t[%u] %s", fileDataId, FileStorage::GetInstance()->GetFileInfoByFileDataId(fileDataId).Path.c_str());
 	}
 
 	auto Error = LoadSkins();
@@ -261,13 +258,10 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 		Chunks[PostChunk.first] = Chunk;
 	}
 
-	if (auto casc = GetCasc())
+	if (auto chunk = (SKIDChunk*)GetChunk(EM2Chunk::Skeleton))
 	{
-		if (auto chunk = (SKIDChunk*)GetChunk(EM2Chunk::Skeleton))
-		{
-			sLogger.LogInfo("Used skeleton file:");
-			sLogger.LogInfo("\t[%u] %s", chunk->SkeletonFileDataId, casc->GetFileByFileDataId(chunk->SkeletonFileDataId).c_str());
-		}
+		sLogger.LogInfo("Used skeleton file:");
+		sLogger.LogInfo("\t[%u] %s", chunk->SkeletonFileDataId, FileStorage::GetInstance()->GetFileInfoByFileDataId(chunk->SkeletonFileDataId).Path.c_str());
 	}
 
 	Error = LoadSkeleton();
@@ -314,42 +308,34 @@ M2Lib::EError M2Lib::M2::LoadSkeleton()
 
 	if (auto chunk = (SkeletonChunk::SKPDChunk*)Skeleton->GetChunk(SkeletonChunk::ESkeletonChunk::SKPD))
 	{
-		if (auto casc = GetCasc())
+		auto info = FileStorage::GetInstance()->GetFileInfoByFileDataId(chunk->Data.ParentSkeletonFileId);
+		if (!info.Path.empty())
 		{
-			auto path = casc->GetFileByFileDataId(chunk->Data.ParentSkeletonFileId);
-			if (!path.empty())
+			std::wstring ParentSkeletonFileName;
+			if (Settings && !Settings->WorkingDirectory.empty())
+				ParentSkeletonFileName = StringToWString(FileSystemA::Combine(Settings->WorkingDirectory.c_str(), info.Path.c_str(), NULL));
+			else
 			{
-				std::wstring ParentSkeletonFileName;
-				if (Settings && !Settings->WorkingDirectory.empty())
-					ParentSkeletonFileName = StringToWString(FileSystemA::Combine(Settings->WorkingDirectory.c_str(), path.c_str(), NULL));
-				else
-				{
-					ParentSkeletonFileName = StringToWString(FileSystemA::GetBaseName(path));
-					ParentSkeletonFileName = FileSystemW::GetParentDirectory(_FileName) + L"\\" + ParentSkeletonFileName;
-				}
-				auto parentSkeleton = new M2Lib::Skeleton();
-				auto Error = parentSkeleton->Load(ParentSkeletonFileName.c_str());
-				if (Error == EError_OK)
-				{
-					sLogger.LogInfo("Parent skeleton file [%u] %s loaded", chunk->Data.ParentSkeletonFileId, WStringToString(ParentSkeletonFileName).c_str());
-					ParentSkeleton = parentSkeleton;
-				}
-				else
-				{
-					sLogger.LogError("Error: Failed to load parent skeleton file [%u] %s", chunk->Data.ParentSkeletonFileId, WStringToString(ParentSkeletonFileName).c_str());
-					delete parentSkeleton;
-					return EError_FailedToLoadSkeleton_CouldNotOpenFile;
-				}
+				ParentSkeletonFileName = StringToWString(FileSystemA::GetBaseName(info.Path));
+				ParentSkeletonFileName = FileSystemW::GetParentDirectory(_FileName) + L"\\" + ParentSkeletonFileName;
+			}
+			auto parentSkeleton = new M2Lib::Skeleton();
+			auto Error = parentSkeleton->Load(ParentSkeletonFileName.c_str());
+			if (Error == EError_OK)
+			{
+				sLogger.LogInfo("Parent skeleton file [%u] %s loaded", chunk->Data.ParentSkeletonFileId, WStringToString(ParentSkeletonFileName).c_str());
+				ParentSkeleton = parentSkeleton;
 			}
 			else
 			{
-				sLogger.LogError("Error: skeleton has parent skeleton chunk, but parent file not loaded!");
+				sLogger.LogError("Error: Failed to load parent skeleton file [%u] %s", chunk->Data.ParentSkeletonFileId, WStringToString(ParentSkeletonFileName).c_str());
+				delete parentSkeleton;
 				return EError_FailedToLoadSkeleton_CouldNotOpenFile;
 			}
 		}
 		else
 		{
-			sLogger.LogError("Error: failed to load parent skeleton file [%u], CASC not initialized!", chunk->Data.ParentSkeletonFileId);
+			sLogger.LogError("Error: skeleton has parent skeleton chunk, but parent file not loaded!");
 			return EError_FailedToLoadSkeleton_CouldNotOpenFile;
 		}
 	}
@@ -708,20 +694,17 @@ M2Lib::EError M2Lib::M2::Save(const Char16* FileName)
 	if (Error != EError_OK)
 		return Error;
 
-	if (auto casc = GetCasc())
+	if (auto chunk = (SFIDChunk*)GetChunk(EM2Chunk::Skin))
 	{
-		if (auto chunk = (SFIDChunk*)GetChunk(EM2Chunk::Skin))
-		{
-			sLogger.LogInfo("INFO: Put your skins to:");
-			for (auto fileDataId : chunk->SkinsFileDataIds)
-				sLogger.LogInfo("\t%s", casc->GetFileByFileDataId(fileDataId).c_str());
-		}
+		sLogger.LogInfo("INFO: Put your skins to:");
+		for (auto fileDataId : chunk->SkinsFileDataIds)
+			sLogger.LogInfo("\t%s", FileStorage::GetInstance()->GetFileInfoByFileDataId(fileDataId).Path.c_str());
+	}
 
-		if (auto chunk = (SKIDChunk*)GetChunk(EM2Chunk::Skeleton))
-		{
-			sLogger.LogInfo("INFO: Put your skeleton to:");
-			sLogger.LogInfo("\t%s", casc->GetFileByFileDataId(chunk->SkeletonFileDataId).c_str());
-		}
+	if (auto chunk = (SKIDChunk*)GetChunk(EM2Chunk::Skeleton))
+	{
+		sLogger.LogInfo("INFO: Put your skeleton to:");
+		sLogger.LogInfo("\t%s", FileStorage::GetInstance()->GetFileInfoByFileDataId(chunk->SkeletonFileDataId).Path.c_str());
 	}
 
 	return EError_OK;
@@ -1371,20 +1354,16 @@ void M2Lib::M2::PrintReferencedFileInfo()
 	if (!textureChunk)
 		sLogger.LogInfo("Texture files are not referenced by M2");
 
-	auto casc = GetCasc();
-	auto pathInfo = [casc](UInt32 FileDataId) -> std::string
+	auto pathInfo = [](UInt32 FileDataId) -> std::string
 	{
 		if (!FileDataId)
 			return "<none>";
 		
-		if (!casc)
-			return "<casc not initialized>";
-		
-		std::string path = casc->GetFileByFileDataId(FileDataId);
-		if (path.empty())
-			path = "<not cached>";
+		auto info = FileStorage::GetInstance()->GetFileInfoByFileDataId(FileDataId);
+		if (info.IsEmpty())
+			return "<not cached>";
 
-		return path;
+		return info.Path;
 	};
 
 	if (skinChunk)
@@ -1452,10 +1431,10 @@ void M2Lib::M2::PrintReferencedFileInfo()
 
 				if (textureElement.TexturePath.Offset && FileDataId && textureElement.TexturePath.Count > 1)
 				{
-					auto cascPath = pathInfo(FileDataId);
+					auto storagePath = pathInfo(FileDataId);
 					sLogger.LogInfo("\tWarning: Texture #%u file is stored in both chunk and texture element.\r\n"
 						"\t\tElement path: %s\r\n"
-						"\t\tChunk path: [%u] %s", i, localTexturePath, FileDataId, pathInfo(FileDataId).c_str());
+						"\t\tChunk path: [%u] %s", i, localTexturePath, FileDataId, storagePath.c_str());
 				}
 				else if (textureElement.TexturePath.Offset && textureElement.TexturePath.Count > 1)
 					sLogger.LogInfo("\tWarning: texture #%u '%s' is referenced in texture element but not in chunk (legacy model?)", i, localTexturePath);
@@ -1527,7 +1506,7 @@ bool M2Lib::M2::GetFileSkin(std::wstring& SkinFileNameResultBuffer, std::wstring
 	else
 		skinChunk =(M2Chunk::SFIDChunk*)GetChunk(EM2Chunk::Skin);
 
-	if (skinChunk && casc)
+	if (skinChunk)
 	{
 		//sLogger.LogInfo("Skin chunk detected");
 		SInt32 chunkIndex = -1;
@@ -1546,18 +1525,18 @@ bool M2Lib::M2::GetFileSkin(std::wstring& SkinFileNameResultBuffer, std::wstring
 		}
 
 		auto skinFileDataId = skinChunk->SkinsFileDataIds[chunkIndex];
-		auto path = casc->GetFileByFileDataId(skinFileDataId);
-		if (!path.empty())
+		auto info = FileStorage::GetInstance()->GetFileInfoByFileDataId(skinFileDataId);
+		if (!info.IsEmpty())
 		{
 			//sLogger.LogInfo("Skin listfile entry: %s", path.c_str());
 
 			if (!Save && Settings && !Settings->WorkingDirectory.empty())
-				SkinFileNameResultBuffer = StringToWString(FileSystemA::Combine(Settings->WorkingDirectory.c_str(), path.c_str(), NULL));
+				SkinFileNameResultBuffer = StringToWString(FileSystemA::Combine(Settings->WorkingDirectory.c_str(), info.Path.c_str(), NULL));
 			else if (Save && Settings && !Settings->OutputDirectory.empty())
-				SkinFileNameResultBuffer = StringToWString(FileSystemA::Combine(Settings->OutputDirectory.c_str(), path.c_str(), NULL));
+				SkinFileNameResultBuffer = StringToWString(FileSystemA::Combine(Settings->OutputDirectory.c_str(), info.Path.c_str(), NULL));
 			else
 			{
-				auto SkinFileName = StringToWString(FileSystemA::GetBaseName(path));
+				auto SkinFileName = StringToWString(FileSystemA::GetBaseName(info.Path));
 				SkinFileNameResultBuffer = FileSystemW::Combine(FileSystemW::GetParentDirectory(M2FileName).c_str(), SkinFileName.c_str(), NULL);
 			}
 			
@@ -1597,26 +1576,17 @@ bool M2Lib::M2::GetFileSkeleton(std::wstring& SkeletonFileNameResultBuffer, std:
 	if (!chunk)
 		return false;
 
-	auto casc = GetCasc();
-	if (!casc)
-	{
-		sLogger.LogInfo("CASC not initialized, trying default names");
-
-		SkeletonFileNameResultBuffer = FileSystemW::GetParentDirectory(M2FileName) + L"\\" + FileSystemW::GetFileName(M2FileName) + L".skel";
-		return true;
-	}
-
-	auto path = casc->GetFileByFileDataId(chunk->SkeletonFileDataId);
-	if (!path.empty())
+	auto info = FileStorage::GetInstance()->GetFileInfoByFileDataId(chunk->SkeletonFileDataId);
+	if (!info.IsEmpty())
 	{
 		if (!Save && Settings && !Settings->WorkingDirectory.empty())
-			SkeletonFileNameResultBuffer = StringToWString(FileSystemA::Combine(Settings->WorkingDirectory.c_str(), path.c_str(), NULL));
+			SkeletonFileNameResultBuffer = StringToWString(FileSystemA::Combine(Settings->WorkingDirectory.c_str(), info.Path.c_str(), NULL));
 		else if (Save && Settings && !Settings->OutputDirectory.empty())
-			SkeletonFileNameResultBuffer = StringToWString(FileSystemA::Combine(Settings->OutputDirectory.c_str(), path.c_str(), NULL));
+			SkeletonFileNameResultBuffer = StringToWString(FileSystemA::Combine(Settings->OutputDirectory.c_str(), info.Path.c_str(), NULL));
 		else
 		{
-			sLogger.LogInfo("Skeleton listfile entry: %s", path.c_str());
-			auto SkeletonFileName = StringToWString(FileSystemA::GetBaseName(path));
+			sLogger.LogInfo("Skeleton listfile entry: %s", info.Path.c_str());
+			auto SkeletonFileName = StringToWString(FileSystemA::GetBaseName(info.Path));
 			SkeletonFileNameResultBuffer = FileSystemW::GetParentDirectory(M2FileName) + L"\\" + SkeletonFileName;
 		}
 		return true;
@@ -1639,29 +1609,22 @@ bool M2Lib::M2::GetFileParentSkeleton(std::wstring& SkeletonFileNameResultBuffer
 	if (!chunk)
 		return false;
 
-	auto casc = GetCasc();
-	if (!casc)
-	{
-		sLogger.LogError("Error: CASC not initialized, unable to write parent skeleton!");
-		return false;
-	}
-
-	auto path = casc->GetFileByFileDataId(chunk->Data.ParentSkeletonFileId);
-	if (path.empty())
+	auto info = FileStorage::GetInstance()->GetFileInfoByFileDataId(chunk->Data.ParentSkeletonFileId);
+	if (info.IsEmpty())
 	{
 		sLogger.LogError("Can't determine parent skeleton [%u] file name for model. Parent skeleton will not be saved", chunk->Data.ParentSkeletonFileId);
 		return false;
 	}
 
-	sLogger.LogInfo("Parent skeleton listfile entry: %s", path.c_str());
+	sLogger.LogInfo("Parent skeleton listfile entry: %s", info.Path.c_str());
 
 	if (!Save && Settings && !Settings->WorkingDirectory.empty())
-		SkeletonFileNameResultBuffer = StringToWString(FileSystemA::Combine(Settings->WorkingDirectory.c_str(), path.c_str(), NULL));
+		SkeletonFileNameResultBuffer = StringToWString(FileSystemA::Combine(Settings->WorkingDirectory.c_str(), info.Path.c_str(), NULL));
 	else if (Save && Settings && !Settings->OutputDirectory.empty())
-		SkeletonFileNameResultBuffer = StringToWString(FileSystemA::Combine(Settings->OutputDirectory.c_str(), path.c_str(), NULL));
+		SkeletonFileNameResultBuffer = StringToWString(FileSystemA::Combine(Settings->OutputDirectory.c_str(), info.Path.c_str(), NULL));
 	else
 	{
-		auto SkeletonFileName = StringToWString(FileSystemA::GetBaseName(path));
+		auto SkeletonFileName = StringToWString(FileSystemA::GetBaseName(info.Path));
 		SkeletonFileNameResultBuffer = FileSystemW::Combine(FileSystemW::GetParentDirectory(M2FileName).c_str(), SkeletonFileName.c_str(), NULL);
 	}
 
@@ -2348,11 +2311,6 @@ void M2Lib::M2::m_LoadElements_FindSizes(UInt32 ChunkSize)
 #define VERIFY_OFFSET_NOTLOCAL( offset ) \
 	assert( !offset || offset >= Elements[iElement].OffsetOriginal + Elements[iElement].Data.size() );
 
-void M2Lib::M2::SetCasc(FileStorage* casc)
-{
-	this->casc = casc;
-}
-
 M2Lib::DataElement* M2Lib::M2::GetAnimations()
 {
 	using namespace SkeletonChunk;
@@ -2931,9 +2889,9 @@ UInt32 M2Lib::M2::AddTexture(CElement_Texture::ETextureType Type, CElement_Textu
 	// shift offsets for existing textures
 	for (UInt32 i = 0; i < Element.Count; ++i)
 	{
-		auto& texture = Element.as<CElement_Texture>()[i];
-		if (texture.TexturePath.Offset)
-			texture.TexturePath.Offset += sizeof(CElement_Texture);
+		auto texture = Element.at<CElement_Texture>(i);
+		if (texture->TexturePath.Offset)
+			texture->TexturePath.Offset += sizeof(CElement_Texture);
 	}
 
 	// add element placeholder for new texture
@@ -2942,34 +2900,35 @@ UInt32 M2Lib::M2::AddTexture(CElement_Texture::ETextureType Type, CElement_Textu
 	bool inplacePath = true;
 	auto textureChunk = (TXIDChunk*)GetChunk(EM2Chunk::Texture);
 
+	if (strlen(szTextureSource) > 0)
+		sLogger.LogInfo("Adding custom texture %s", szTextureSource);
+
 	if (textureChunk)
 	{
-		FileStorage* casc = GetCasc();
 		if (!strlen(szTextureSource))
 		{
 			inplacePath = false;
 			textureChunk->TextureFileDataIds.push_back(0);
 		}
-		else if (auto FileDataId = casc ? casc->GetFileDataIdByFile(szTextureSource) : 0)
+		else if (auto info = FileStorage::GetInstance()->GetFileInfoByPath(szTextureSource))
 		{
+			sLogger.LogInfo("Texture %s is indexed in CASC by FileDataId = %u", szTextureSource, info.FileDataId);
 			inplacePath = false;
-			textureChunk->TextureFileDataIds.push_back(FileDataId);
+			textureChunk->TextureFileDataIds.push_back(info.FileDataId);
 		}
-		else
+		else {
 			textureChunk->TextureFileDataIds.push_back(0);
+
+			sLogger.LogInfo("Texture %s is not indexed in CASC, TXID chunk will be removed from model", szTextureSource);
+			// texture is not indexed, texture chunk needs to be removed
+			needRemoveTXIDChunk = true;
+		}
 	}
 
 	auto newIndex = Element.Count;
 
 	if (inplacePath)
 	{
-		if (textureChunk)
-		{
-			sLogger.LogInfo("Texture %s is not indexed in CASC, TXID chunk will be removed from model", szTextureSource);
-			// texture is not indexed, texture chunk needs to be removed
-			needRemoveTXIDChunk = true;
-		}
-
 		auto texturePathPos = Element.Data.size();
 		// add placeholder for texture path
 		Element.Data.insert(Element.Data.end(), strlen(szTextureSource) + 1, 0);
@@ -3032,15 +2991,12 @@ UInt32 M2Lib::M2::GetTextureIndex(M2Element::CElement_Texture::ETextureType Type
 	{
 		if (auto textureChunk = (M2Chunk::TXIDChunk*)GetChunk(EM2Chunk::Texture))
 		{
-			if (casc)
+			// if file not found - can be custom texture
+			if (auto info = FileStorage::GetInstance()->GetFileInfoByPath(szTextureSource))
 			{
-				// if file not found - can be custom texture
-				if (auto FileDataId = casc->GetFileDataIdByFile(szTextureSource))
-				{
-					for (UInt32 i = 0; i < textureChunk->TextureFileDataIds.size(); ++i)
-						if (textureChunk->TextureFileDataIds[i] == FileDataId)
-							return i;
-				}
+				for (UInt32 i = 0; i < textureChunk->TextureFileDataIds.size(); ++i)
+					if (textureChunk->TextureFileDataIds[i] == info.FileDataId)
+						return i;
 			}
 		}
 	}
@@ -3080,19 +3036,14 @@ std::string M2Lib::M2::GetTexturePath(UInt32 Index)
 		return (char*)TextureElement.GetLocalPointer(texture->TexturePath.Offset);
 
 	auto textureChunk = (TXIDChunk*)GetChunk(EM2Chunk::Texture);
-	auto casc = GetCasc();
-	if (!textureChunk || !casc || textureChunk->TextureFileDataIds.size() <= Index)
+	if (!textureChunk || textureChunk->TextureFileDataIds.size() <= Index)
 		return "";
 
-	return casc->GetFileByFileDataId(textureChunk->TextureFileDataIds[Index]);
+	return FileStorage::GetInstance()->GetFileInfoByFileDataId(textureChunk->TextureFileDataIds[Index]).Path;
 }
 
 void M2Lib::M2::RemoveTXIDChunk()
 {
-	auto casc = GetCasc();
-	if (!casc)
-		return;
-
 	sLogger.LogInfo("Erasing TXID chunk from model");
 
 	auto chunkItr = Chunks.find(EM2Chunk::Texture);
@@ -3115,16 +3066,16 @@ void M2Lib::M2::RemoveTXIDChunk()
 		if (!FileDataId)
 			continue;
 
-		auto path = casc->GetFileByFileDataId(FileDataId);
-		if (path.empty())
+		auto info = FileStorage::GetInstance()->GetFileInfoByFileDataId(FileDataId);
+		if (info.IsEmpty())
 		{
 			sLogger.LogError("Error: failed to get path for FileDataId = [%u] for texture #%u. FileStorage is not initialized or listfile is not loaded or not up to date", FileDataId, i);
 			sLogger.LogError("Custom textures will not work ingame");
 			return;
 		}
 
-		PathsByTextureId[i] = path;
-		newDataLen += path.length() + 1;
+		PathsByTextureId[i] = info.Path;
+		newDataLen += info.Path.length() + 1;
 	}
 
 	sLogger.LogInfo("Total bytes for storing textures will be used: %u", newDataLen);

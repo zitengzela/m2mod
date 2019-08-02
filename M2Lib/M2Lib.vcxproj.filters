@@ -13,11 +13,11 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Casc">
-      <UniqueIdentifier>{c9552b36-bfbf-49da-ba08-d662650b1fd7}</UniqueIdentifier>
-    </Filter>
     <Filter Include="FileSystem">
       <UniqueIdentifier>{1188fdff-1a20-4883-aebb-e5df05037b87}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Storage">
+      <UniqueIdentifier>{c9552b36-bfbf-49da-ba08-d662650b1fd7}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -79,7 +79,7 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="FileStorage.h">
-      <Filter>Casc</Filter>
+      <Filter>Storage</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -135,7 +135,7 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="FileStorage.cpp">
-      <Filter>Casc</Filter>
+      <Filter>Storage</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

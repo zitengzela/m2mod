@@ -90,19 +90,18 @@ namespace M2ModRedux
 			if (!testInputTextBox->Text->Length)
 				return;
 
-			auto casc = GetCasc();
 			System::UInt32 FileDataId;
 			if (System::UInt32::TryParse(testInputTextBox->Text, FileDataId))
 			{
-				auto path = casc->GetFileByFileDataId(FileDataId);
-				if (!path.empty())
-					testOutputTextBox->Text = gcnew String(path.c_str());
+				auto info = M2Lib::FileStorage::GetInstance()->GetFileInfoByFileDataId(FileDataId);
+				if (!info.IsEmpty())
+					testOutputTextBox->Text = gcnew String(info.Path.c_str());
 				else
-					testOutputTextBox->Text = "Not cached";
+					testOutputTextBox->Text = "Not found in storage";
 			}
 			else
 			{
-				auto info = casc->FindByPartialFileName(StringConverter(testInputTextBox->Text).ToStringA());
+				auto info = M2Lib::FileStorage::GetInstance()->GetFileInfoByPartialPath(StringConverter(testInputTextBox->Text).ToStringA());
 				if (!info.FileDataId)
 					testOutputTextBox->Text = "Not found in storage";
 				else
@@ -1008,7 +1007,6 @@ private: System::Windows::Forms::Button^  clearButton;
 			}
 
 			M2Lib::M2 M2(settings);
-			M2.SetCasc(GetCasc());
 
 			// import M2
 			M2Lib::EError Error = M2.Load(StringConverter(textBoxInputM2Exp->Text).ToStringW());
@@ -1081,13 +1079,6 @@ private: System::Windows::Forms::Button^  clearButton;
 	private: M2Lib::M2* replaceM2 = NULL;
 	private: M2Lib::GlobalSettings* settings = NULL;
 
-
-	private: M2Lib::FileStorage* _casc = NULL;
-	private: M2Lib::FileStorage* GetCasc()
-	{
-		return M2Lib::FileStorage::GetInstance();
-	}
-
 	private: delegate void LoggerDelegate(int LogLevel, char const*);
 
 	private: static void Log(int LogLevel, char const* data)
@@ -1156,8 +1147,7 @@ private: System::Windows::Forms::Button^  clearButton;
 		{
 			auto outputDirectory = gcnew String(settings->OutputDirectory.c_str());
 
-			auto casc = GetCasc();
-			auto info = casc ? casc->FindByPartialFileName(StringConverter(fileName).ToStringA()) : M2Lib::FileStorage::FileInfo();
+			auto info = M2Lib::FileStorage::GetInstance()->GetFileInfoByPartialPath(StringConverter(fileName).ToStringA());
 			if (info.Path.empty())
 			{
 				SetStatus("Failed to determine model relative path in storage");
@@ -1223,7 +1213,6 @@ private: System::Windows::Forms::Button^  clearButton;
 		}
 
 		preloadM2 = new M2Lib::M2(settings);
-		preloadM2->SetCasc(GetCasc());
 
 		M2Lib::EError Error = preloadM2->Load(StringConverter(textBoxInputM2Imp->Text).ToStringW());
 		if (Error != M2Lib::EError_OK)
@@ -1236,7 +1225,6 @@ private: System::Windows::Forms::Button^  clearButton;
 		if (checkBoxReplaceM2->Checked)
 		{
 			replaceM2 = new M2Lib::M2();
-			replaceM2->SetCasc(GetCasc());
 			auto Error = replaceM2->Load(StringConverter(textBoxReplaceM2->Text).ToStringW());
 			if (Error != M2Lib::EError_OK)
 			{
@@ -1345,7 +1333,7 @@ private: System::Windows::Forms::Button^  clearButton;
 		if (result != System::Windows::Forms::DialogResult::OK)
 			return;
 
-		M2Lib::FileStorage::GetInstance()->LoadCSV(StringConverter(dialog->FileName).ToStringA());
+		M2Lib::FileStorage::GetInstance()->LoadStorage(StringConverter(dialog->FileName).ToStringA());
 	}
 	private: System::Void fileTestButton_Click(System::Object^  sender, System::EventArgs^  e) {
 		TestFiles();
