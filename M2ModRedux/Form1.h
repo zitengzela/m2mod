@@ -67,6 +67,7 @@ namespace M2ModRedux
 	private: System::Windows::Forms::Button^  fileTestButton;
 
 	private: System::Windows::Forms::ToolStripMenuItem^  checkUpdatesToolStripMenuItem;
+	private: System::Windows::Forms::Panel^ panel2;
 
 
 	public:
@@ -320,6 +321,7 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->exitToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 				 this->toolsToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 				 this->compareBonesToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
+				 this->panel2 = (gcnew System::Windows::Forms::Panel());
 				 this->tabControl->SuspendLayout();
 				 this->tabExport->SuspendLayout();
 				 this->panelImputM2Exp->SuspendLayout();
@@ -334,6 +336,7 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->tabLog->SuspendLayout();
 				 this->statusStrip1->SuspendLayout();
 				 this->menuStrip1->SuspendLayout();
+				 this->panel2->SuspendLayout();
 				 this->SuspendLayout();
 				 // 
 				 // openFileDialog1
@@ -708,10 +711,7 @@ private: System::Windows::Forms::Button^  clearButton;
 				 // 
 				 // cascTabPage
 				 // 
-				 this->cascTabPage->Controls->Add(this->fileTestButton);
-				 this->cascTabPage->Controls->Add(this->testOutputTextBox);
-				 this->cascTabPage->Controls->Add(this->testInputTextBox);
-				 this->cascTabPage->Controls->Add(this->fileTestLabel);
+				 this->cascTabPage->Controls->Add(this->panel2);
 				 this->cascTabPage->Controls->Add(this->loadListfileButton);
 				 this->cascTabPage->Location = System::Drawing::Point(4, 22);
 				 this->cascTabPage->Name = L"cascTabPage";
@@ -723,8 +723,7 @@ private: System::Windows::Forms::Button^  clearButton;
 				 // 
 				 // fileTestButton
 				 // 
-				 this->fileTestButton->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Bottom | System::Windows::Forms::AnchorStyles::Left));
-				 this->fileTestButton->Location = System::Drawing::Point(30, 54);
+				 this->fileTestButton->Location = System::Drawing::Point(9, 31);
 				 this->fileTestButton->Name = L"fileTestButton";
 				 this->fileTestButton->Size = System::Drawing::Size(75, 23);
 				 this->fileTestButton->TabIndex = 8;
@@ -734,28 +733,27 @@ private: System::Windows::Forms::Button^  clearButton;
 				 // 
 				 // testOutputTextBox
 				 // 
-				 this->testOutputTextBox->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Bottom | System::Windows::Forms::AnchorStyles::Left)
+				 this->testOutputTextBox->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
 					 | System::Windows::Forms::AnchorStyles::Right));
-				 this->testOutputTextBox->Location = System::Drawing::Point(128, 56);
+				 this->testOutputTextBox->Location = System::Drawing::Point(133, 32);
 				 this->testOutputTextBox->Name = L"testOutputTextBox";
-				 this->testOutputTextBox->Size = System::Drawing::Size(431, 20);
+				 this->testOutputTextBox->Size = System::Drawing::Size(416, 20);
 				 this->testOutputTextBox->TabIndex = 7;
 				 // 
 				 // testInputTextBox
 				 // 
-				 this->testInputTextBox->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Bottom | System::Windows::Forms::AnchorStyles::Left)
+				 this->testInputTextBox->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
 					 | System::Windows::Forms::AnchorStyles::Right));
-				 this->testInputTextBox->Location = System::Drawing::Point(128, 30);
+				 this->testInputTextBox->Location = System::Drawing::Point(133, 6);
 				 this->testInputTextBox->Name = L"testInputTextBox";
-				 this->testInputTextBox->Size = System::Drawing::Size(431, 20);
+				 this->testInputTextBox->Size = System::Drawing::Size(416, 20);
 				 this->testInputTextBox->TabIndex = 6;
 				 this->testInputTextBox->KeyDown += gcnew System::Windows::Forms::KeyEventHandler(this, &Form1::testInputTextBox_KeyDown);
 				 // 
 				 // fileTestLabel
 				 // 
-				 this->fileTestLabel->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Bottom | System::Windows::Forms::AnchorStyles::Left));
 				 this->fileTestLabel->AutoSize = true;
-				 this->fileTestLabel->Location = System::Drawing::Point(6, 33);
+				 this->fileTestLabel->Location = System::Drawing::Point(6, 8);
 				 this->fileTestLabel->Name = L"fileTestLabel";
 				 this->fileTestLabel->Size = System::Drawing::Size(121, 13);
 				 this->fileTestLabel->TabIndex = 5;
@@ -764,13 +762,13 @@ private: System::Windows::Forms::Button^  clearButton;
 				 // loadListfileButton
 				 // 
 				 this->loadListfileButton->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Right));
-				 this->loadListfileButton->Location = System::Drawing::Point(451, 3);
+				 this->loadListfileButton->Location = System::Drawing::Point(444, 3);
 				 this->loadListfileButton->Name = L"loadListfileButton";
 				 this->loadListfileButton->Size = System::Drawing::Size(108, 23);
 				 this->loadListfileButton->TabIndex = 3;
-				 this->loadListfileButton->Text = L"Load Listfile";
+				 this->loadListfileButton->Text = L"Reload Listfile";
 				 this->loadListfileButton->UseVisualStyleBackColor = true;
-				 this->loadListfileButton->Click += gcnew System::EventHandler(this, &Form1::loadCacheButton_Click);
+				 this->loadListfileButton->Click += gcnew System::EventHandler(this, &Form1::reloadListfileButton_Click);
 				 // 
 				 // tabLog
 				 // 
@@ -881,6 +879,19 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->compareBonesToolStripMenuItem->Text = L"Compare bones";
 				 this->compareBonesToolStripMenuItem->Click += gcnew System::EventHandler(this, &Form1::compareBonesToolStripMenuItem_Click);
 				 // 
+				 // panel2
+				 // 
+				 this->panel2->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
+					 | System::Windows::Forms::AnchorStyles::Right));
+				 this->panel2->Controls->Add(this->fileTestLabel);
+				 this->panel2->Controls->Add(this->fileTestButton);
+				 this->panel2->Controls->Add(this->testOutputTextBox);
+				 this->panel2->Controls->Add(this->testInputTextBox);
+				 this->panel2->Location = System::Drawing::Point(3, 32);
+				 this->panel2->Name = L"panel2";
+				 this->panel2->Size = System::Drawing::Size(553, 64);
+				 this->panel2->TabIndex = 10;
+				 // 
 				 // Form1
 				 // 
 				 this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
@@ -912,13 +923,14 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->panelInputM2I->ResumeLayout(false);
 				 this->panelInputM2I->PerformLayout();
 				 this->cascTabPage->ResumeLayout(false);
-				 this->cascTabPage->PerformLayout();
 				 this->tabLog->ResumeLayout(false);
 				 this->tabLog->PerformLayout();
 				 this->statusStrip1->ResumeLayout(false);
 				 this->statusStrip1->PerformLayout();
 				 this->menuStrip1->ResumeLayout(false);
 				 this->menuStrip1->PerformLayout();
+				 this->panel2->ResumeLayout(false);
+				 this->panel2->PerformLayout();
 				 this->ResumeLayout(false);
 				 this->PerformLayout();
 
@@ -1323,7 +1335,7 @@ private: System::Windows::Forms::Button^  clearButton;
 	private: System::Void clearButton_Click(System::Object^  sender, System::EventArgs^  e) {
 		logTextBox->Text = "";
 	}
-	private: System::Void loadCacheButton_Click(System::Object^  sender, System::EventArgs^  e) {
+	private: System::Void reloadListfileButton_Click(System::Object^  sender, System::EventArgs^  e) {
 		
 		auto dialog = gcnew OpenFileDialog();
 		dialog->InitialDirectory = gcnew String(M2Lib::FileSystemA::GetCurrentPath().c_str());
