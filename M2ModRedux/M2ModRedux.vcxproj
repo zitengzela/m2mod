@@ -109,6 +109,9 @@
     <ClInclude Include="ElementManagementForm.h">
       <FileType>CppForm</FileType>
     </ClInclude>
+    <ClInclude Include="ErrorForm.h">
+      <FileType>CppForm</FileType>
+    </ClInclude>
     <ClInclude Include="Form1.h">
       <FileType>CppForm</FileType>
     </ClInclude>
@@ -134,6 +137,9 @@
     <EmbeddedResource Include="CompareBonesForm.resx" />
     <EmbeddedResource Include="ElementManagementForm.resx">
       <DependentUpon>ElementManagementForm.h</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ErrorForm.resx">
+      <DependentUpon>ErrorForm.h</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Form1.resX">
       <DependentUpon>Form1.h</DependentUpon>

@@ -5,8 +5,6 @@
 
 namespace M2Lib
 {
-	typedef void(__stdcall *LoggerCallback)(int LogLevel, char const*);
-
 	enum LogLevel
 	{
 		LOG_INFO = 1,
@@ -16,8 +14,11 @@ namespace M2Lib
 
 	class Logger
 	{
+	public:
+		typedef void(__stdcall* LoggerCallback)(int LogLevel, char const*);
+
 	private:
-		Logger() {}
+		Logger() = default;
 
 		std::list<LoggerCallback> AttachedCallbacks;
 

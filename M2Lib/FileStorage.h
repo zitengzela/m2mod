@@ -41,8 +41,9 @@ namespace M2Lib
 		static FileStorage* GetInstance()
 		{
 			static FileStorage* storage = new FileStorage();
-			if (!storage->Loaded())
-				storage->LoadStorage(DefaultListfilePath);
+			static bool loadFailed = false;
+			if (!loadFailed && !storage->Loaded())
+				loadFailed = !storage->LoadStorage(DefaultListfilePath);
 
 			return storage;
 		}
@@ -60,5 +61,6 @@ namespace M2Lib
 		FileInfo const& GetFileInfoByFileDataId(UInt32 FileDataId);
 		FileInfo const& GetFileInfoByPath(std::string const& Path);
 		static UInt64 CalculateHash(std::string const& Path);
+		static std::string PathInfo(UInt32 FileDataId);
 	};
 }

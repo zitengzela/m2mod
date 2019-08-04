@@ -38,18 +38,9 @@ void M2Lib::Logger::LogWarning(char const* format, ...)
 
 void M2Lib::Logger::Log(int LogLevel, char const* format, va_list args)
 {
-	time_t rawtime;
-	time(&rawtime);
-
-	auto info = localtime(&rawtime);
-
-	char buffer[80];
-	strftime(buffer, sizeof(buffer), "[%Y-%m-%d %X] ", info);
-
 	char text[4096];
-	memcpy(text, buffer, strlen(buffer));
 
-	vsprintf(&text[strlen(buffer)], format, args);
+	vsprintf(text, format, args);
 
 	for (auto callback : AttachedCallbacks)
 		callback(LogLevel, text);

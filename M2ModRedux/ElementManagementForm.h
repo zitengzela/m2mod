@@ -43,6 +43,7 @@ namespace M2ModRedux {
 	private: System::Windows::Forms::Button^  saveButton;
 	private: System::Windows::Forms::Label^  filterLabel;
 	private: System::Windows::Forms::TextBox^  filterTextBox;
+	private: System::Windows::Forms::Label^ label1;
 
 
 	private:
@@ -63,7 +64,9 @@ namespace M2ModRedux {
 			this->saveButton = (gcnew System::Windows::Forms::Button());
 			this->filterLabel = (gcnew System::Windows::Forms::Label());
 			this->filterTextBox = (gcnew System::Windows::Forms::TextBox());
+			this->label1 = (gcnew System::Windows::Forms::Label());
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->splitContainer1))->BeginInit();
+			this->splitContainer1->Panel1->SuspendLayout();
 			this->splitContainer1->Panel2->SuspendLayout();
 			this->splitContainer1->SuspendLayout();
 			this->SuspendLayout();
@@ -77,6 +80,7 @@ namespace M2ModRedux {
 			// splitContainer1.Panel1
 			// 
 			this->splitContainer1->Panel1->AutoScroll = true;
+			this->splitContainer1->Panel1->Controls->Add(this->label1);
 			// 
 			// splitContainer1.Panel2
 			// 
@@ -125,6 +129,19 @@ namespace M2ModRedux {
 			this->filterTextBox->TabIndex = 0;
 			this->filterTextBox->TextChanged += gcnew System::EventHandler(this, &ElementManagementForm::filterTextBox_TextChanged);
 			// 
+			// label1
+			// 
+			this->label1->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
+				| System::Windows::Forms::AnchorStyles::Right));
+			this->label1->AutoSize = true;
+			this->label1->ForeColor = System::Drawing::Color::Red;
+			this->label1->Location = System::Drawing::Point(101, 9);
+			this->label1->Name = L"label1";
+			this->label1->Size = System::Drawing::Size(146, 13);
+			this->label1->TabIndex = 0;
+			this->label1->Text = L"Do not use this - use Blender ";
+			this->label1->TextAlign = System::Drawing::ContentAlignment::MiddleCenter;
+			// 
 			// ElementManagementForm
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
@@ -133,6 +150,8 @@ namespace M2ModRedux {
 			this->Controls->Add(this->splitContainer1);
 			this->Name = L"ElementManagementForm";
 			this->Text = L"ElementManagementForm";
+			this->splitContainer1->Panel1->ResumeLayout(false);
+			this->splitContainer1->Panel1->PerformLayout();
 			this->splitContainer1->Panel2->ResumeLayout(false);
 			this->splitContainer1->Panel2->PerformLayout();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->splitContainer1))->EndInit();
@@ -161,6 +180,7 @@ namespace M2ModRedux {
 	{
 		ControlType^ Prev = nullptr;
 
+		int TopOffset = 5 + label1->Location.Y + label1->Size.Height;
 		for (int i = 0; i < ElementInfoList.Count; ++i)
 		{
 			auto Control = ElementInfoList[i];
@@ -173,7 +193,7 @@ namespace M2ModRedux {
 			Control->Show();
 
 			if (!Prev)
-				Control->Top = 5;
+				Control->Top = TopOffset;
 			else
 				Control->Top = Prev->Top + Prev->Height + 5;
 

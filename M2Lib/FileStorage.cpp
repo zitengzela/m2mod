@@ -163,3 +163,15 @@ UInt64 M2Lib::FileStorage::CalculateHash(std::string const & FileName)
 
 	return hasher(name);
 }
+
+std::string M2Lib::FileStorage::PathInfo(UInt32 FileDataId)
+{
+	if (!FileDataId)
+		return "<none>";
+
+	auto info = GetInstance()->GetFileInfoByFileDataId(FileDataId);
+	if (info.IsEmpty())
+		return "<not found in listfile>";
+
+	return info.Path;
+};

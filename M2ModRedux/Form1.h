@@ -4,6 +4,7 @@
 # define _DEFINE_FILTERS
 # define M2Filter L"M2 Files|*.m2|All Files|*.*"
 # define M2IFilter L"M2I Files|*.m2i|All Files|*.*"
+#include "ErrorForm.h"
 #endif
 
 #include "FileStorage.h"
@@ -68,6 +69,8 @@ namespace M2ModRedux
 
 	private: System::Windows::Forms::ToolStripMenuItem^  checkUpdatesToolStripMenuItem;
 	private: System::Windows::Forms::Panel^ panel2;
+	private: System::Windows::Forms::RichTextBox^ logTextBox;
+
 
 
 	public:
@@ -79,7 +82,7 @@ namespace M2ModRedux
 			auto delegate = gcnew LoggerDelegate(Log);
 			GCHandle gch = GCHandle::Alloc(delegate);
 			IntPtr ip = Marshal::GetFunctionPointerForDelegate(delegate);
-			auto callback = static_cast<M2Lib::LoggerCallback>(ip.ToPointer());
+			auto callback = static_cast<M2Lib::Logger::LoggerCallback>(ip.ToPointer());
 			GC::Collect();
 
 			sLogger.AttachCallback(callback);
@@ -251,7 +254,7 @@ namespace M2ModRedux
 	private: System::Windows::Forms::ToolStripMenuItem^  compareBonesToolStripMenuItem;
 
 private: System::Windows::Forms::TabPage^  tabLog;
-private: System::Windows::Forms::TextBox^  logTextBox;
+
 private: System::Windows::Forms::Button^  clearButton;
 
 
@@ -304,14 +307,15 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->panelInputM2Import = (gcnew System::Windows::Forms::Panel());
 				 this->panelInputM2I = (gcnew System::Windows::Forms::Panel());
 				 this->cascTabPage = (gcnew System::Windows::Forms::TabPage());
+				 this->panel2 = (gcnew System::Windows::Forms::Panel());
+				 this->fileTestLabel = (gcnew System::Windows::Forms::Label());
 				 this->fileTestButton = (gcnew System::Windows::Forms::Button());
 				 this->testOutputTextBox = (gcnew System::Windows::Forms::TextBox());
 				 this->testInputTextBox = (gcnew System::Windows::Forms::TextBox());
-				 this->fileTestLabel = (gcnew System::Windows::Forms::Label());
 				 this->loadListfileButton = (gcnew System::Windows::Forms::Button());
 				 this->tabLog = (gcnew System::Windows::Forms::TabPage());
+				 this->logTextBox = (gcnew System::Windows::Forms::RichTextBox());
 				 this->clearButton = (gcnew System::Windows::Forms::Button());
-				 this->logTextBox = (gcnew System::Windows::Forms::TextBox());
 				 this->statusStrip1 = (gcnew System::Windows::Forms::StatusStrip());
 				 this->toolStripStatusLabel1 = (gcnew System::Windows::Forms::ToolStripStatusLabel());
 				 this->menuStrip1 = (gcnew System::Windows::Forms::MenuStrip());
@@ -321,7 +325,6 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->exitToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 				 this->toolsToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 				 this->compareBonesToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
-				 this->panel2 = (gcnew System::Windows::Forms::Panel());
 				 this->tabControl->SuspendLayout();
 				 this->tabExport->SuspendLayout();
 				 this->panelImputM2Exp->SuspendLayout();
@@ -333,10 +336,10 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->panelInputM2Import->SuspendLayout();
 				 this->panelInputM2I->SuspendLayout();
 				 this->cascTabPage->SuspendLayout();
+				 this->panel2->SuspendLayout();
 				 this->tabLog->SuspendLayout();
 				 this->statusStrip1->SuspendLayout();
 				 this->menuStrip1->SuspendLayout();
-				 this->panel2->SuspendLayout();
 				 this->SuspendLayout();
 				 // 
 				 // openFileDialog1
@@ -721,6 +724,28 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->cascTabPage->Text = L"CASC";
 				 this->cascTabPage->UseVisualStyleBackColor = true;
 				 // 
+				 // panel2
+				 // 
+				 this->panel2->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
+					 | System::Windows::Forms::AnchorStyles::Right));
+				 this->panel2->Controls->Add(this->fileTestLabel);
+				 this->panel2->Controls->Add(this->fileTestButton);
+				 this->panel2->Controls->Add(this->testOutputTextBox);
+				 this->panel2->Controls->Add(this->testInputTextBox);
+				 this->panel2->Location = System::Drawing::Point(3, 32);
+				 this->panel2->Name = L"panel2";
+				 this->panel2->Size = System::Drawing::Size(553, 64);
+				 this->panel2->TabIndex = 10;
+				 // 
+				 // fileTestLabel
+				 // 
+				 this->fileTestLabel->AutoSize = true;
+				 this->fileTestLabel->Location = System::Drawing::Point(6, 8);
+				 this->fileTestLabel->Name = L"fileTestLabel";
+				 this->fileTestLabel->Size = System::Drawing::Size(121, 13);
+				 this->fileTestLabel->TabIndex = 5;
+				 this->fileTestLabel->Text = L"Input path or FileDataId:";
+				 // 
 				 // fileTestButton
 				 // 
 				 this->fileTestButton->Location = System::Drawing::Point(9, 31);
@@ -750,15 +775,6 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->testInputTextBox->TabIndex = 6;
 				 this->testInputTextBox->KeyDown += gcnew System::Windows::Forms::KeyEventHandler(this, &Form1::testInputTextBox_KeyDown);
 				 // 
-				 // fileTestLabel
-				 // 
-				 this->fileTestLabel->AutoSize = true;
-				 this->fileTestLabel->Location = System::Drawing::Point(6, 8);
-				 this->fileTestLabel->Name = L"fileTestLabel";
-				 this->fileTestLabel->Size = System::Drawing::Size(121, 13);
-				 this->fileTestLabel->TabIndex = 5;
-				 this->fileTestLabel->Text = L"Input path or FileDataId:";
-				 // 
 				 // loadListfileButton
 				 // 
 				 this->loadListfileButton->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Right));
@@ -772,8 +788,8 @@ private: System::Windows::Forms::Button^  clearButton;
 				 // 
 				 // tabLog
 				 // 
-				 this->tabLog->Controls->Add(this->clearButton);
 				 this->tabLog->Controls->Add(this->logTextBox);
+				 this->tabLog->Controls->Add(this->clearButton);
 				 this->tabLog->Location = System::Drawing::Point(4, 22);
 				 this->tabLog->Name = L"tabLog";
 				 this->tabLog->Padding = System::Windows::Forms::Padding(3);
@@ -781,6 +797,20 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->tabLog->TabIndex = 2;
 				 this->tabLog->Text = L"Log";
 				 this->tabLog->UseVisualStyleBackColor = true;
+				 // 
+				 // logTextBox
+				 // 
+				 this->logTextBox->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Bottom)
+					 | System::Windows::Forms::AnchorStyles::Left)
+					 | System::Windows::Forms::AnchorStyles::Right));
+				 this->logTextBox->BorderStyle = System::Windows::Forms::BorderStyle::FixedSingle;
+				 this->logTextBox->DetectUrls = false;
+				 this->logTextBox->Location = System::Drawing::Point(7, 6);
+				 this->logTextBox->Name = L"logTextBox";
+				 this->logTextBox->ReadOnly = true;
+				 this->logTextBox->Size = System::Drawing::Size(549, 210);
+				 this->logTextBox->TabIndex = 2;
+				 this->logTextBox->Text = L"";
 				 // 
 				 // clearButton
 				 // 
@@ -792,20 +822,6 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->clearButton->Text = L"Clear";
 				 this->clearButton->UseVisualStyleBackColor = true;
 				 this->clearButton->Click += gcnew System::EventHandler(this, &Form1::clearButton_Click);
-				 // 
-				 // logTextBox
-				 // 
-				 this->logTextBox->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Bottom)
-					 | System::Windows::Forms::AnchorStyles::Left)
-					 | System::Windows::Forms::AnchorStyles::Right));
-				 this->logTextBox->Location = System::Drawing::Point(3, 3);
-				 this->logTextBox->Multiline = true;
-				 this->logTextBox->Name = L"logTextBox";
-				 this->logTextBox->ReadOnly = true;
-				 this->logTextBox->ScrollBars = System::Windows::Forms::ScrollBars::Both;
-				 this->logTextBox->Size = System::Drawing::Size(556, 216);
-				 this->logTextBox->TabIndex = 0;
-				 this->logTextBox->WordWrap = false;
 				 // 
 				 // statusStrip1
 				 // 
@@ -879,19 +895,6 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->compareBonesToolStripMenuItem->Text = L"Compare bones";
 				 this->compareBonesToolStripMenuItem->Click += gcnew System::EventHandler(this, &Form1::compareBonesToolStripMenuItem_Click);
 				 // 
-				 // panel2
-				 // 
-				 this->panel2->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
-					 | System::Windows::Forms::AnchorStyles::Right));
-				 this->panel2->Controls->Add(this->fileTestLabel);
-				 this->panel2->Controls->Add(this->fileTestButton);
-				 this->panel2->Controls->Add(this->testOutputTextBox);
-				 this->panel2->Controls->Add(this->testInputTextBox);
-				 this->panel2->Location = System::Drawing::Point(3, 32);
-				 this->panel2->Name = L"panel2";
-				 this->panel2->Size = System::Drawing::Size(553, 64);
-				 this->panel2->TabIndex = 10;
-				 // 
 				 // Form1
 				 // 
 				 this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
@@ -923,14 +926,13 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->panelInputM2I->ResumeLayout(false);
 				 this->panelInputM2I->PerformLayout();
 				 this->cascTabPage->ResumeLayout(false);
+				 this->panel2->ResumeLayout(false);
+				 this->panel2->PerformLayout();
 				 this->tabLog->ResumeLayout(false);
-				 this->tabLog->PerformLayout();
 				 this->statusStrip1->ResumeLayout(false);
 				 this->statusStrip1->PerformLayout();
 				 this->menuStrip1->ResumeLayout(false);
 				 this->menuStrip1->PerformLayout();
-				 this->panel2->ResumeLayout(false);
-				 this->panel2->PerformLayout();
 				 this->ResumeLayout(false);
 				 this->PerformLayout();
 
@@ -999,6 +1001,7 @@ private: System::Windows::Forms::Button^  clearButton;
 	private:
 		System::Void buttonGo_Click(System::Object^  sender, System::EventArgs^  e)
 		{
+			ignoreErrors = false;
 			exportButtonGo->Enabled = false;
 			exportButtonGo->Refresh();
 			SetStatus("Working...");
@@ -1099,21 +1102,72 @@ private: System::Windows::Forms::Button^  clearButton;
 			Instance->_Log(LogLevel, data);
 	}
 
-	private: void _Log(int LogLevel, char const* data)
+	private:
+	bool ignoreErrors;
+
+	void AppendLine(String^ text, Color textColor, Color backColor)
+	{
+		text = String::Format("[{0:yyyy-MM-dd HH:mm:ss}]: {1}", DateTime::Now, text);
+
+		if (logTextBox->TextLength)
+			text = "\r\n" + text;
+
+		if (textColor == Color::Empty)
+		{
+			logTextBox->AppendText(text);
+			return;
+		}
+
+		logTextBox->SelectionStart = logTextBox->TextLength;
+		logTextBox->SelectionLength = 0;
+
+		logTextBox->SelectionColor = textColor;
+		logTextBox->SelectionBackColor = backColor;
+		logTextBox->AppendText(text);
+		logTextBox->SelectionColor = logTextBox->ForeColor;
+		logTextBox->SelectionBackColor = logTextBox->BackColor;
+
+		logTextBox->SelectionStart = logTextBox->TextLength;
+		logTextBox->ScrollToCaret();
+	}
+
+	void _Log(int LogLevel, char const* data)
 	{
 		auto text = gcnew String(data);
-		if (logTextBox->Text->Length)
-			logTextBox->Text += "\r\n" + text;
-		else
-			logTextBox->Text = text;
 
-		if (LogLevel == M2Lib::LOG_ERROR)
-			MessageBox::Show(text, "Error", MessageBoxButtons::OK, MessageBoxIcon::Error);
-		else if (LogLevel == M2Lib::LOG_WARNING)
-			MessageBox::Show(text, "Warning", MessageBoxButtons::OK, MessageBoxIcon::Warning);
+		Color textColor, backColor;
+		switch (LogLevel)
+		{
+			case M2Lib::LOG_ERROR:
+				textColor = Color::Black;
+				backColor = Color::Red;
+				break;
+			case M2Lib::LOG_WARNING:
+				textColor = Color::Black;
+				backColor = Color::Yellow;
+				break;
+			default:
+				textColor = backColor = Color::Empty;
+				break;
+		}
+
+		AppendLine(text, textColor, backColor);
+
+		if (!ignoreErrors)
+		{
+			if (LogLevel == M2Lib::LOG_ERROR) {
+				if (ErrorForm::ShowError(text) == Windows::Forms::DialogResult::Ignore)
+					ignoreErrors = true;
+			}
+			else if (LogLevel == M2Lib::LOG_WARNING) {
+				if (ErrorForm::ShowWarning(text) == Windows::Forms::DialogResult::Ignore)
+					ignoreErrors = true;
+			}
+		}
 	}
 
 	private: System::Void importButtonGo_Click(System::Object^  sender, System::EventArgs^  e) {
+		ignoreErrors = false;
 		importButtonPreload->Enabled = false;
 		importButtonPreload->Refresh();
 		SetStatus("Importing...");
@@ -1193,6 +1247,7 @@ private: System::Windows::Forms::Button^  clearButton;
 	}
 
 	private: System::Void importButtonPreload_Click(System::Object^  sender, System::EventArgs^  e) {
+		ignoreErrors = false;
 		importButtonPreload->Enabled = false;
 		importButtonPreload->Refresh();
 		SetStatus("Preloading...");
@@ -1294,6 +1349,7 @@ private: System::Windows::Forms::Button^  clearButton;
 
 	private: System::Void manageMeshesButton_Click(System::Object^  sender, System::EventArgs^  e)
 	{
+		ignoreErrors = false;
 		auto result = GetOrCreateMeshManagementForm()->ShowDialog();
 		if (result != Windows::Forms::DialogResult::OK)
 			MeshManagementForm = nullptr;
@@ -1329,6 +1385,7 @@ private: System::Windows::Forms::Button^  clearButton;
 		}
 	}
 	private: System::Void compareBonesToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) {
+		ignoreErrors = false;
 		auto form = gcnew CompareBonesForm();
 		form->ShowDialog();
 	}
@@ -1336,7 +1393,7 @@ private: System::Windows::Forms::Button^  clearButton;
 		logTextBox->Text = "";
 	}
 	private: System::Void reloadListfileButton_Click(System::Object^  sender, System::EventArgs^  e) {
-		
+		ignoreErrors = false;
 		auto dialog = gcnew OpenFileDialog();
 		dialog->InitialDirectory = gcnew String(M2Lib::FileSystemA::GetCurrentPath().c_str());
 		dialog->FileName = L"listfile.csv";
@@ -1348,6 +1405,7 @@ private: System::Windows::Forms::Button^  clearButton;
 		M2Lib::FileStorage::GetInstance()->LoadStorage(StringConverter(dialog->FileName).ToStringA());
 	}
 	private: System::Void fileTestButton_Click(System::Object^  sender, System::EventArgs^  e) {
+		ignoreErrors = false;
 		TestFiles();
 	}
 	private: System::Void testInputTextBox_KeyPress(System::Object^  sender, System::Windows::Forms::KeyPressEventArgs^  e) {
@@ -1358,8 +1416,6 @@ private: System::Windows::Forms::Button^  clearButton;
 			return;
 
 		TestFiles();
-	}
-	private: System::Void refreshButton_Click(System::Object^  sender, System::EventArgs^  e) {
 	}
 	private: System::Void checkUpdatesToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) {
 		auto updater = gcnew Updater();
