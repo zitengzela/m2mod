@@ -740,35 +740,35 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate(wchar_t const* FileName)
 	DataBinary.WriteFourCC(M2I::Signature_M2I0);
 
 	// save version
-	DataBinary.WriteUInt16(8);
-	DataBinary.WriteUInt16(1);
+	DataBinary.Write<uint16_t>(8);
+	DataBinary.Write<uint16_t>(1);
 
 	// save subsets
-	DataBinary.WriteUInt32(SubsetCount);
+	DataBinary.Write<uint32_t>(SubsetCount);
 	for (uint32_t i = 0; i < SubsetCount; ++i)
 	{
 		M2SkinElement::CElement_SubMesh* pSubsetOut = &Subsets[i];
 
-		DataBinary.WriteUInt16(pSubsetOut->ID);	// mesh id
+		DataBinary.Write<uint16_t>(pSubsetOut->ID);	// mesh id
 		DataBinary.WriteASCIIString("");		// description
-		DataBinary.WriteSInt16(-1);				// material override
+		DataBinary.Write<int16_t>(-1);				// material override
 
-		DataBinary.WriteSInt32(-1);				// shader id
-		DataBinary.WriteSInt16(-1);				// blend type
-		DataBinary.WriteUInt16(0);				// render flags
+		DataBinary.Write<int32_t>(-1);				// shader id
+		DataBinary.Write<int16_t>(-1);				// blend type
+		DataBinary.Write<uint16_t>(0);				// render flags
 		
 		for (uint32_t j = 0; j < MAX_SUBMESH_TEXTURES; ++j)
 		{
-			DataBinary.WriteUInt16(-1);			// texture type
+			DataBinary.Write<uint16_t>(-1);			// texture type
 			DataBinary.WriteASCIIString("");	// texture
 		}
 
-		DataBinary.WriteUInt32(i);				// original subset index
+		DataBinary.Write<uint32_t>(i);				// original subset index
 
-		DataBinary.WriteUInt16(pSubsetOut->Level);
+		DataBinary.Write<uint16_t>(pSubsetOut->Level);
 
 		// write vertices
-		DataBinary.WriteUInt32(pSubsetOut->VertexCount);
+		DataBinary.Write<uint32_t>(pSubsetOut->VertexCount);
 		uint32_t VertexEnd = pSubsetOut->VertexStart + pSubsetOut->VertexCount;
 		for (uint32_t k = pSubsetOut->VertexStart; k < VertexEnd; ++k)
 		{
@@ -777,10 +777,10 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate(wchar_t const* FileName)
 			DataBinary.WriteC3Vector(Vertex.Position);
 
 			for (uint32_t j = 0; j < BONES_PER_VERTEX; ++j)
-				DataBinary.WriteUInt8(Vertex.BoneWeights[j]);
+				DataBinary.Write<uint8_t>(Vertex.BoneWeights[j]);
 
 			for (uint32_t j = 0; j < BONES_PER_VERTEX; ++j)
-				DataBinary.WriteUInt8(Vertex.BoneIndices[j]);
+				DataBinary.Write<uint8_t>(Vertex.BoneIndices[j]);
 
 			DataBinary.WriteC3Vector(Vertex.Normal);
 
@@ -790,7 +790,7 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate(wchar_t const* FileName)
 
 		// write triangles
 		uint32_t SubsetTriangleCountOut = pSubsetOut->TriangleIndexCount / 3;
-		DataBinary.WriteUInt32(SubsetTriangleCountOut);
+		DataBinary.Write<uint32_t>(SubsetTriangleCountOut);
 
 		uint32_t TriangleIndexStart = pSubsetOut->GetStartTrianlgeIndex();
 		uint32_t TriangleIndexEnd = pSubsetOut->GetEndTriangleIndex();
@@ -798,40 +798,40 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate(wchar_t const* FileName)
 		{
 			uint16_t TriangleIndexOut = Triangles[k] - pSubsetOut->VertexStart;
 			assert(TriangleIndexOut < pSubsetOut->VertexCount);
-			DataBinary.WriteUInt16(TriangleIndexOut);
+			DataBinary.Write<uint16_t>(TriangleIndexOut);
 		}
 	}
 
 	// write bones
-	DataBinary.WriteUInt32(boneElement->Count);
+	DataBinary.Write<uint32_t>(boneElement->Count);
 	for (uint16_t i = 0; i < boneElement->Count; i++)
 	{
 		CElement_Bone& Bone = *boneElement->at<CElement_Bone>(i);
 
-		DataBinary.WriteUInt16(i);
-		DataBinary.WriteSInt16(Bone.ParentBone);
+		DataBinary.Write<uint16_t>(i);
+		DataBinary.Write<int16_t>(Bone.ParentBone);
 		DataBinary.WriteC3Vector(Bone.Position);
-		DataBinary.WriteUInt8(1);	// has data
-		DataBinary.WriteUInt32(Bone.Flags);
-		DataBinary.WriteUInt16(Bone.SubmeshId);
-		DataBinary.WriteUInt16(Bone.Unknown[0]);
-		DataBinary.WriteUInt16(Bone.Unknown[1]);
+		DataBinary.Write<uint8_t>(1);	// has data
+		DataBinary.Write<uint32_t>(Bone.Flags);
+		DataBinary.Write<uint16_t>(Bone.SubmeshId);
+		DataBinary.Write<uint16_t>(Bone.Unknown[0]);
+		DataBinary.Write<uint16_t>(Bone.Unknown[1]);
 	}
 
 	// write attachments
-	DataBinary.WriteUInt32(attachmentElement->Count);
+	DataBinary.Write<uint32_t>(attachmentElement->Count);
 	for (uint16_t i = 0; i < attachmentElement->Count; i++)
 	{
 		CElement_Attachment& Attachment = *attachmentElement->at<CElement_Attachment>(i);
 
-		DataBinary.WriteUInt32(Attachment.ID);
-		DataBinary.WriteSInt16(Attachment.ParentBone);
+		DataBinary.Write<uint32_t>(Attachment.ID);
+		DataBinary.Write<int16_t>(Attachment.ParentBone);
 		DataBinary.WriteC3Vector(Attachment.Position);
-		DataBinary.WriteFloat32(1.0f);
+		DataBinary.Write<float>(1.0f);
 	}
 
 	// write cameras
-	DataBinary.WriteUInt32(CamerasCount);
+	DataBinary.Write<uint32_t>(CamerasCount);
 	for (uint16_t i = 0; i < CamerasCount; i++)
 	{
 		int32_t CameraType;
@@ -873,13 +873,13 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate(wchar_t const* FileName)
 				FoV = 0.785398163f;	// 45 degrees in radians, assuming that WoW stores camera FoV in radians. or maybe it's half FoV.
 		}
 
-		DataBinary.WriteUInt8(1);	// has data
-		DataBinary.WriteSInt32(CameraType);
+		DataBinary.Write<uint8_t>(1);	// has data
+		DataBinary.Write<int32_t>(CameraType);
 
-		DataBinary.WriteFloat32(FoV);
+		DataBinary.Write<float>(FoV);
 
-		DataBinary.WriteFloat32(ClipFar);
-		DataBinary.WriteFloat32(ClipNear);
+		DataBinary.Write<float>(ClipFar);
+		DataBinary.Write<float>(ClipNear);
 		DataBinary.WriteC3Vector(Position);
 		DataBinary.WriteC3Vector(Target);
 	}

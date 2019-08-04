@@ -24,8 +24,8 @@ M2Lib::EError M2Lib::M2I::Load(wchar_t const* FileName, M2Lib::M2* pM2, bool Ign
 	uint32_t Version = 0;
 	if (InSignature == Signature_M2I0)
 	{
-		uint16_t VersionMajor = DataBinary.ReadUInt16();
-		uint16_t VersionMinor = DataBinary.ReadUInt16();
+		uint16_t VersionMajor = DataBinary.Read<uint16_t>();
+		uint16_t VersionMinor = DataBinary.Read<uint16_t>();
 
 		Version = MAKE_VERSION(VersionMajor, VersionMinor);
 
@@ -36,7 +36,7 @@ M2Lib::EError M2Lib::M2I::Load(wchar_t const* FileName, M2Lib::M2* pM2, bool Ign
 	// load sub meshes, build new vertex list
 	uint32_t VertexStart = 0;
 	uint32_t InSubsetCount = 0;
-	InSubsetCount = DataBinary.ReadUInt32();
+	InSubsetCount = DataBinary.Read<uint32_t>();
 	uint32_t iTriangle = 0;
 
 	for (uint32_t i = 0; i < InSubsetCount; i++)
@@ -44,25 +44,25 @@ M2Lib::EError M2Lib::M2I::Load(wchar_t const* FileName, M2Lib::M2* pM2, bool Ign
 		M2I::CSubMesh* pNewSubMesh = new M2I::CSubMesh();
 
 		// read id
-		pNewSubMesh->ID = DataBinary.ReadUInt16();
+		pNewSubMesh->ID = DataBinary.Read<uint16_t>();
 		pNewSubMesh->ExtraData.ID = pNewSubMesh->ID;
 
 		if (Version >= MAKE_VERSION(4, 6))
 			pNewSubMesh->ExtraData.Description = DataBinary.ReadASCIIString();
 		if (Version >= MAKE_VERSION(4, 7))
 		{
-			pNewSubMesh->ExtraData.MaterialOverride = DataBinary.ReadSInt16();
+			pNewSubMesh->ExtraData.MaterialOverride = DataBinary.Read<int16_t>();
 			
 			if (Version >= MAKE_VERSION(8, 1))
 			{
-				pNewSubMesh->ExtraData.ShaderId = DataBinary.ReadSInt32();
+				pNewSubMesh->ExtraData.ShaderId = DataBinary.Read<int32_t>();
 
-				pNewSubMesh->ExtraData.BlendMode = DataBinary.ReadSInt16();
-				pNewSubMesh->ExtraData.RenderFlags = DataBinary.ReadUInt16();
+				pNewSubMesh->ExtraData.BlendMode = DataBinary.Read<int16_t>();
+				pNewSubMesh->ExtraData.RenderFlags = DataBinary.Read<uint16_t>();
 
 				for (uint32_t j = 0; j < MAX_SUBMESH_TEXTURES; ++j)
 				{
-					pNewSubMesh->ExtraData.TextureType[j] = DataBinary.ReadSInt16();
+					pNewSubMesh->ExtraData.TextureType[j] = DataBinary.Read<int16_t>();
 					pNewSubMesh->ExtraData.TextureName[j] = DataBinary.ReadASCIIString();
 				}
 			}
@@ -70,22 +70,22 @@ M2Lib::EError M2Lib::M2I::Load(wchar_t const* FileName, M2Lib::M2* pM2, bool Ign
 			{
 				if (Version >= MAKE_VERSION(4, 9))
 				{
-					if (DataBinary.ReadUInt8() != 0)
+					if (DataBinary.Read<uint8_t>() != 0)
 					{
 						pNewSubMesh->ExtraData.ShaderId = TRANSPARENT_SHADER_ID;
 						pNewSubMesh->ExtraData.TextureType[0] = (int32_t)M2Element::CElement_Texture::ETextureType::Final_Hardcoded;
 						pNewSubMesh->ExtraData.TextureName[0] = DataBinary.ReadASCIIString();
 
 						pNewSubMesh->ExtraData.RenderFlags = (int32_t)M2Element::CElement_TextureFlag::EFlags::EFlags_TwoSided;
-						pNewSubMesh->ExtraData.BlendMode = DataBinary.ReadUInt16();
+						pNewSubMesh->ExtraData.BlendMode = DataBinary.Read<uint16_t>();
 					}
 					else
 					{
 						DataBinary.ReadASCIIString();
-						DataBinary.ReadUInt16();
+						DataBinary.Read<uint16_t>();
 					}
 
-					if (DataBinary.ReadUInt8() != 0)
+					if (DataBinary.Read<uint8_t>() != 0)
 					{
 						pNewSubMesh->ExtraData.ShaderId = GLOSS_SHADER_ID;
 
@@ -119,18 +119,18 @@ M2Lib::EError M2Lib::M2I::Load(wchar_t const* FileName, M2Lib::M2* pM2, bool Ign
 		if (Version >= MAKE_VERSION(8, 0))
 		{
 			if (!IgnoreOriginalMeshIndexes)
-				pNewSubMesh->ExtraData.OriginalSubmeshIndex = DataBinary.ReadSInt32();
+				pNewSubMesh->ExtraData.OriginalSubmeshIndex = DataBinary.Read<int32_t>();
 			else
-				DataBinary.ReadSInt32();
+				DataBinary.Read<int32_t>();
 		}
 
 		// FMN 2015-02-13: read level
-		DataBinary.ReadUInt16();
+		DataBinary.Read<uint16_t>();
 		pNewSubMesh->Level = 0; 
 
 		// read vertices
 		uint32_t InVertexCount = 0;
-		InVertexCount = DataBinary.ReadUInt32();
+		InVertexCount = DataBinary.Read<uint32_t>();
 		if (VertexList.size() + InVertexCount > 0xFFFF)
 			return EError_FailedToImportM2I_TooManyVertices;
 
@@ -142,10 +142,10 @@ M2Lib::EError M2Lib::M2I::Load(wchar_t const* FileName, M2Lib::M2* pM2, bool Ign
 			InVertex.Position = DataBinary.ReadC3Vector();
 
 			for (uint32_t k = 0; k < BONES_PER_VERTEX; ++k)
-				InVertex.BoneWeights[k] = DataBinary.ReadUInt8();
+				InVertex.BoneWeights[k] = DataBinary.Read<uint8_t>();
 
 			for (uint32_t k = 0; k < BONES_PER_VERTEX; ++k)
-				InVertex.BoneIndices[k] = DataBinary.ReadUInt8();
+				InVertex.BoneIndices[k] = DataBinary.Read<uint8_t>();
 
 			InVertex.Normal = DataBinary.ReadC3Vector();
 			InVertex.Texture = DataBinary.ReadC2Vector();
@@ -162,7 +162,7 @@ M2Lib::EError M2Lib::M2I::Load(wchar_t const* FileName, M2Lib::M2* pM2, bool Ign
 		pNewSubMesh->ExtraData.Boundary.Calculate(submeshVertices);
 
 		// read triangles
-		uint32_t InTriangleCount = DataBinary.ReadUInt32();
+		uint32_t InTriangleCount = DataBinary.Read<uint32_t>();
 
 		for (uint32_t j = 0; j < InTriangleCount; ++j)
 		{
@@ -172,7 +172,7 @@ M2Lib::EError M2Lib::M2I::Load(wchar_t const* FileName, M2Lib::M2* pM2, bool Ign
 			++iTriangle;
 
 			for (uint32_t k = 0; k < VERTEX_PER_TRIANGLE; ++k)
-				NewTriangle.Vertices[k] = DataBinary.ReadUInt16() + VertexStart;
+				NewTriangle.Vertices[k] = DataBinary.Read<uint16_t>() + VertexStart;
 
 			pNewSubMesh->Triangles.push_back(NewTriangle);
 		}
@@ -189,11 +189,11 @@ M2Lib::EError M2Lib::M2I::Load(wchar_t const* FileName, M2Lib::M2* pM2, bool Ign
 		// read bones, overwrite existing
 		auto boneElement = pM2->GetBones();
 		uint32_t BoneCount = boneElement->Count;
-		uint32_t BoneCountIn = DataBinary.ReadUInt32();
+		uint32_t BoneCountIn = DataBinary.Read<uint32_t>();
 		for (uint32_t i = 0; i < BoneCountIn; ++i)
 		{
-			uint16_t InBoneIndex = DataBinary.ReadUInt16();
-			int16_t ParentBone = DataBinary.ReadSInt16();
+			uint16_t InBoneIndex = DataBinary.Read<uint16_t>();
+			int16_t ParentBone = DataBinary.Read<int16_t>();
 			C3Vector Position = DataBinary.ReadC3Vector();
 			bool HasExtraData = false;
 			uint32_t Flags;
@@ -202,11 +202,11 @@ M2Lib::EError M2Lib::M2I::Load(wchar_t const* FileName, M2Lib::M2* pM2, bool Ign
 
 			if (Version >= MAKE_VERSION(4, 8))
 			{
-				HasExtraData = DataBinary.ReadUInt8() != 0;
-				Flags = DataBinary.ReadUInt32();
-				SubmeshId = DataBinary.ReadUInt16();
-				Unknown[0] = DataBinary.ReadUInt16();
-				Unknown[1] = DataBinary.ReadUInt16();
+				HasExtraData = DataBinary.Read<uint8_t>() != 0;
+				Flags = DataBinary.Read<uint32_t>();
+				SubmeshId = DataBinary.Read<uint16_t>();
+				Unknown[0] = DataBinary.Read<uint16_t>();
+				Unknown[1] = DataBinary.Read<uint16_t>();
 			}
 
 			uint16_t ModBoneIndex = -1;
@@ -247,20 +247,20 @@ M2Lib::EError M2Lib::M2I::Load(wchar_t const* FileName, M2Lib::M2* pM2, bool Ign
 	}
 	else
 	{
-		uint32_t BoneCountIn = DataBinary.ReadUInt32();
+		uint32_t BoneCountIn = DataBinary.Read<uint32_t>();
 		for (uint32_t i = 0; i < BoneCountIn; ++i)
 		{
-			DataBinary.ReadUInt16();
-			DataBinary.ReadSInt16();
+			DataBinary.Read<uint16_t>();
+			DataBinary.Read<int16_t>();
 			DataBinary.ReadC3Vector();
 
 			if (Version >= MAKE_VERSION(4, 8))
 			{
-				DataBinary.ReadUInt8();
-				DataBinary.ReadUInt32();
-				DataBinary.ReadUInt16();
-				DataBinary.ReadUInt16();
-				DataBinary.ReadUInt16();
+				DataBinary.Read<uint8_t>();
+				DataBinary.Read<uint32_t>();
+				DataBinary.Read<uint16_t>();
+				DataBinary.Read<uint16_t>();
+				DataBinary.Read<uint16_t>();
 			}
 		}
 	}
@@ -298,11 +298,11 @@ M2Lib::EError M2Lib::M2I::Load(wchar_t const* FileName, M2Lib::M2* pM2, bool Ign
 		uint32_t AttachmentsCount = attachmentElement->Count;
 		auto Attachments = attachmentElement->as<M2Element::CElement_Attachment>();
 		uint32_t AttachmentCountIn;
-		AttachmentCountIn = DataBinary.ReadUInt32();
+		AttachmentCountIn = DataBinary.Read<uint32_t>();
 		for (uint32_t i = 0; i < AttachmentCountIn; ++i)
 		{
 			uint32_t InAttachmentID = 0;
-			InAttachmentID = DataBinary.ReadUInt32();
+			InAttachmentID = DataBinary.Read<uint32_t>();
 			M2Element::CElement_Attachment* pAttachmentToMod = NULL;
 			for (uint32_t j = 0; j < AttachmentsCount; ++j)
 			{
@@ -314,31 +314,31 @@ M2Lib::EError M2Lib::M2I::Load(wchar_t const* FileName, M2Lib::M2* pM2, bool Ign
 			}
 			if (pAttachmentToMod)
 			{
-				pAttachmentToMod->ParentBone = DataBinary.ReadSInt16();
+				pAttachmentToMod->ParentBone = DataBinary.Read<int16_t>();
 				if (BoneRemap.find(pAttachmentToMod->ParentBone) != BoneRemap.end())
 					pAttachmentToMod->ParentBone = BoneRemap[pAttachmentToMod->ParentBone];
 
 				pAttachmentToMod->Position = DataBinary.ReadC3Vector();
-				float Scale = DataBinary.ReadFloat32();
+				float Scale = DataBinary.Read<float>();
 			}
 			else
 			{
-				DataBinary.ReadUInt16();
+				DataBinary.Read<uint16_t>();
 
 				DataBinary.ReadC3Vector();
-				DataBinary.ReadFloat32();
+				DataBinary.Read<float>();
 			}
 		}
 	}
 	else
 	{
-		uint32_t AttachmentCountIn = DataBinary.ReadUInt32();
+		uint32_t AttachmentCountIn = DataBinary.Read<uint32_t>();
 		for (uint32_t i = 0; i < AttachmentCountIn; ++i)
 		{
-			DataBinary.ReadUInt32();
-			DataBinary.ReadUInt16();
+			DataBinary.Read<uint32_t>();
+			DataBinary.Read<uint16_t>();
 			DataBinary.ReadC3Vector();
-			DataBinary.ReadFloat32();
+			DataBinary.Read<float>();
 		}
 	}
 
@@ -347,17 +347,17 @@ M2Lib::EError M2Lib::M2I::Load(wchar_t const* FileName, M2Lib::M2* pM2, bool Ign
 		// read cameras, overwrite existing
 		uint32_t CameraCount = pM2->Elements[M2Element::EElement_Camera].Count;
 		auto Cameras = pM2->Elements[M2Element::EElement_Camera].as<M2Element::CElement_Camera>();
-		uint32_t CameraCountIn = DataBinary.ReadUInt32();
+		uint32_t CameraCountIn = DataBinary.Read<uint32_t>();
 		for (uint32_t i = 0; i < CameraCountIn; ++i)
 		{
 			auto hasData = true;
 			if (Version >= MAKE_VERSION(4, 9))
-				hasData = DataBinary.ReadUInt8() != 0;
+				hasData = DataBinary.Read<uint8_t>() != 0;
 
 			M2Element::CElement_Camera* pCameraToMod = NULL;
 			if (hasData)
 			{
-				auto InType = (M2Element::CElement_Camera::ECameraType)DataBinary.ReadSInt32();
+				auto InType = (M2Element::CElement_Camera::ECameraType)DataBinary.Read<int32_t>();
 				for (uint32_t j = 0; j < CameraCount; ++j)
 				{
 					if (Cameras[j].Type == InType)
@@ -379,22 +379,22 @@ M2Lib::EError M2Lib::M2I::Load(wchar_t const* FileName, M2Lib::M2* pM2, bool Ign
 					assert(ExternalAnimations[0].Offset >= LastElement.Offset && ExternalAnimations[0].Offset < LastElement.Offset + LastElement.Data.size());
 
 					float* FieldOfView_Keys = (float*)LastElement.GetLocalPointer(ExternalAnimations[0].Offset);
-					auto value = DataBinary.ReadFloat32();
+					auto value = DataBinary.Read<float>();
 					FieldOfView_Keys[0] = value;
 				}
 				else
-					DataBinary.ReadFloat32();
+					DataBinary.Read<float>();
 
-				pCameraToMod->ClipFar = DataBinary.ReadFloat32();
-				pCameraToMod->ClipNear = DataBinary.ReadFloat32();
+				pCameraToMod->ClipFar = DataBinary.Read<float>();
+				pCameraToMod->ClipNear = DataBinary.Read<float>();
 				pCameraToMod->Position = DataBinary.ReadC3Vector();
 				pCameraToMod->Target = DataBinary.ReadC3Vector();
 			}
 			else
 			{
-				DataBinary.ReadFloat32();
-				DataBinary.ReadFloat32();
-				DataBinary.ReadFloat32();
+				DataBinary.Read<float>();
+				DataBinary.Read<float>();
+				DataBinary.Read<float>();
 				DataBinary.ReadC3Vector();
 				DataBinary.ReadC3Vector();
 			}
@@ -402,21 +402,21 @@ M2Lib::EError M2Lib::M2I::Load(wchar_t const* FileName, M2Lib::M2* pM2, bool Ign
 	}
 	else
 	{
-		uint32_t CameraCountIn = DataBinary.ReadUInt32();
+		uint32_t CameraCountIn = DataBinary.Read<uint32_t>();
 		for (uint32_t i = 0; i < CameraCountIn; ++i)
 		{
 			if (Version >= MAKE_VERSION(4, 9))
-				DataBinary.ReadUInt8();
-			DataBinary.ReadSInt32();
-			DataBinary.ReadFloat32();
-			DataBinary.ReadFloat32();
-			DataBinary.ReadFloat32();
-			DataBinary.ReadFloat32();
-			DataBinary.ReadFloat32();
-			DataBinary.ReadFloat32();
-			DataBinary.ReadFloat32();
-			DataBinary.ReadFloat32();
-			DataBinary.ReadFloat32();
+				DataBinary.Read<uint8_t>();
+			DataBinary.Read<int32_t>();
+			DataBinary.Read<float>();
+			DataBinary.Read<float>();
+			DataBinary.Read<float>();
+			DataBinary.Read<float>();
+			DataBinary.Read<float>();
+			DataBinary.Read<float>();
+			DataBinary.Read<float>();
+			DataBinary.Read<float>();
+			DataBinary.Read<float>();
 		}
 	}
 
