@@ -22,7 +22,7 @@ bool M2Lib::FileStorage::ParseCsv(std::string const& Path, bool CheckExisting)
 	if (in.fail())
 		return false;
 
-	UInt32 dwLocaleFlags = 0;
+	uint32_t dwLocaleFlags = 0;
 	std::string line;
 	while (std::getline(in, line))
 	{
@@ -33,7 +33,7 @@ bool M2Lib::FileStorage::ParseCsv(std::string const& Path, bool CheckExisting)
 
 		std::string tmp, fileName;
 		std::getline(stream, tmp, ';');
-		UInt32 FileDataId = std::stoul(tmp);
+		uint32_t FileDataId = std::stoul(tmp);
 		std::getline(stream, fileName, ';');
 
 		auto nameHash = CalculateHash(fileName);
@@ -73,7 +73,7 @@ bool M2Lib::FileStorage::LoadStorage(std::string const& ListfilePath)
 		return false;
 	}
 
-	UInt32 addonCount = 0;
+	uint32_t addonCount = 0;
 	if (!LoadListFileAddons(addonCount))
 	{
 		sLogger.LogError("Failed to load listfile addons at '%s'", ListfileAddonsPath.c_str());
@@ -85,7 +85,7 @@ bool M2Lib::FileStorage::LoadStorage(std::string const& ListfilePath)
 	return true;
 }
 
-bool M2Lib::FileStorage::LoadListFileAddons(UInt32& totalAddons)
+bool M2Lib::FileStorage::LoadListFileAddons(uint32_t& totalAddons)
 {
 	if (!std::filesystem::is_directory(ListfileAddonsPath)) {
 		sLogger.LogError("Listfile addons directory '%s' does not exist", ListfileAddonsPath.c_str());
@@ -93,7 +93,7 @@ bool M2Lib::FileStorage::LoadListFileAddons(UInt32& totalAddons)
 	}
 	std::filesystem::directory_iterator itr;
 
-	UInt32 currentCount = fileInfosByFileDataId.size();
+	uint32_t currentCount = fileInfosByFileDataId.size();
 	bool ok = true;
 	for (auto& p : std::filesystem::directory_iterator(ListfileAddonsPath))
 	{
@@ -133,7 +133,7 @@ M2Lib::FileInfo const& M2Lib::FileStorage::GetFileInfoByPartialPath(std::string 
 	return FileInfo::Empty;
 }
 
-M2Lib::FileInfo const& M2Lib::FileStorage::GetFileInfoByFileDataId(UInt32 FileDataId)
+M2Lib::FileInfo const& M2Lib::FileStorage::GetFileInfoByFileDataId(uint32_t FileDataId)
 {
 	auto itr = fileInfosByFileDataId.find(FileDataId);
 	if (itr == fileInfosByFileDataId.end())
@@ -144,7 +144,7 @@ M2Lib::FileInfo const& M2Lib::FileStorage::GetFileInfoByFileDataId(UInt32 FileDa
 
 M2Lib::FileInfo const& M2Lib::FileStorage::GetFileInfoByPath(std::string const& Path)
 {
-	UInt64 hash = CalculateHash(Path);
+	uint64_t hash = CalculateHash(Path);
 	auto itr = fileInfosByNameHash.find(hash);
 	if (itr != fileInfosByNameHash.end())
 		return itr->second;
@@ -152,7 +152,7 @@ M2Lib::FileInfo const& M2Lib::FileStorage::GetFileInfoByPath(std::string const& 
 	return FileInfo::Empty;
 }
 
-UInt64 M2Lib::FileStorage::CalculateHash(std::string const & FileName)
+uint64_t M2Lib::FileStorage::CalculateHash(std::string const & FileName)
 {
 	auto name = FileName;
 	std::transform(name.begin(), name.end(), name.begin(), [](auto c) {return std::tolower(c); });
@@ -164,7 +164,7 @@ UInt64 M2Lib::FileStorage::CalculateHash(std::string const & FileName)
 	return hasher(name);
 }
 
-std::string M2Lib::FileStorage::PathInfo(UInt32 FileDataId)
+std::string M2Lib::FileStorage::PathInfo(uint32_t FileDataId)
 {
 	if (!FileDataId)
 		return "<none>";

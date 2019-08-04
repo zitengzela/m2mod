@@ -26,30 +26,30 @@ namespace M2Lib
 		class CM2SkinHeader
 		{
 		public:
-			Char8 ID[4];	// 'SKIN'
+			char ID[4];	// 'SKIN'
 
-			UInt32 nVertex;
-			UInt32 oVertex;
+			uint32_t nVertex;
+			uint32_t oVertex;
 
-			UInt32 nTriangleIndex;
-			UInt32 oTriangleIndex;
+			uint32_t nTriangleIndex;
+			uint32_t oTriangleIndex;
 
-			UInt32 nBoneIndices;
-			UInt32 oBoneIndices;
+			uint32_t nBoneIndices;
+			uint32_t oBoneIndices;
 
-			UInt32 nSubMesh;
-			UInt32 oSubMesh;
+			uint32_t nSubMesh;
+			uint32_t oSubMesh;
 
-			UInt32 nMaterial;
-			UInt32 oMaterial;
+			uint32_t nMaterial;
+			uint32_t oMaterial;
 
-			UInt32 BoneCountMax;	// non-zero only in ChickenMount01.skin
+			uint32_t BoneCountMax;	// non-zero only in ChickenMount01.skin
 
-			UInt32 nFlags;
-			UInt32 oFlags;
+			uint32_t nFlags;
+			uint32_t oFlags;
 
-			UInt32 Unknown2;	// non-zero only in ChickenMount01.skin
-			UInt32 Unknown3;	// non-zero only in ChickenMount01.skin
+			uint32_t Unknown2;	// non-zero only in ChickenMount01.skin
+			uint32_t Unknown3;	// non-zero only in ChickenMount01.skin
 		};
 
 #pragma pack(pop)
@@ -79,9 +79,9 @@ namespace M2Lib
 
 	public:
 		// loads an M2 skin from a file.
-		EError Load(const Char16* FileName);
+		EError Load(const wchar_t* FileName);
 		// saves this M2 skin to a file.
-		EError Save(const Char16* FileName);
+		EError Save(const wchar_t* FileName);
 
 		void BuildVertexBoneIndices();
 		void BuildBoundingData();
@@ -96,18 +96,18 @@ namespace M2Lib
 		bool PrintInfo();
 
 		// returns sub mesh with ID using CenterBounds to narrow search. some times there are multiple sub meshes with the same ID, so we can narrow our search to whatever sub mesh lies closest to CenterBounds.
-		M2SkinElement::CElement_SubMesh* GetSubMesh(SubmeshExtraData const& TargetSubMeshData, SInt32& SubMeshIndexOut);
+		M2SkinElement::CElement_SubMesh* GetSubMesh(SubmeshExtraData const& TargetSubMeshData, int32_t& SubMeshIndexOut);
 
 		// gathers list of materials that affect a given sub mesh within this skin.
-		void GetSubMeshMaterials(UInt32 SubMeshIndex, std::vector< M2SkinElement::CElement_Material* >& Result);
+		void GetSubMeshMaterials(uint32_t SubMeshIndex, std::vector< M2SkinElement::CElement_Material* >& Result);
 
 		// gathers list of flags that affect a given sub mesh within this skin.
-		void GetSubMeshFlags(UInt32 SubMeshIndex, std::vector< M2SkinElement::CElement_Flags* >& Result);
+		void GetSubMeshFlags(uint32_t SubMeshIndex, std::vector< M2SkinElement::CElement_Flags* >& Result);
 
-		bool AddShader(UInt16 ShaderId, SInt16 const* TextureTypes, std::string const* MeshTextures, std::vector<UInt32> const& MeshIndexes, M2SkinElement::TextureLookupRemap& LookupRemap);
-		bool AddShader(UInt16 ShaderId, UInt32 const* MeshTextureIds, std::vector<UInt32> const& MeshIndexes, M2SkinElement::TextureLookupRemap& LookupRemap);
+		bool AddShader(uint16_t ShaderId, int16_t const* TextureTypes, std::string const* MeshTextures, std::vector<uint32_t> const& MeshIndexes, M2SkinElement::TextureLookupRemap& LookupRemap);
+		bool AddShader(uint16_t ShaderId, uint32_t const* MeshTextureIds, std::vector<uint32_t> const& MeshIndexes, M2SkinElement::TextureLookupRemap& LookupRemap);
 
-		void CopyMaterial(UInt32 SrcMeshIndex, UInt32 DstMeshIndex);
+		void CopyMaterial(uint32_t SrcMeshIndex, uint32_t DstMeshIndex);
 
 		std::unordered_set<M2SkinElement::Edge> GetEdges(M2SkinElement::CElement_SubMesh* submesh);
 
@@ -124,7 +124,7 @@ namespace M2Lib
 				std::string Name;
 			};
 
-			UInt32 ID;
+			uint32_t ID;
 			std::string Description;
 
 			std::vector<M2SkinElement::CElement_Material*> Materials;
@@ -135,13 +135,13 @@ namespace M2Lib
 
 	private:
 		void m_LoadElements_CopyHeaderToElements();
-		void m_LoadElements_FindSizes(UInt32 FileSize);
+		void m_LoadElements_FindSizes(uint32_t FileSize);
 		void m_SaveElements_FindOffsets();
 		void m_SaveElements_CopyElementsToHeader();
 
-		static SInt32 m_ReverseBoneLookup(UInt8 BoneID, UInt16* BoneLookupTable, UInt32 BoneLookupTableLength)
+		static int32_t m_ReverseBoneLookup(uint8_t BoneID, uint16_t* BoneLookupTable, uint32_t BoneLookupTableLength)
 		{
-			for (UInt32 i = 0; i < BoneLookupTableLength; i++)
+			for (uint32_t i = 0; i < BoneLookupTableLength; i++)
 			{
 				if (BoneLookupTable[i] == BoneID)
 					return i;

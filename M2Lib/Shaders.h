@@ -133,8 +133,8 @@ namespace M2Lib
 
 #define NUM_M2SHADERS (sizeof(s_modelShaderEffect) / sizeof(ShaderEffect))
 
-	bool IsValidShaderId(UInt16 ShaderId);
-	UInt32 GetOpCountForShader(UInt16 ShaderId);
+	bool IsValidShaderId(uint16_t ShaderId);
+	uint32_t GetOpCountForShader(uint16_t ShaderId);
 
 	//static_assert(sizeof(s_modelShaderEffect) / sizeof(ShaderEffect) == 34, "M2 shader count doesn't match");
 }

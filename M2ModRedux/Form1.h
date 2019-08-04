@@ -94,8 +94,8 @@ namespace M2ModRedux
 			if (!testInputTextBox->Text->Length)
 				return;
 
-			System::UInt32 FileDataId;
-			if (System::UInt32::TryParse(testInputTextBox->Text, FileDataId))
+			UInt32 FileDataId;
+			if (UInt32::TryParse(testInputTextBox->Text, FileDataId))
 			{
 				auto info = M2Lib::FileStorage::GetInstance()->GetFileInfoByFileDataId(FileDataId);
 				if (!info.IsEmpty())
@@ -181,7 +181,7 @@ namespace M2ModRedux
 		RegistyStore::SetValue(RegistyStore::Value::WorkingDirectory, gcnew String(settings->WorkingDirectory.c_str()));
 		RegistyStore::SetValue(RegistyStore::Value::OutputDirectory, gcnew String(settings->OutputDirectory.c_str()));
 
-		RegistyStore::SetValue(RegistyStore::Value::ForceExportExpansion, (SInt32)settings->ForceLoadExpansion);
+		RegistyStore::SetValue(RegistyStore::Value::ForceExportExpansion, (int32_t)settings->ForceLoadExpansion);
 		RegistyStore::SetValue(RegistyStore::Value::MergeAttachments, settings->MergeAttachments);
 		RegistyStore::SetValue(RegistyStore::Value::MergeBones, settings->MergeBones);
 		RegistyStore::SetValue(RegistyStore::Value::MergeCameras, settings->MergeCameras);
@@ -359,11 +359,11 @@ private: System::Windows::Forms::Button^  clearButton;
 				 // label1
 				 // 
 				 this->label1->AutoSize = true;
-				 this->label1->Location = System::Drawing::Point(20, 7);
+				 this->label1->Location = System::Drawing::Point(7, 6);
 				 this->label1->Name = L"label1";
-				 this->label1->Size = System::Drawing::Size(46, 13);
+				 this->label1->Size = System::Drawing::Size(59, 13);
 				 this->label1->TabIndex = 3;
-				 this->label1->Text = L"InputM2";
+				 this->label1->Text = L"Source M2";
 				 this->toolTip1->SetToolTip(this->label1, L"Required. Select an M2 for M2Mod to work with.");
 				 // 
 				 // buttonInputM2ExpBrowse
@@ -393,21 +393,21 @@ private: System::Windows::Forms::Button^  clearButton;
 				 // label7
 				 // 
 				 this->label7->AutoSize = true;
-				 this->label7->Location = System::Drawing::Point(10, 6);
+				 this->label7->Location = System::Drawing::Point(8, 6);
 				 this->label7->Name = L"label7";
-				 this->label7->Size = System::Drawing::Size(57, 13);
+				 this->label7->Size = System::Drawing::Size(59, 13);
 				 this->label7->TabIndex = 6;
-				 this->label7->Text = L"OutputM2I";
+				 this->label7->Text = L"Target M2I";
 				 this->toolTip1->SetToolTip(this->label7, L"Optional. If set, M2Mod will convert InputM2 to an M2I and save it here.");
 				 // 
 				 // label3
 				 // 
 				 this->label3->AutoSize = true;
-				 this->label3->Location = System::Drawing::Point(17, 8);
+				 this->label3->Location = System::Drawing::Point(7, 8);
 				 this->label3->Name = L"label3";
-				 this->label3->Size = System::Drawing::Size(49, 13);
+				 this->label3->Size = System::Drawing::Size(62, 13);
 				 this->label3->TabIndex = 9;
-				 this->label3->Text = L"InputM2I";
+				 this->label3->Text = L"Source M2I";
 				 this->toolTip1->SetToolTip(this->label3, L"Optional. If set, M2Mod will merge InputM2 with InputM2I to create a modified M2 "
 					 L"which will be saved to OutputM2.");
 				 // 
@@ -440,11 +440,11 @@ private: System::Windows::Forms::Button^  clearButton;
 				 // label5
 				 // 
 				 this->label5->AutoSize = true;
-				 this->label5->Location = System::Drawing::Point(20, 7);
+				 this->label5->Location = System::Drawing::Point(7, 6);
 				 this->label5->Name = L"label5";
-				 this->label5->Size = System::Drawing::Size(46, 13);
+				 this->label5->Size = System::Drawing::Size(59, 13);
 				 this->label5->TabIndex = 3;
-				 this->label5->Text = L"InputM2";
+				 this->label5->Text = L"Source M2";
 				 this->toolTip1->SetToolTip(this->label5, L"Required. Select an M2 for M2Mod to work with.");
 				 // 
 				 // buttonInputM2ImpBrowse
@@ -465,7 +465,7 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->importButtonGo->Enabled = false;
 				 this->importButtonGo->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 8.25F, System::Drawing::FontStyle::Bold, System::Drawing::GraphicsUnit::Point,
 					 static_cast<System::Byte>(0)));
-				 this->importButtonGo->Location = System::Drawing::Point(207, 10);
+				 this->importButtonGo->Location = System::Drawing::Point(207, 9);
 				 this->importButtonGo->Name = L"importButtonGo";
 				 this->importButtonGo->Size = System::Drawing::Size(142, 38);
 				 this->importButtonGo->TabIndex = 27;
@@ -479,7 +479,7 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->importButtonPreload->Anchor = System::Windows::Forms::AnchorStyles::Bottom;
 				 this->importButtonPreload->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 8.25F, System::Drawing::FontStyle::Bold,
 					 System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(0)));
-				 this->importButtonPreload->Location = System::Drawing::Point(54, 10);
+				 this->importButtonPreload->Location = System::Drawing::Point(54, 9);
 				 this->importButtonPreload->Name = L"importButtonPreload";
 				 this->importButtonPreload->Size = System::Drawing::Size(142, 38);
 				 this->importButtonPreload->TabIndex = 28;
@@ -494,7 +494,7 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->importCancelButton->Enabled = false;
 				 this->importCancelButton->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 8.25F, System::Drawing::FontStyle::Bold, System::Drawing::GraphicsUnit::Point,
 					 static_cast<System::Byte>(0)));
-				 this->importCancelButton->Location = System::Drawing::Point(359, 10);
+				 this->importCancelButton->Location = System::Drawing::Point(359, 9);
 				 this->importCancelButton->Name = L"importCancelButton";
 				 this->importCancelButton->Size = System::Drawing::Size(142, 38);
 				 this->importCancelButton->TabIndex = 29;
@@ -538,7 +538,7 @@ private: System::Windows::Forms::Button^  clearButton;
 				 // 
 				 this->textBoxReplaceM2->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
 					 | System::Windows::Forms::AnchorStyles::Right));
-				 this->textBoxReplaceM2->Location = System::Drawing::Point(8, 3);
+				 this->textBoxReplaceM2->Location = System::Drawing::Point(3, 3);
 				 this->textBoxReplaceM2->Name = L"textBoxReplaceM2";
 				 this->textBoxReplaceM2->Size = System::Drawing::Size(378, 20);
 				 this->textBoxReplaceM2->TabIndex = 13;
@@ -547,7 +547,7 @@ private: System::Windows::Forms::Button^  clearButton;
 				 // buttonReplaceM2Browse
 				 // 
 				 this->buttonReplaceM2Browse->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Right));
-				 this->buttonReplaceM2Browse->Location = System::Drawing::Point(392, 2);
+				 this->buttonReplaceM2Browse->Location = System::Drawing::Point(387, 2);
 				 this->buttonReplaceM2Browse->Name = L"buttonReplaceM2Browse";
 				 this->buttonReplaceM2Browse->Size = System::Drawing::Size(55, 20);
 				 this->buttonReplaceM2Browse->TabIndex = 14;
@@ -561,9 +561,9 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->checkBoxReplaceM2->AutoSize = true;
 				 this->checkBoxReplaceM2->Location = System::Drawing::Point(7, 73);
 				 this->checkBoxReplaceM2->Name = L"checkBoxReplaceM2";
-				 this->checkBoxReplaceM2->Size = System::Drawing::Size(81, 17);
+				 this->checkBoxReplaceM2->Size = System::Drawing::Size(84, 17);
 				 this->checkBoxReplaceM2->TabIndex = 15;
-				 this->checkBoxReplaceM2->Text = L"ReplaceM2";
+				 this->checkBoxReplaceM2->Text = L"Replace M2";
 				 this->toolTip1->SetToolTip(this->checkBoxReplaceM2, L"If you are swapping models, select target M2 that you would like to swap from.");
 				 this->checkBoxReplaceM2->UseVisualStyleBackColor = true;
 				 this->checkBoxReplaceM2->CheckedChanged += gcnew System::EventHandler(this, &Form1::checkBoxReplaceM2_CheckedChanged);
@@ -662,9 +662,9 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->panelReplaceM2->Controls->Add(this->textBoxReplaceM2);
 				 this->panelReplaceM2->Controls->Add(this->buttonReplaceM2Browse);
 				 this->panelReplaceM2->Enabled = false;
-				 this->panelReplaceM2->Location = System::Drawing::Point(86, 70);
+				 this->panelReplaceM2->Location = System::Drawing::Point(91, 70);
 				 this->panelReplaceM2->Name = L"panelReplaceM2";
-				 this->panelReplaceM2->Size = System::Drawing::Size(451, 25);
+				 this->panelReplaceM2->Size = System::Drawing::Size(446, 25);
 				 this->panelReplaceM2->TabIndex = 25;
 				 // 
 				 // panel1
@@ -674,9 +674,9 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->panel1->Controls->Add(this->importButtonGo);
 				 this->panel1->Controls->Add(this->importButtonPreload);
 				 this->panel1->Controls->Add(this->importCancelButton);
-				 this->panel1->Location = System::Drawing::Point(7, 198);
+				 this->panel1->Location = System::Drawing::Point(7, 199);
 				 this->panel1->Name = L"panel1";
-				 this->panel1->Size = System::Drawing::Size(527, 62);
+				 this->panel1->Size = System::Drawing::Size(527, 61);
 				 this->panel1->TabIndex = 31;
 				 // 
 				 // extraworkPanel
@@ -1195,13 +1195,13 @@ private: System::Windows::Forms::Button^  clearButton;
 
 				if (Control->customTextureCheckBox->Checked && Control->customTextureTextBox->Text->Length)
 				{
-					const_cast<M2Lib::SubmeshExtraData*>(MainSkin->ExtraDataBySubmeshIndex[i])->TextureType[0] = (SInt32)M2Lib::M2Element::CElement_Texture::ETextureType::Final_Hardcoded;
+					const_cast<M2Lib::SubmeshExtraData*>(MainSkin->ExtraDataBySubmeshIndex[i])->TextureType[0] = (int16_t)M2Lib::M2Element::CElement_Texture::ETextureType::Final_Hardcoded;
 					const_cast<M2Lib::SubmeshExtraData*>(MainSkin->ExtraDataBySubmeshIndex[i])->TextureName[0] = StringConverter(Control->customTextureTextBox->Text).ToStringA();
 				}
 
 				if (Control->makeGlossyCheckBox->Checked && Control->glossTextureTextBox->Text->Length)
 				{
-					const_cast<M2Lib::SubmeshExtraData*>(MainSkin->ExtraDataBySubmeshIndex[i])->TextureType[1] = (SInt32)M2Lib::M2Element::CElement_Texture::ETextureType::Final_Hardcoded;
+					const_cast<M2Lib::SubmeshExtraData*>(MainSkin->ExtraDataBySubmeshIndex[i])->TextureType[1] = (int16_t)M2Lib::M2Element::CElement_Texture::ETextureType::Final_Hardcoded;
 					const_cast<M2Lib::SubmeshExtraData*>(MainSkin->ExtraDataBySubmeshIndex[i])->TextureName[1] = StringConverter(Control->glossTextureTextBox->Text).ToStringA();
 				}
 			}

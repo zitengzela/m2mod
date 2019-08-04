@@ -1,7 +1,7 @@
 #include "Shaders.h"
 #include "M2Types.h"
 
-bool M2Lib::IsValidShaderId(UInt16 ShaderId)
+bool M2Lib::IsValidShaderId(uint16_t ShaderId)
 {
 	if ((ShaderId & 0x8000) == 0)
 		return false;
@@ -13,7 +13,7 @@ bool M2Lib::IsValidShaderId(UInt16 ShaderId)
 	return true;
 }
 
-UInt32 M2Lib::GetOpCountForShader(UInt16 ShaderId)
+uint32_t M2Lib::GetOpCountForShader(uint16_t ShaderId)
 {
 	assert(IsValidShaderId(ShaderId) && "Invalid shader Id");
 

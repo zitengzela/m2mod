@@ -7,7 +7,7 @@
 
 namespace M2Lib
 {
-	enum class Expansion : SInt32
+	enum class Expansion : int32_t
 	{
 		None = -1,
 		Classic = 0,
@@ -25,20 +25,20 @@ namespace M2Lib
 #define BONES_PER_VERTEX 4
 #define BONES_PER_TRIANGLE (VERTEX_PER_TRIANGLE * BONES_PER_VERTEX)
 
-	static Float32 SubmeshPositionalTolerance = 0.0001f;
-	static Float32 SubmeshAngularTolerance = 45.0f;
-	static Float32 BodyPositionalTolerance = 0.0001f;
-	static Float32 BodyAngularTolerance = 90.0f;
-	static Float32 ClothingPositionalTolerance = 0.0001f;
-	static Float32 ClothingAngularTolerance = 90.0f;
-	static Float32 NormalAngularTolerance = 15.0f;
+	static float SubmeshPositionalTolerance = 0.0001f;
+	static float SubmeshAngularTolerance = 45.0f;
+	static float BodyPositionalTolerance = 0.0001f;
+	static float BodyAngularTolerance = 90.0f;
+	static float ClothingPositionalTolerance = 0.0001f;
+	static float ClothingAngularTolerance = 90.0f;
+	static float NormalAngularTolerance = 15.0f;
 
 	// used when importing an M2I and building an M2. each triangle is given an index in addition to the 3 vertices. the index is used for quick lookup when dealing out triangles between bone partitions when building skins.
 	class CTriangle
 	{
 	public:
-		UInt32 TriangleIndex;			// this triangle's global index, or unique ID.
-		UInt16 Vertices[3];		// indices into the global vertex list.
+		uint32_t TriangleIndex;			// this triangle's global index, or unique ID.
+		uint16_t Vertices[3];		// indices into the global vertex list.
 
 	public:
 		CTriangle();
@@ -53,10 +53,10 @@ namespace M2Lib
 			Count = Offset = 0;
 		}
 
-		SInt32 Count;
-		UInt32 Offset;
+		int32_t Count;
+		uint32_t Offset;
 
-		void Shift(SInt32 Delta)
+		void Shift(int32_t Delta)
 		{
 			if (Count/* && Offset*/)
 			{
@@ -71,8 +71,8 @@ namespace M2Lib
 	class C2Vector
 	{
 	public:
-		Float32 X;
-		Float32 Y;
+		float X;
+		float Y;
 
 		C2Vector& operator = (const C2Vector& Other);
 	};
@@ -81,21 +81,21 @@ namespace M2Lib
 	class C3Vector
 	{
 	public:
-		Float32 X;
-		Float32 Y;
-		Float32 Z;
+		float X;
+		float Y;
+		float Z;
 
 		C3Vector() : X(0.0f), Y(0.0f), Z(0.0f) { }
-		C3Vector(Float32 _X, Float32 _Y, Float32 _Z) : X(_X), Y(_Y), Z(_Z) {}
+		C3Vector(float _X, float _Y, float _Z) : X(_X), Y(_Y), Z(_Z) {}
 		C3Vector& operator = (const C3Vector& Other);
 		C3Vector operator + (const C3Vector& Other) const;
 		C3Vector operator - (const C3Vector& Other) const;
-		C3Vector operator * (Float32 Value) const;
-		C3Vector operator / (Float32 Value) const;
+		C3Vector operator * (float Value) const;
+		C3Vector operator / (float Value) const;
 
 		C3Vector CrossProduct(C3Vector const& other) const;
 		void Normalize();
-		Float32 Length() const;
+		float Length() const;
 
 		static C3Vector CalculateNormal(C3Vector const& v1, C3Vector const& v2, C3Vector const& v3);
 	};
@@ -106,8 +106,8 @@ namespace M2Lib
 	{
 	public:
 		C3Vector Position;
-		UInt8 BoneWeights[BONES_PER_VERTEX];
-		UInt8 BoneIndices[BONES_PER_VERTEX];
+		uint8_t BoneWeights[BONES_PER_VERTEX];
+		uint8_t BoneIndices[BONES_PER_VERTEX];
 		C3Vector Normal;
 		C2Vector Texture;
 		C2Vector Texture2;
@@ -116,14 +116,14 @@ namespace M2Lib
 		CVertex();
 		CVertex(const CVertex& Other);
 		CVertex& operator = (const CVertex& Other);
-		static bool CompareSimilar(CVertex& A, CVertex& B, bool CompareTextures, bool CompareBones, bool CompareNormals, Float32 PositionalTolerance, Float32 AngularTolerance);	// compares 2 vertices to see if they have the same position, bones, and texture coordinates. vertices between subsets that pass this test are most likely duplicates.
+		static bool CompareSimilar(CVertex& A, CVertex& B, bool CompareTextures, bool CompareBones, bool CompareNormals, float PositionalTolerance, float AngularTolerance);	// compares 2 vertices to see if they have the same position, bones, and texture coordinates. vertices between subsets that pass this test are most likely duplicates.
 	};
 	ASSERT_SIZE(CVertex, 48);
 
 	struct CRange
 	{
-		Float32 Min;
-		Float32 Max;
+		float Min;
+		float Max;
 	};
 
 	struct M2Box
@@ -137,7 +137,7 @@ namespace M2Lib
 	{
 		C3Vector Min;
 		C3Vector Max;
-		Float32 Radius;
+		float Radius;
 	};
 
 	ASSERT_SIZE(SVolume, 28);
@@ -226,7 +226,7 @@ namespace M2Lib
 		C3Vector BoundingMax;
 
 		C3Vector SortCenter;
-		Float32 SortRadius;
+		float SortRadius;
 
 		C3Vector CenterMass;
 
@@ -240,26 +240,26 @@ namespace M2Lib
 	{
 		SubmeshExtraData();
 
-		UInt32 ID;
-		UInt32 FirstLODMeshIndex;
+		uint32_t ID;
+		uint32_t FirstLODMeshIndex;
 		std::string Description;
 		BoundaryData Boundary;
 
-		SInt32 ShaderId = -1;
+		int32_t ShaderId = -1;
 
-		SInt16 TextureType[MAX_SUBMESH_TEXTURES];
+		int16_t TextureType[MAX_SUBMESH_TEXTURES];
 		std::string TextureName[MAX_SUBMESH_TEXTURES];
 		
-		SInt16 RenderFlags = 0;
-		SInt16 BlendMode = -1;
+		int16_t RenderFlags = 0;
+		int16_t BlendMode = -1;
 
 		// index of mesh to override material from
-		SInt32 MaterialOverride = -1;
+		int32_t MaterialOverride = -1;
 		// this is the index of mesh in element structure of original skin
-		SInt32 OriginalSubmeshIndex = -1;
+		int32_t OriginalSubmeshIndex = -1;
 	};
 
-	bool floatEq(Float32 a, Float32 b, float Tolerance = 1e-4);
+	bool floatEq(float a, float b, float Tolerance = 1e-4);
 
 	std::wstring StringToWString(std::string const& str);
 	std::string WStringToString(std::wstring const& str);

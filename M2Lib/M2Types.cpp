@@ -32,7 +32,7 @@ M2Lib::CTriangle& M2Lib::CTriangle::operator = (const CTriangle& Other)
 
 M2Lib::CVertex::CVertex()
 {
-	for (UInt32 i = 0; i < BONES_PER_VERTEX; ++i)
+	for (uint32_t i = 0; i < BONES_PER_VERTEX; ++i)
 	{
 		BoneWeights[i] = 0;
 		BoneIndices[i] = 0;
@@ -49,7 +49,7 @@ M2Lib::CVertex& M2Lib::CVertex::operator = (const CVertex& Other)
 	Position = Other.Position;
 	Normal = Other.Normal;
 
-	for (UInt32 i = 0; i < BONES_PER_VERTEX; ++i)
+	for (uint32_t i = 0; i < BONES_PER_VERTEX; ++i)
 	{
 		BoneWeights[i] = Other.BoneWeights[i];
 		BoneIndices[i] = Other.BoneIndices[i];
@@ -62,7 +62,7 @@ M2Lib::CVertex& M2Lib::CVertex::operator = (const CVertex& Other)
 }
 
 // compares 2 vertices to see if they have the same position, bones, and texture coordinates. vertices between subsets that pass this test are most likely duplicates.
-bool M2Lib::CVertex::CompareSimilar(CVertex& A, CVertex& B, bool CompareTextures, bool CompareBones, bool CompareNormals, Float32 PositionalTolerance, Float32 AngularTolerance)
+bool M2Lib::CVertex::CompareSimilar(CVertex& A, CVertex& B, bool CompareTextures, bool CompareBones, bool CompareNormals, float PositionalTolerance, float AngularTolerance)
 {
 	// compare position
 	if (PositionalTolerance > 0.0f)
@@ -92,13 +92,13 @@ bool M2Lib::CVertex::CompareSimilar(CVertex& A, CVertex& B, bool CompareTextures
 	{
 		// order independent comparison
 		bool SameBones[BONES_PER_VERTEX];
-		for (UInt32 i = 0; i < BONES_PER_VERTEX; ++i)
+		for (uint32_t i = 0; i < BONES_PER_VERTEX; ++i)
 			SameBones[i] = false;
 
-		for (UInt32 i = 0; i < BONES_PER_VERTEX; ++i)
+		for (uint32_t i = 0; i < BONES_PER_VERTEX; ++i)
 		{
 			bool HasSameBone = false;
-			for (UInt32 j = 0; j < BONES_PER_VERTEX; ++j)
+			for (uint32_t j = 0; j < BONES_PER_VERTEX; ++j)
 			{
 				if (A.BoneIndices[i] == B.BoneIndices[j] && SameBones[j] == false)
 				{
@@ -123,7 +123,7 @@ bool M2Lib::CVertex::CompareSimilar(CVertex& A, CVertex& B, bool CompareTextures
 	{
 		if (AngularTolerance > 0.0f)
 		{
-			Float32 Dot = (A.Normal.X * B.Normal.X + A.Normal.Y * B.Normal.Y + A.Normal.Z * B.Normal.Z) / A.Normal.Length() / B.Normal.Length();
+			float Dot = (A.Normal.X * B.Normal.X + A.Normal.Y * B.Normal.Y + A.Normal.Z * B.Normal.Z) / A.Normal.Length() / B.Normal.Length();
 			if (acosf(Dot) > AngularTolerance)	// units are radians
 				return false;
 		}
@@ -205,7 +205,7 @@ M2Lib::SubmeshExtraData::SubmeshExtraData()
 	ID = 0;
 	FirstLODMeshIndex = -1;
 
-	for (UInt32 i = 0; i < MAX_SUBMESH_TEXTURES; ++i)
+	for (uint32_t i = 0; i < MAX_SUBMESH_TEXTURES; ++i)
 		TextureType[i] = -1;
 }
 
@@ -264,7 +264,7 @@ void M2Lib::BoundaryData::Calculate(std::vector<CVertex> const& vertices)
 		CenterMass = CenterMass + Vertex.Position;
 	}
 
-	CenterMass = CenterMass / (Float32)vertices.size();
+	CenterMass = CenterMass / (float)vertices.size();
 
 	SortCenter = (BoundingMin + BoundingMax) / 2.0f;
 
@@ -273,7 +273,7 @@ void M2Lib::BoundaryData::Calculate(std::vector<CVertex> const& vertices)
 	{
 		C3Vector PositionLocal = Vertex.Position - SortCenter;
 
-		Float32 Distance = PositionLocal.Length();
+		float Distance = PositionLocal.Length();
 		if (Distance > SortRadius)
 			SortRadius = Distance;
 	}
@@ -344,7 +344,7 @@ M2Lib::C3Vector M2Lib::C3Vector::operator - (const C3Vector& Other) const
 	return result;
 }
 
-M2Lib::C3Vector M2Lib::C3Vector::operator * (Float32 Value) const
+M2Lib::C3Vector M2Lib::C3Vector::operator * (float Value) const
 {
 	C3Vector result;
 	result.X = X * Value;
@@ -354,7 +354,7 @@ M2Lib::C3Vector M2Lib::C3Vector::operator * (Float32 Value) const
 	return result;
 }
 
-M2Lib::C3Vector M2Lib::C3Vector::operator / (Float32 Value) const
+M2Lib::C3Vector M2Lib::C3Vector::operator / (float Value) const
 {
 	C3Vector result;
 	result.X = X / Value;
@@ -375,14 +375,14 @@ M2Lib::C3Vector M2Lib::C3Vector::CrossProduct(C3Vector const& other) const
 	return Product;
 }
 
-Float32 M2Lib::C3Vector::Length() const
+float M2Lib::C3Vector::Length() const
 {
 	return sqrtf(X * X + Y * Y + Z * Z);
 }
 
 void M2Lib::C3Vector::Normalize()
 {
-	Float32 length = Length();
+	float length = Length();
 
 	X = std::min(X / length, 1.0f);
 	Y = std::min(Y / length, 1.0f);
@@ -399,7 +399,7 @@ M2Lib::C3Vector M2Lib::C3Vector::CalculateNormal(C3Vector const& v1, C3Vector co
 	return N;
 }
 
-bool M2Lib::floatEq(Float32 a, Float32 b, float Tolerance)
+bool M2Lib::floatEq(float a, float b, float Tolerance)
 {
 	return std::fabsf(a - b) < Tolerance;
 }

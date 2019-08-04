@@ -9,12 +9,12 @@
 bool M2Lib::M2SkinBuilder::CBonePartition::AddTriangle(CVertex* GlobalVertexList, CTriangle* pTriangle)
 {
 	// put all the bones used by the input triangle into a 1D list for easy iteration
-	SInt16 TriBones[BONES_PER_TRIANGLE];
+	int16_t TriBones[BONES_PER_TRIANGLE];
 
 	for (int i = 0; i < VERTEX_PER_TRIANGLE; ++i)
 	{
-		UInt32 TotalWeight = 0;
-		SInt16* TriBonesSub = &TriBones[i * BONES_PER_VERTEX];
+		uint32_t TotalWeight = 0;
+		int16_t* TriBonesSub = &TriBones[i * BONES_PER_VERTEX];
 		CVertex* pTriVertex = &GlobalVertexList[pTriangle->Vertices[i]];
 
 		for (int j = 0; j < BONES_PER_VERTEX; ++j)
@@ -27,8 +27,8 @@ bool M2Lib::M2SkinBuilder::CBonePartition::AddTriangle(CVertex* GlobalVertexList
 	}
 
 	// count the number of bones used by the triangle that don't exist in partition
-	UInt32 ExtraBones = 0;
-	for (UInt32 i = 0; i < BONES_PER_TRIANGLE; ++i)
+	uint32_t ExtraBones = 0;
+	for (uint32_t i = 0; i < BONES_PER_TRIANGLE; ++i)
 	{
 		if (TriBones[i] != -1 && !HasBone(TriBones[i], NULL))
 			++ExtraBones;
@@ -44,7 +44,7 @@ bool M2Lib::M2SkinBuilder::CBonePartition::AddTriangle(CVertex* GlobalVertexList
 		}
 
 		// there's room for them
-		for (UInt32 i = 0; i < BONES_PER_TRIANGLE; ++i)
+		for (uint32_t i = 0; i < BONES_PER_TRIANGLE; ++i)
 		{
 			if (TriBones[i] != -1 && !HasBone(TriBones[i], NULL))
 			{
@@ -62,9 +62,9 @@ bool M2Lib::M2SkinBuilder::CBonePartition::AddTriangle(CVertex* GlobalVertexList
 	return true;
 }
 
-bool M2Lib::M2SkinBuilder::CBonePartition::HasBone(UInt16 BoneIndex, UInt16* pIndexOut)
+bool M2Lib::M2SkinBuilder::CBonePartition::HasBone(uint16_t BoneIndex, uint16_t* pIndexOut)
 {
-	for (UInt32 i = 0; i < Bones.size(); ++i)
+	for (uint32_t i = 0; i < Bones.size(); ++i)
 	{
 		if (Bones[i] == BoneIndex)
 		{
@@ -77,7 +77,7 @@ bool M2Lib::M2SkinBuilder::CBonePartition::HasBone(UInt16 BoneIndex, UInt16* pIn
 	return false;
 }
 
-bool M2Lib::M2SkinBuilder::CBonePartition::HasTriangle(UInt32 TriangleIndex)
+bool M2Lib::M2SkinBuilder::CBonePartition::HasTriangle(uint32_t TriangleIndex)
 {
 	return TrianglesMap.find(TriangleIndex) != TrianglesMap.end();
 }
@@ -109,10 +109,10 @@ bool M2Lib::M2SkinBuilder::CSubMesh::CSubsetPartition::AddTriangle(CTriangle* pT
 }
 
 
-//UInt32 M2Lib::M2SkinBuilder::CSubMesh::CSubsetPartition::AddVertex( UInt32 VertexTriangleIndex )
+//uint32_t M2Lib::M2SkinBuilder::CSubMesh::CSubsetPartition::AddVertex( uint32_t VertexTriangleIndex )
 //{
-//	UInt32 Count = Vertices.size();
-//	for ( UInt32 i = 0; i < Count; i++ )
+//	uint32_t Count = Vertices.size();
+//	for ( uint32_t i = 0; i < Count; i++ )
 //	{
 //		if ( Vertices[i] == VertexTriangleIndex )
 //		{
@@ -124,9 +124,9 @@ bool M2Lib::M2SkinBuilder::CSubMesh::CSubsetPartition::AddTriangle(CTriangle* pT
 //	return Count;
 //}
 
-//void M2Lib::M2SkinBuilder::CSubMesh::CSubsetPartition::FixVertexOffsets( SInt32 Delta )
+//void M2Lib::M2SkinBuilder::CSubMesh::CSubsetPartition::FixVertexOffsets( int32_t Delta )
 //{
-//	for ( UInt32 i = 0; i < Triangles.size(); i++ )
+//	for ( uint32_t i = 0; i < Triangles.size(); i++ )
 //	{
 //		CTriangle* pTriangle = &Triangles[i];
 //
@@ -143,7 +143,7 @@ void M2Lib::M2SkinBuilder::CSubMesh::AddSubsetPartition(CBonePartition* pBonePar
 
 bool M2Lib::M2SkinBuilder::CSubMesh::AddTriangle(CTriangle* pTriangle)
 {
-	for (UInt32 i = 0; i < SubsetPartitions.size(); i++)
+	for (uint32_t i = 0; i < SubsetPartitions.size(); i++)
 	{
 		if (SubsetPartitions[i]->AddTriangle(pTriangle))
 			return true;
@@ -158,28 +158,28 @@ void M2Lib::M2SkinBuilder::Clear()
 	m_Bones.clear();
 	m_Indices.clear();
 
-	for (UInt32 i = 0; i < m_SubMeshList.size(); i++)
+	for (uint32_t i = 0; i < m_SubMeshList.size(); i++)
 	{
 		delete m_SubMeshList[i];
 	}
 	m_SubMeshList.clear();
 }
 
-bool M2Lib::M2SkinBuilder::Build(M2Skin* pResult, UInt32 BoneLoD, M2I* pM2I, CVertex* pGlobalVertexList, UInt32 BoneStart)
+bool M2Lib::M2SkinBuilder::Build(M2Skin* pResult, uint32_t BoneLoD, M2I* pM2I, CVertex* pGlobalVertexList, uint32_t BoneStart)
 {
 	Clear();
 
 	// list of bone partitions used within this skin.
 	std::vector<CBonePartition*> m_BonePartitions;
 
-	for (UInt32 i = 0; i < pM2I->SubMeshList.size(); ++i)
+	for (uint32_t i = 0; i < pM2I->SubMeshList.size(); ++i)
 	{
 		auto SubMesh = pM2I->SubMeshList[i];
 
-		for (UInt32 j = 0; j < SubMesh->Triangles.size(); ++j)
+		for (uint32_t j = 0; j < SubMesh->Triangles.size(); ++j)
 		{
 			bool Added = false;
-			for (UInt32 k = 0; k < m_BonePartitions.size(); ++k)
+			for (uint32_t k = 0; k < m_BonePartitions.size(); ++k)
 			{
 				if (m_BonePartitions[k]->AddTriangle(pGlobalVertexList, &SubMesh->Triangles[j]))
 				{
@@ -197,54 +197,54 @@ bool M2Lib::M2SkinBuilder::Build(M2Skin* pResult, UInt32 BoneLoD, M2I* pM2I, CVe
 		}
 	}
 
-	UInt32 iBoneStart = BoneStart;
-	for (UInt32 i = 0; i < m_BonePartitions.size(); ++i)
+	uint32_t iBoneStart = BoneStart;
+	for (uint32_t i = 0; i < m_BonePartitions.size(); ++i)
 	{
 		m_BonePartitions[i]->BoneStart = iBoneStart;
 		iBoneStart += m_BonePartitions[i]->Bones.size();
 	}
 
-	for (UInt32 i = 0; i < pM2I->SubMeshList.size(); ++i)
+	for (uint32_t i = 0; i < pM2I->SubMeshList.size(); ++i)
 	{
 		CSubMesh* pNewSubset = new CSubMesh();
 		pNewSubset->ID = pM2I->SubMeshList[i]->ID;
 		pNewSubset->pExtraData = &pM2I->SubMeshList[i]->ExtraData;
 
 		// add sub mesh partitions
-		for (UInt32 k = 0; k < m_BonePartitions.size(); k++)
+		for (uint32_t k = 0; k < m_BonePartitions.size(); k++)
 			pNewSubset->AddSubsetPartition(m_BonePartitions[k]);
 
 		m_SubMeshList.push_back(pNewSubset);
 	}
 
-	for (UInt32 i = 0; i < m_SubMeshList.size(); ++i)
+	for (uint32_t i = 0; i < m_SubMeshList.size(); ++i)
 	{
 		M2I::CSubMesh* pSubMeshM2I = pM2I->SubMeshList[i];
-		for (UInt32 j = 0; j < pSubMeshM2I->Triangles.size(); ++j)
+		for (uint32_t j = 0; j < pSubMeshM2I->Triangles.size(); ++j)
 		{
 			assert(m_SubMeshList[i]->AddTriangle(&pSubMeshM2I->Triangles[j]));
 		}
 	}
 
-	UInt32 VertexStart = 0;
-	UInt32 TriangleIndexStart = 0;
-	for (UInt32 i = 0; i < m_SubMeshList.size(); ++i)
+	uint32_t VertexStart = 0;
+	uint32_t TriangleIndexStart = 0;
+	for (uint32_t i = 0; i < m_SubMeshList.size(); ++i)
 	{
-		for (UInt32 j = 0; j < m_SubMeshList[i]->SubsetPartitions.size(); ++j)
+		for (uint32_t j = 0; j < m_SubMeshList[i]->SubsetPartitions.size(); ++j)
 		{
 			CSubMesh::CSubsetPartition* pSubsetPartition = m_SubMeshList[i]->SubsetPartitions[j];
 			if (pSubsetPartition->Triangles.empty())
 				continue;
 
-			std::map< UInt16, UInt16 > GlobalToSkinIndexMap;
-			UInt32 VertexCount = 0;
-			UInt32 TriangleIndexCount = 0;
-			for (UInt32 k = 0; k < pSubsetPartition->Triangles.size(); ++k)
+			std::map< uint16_t, uint16_t > GlobalToSkinIndexMap;
+			uint32_t VertexCount = 0;
+			uint32_t TriangleIndexCount = 0;
+			for (uint32_t k = 0; k < pSubsetPartition->Triangles.size(); ++k)
 			{
-				for (UInt32 iVert = 0; iVert < VERTEX_PER_TRIANGLE; ++iVert)
+				for (uint32_t iVert = 0; iVert < VERTEX_PER_TRIANGLE; ++iVert)
 				{
-					UInt16 VertexToMap = pSubsetPartition->Triangles[k]->Vertices[iVert];	// this is the global vertex index
-					UInt16 VertexMapped = 0;
+					uint16_t VertexToMap = pSubsetPartition->Triangles[k]->Vertices[iVert];	// this is the global vertex index
+					uint16_t VertexMapped = 0;
 					if (GlobalToSkinIndexMap.find(VertexToMap) != GlobalToSkinIndexMap.end())
 						VertexMapped = GlobalToSkinIndexMap[VertexToMap];
 					else
@@ -284,27 +284,27 @@ bool M2Lib::M2SkinBuilder::Build(M2Skin* pResult, UInt32 BoneLoD, M2I* pM2I, CVe
 	pResult->Header.Unknown2 = 0;
 	pResult->Header.Unknown3 = 0;
 
-	pResult->Elements[M2SkinElement::EElement_VertexLookup].SetDataSize(m_Vertices.size(), m_Vertices.size() * sizeof(UInt16), false);
-	UInt16* Indices = pResult->Elements[M2SkinElement::EElement_VertexLookup].as<UInt16>();
-	memcpy(Indices, m_Vertices.data(), m_Vertices.size() * sizeof(UInt16));
+	pResult->Elements[M2SkinElement::EElement_VertexLookup].SetDataSize(m_Vertices.size(), m_Vertices.size() * sizeof(uint16_t), false);
+	uint16_t* Indices = pResult->Elements[M2SkinElement::EElement_VertexLookup].as<uint16_t>();
+	memcpy(Indices, m_Vertices.data(), m_Vertices.size() * sizeof(uint16_t));
 
-	pResult->Elements[M2SkinElement::EElement_TriangleIndex].SetDataSize(m_Indices.size(), m_Indices.size() * sizeof(UInt16), false);
-	UInt16* Triangles = pResult->Elements[M2SkinElement::EElement_TriangleIndex].as<UInt16>();
-	memcpy(Triangles, m_Indices.data(), m_Indices.size() * sizeof(UInt16)); // triangles
+	pResult->Elements[M2SkinElement::EElement_TriangleIndex].SetDataSize(m_Indices.size(), m_Indices.size() * sizeof(uint16_t), false);
+	uint16_t* Triangles = pResult->Elements[M2SkinElement::EElement_TriangleIndex].as<uint16_t>();
+	memcpy(Triangles, m_Indices.data(), m_Indices.size() * sizeof(uint16_t)); // triangles
 
-	UInt32 TotalPartitionCount = 0;
-	for (UInt32 i = 0; i < m_SubMeshList.size(); ++i)
-		for (UInt32 j = 0; j < m_SubMeshList[i]->SubsetPartitions.size(); ++j)
+	uint32_t TotalPartitionCount = 0;
+	for (uint32_t i = 0; i < m_SubMeshList.size(); ++i)
+		for (uint32_t j = 0; j < m_SubMeshList[i]->SubsetPartitions.size(); ++j)
 			if (m_SubMeshList[i]->SubsetPartitions[j]->Triangles.size())
 				++TotalPartitionCount;
 
 	pResult->Elements[M2SkinElement::EElement_SubMesh].SetDataSize(TotalPartitionCount, TotalPartitionCount * sizeof(M2SkinElement::CElement_SubMesh), false);
 	M2SkinElement::CElement_SubMesh* SubsetsOut = pResult->Elements[M2SkinElement::EElement_SubMesh].as<M2SkinElement::CElement_SubMesh>();
-	UInt32 iSubsetPartition = 0;
+	uint32_t iSubsetPartition = 0;
 
-	for (UInt32 i = 0; i < m_SubMeshList.size(); i++)
+	for (uint32_t i = 0; i < m_SubMeshList.size(); i++)
 	{
-		for (UInt32 j = 0; j < m_SubMeshList[i]->SubsetPartitions.size(); ++j)
+		for (uint32_t j = 0; j < m_SubMeshList[i]->SubsetPartitions.size(); ++j)
 		{
 			CSubMesh::CSubsetPartition* pSubsetPartitionIn = m_SubMeshList[i]->SubsetPartitions[j];
 			if (!pSubsetPartitionIn->Triangles.size())

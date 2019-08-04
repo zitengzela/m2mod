@@ -10,17 +10,17 @@ namespace M2Lib
 	class M2I
 	{
 	public:
-		static const UInt32 Signature_M2I0 = MakeFourCC('M', '2', 'I', '0');
+		static const uint32_t Signature_M2I0 = MakeFourCC('M', '2', 'I', '0');
 
 		class CSubMesh
 		{
 		public:
 			// this subset's ID.
-			UInt16 ID;
-			UInt16 Level;
+			uint16_t ID;
+			uint16_t Level;
 
 			// vertices that make up this subset, as indices into the global vertex list.
-			std::vector< UInt16 > Indices;
+			std::vector< uint16_t > Indices;
 			// triangles that make up this subset, as indices into the global vertex list.
 			std::vector< CTriangle > Triangles;
 
@@ -37,11 +37,11 @@ namespace M2Lib
 	public:
 		M2I() { }
 
-		EError Load(Char16 const* FileName, M2* pM2, bool IgnoreBones, bool IgnoreAttachments, bool IgnoreCameras, bool IgnoreOriginalMeshIndexes);
+		EError Load(wchar_t const* FileName, M2* pM2, bool IgnoreBones, bool IgnoreAttachments, bool IgnoreCameras, bool IgnoreOriginalMeshIndexes);
 
 		~M2I()
 		{
-			for (UInt32 i = 0; i < SubMeshList.size(); i++)
+			for (uint32_t i = 0; i < SubMeshList.size(); i++)
 			{
 				delete SubMeshList[i];
 			}

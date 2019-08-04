@@ -5,7 +5,7 @@
 #include "M2.h"
 #include "Logger.h"
 
-M2Lib::EError M2Lib::M2I::Load(Char16 const* FileName, M2Lib::M2* pM2, bool IgnoreBones, bool IgnoreAttachments, bool IgnoreCameras, bool IgnoreOriginalMeshIndexes)
+M2Lib::EError M2Lib::M2I::Load(wchar_t const* FileName, M2Lib::M2* pM2, bool IgnoreBones, bool IgnoreAttachments, bool IgnoreCameras, bool IgnoreOriginalMeshIndexes)
 {
 	// open file stream
 	std::fstream FileStream;
@@ -15,17 +15,17 @@ M2Lib::EError M2Lib::M2I::Load(Char16 const* FileName, M2Lib::M2* pM2, bool Igno
 	DataBinary DataBinary(&FileStream, EEndianness_Little);
 
 	// load signature
-	UInt32 InSignature = 0;
+	uint32_t InSignature = 0;
 	InSignature = DataBinary.ReadFourCC();
 	if (InSignature != 1 && InSignature != Signature_M2I0)
 		return EError_FailedToImportM2I_FileCorrupt;
 
 	// load version
-	UInt32 Version = 0;
+	uint32_t Version = 0;
 	if (InSignature == Signature_M2I0)
 	{
-		UInt16 VersionMajor = DataBinary.ReadUInt16();
-		UInt16 VersionMinor = DataBinary.ReadUInt16();
+		uint16_t VersionMajor = DataBinary.ReadUInt16();
+		uint16_t VersionMinor = DataBinary.ReadUInt16();
 
 		Version = MAKE_VERSION(VersionMajor, VersionMinor);
 
@@ -34,12 +34,12 @@ M2Lib::EError M2Lib::M2I::Load(Char16 const* FileName, M2Lib::M2* pM2, bool Igno
 	}
 
 	// load sub meshes, build new vertex list
-	UInt32 VertexStart = 0;
-	UInt32 InSubsetCount = 0;
+	uint32_t VertexStart = 0;
+	uint32_t InSubsetCount = 0;
 	InSubsetCount = DataBinary.ReadUInt32();
-	UInt32 iTriangle = 0;
+	uint32_t iTriangle = 0;
 
-	for (UInt32 i = 0; i < InSubsetCount; i++)
+	for (uint32_t i = 0; i < InSubsetCount; i++)
 	{
 		M2I::CSubMesh* pNewSubMesh = new M2I::CSubMesh();
 
@@ -60,7 +60,7 @@ M2Lib::EError M2Lib::M2I::Load(Char16 const* FileName, M2Lib::M2* pM2, bool Igno
 				pNewSubMesh->ExtraData.BlendMode = DataBinary.ReadSInt16();
 				pNewSubMesh->ExtraData.RenderFlags = DataBinary.ReadUInt16();
 
-				for (UInt32 j = 0; j < MAX_SUBMESH_TEXTURES; ++j)
+				for (uint32_t j = 0; j < MAX_SUBMESH_TEXTURES; ++j)
 				{
 					pNewSubMesh->ExtraData.TextureType[j] = DataBinary.ReadSInt16();
 					pNewSubMesh->ExtraData.TextureName[j] = DataBinary.ReadASCIIString();
@@ -73,10 +73,10 @@ M2Lib::EError M2Lib::M2I::Load(Char16 const* FileName, M2Lib::M2* pM2, bool Igno
 					if (DataBinary.ReadUInt8() != 0)
 					{
 						pNewSubMesh->ExtraData.ShaderId = TRANSPARENT_SHADER_ID;
-						pNewSubMesh->ExtraData.TextureType[0] = (SInt32)M2Element::CElement_Texture::ETextureType::Final_Hardcoded;
+						pNewSubMesh->ExtraData.TextureType[0] = (int32_t)M2Element::CElement_Texture::ETextureType::Final_Hardcoded;
 						pNewSubMesh->ExtraData.TextureName[0] = DataBinary.ReadASCIIString();
 
-						pNewSubMesh->ExtraData.RenderFlags = (SInt32)M2Element::CElement_TextureFlag::EFlags::EFlags_TwoSided;
+						pNewSubMesh->ExtraData.RenderFlags = (int32_t)M2Element::CElement_TextureFlag::EFlags::EFlags_TwoSided;
 						pNewSubMesh->ExtraData.BlendMode = DataBinary.ReadUInt16();
 					}
 					else
@@ -89,7 +89,7 @@ M2Lib::EError M2Lib::M2I::Load(Char16 const* FileName, M2Lib::M2* pM2, bool Igno
 					{
 						pNewSubMesh->ExtraData.ShaderId = GLOSS_SHADER_ID;
 
-						pNewSubMesh->ExtraData.TextureType[1] = (SInt32)M2Element::CElement_Texture::ETextureType::Final_Hardcoded;
+						pNewSubMesh->ExtraData.TextureType[1] = (int32_t)M2Element::CElement_Texture::ETextureType::Final_Hardcoded;
 						pNewSubMesh->ExtraData.TextureName[1] = DataBinary.ReadASCIIString();
 					}
 					else
@@ -101,16 +101,16 @@ M2Lib::EError M2Lib::M2I::Load(Char16 const* FileName, M2Lib::M2* pM2, bool Igno
 					if (pNewSubMesh->ExtraData.TextureName[0].length() > 0)
 					{
 						pNewSubMesh->ExtraData.ShaderId = TRANSPARENT_SHADER_ID;
-						pNewSubMesh->ExtraData.TextureType[0] = (SInt32)M2Element::CElement_Texture::ETextureType::Final_Hardcoded;
-						pNewSubMesh->ExtraData.RenderFlags = (SInt32)M2Element::CElement_TextureFlag::EFlags::EFlags_TwoSided;
-						pNewSubMesh->ExtraData.BlendMode = (SInt32)M2Element::CElement_TextureFlag::EBlend::EBlend_Decal;
+						pNewSubMesh->ExtraData.TextureType[0] = (int32_t)M2Element::CElement_Texture::ETextureType::Final_Hardcoded;
+						pNewSubMesh->ExtraData.RenderFlags = (int32_t)M2Element::CElement_TextureFlag::EFlags::EFlags_TwoSided;
+						pNewSubMesh->ExtraData.BlendMode = (int32_t)M2Element::CElement_TextureFlag::EBlend::EBlend_Decal;
 					}
 
 					pNewSubMesh->ExtraData.TextureName[1] = DataBinary.ReadASCIIString();
 					if (pNewSubMesh->ExtraData.TextureName[1].length() > 0)
 					{
 						pNewSubMesh->ExtraData.ShaderId = GLOSS_SHADER_ID;
-						pNewSubMesh->ExtraData.TextureType[1] = (SInt32)M2Element::CElement_Texture::ETextureType::Final_Hardcoded;
+						pNewSubMesh->ExtraData.TextureType[1] = (int32_t)M2Element::CElement_Texture::ETextureType::Final_Hardcoded;
 					}
 				}
 			}
@@ -129,22 +129,22 @@ M2Lib::EError M2Lib::M2I::Load(Char16 const* FileName, M2Lib::M2* pM2, bool Igno
 		pNewSubMesh->Level = 0; 
 
 		// read vertices
-		UInt32 InVertexCount = 0;
+		uint32_t InVertexCount = 0;
 		InVertexCount = DataBinary.ReadUInt32();
 		if (VertexList.size() + InVertexCount > 0xFFFF)
 			return EError_FailedToImportM2I_TooManyVertices;
 
 		std::vector<CVertex> submeshVertices;
-		for (UInt32 j = 0; j < InVertexCount; ++j)
+		for (uint32_t j = 0; j < InVertexCount; ++j)
 		{
 			CVertex InVertex;
 
 			InVertex.Position = DataBinary.ReadC3Vector();
 
-			for (UInt32 k = 0; k < BONES_PER_VERTEX; ++k)
+			for (uint32_t k = 0; k < BONES_PER_VERTEX; ++k)
 				InVertex.BoneWeights[k] = DataBinary.ReadUInt8();
 
-			for (UInt32 k = 0; k < BONES_PER_VERTEX; ++k)
+			for (uint32_t k = 0; k < BONES_PER_VERTEX; ++k)
 				InVertex.BoneIndices[k] = DataBinary.ReadUInt8();
 
 			InVertex.Normal = DataBinary.ReadC3Vector();
@@ -152,7 +152,7 @@ M2Lib::EError M2Lib::M2I::Load(Char16 const* FileName, M2Lib::M2* pM2, bool Igno
 			if (Version >= MAKE_VERSION(8, 0))
 				InVertex.Texture2 = DataBinary.ReadC2Vector();
 
-			UInt16 VertexIndex = VertexList.size();
+			uint16_t VertexIndex = VertexList.size();
 			VertexList.push_back(InVertex);
 			pNewSubMesh->Indices.push_back(VertexIndex);
 
@@ -162,16 +162,16 @@ M2Lib::EError M2Lib::M2I::Load(Char16 const* FileName, M2Lib::M2* pM2, bool Igno
 		pNewSubMesh->ExtraData.Boundary.Calculate(submeshVertices);
 
 		// read triangles
-		UInt32 InTriangleCount = DataBinary.ReadUInt32();
+		uint32_t InTriangleCount = DataBinary.ReadUInt32();
 
-		for (UInt32 j = 0; j < InTriangleCount; ++j)
+		for (uint32_t j = 0; j < InTriangleCount; ++j)
 		{
 			CTriangle NewTriangle;
 
 			NewTriangle.TriangleIndex = iTriangle;
 			++iTriangle;
 
-			for (UInt32 k = 0; k < VERTEX_PER_TRIANGLE; ++k)
+			for (uint32_t k = 0; k < VERTEX_PER_TRIANGLE; ++k)
 				NewTriangle.Vertices[k] = DataBinary.ReadUInt16() + VertexStart;
 
 			pNewSubMesh->Triangles.push_back(NewTriangle);
@@ -182,23 +182,23 @@ M2Lib::EError M2Lib::M2I::Load(Char16 const* FileName, M2Lib::M2* pM2, bool Igno
 		SubMeshList.push_back(pNewSubMesh);
 	}
 
-	std::map<UInt16, UInt16> BoneRemap;
+	std::map<uint16_t, uint16_t> BoneRemap;
 
 	if (!IgnoreBones)
 	{
 		// read bones, overwrite existing
 		auto boneElement = pM2->GetBones();
-		UInt32 BoneCount = boneElement->Count;
-		UInt32 BoneCountIn = DataBinary.ReadUInt32();
-		for (UInt32 i = 0; i < BoneCountIn; ++i)
+		uint32_t BoneCount = boneElement->Count;
+		uint32_t BoneCountIn = DataBinary.ReadUInt32();
+		for (uint32_t i = 0; i < BoneCountIn; ++i)
 		{
-			UInt16 InBoneIndex = DataBinary.ReadUInt16();
-			SInt16 ParentBone = DataBinary.ReadSInt16();
+			uint16_t InBoneIndex = DataBinary.ReadUInt16();
+			int16_t ParentBone = DataBinary.ReadSInt16();
 			C3Vector Position = DataBinary.ReadC3Vector();
 			bool HasExtraData = false;
-			UInt32 Flags;
-			UInt16 SubmeshId;
-			UInt16 Unknown[2];
+			uint32_t Flags;
+			uint16_t SubmeshId;
+			uint16_t Unknown[2];
 
 			if (Version >= MAKE_VERSION(4, 8))
 			{
@@ -209,7 +209,7 @@ M2Lib::EError M2Lib::M2I::Load(Char16 const* FileName, M2Lib::M2* pM2, bool Igno
 				Unknown[1] = DataBinary.ReadUInt16();
 			}
 
-			UInt16 ModBoneIndex = -1;
+			uint16_t ModBoneIndex = -1;
 			if (InBoneIndex < BoneCount)
 			{
 				ModBoneIndex = InBoneIndex;
@@ -247,8 +247,8 @@ M2Lib::EError M2Lib::M2I::Load(Char16 const* FileName, M2Lib::M2* pM2, bool Igno
 	}
 	else
 	{
-		UInt32 BoneCountIn = DataBinary.ReadUInt32();
-		for (UInt32 i = 0; i < BoneCountIn; ++i)
+		uint32_t BoneCountIn = DataBinary.ReadUInt32();
+		for (uint32_t i = 0; i < BoneCountIn; ++i)
 		{
 			DataBinary.ReadUInt16();
 			DataBinary.ReadSInt16();
@@ -268,9 +268,9 @@ M2Lib::EError M2Lib::M2I::Load(Char16 const* FileName, M2Lib::M2* pM2, bool Igno
 	// this is only executed when new bones are present, skip
 	/*if (!BoneRemap.empty())
 	{
-		UInt32 BoneCount = pM2->Elements[M2Element::EElement_Bone].Count;
+		uint32_t BoneCount = pM2->Elements[M2Element::EElement_Bone].Count;
 		auto Bones = pM2->Elements[M2Element::EElement_Bone].as<M2Element::CElement_Bone>();
-		for (UInt32 i = 0; i < BoneCount; ++i)
+		for (uint32_t i = 0; i < BoneCount; ++i)
 		{
 			auto& Bone = Bones[i];
 			if (BoneRemap.find(Bone.ParentBone) == BoneRemap.end())
@@ -281,7 +281,7 @@ M2Lib::EError M2Lib::M2I::Load(Char16 const* FileName, M2Lib::M2* pM2, bool Igno
 
 		for (auto& Vertex : VertexList)
 		{
-			for (UInt32 i = 0; i < BONES_PER_VERTEX; ++i)
+			for (uint32_t i = 0; i < BONES_PER_VERTEX; ++i)
 			{
 				if (BoneRemap.find(Vertex.BoneIndices[i]) == BoneRemap.end())
 					continue;
@@ -295,16 +295,16 @@ M2Lib::EError M2Lib::M2I::Load(Char16 const* FileName, M2Lib::M2* pM2, bool Igno
 	{
 		// read attachments, overwrite existing
 		auto attachmentElement = pM2->GetAttachments();
-		UInt32 AttachmentsCount = attachmentElement->Count;
+		uint32_t AttachmentsCount = attachmentElement->Count;
 		auto Attachments = attachmentElement->as<M2Element::CElement_Attachment>();
-		UInt32 AttachmentCountIn;
+		uint32_t AttachmentCountIn;
 		AttachmentCountIn = DataBinary.ReadUInt32();
-		for (UInt32 i = 0; i < AttachmentCountIn; ++i)
+		for (uint32_t i = 0; i < AttachmentCountIn; ++i)
 		{
-			UInt32 InAttachmentID = 0;
+			uint32_t InAttachmentID = 0;
 			InAttachmentID = DataBinary.ReadUInt32();
 			M2Element::CElement_Attachment* pAttachmentToMod = NULL;
-			for (UInt32 j = 0; j < AttachmentsCount; ++j)
+			for (uint32_t j = 0; j < AttachmentsCount; ++j)
 			{
 				if (Attachments[j].ID == InAttachmentID)
 				{
@@ -319,7 +319,7 @@ M2Lib::EError M2Lib::M2I::Load(Char16 const* FileName, M2Lib::M2* pM2, bool Igno
 					pAttachmentToMod->ParentBone = BoneRemap[pAttachmentToMod->ParentBone];
 
 				pAttachmentToMod->Position = DataBinary.ReadC3Vector();
-				Float32 Scale = DataBinary.ReadFloat32();
+				float Scale = DataBinary.ReadFloat32();
 			}
 			else
 			{
@@ -332,8 +332,8 @@ M2Lib::EError M2Lib::M2I::Load(Char16 const* FileName, M2Lib::M2* pM2, bool Igno
 	}
 	else
 	{
-		UInt32 AttachmentCountIn = DataBinary.ReadUInt32();
-		for (UInt32 i = 0; i < AttachmentCountIn; ++i)
+		uint32_t AttachmentCountIn = DataBinary.ReadUInt32();
+		for (uint32_t i = 0; i < AttachmentCountIn; ++i)
 		{
 			DataBinary.ReadUInt32();
 			DataBinary.ReadUInt16();
@@ -345,10 +345,10 @@ M2Lib::EError M2Lib::M2I::Load(Char16 const* FileName, M2Lib::M2* pM2, bool Igno
 	if (!IgnoreCameras)
 	{
 		// read cameras, overwrite existing
-		UInt32 CameraCount = pM2->Elements[M2Element::EElement_Camera].Count;
+		uint32_t CameraCount = pM2->Elements[M2Element::EElement_Camera].Count;
 		auto Cameras = pM2->Elements[M2Element::EElement_Camera].as<M2Element::CElement_Camera>();
-		UInt32 CameraCountIn = DataBinary.ReadUInt32();
-		for (UInt32 i = 0; i < CameraCountIn; ++i)
+		uint32_t CameraCountIn = DataBinary.ReadUInt32();
+		for (uint32_t i = 0; i < CameraCountIn; ++i)
 		{
 			auto hasData = true;
 			if (Version >= MAKE_VERSION(4, 9))
@@ -358,7 +358,7 @@ M2Lib::EError M2Lib::M2I::Load(Char16 const* FileName, M2Lib::M2* pM2, bool Igno
 			if (hasData)
 			{
 				auto InType = (M2Element::CElement_Camera::ECameraType)DataBinary.ReadSInt32();
-				for (UInt32 j = 0; j < CameraCount; ++j)
+				for (uint32_t j = 0; j < CameraCount; ++j)
 				{
 					if (Cameras[j].Type == InType)
 					{
@@ -378,7 +378,7 @@ M2Lib::EError M2Lib::M2I::Load(Char16 const* FileName, M2Lib::M2* pM2, bool Igno
 					auto& LastElement = pM2->Elements[LastElementIndex];
 					assert(ExternalAnimations[0].Offset >= LastElement.Offset && ExternalAnimations[0].Offset < LastElement.Offset + LastElement.Data.size());
 
-					Float32* FieldOfView_Keys = (Float32*)LastElement.GetLocalPointer(ExternalAnimations[0].Offset);
+					float* FieldOfView_Keys = (float*)LastElement.GetLocalPointer(ExternalAnimations[0].Offset);
 					auto value = DataBinary.ReadFloat32();
 					FieldOfView_Keys[0] = value;
 				}
@@ -402,8 +402,8 @@ M2Lib::EError M2Lib::M2I::Load(Char16 const* FileName, M2Lib::M2* pM2, bool Igno
 	}
 	else
 	{
-		UInt32 CameraCountIn = DataBinary.ReadUInt32();
-		for (UInt32 i = 0; i < CameraCountIn; ++i)
+		uint32_t CameraCountIn = DataBinary.ReadUInt32();
+		for (uint32_t i = 0; i < CameraCountIn; ++i)
 		{
 			if (Version >= MAKE_VERSION(4, 9))
 				DataBinary.ReadUInt8();

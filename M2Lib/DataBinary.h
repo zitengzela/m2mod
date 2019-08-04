@@ -20,15 +20,15 @@ namespace M2Lib
 		EEndianness _Endianness;
 		EEndianness _EndiannessNative;
 
-		static void _SwitchEndianness(void* Data, UInt8 Size);
-		void _Read(void* Data, UInt32 Size);
-		void _Write(void* Data, UInt32 Size);
+		static void _SwitchEndianness(void* Data, uint8_t Size);
+		void _Read(void* Data, uint32_t Size);
+		void _Write(void* Data, uint32_t Size);
 
 	public:
 		DataBinary(std::fstream* Stream, EEndianness Endianness);
 		~DataBinary();
 
-		void SwitchEndiannessIfNeeded(void* Data, UInt8 Size);
+		void SwitchEndiannessIfNeeded(void* Data, uint8_t Size);
 
 		std::fstream* GetStream();
 		void SetStream(std::fstream* Stream);
@@ -36,30 +36,31 @@ namespace M2Lib
 		EEndianness GetEndianness();
 		void SetEndianness(EEndianness Endianness);
 
-		UInt32 ReadUInt32();
-		SInt32 ReadSInt32();
-		UInt16 ReadUInt16();
-		SInt16 ReadSInt16();
-		UInt8 ReadUInt8();
-		SInt8 ReadSInt8();
-		Float32 ReadFloat32();
-		Char16 ReadChar16();
-		Char8 ReadChar8();
-		UInt32 ReadFourCC();
+		uint32_t ReadUInt32();
+		int32_t ReadSInt32();
+		uint16_t ReadUInt16();
+		int16_t ReadSInt16();
+		uint8_t ReadUInt8();
+		int8_t ReadSInt8();
+		float ReadFloat32();
+		wchar_t ReadWideChar();
+		char ReadChar();
+
+		uint32_t ReadFourCC();
 		std::string ReadASCIIString();
 		C2Vector ReadC2Vector();
 		C3Vector ReadC3Vector();
 
-		void WriteUInt32(UInt32 Value);
-		void WriteSInt32(SInt32 Value);
-		void WriteUInt16(UInt16 Value);
-		void WriteSInt16(SInt16 Value);
-		void WriteUInt8(UInt8 Value);
-		void WriteSInt8(SInt8 Value);
-		void WriteFloat32(Float32 Value);
-		void WriteChar16(Char16 Value);
-		void WriteChar8(Char8 Value);
-		void WriteFourCC(UInt32 Value);
+		void WriteUInt32(uint32_t Value);
+		void WriteSInt32(int32_t Value);
+		void WriteUInt16(uint16_t Value);
+		void WriteSInt16(int16_t Value);
+		void WriteUInt8(uint8_t Value);
+		void WriteSInt8(int8_t Value);
+		void WriteFloat32(float Value);
+		void WriteWideChar(wchar_t Value);
+		void WriteChar(char Value);
+		void WriteFourCC(uint32_t Value);
 		void WriteASCIIString(std::string const& value);
 		void WriteC2Vector(C2Vector const& Vector);
 		void WriteC3Vector(C3Vector const& Vector);

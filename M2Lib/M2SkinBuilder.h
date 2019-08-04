@@ -23,17 +23,17 @@ namespace M2Lib
 		{
 		public:
 			// maximum number of bones allowed per partition.
-			UInt32 MaxBones;
+			uint32_t MaxBones;
 			// list of bones in this partition, indices into the global bone list. later gets consolidated into the global bone lookup list.
-			std::vector< UInt16 > Bones;
+			std::vector< uint16_t > Bones;
 			// here we keep a map of triangle index to triangle for all triangles that have successfully been added to this bone partition. this is result caching to speed up building of subset partitions when dealing out subset triangles between subset partitions.
-			std::map< UInt32, CTriangle* > TrianglesMap;
+			std::map< uint32_t, CTriangle* > TrianglesMap;
 
 			// offset from begining of skin's bone lookup list.
-			UInt32 BoneStart;
+			uint32_t BoneStart;
 
 		public:
-			CBonePartition(UInt32 BoneLOD)
+			CBonePartition(uint32_t BoneLOD)
 				: MaxBones(BoneLOD),
 				BoneStart(0)
 			{
@@ -43,10 +43,10 @@ namespace M2Lib
 			bool AddTriangle(CVertex* GlobalVertexList, CTriangle* pTriangle);
 
 			// returns true if bone is contained in this bone partition. if pTriangleIndexOut is supplied and function returns true, it will be set to index of where bone was found in this partition.
-			bool HasBone(UInt16 Bone, UInt16* pIndexOut);
+			bool HasBone(uint16_t Bone, uint16_t* pIndexOut);
 
 			// returns true if a triangle has been associated with this bone partition.
-			bool HasTriangle(UInt32 TriangleIndex);
+			bool HasTriangle(uint32_t TriangleIndex);
 		};
 
 		//
@@ -60,17 +60,17 @@ namespace M2Lib
 				CBonePartition* pBonePartition;
 
 				// this subset partition's final index list. these are indices into the global vertex list. this gets consolidated into the single skin vertex list.
-				//std::vector< UInt16 > Vertices;
+				//std::vector< uint16_t > Vertices;
 				// this subset partition's final triangle list. these are indices into the above vertex index list. this gets consolidated into the single skin triangle listt
 				std::vector< CTriangle* > Triangles;
 
-				UInt32 VertexStart;
-				UInt32 VertexCount;
-				UInt32 TriangleIndexStart;
-				UInt32 TriangleIndexCount;
+				uint32_t VertexStart;
+				uint32_t VertexCount;
+				uint32_t TriangleIndexStart;
+				uint32_t TriangleIndexCount;
 
-				UInt32 Unknown1;	// aka max bones
-				UInt32 Unknown2;	// aka category
+				uint32_t Unknown1;	// aka max bones
+				uint32_t Unknown2;	// aka category
 
 			public:
 				CSubsetPartition(CBonePartition* pBonePartitionIn);
@@ -79,16 +79,16 @@ namespace M2Lib
 				bool AddTriangle(CTriangle* pTriangle);
 
 				// adds a vertex from the global vertex list to this subset's vertex list. returns index of existing or newly added vertex.
-				//UInt32 AddVertex( UInt32 VertexIndex );
+				//uint32_t AddVertex( uint32_t VertexIndex );
 				//
-				//void FixVertexOffsets( SInt32 Delta );
+				//void FixVertexOffsets( int32_t Delta );
 
 			};
 
 
 		public:
 			// this subset's ID within the model.
-			UInt16 ID;
+			uint16_t ID;
 			//
 			std::vector< CSubsetPartition* > SubsetPartitions;
 			//
@@ -104,7 +104,7 @@ namespace M2Lib
 
 			~CSubMesh()
 			{
-				for (UInt32 i = 0; i < SubsetPartitions.size(); i++)
+				for (uint32_t i = 0; i < SubsetPartitions.size(); i++)
 				{
 					delete SubsetPartitions[i];
 				}
@@ -119,11 +119,11 @@ namespace M2Lib
 
 	public:
 		// each skin has it's own vertex list. common vertices accross subsets get duplicated (i think) so they appear as many times as they are used in multiple subsets. this is because each subset occupies a sub-range of this list.
-		std::vector< UInt16 > m_Vertices;
+		std::vector< uint16_t > m_Vertices;
 		// bone lookup list used by this skin. the bone lookup lists from all the skins get consolidated into one big bone lookup list that is stored in the M2.
-		std::vector< UInt16 > m_Bones;
+		std::vector< uint16_t > m_Bones;
 		// indices to m_VertexLookupList.
-		std::vector< UInt16 > m_Indices;
+		std::vector< uint16_t > m_Indices;
 
 		// list of subsets that make up this skin.
 		std::vector< CSubMesh* > m_SubMeshList;
@@ -135,7 +135,7 @@ namespace M2Lib
 
 		~M2SkinBuilder()
 		{
-			for (UInt32 i = 0; i < m_SubMeshList.size(); i++)
+			for (uint32_t i = 0; i < m_SubMeshList.size(); i++)
 			{
 				delete m_SubMeshList[i];
 			}
@@ -145,7 +145,7 @@ namespace M2Lib
 		void Clear();
 
 		// builds a skin from the supplied parameters.
-		bool Build(M2Skin* pResult, UInt32 BoneLoD, M2I* pM2I, CVertex* pGlobalVertexList, UInt32 BoneStart);
+		bool Build(M2Skin* pResult, uint32_t BoneLoD, M2I* pM2I, CVertex* pGlobalVertexList, uint32_t BoneStart);
 
 		// returns true if the built skin with LoD is necessary to be exported, false if can be done without.
 		// this is to check for LoD that has significant room for more bones than the skin actually uses, in such case, it would not be advisable to save.

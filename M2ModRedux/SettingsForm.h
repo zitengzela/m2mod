@@ -48,7 +48,7 @@ namespace M2ModRedux {
 		{
 			M2Lib::Expansion ExpansionIndex = settings->ForceLoadExpansion;
 			if (ExpansionIndex != M2Lib::Expansion::None)
-				forceExpansionComboBox->SelectedIndex = (SInt32)ExpansionIndex + 1;
+				forceExpansionComboBox->SelectedIndex = (int32_t)ExpansionIndex + 1;
 			else
 				forceExpansionComboBox->SelectedIndex = 0;
 

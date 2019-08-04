@@ -27,6 +27,6 @@ std::string M2Element::CElement_Texture::GetTypeString(ETextureType Type)
 		_CASE_STR(GuildEmblemColor)
 		_CASE_STR(GuildEmblem)
 		default:
-			return "#" + std::to_string((UInt32)Type);
+			return "#" + std::to_string((uint32_t)Type);
 	}
 }

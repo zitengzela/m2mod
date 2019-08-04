@@ -14,26 +14,26 @@ M2Lib::DataElement::~DataElement()
 {
 }
 
-void* M2Lib::DataElement::GetLocalPointer(UInt32 GlobalOffset)
+void* M2Lib::DataElement::GetLocalPointer(uint32_t GlobalOffset)
 {
 	assert(GlobalOffset >= Offset);
 	GlobalOffset -= Offset;
-	assert(GlobalOffset < (UInt32)Data.size());
+	assert(GlobalOffset < (uint32_t)Data.size());
 	return &Data[GlobalOffset];
 }
 
-bool M2Lib::DataElement::Load(std::fstream& FileStream, SInt32 FileOffset)
+bool M2Lib::DataElement::Load(std::fstream& FileStream, int32_t FileOffset)
 {
 	if (Data.empty())
 		return true;
 
 	FileStream.seekg(Offset + FileOffset, std::ios::beg);
-	FileStream.read((Char8*)Data.data(), Data.size());
+	FileStream.read((char*)Data.data(), Data.size());
 
 	return true;
 }
 
-bool M2Lib::DataElement::Load(UInt8 const* RawData, SInt32 FileOffset)
+bool M2Lib::DataElement::Load(uint8_t const* RawData, int32_t FileOffset)
 {
 	if (Data.empty())
 		return true;
@@ -42,13 +42,13 @@ bool M2Lib::DataElement::Load(UInt8 const* RawData, SInt32 FileOffset)
 	return true;
 }
 
-bool M2Lib::DataElement::Save(std::fstream& FileStream, SInt32 FileOffset)
+bool M2Lib::DataElement::Save(std::fstream& FileStream, int32_t FileOffset)
 {
 	if (Data.empty())
 		return true;
 
 	FileStream.seekp(Offset + FileOffset);
-	FileStream.write((Char8*)Data.data(), Data.size());
+	FileStream.write((char*)Data.data(), Data.size());
 
 	return true;
 }
@@ -58,16 +58,16 @@ void M2Lib::DataElement::Clear()
 	Count = 0;
 }
 
-void M2Lib::DataElement::SetDataSize(UInt32 NewCount, UInt32 NewDataSize, bool CopyOldData)
+void M2Lib::DataElement::SetDataSize(uint32_t NewCount, uint32_t NewDataSize, bool CopyOldData)
 {
 	if (Align != 0)
 	{
-		UInt32 Mod = NewDataSize % Align;
+		uint32_t Mod = NewDataSize % Align;
 		if (Mod)
 			NewDataSize += Align - Mod;
 	}
 
-	std::vector<UInt8> NewData(NewDataSize, 0);
+	std::vector<uint8_t> NewData(NewDataSize, 0);
 	if (CopyOldData && !Data.empty())
 		memcpy(NewData.data(), Data.data(), Data.size() > NewDataSize ? NewDataSize : Data.size());
 

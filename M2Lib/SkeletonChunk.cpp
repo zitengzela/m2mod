@@ -3,9 +3,9 @@
 #include <assert.h>
 #include <algorithm>
 
-void M2Lib::SkeletonChunk::SKL1Chunk::Load(std::fstream& FileStream, UInt32 Size)
+void M2Lib::SkeletonChunk::SKL1Chunk::Load(std::fstream& FileStream, uint32_t Size)
 {
-	UInt32 pos = FileStream.tellg();
+	uint32_t pos = FileStream.tellg();
 	FileStream.read((char*)&Header, sizeof(SKL1Chunk::Header));
 
 	FileStream.seekg(pos);
@@ -20,12 +20,12 @@ void M2Lib::SkeletonChunk::SKL1Chunk::Save(std::fstream& FileStream)
 	FileStream.write(RawData.data(), RawData.size());
 }
 
-bool M2Lib::SkeletonChunk::SKL1Chunk::IntializeElements(UInt32 DataSize)
+bool M2Lib::SkeletonChunk::SKL1Chunk::IntializeElements(uint32_t DataSize)
 {
 	Elements[EElement_Name].Count = Header.nName;
 	Elements[EElement_Name].Offset = Header.oName;
 
-	for (UInt32 i = 0; i < EElement_Count; ++i)
+	for (uint32_t i = 0; i < EElement_Count; ++i)
 	{
 		auto& Element = Elements[i];
 
@@ -38,8 +38,8 @@ bool M2Lib::SkeletonChunk::SKL1Chunk::IntializeElements(UInt32 DataSize)
 			continue;
 		}
 
-		UInt32 NextOffset = DataSize;
-		for (UInt32 j = 0; j < EElement_Count; ++j)
+		uint32_t NextOffset = DataSize;
+		for (uint32_t j = 0; j < EElement_Count; ++j)
 		{
 			if (Elements[j].Count && Elements[j].Offset > Element.Offset)
 			{
@@ -55,19 +55,19 @@ bool M2Lib::SkeletonChunk::SKL1Chunk::IntializeElements(UInt32 DataSize)
 	}
 
 	// load elements
-	for (UInt32 i = 0; i < EElement_Count; ++i)
+	for (uint32_t i = 0; i < EElement_Count; ++i)
 	{
 		Elements[i].Align = 16;
-		if (!Elements[i].Load((UInt8 const*)RawData.data(), 0))
+		if (!Elements[i].Load((uint8_t const*)RawData.data(), 0))
 			return false;
 	}
 
 	return true;
 }
 
-void M2Lib::SkeletonChunk::SKA1Chunk::Load(std::fstream& FileStream, UInt32 Size)
+void M2Lib::SkeletonChunk::SKA1Chunk::Load(std::fstream& FileStream, uint32_t Size)
 {
-	UInt32 pos = FileStream.tellg();
+	uint32_t pos = FileStream.tellg();
 	FileStream.read((char*)&Header, sizeof(SKA1Chunk::Header));
 
 	FileStream.seekg(pos);
@@ -79,8 +79,8 @@ void M2Lib::SkeletonChunk::SKA1Chunk::Load(std::fstream& FileStream, UInt32 Size
 
 void M2Lib::SkeletonChunk::SKA1Chunk::Save(std::fstream& FileStream)
 {
-	UInt32 CurrentOffset = sizeof(Header);
-	for (UInt32 i = 0; i < EElement_Count; ++i)
+	uint32_t CurrentOffset = sizeof(Header);
+	for (uint32_t i = 0; i < EElement_Count; ++i)
 	{
 		if (!Elements[i].Data.empty())
 		{
@@ -98,14 +98,14 @@ void M2Lib::SkeletonChunk::SKA1Chunk::Save(std::fstream& FileStream)
 	Header.nAttachmentLookup = Elements[EElement_AttachmentLookup].Count;
 	Header.oAttachmentLookup = Elements[EElement_AttachmentLookup].Offset;
 
-	UInt32 StartPos = (UInt32)FileStream.tellp();
+	uint32_t StartPos = (uint32_t)FileStream.tellp();
 	FileStream.write((char*)&Header, sizeof(Header));
 	// save elements
-	for (UInt32 i = 0; i != EElement_Count; i++)
+	for (uint32_t i = 0; i != EElement_Count; i++)
 		assert("Failed to write chunk element" && Elements[i].Save(FileStream, StartPos));
 }
 
-bool M2Lib::SkeletonChunk::SKA1Chunk::IntializeElements(UInt32 DataSize)
+bool M2Lib::SkeletonChunk::SKA1Chunk::IntializeElements(uint32_t DataSize)
 {
 	Elements[EElement_Attachment].Count = Header.nAttachment;
 	Elements[EElement_Attachment].Offset = Header.oAttachment;
@@ -113,7 +113,7 @@ bool M2Lib::SkeletonChunk::SKA1Chunk::IntializeElements(UInt32 DataSize)
 	Elements[EElement_AttachmentLookup].Count = Header.nAttachmentLookup;
 	Elements[EElement_AttachmentLookup].Offset = Header.oAttachmentLookup;
 
-	for (UInt32 i = 0; i < EElement_Count; ++i)
+	for (uint32_t i = 0; i < EElement_Count; ++i)
 	{
 		auto& Element = Elements[i];
 
@@ -126,8 +126,8 @@ bool M2Lib::SkeletonChunk::SKA1Chunk::IntializeElements(UInt32 DataSize)
 			continue;
 		}
 
-		UInt32 NextOffset = DataSize;
-		for (UInt32 j = 0; j < EElement_Count; ++j)
+		uint32_t NextOffset = DataSize;
+		for (uint32_t j = 0; j < EElement_Count; ++j)
 		{
 			if (Elements[j].Count && Elements[j].Offset > Element.Offset)
 			{
@@ -143,19 +143,19 @@ bool M2Lib::SkeletonChunk::SKA1Chunk::IntializeElements(UInt32 DataSize)
 	}
 
 	// load elements
-	for (UInt32 i = 0; i < EElement_Count; ++i)
+	for (uint32_t i = 0; i < EElement_Count; ++i)
 	{
 		Elements[i].Align = 16;
-		if (!Elements[i].Load((UInt8 const*)RawData.data(), 0))
+		if (!Elements[i].Load((uint8_t const*)RawData.data(), 0))
 			return false;
 	}
 
 	return true;
 }
 
-void M2Lib::SkeletonChunk::SKB1Chunk::Load(std::fstream& FileStream, UInt32 Size)
+void M2Lib::SkeletonChunk::SKB1Chunk::Load(std::fstream& FileStream, uint32_t Size)
 {
-	UInt32 pos = FileStream.tellg();
+	uint32_t pos = FileStream.tellg();
 	FileStream.read((char*)&Header, sizeof(SKB1Chunk::Header));
 
 	FileStream.seekg(pos);
@@ -167,8 +167,8 @@ void M2Lib::SkeletonChunk::SKB1Chunk::Load(std::fstream& FileStream, UInt32 Size
 
 void M2Lib::SkeletonChunk::SKB1Chunk::Save(std::fstream& FileStream)
 {
-	UInt32 CurrentOffset = sizeof(Header);
-	for (UInt32 i = 0; i < EElement_Count; ++i)
+	uint32_t CurrentOffset = sizeof(Header);
+	for (uint32_t i = 0; i < EElement_Count; ++i)
 	{
 		if (!Elements[i].Data.empty())
 		{
@@ -186,14 +186,14 @@ void M2Lib::SkeletonChunk::SKB1Chunk::Save(std::fstream& FileStream)
 	Header.nKeyBoneLookup = Elements[EElement_KeyBoneLookup].Count;
 	Header.oKeyBoneLookup = Elements[EElement_KeyBoneLookup].Offset;
 
-	UInt32 StartPos = (UInt32)FileStream.tellp();
+	uint32_t StartPos = (uint32_t)FileStream.tellp();
 	FileStream.write((char*)&Header, sizeof(Header));
 	// save elements
-	for (UInt32 i = 0; i != EElement_Count; i++)
+	for (uint32_t i = 0; i != EElement_Count; i++)
 		assert("Failed to write chunk element" && Elements[i].Save(FileStream, StartPos));
 }
 
-bool M2Lib::SkeletonChunk::SKB1Chunk::IntializeElements(UInt32 DataSize)
+bool M2Lib::SkeletonChunk::SKB1Chunk::IntializeElements(uint32_t DataSize)
 {
 	Elements[EElement_Bone].Count = Header.nBone;
 	Elements[EElement_Bone].Offset = Header.oBone;
@@ -201,7 +201,7 @@ bool M2Lib::SkeletonChunk::SKB1Chunk::IntializeElements(UInt32 DataSize)
 	Elements[EElement_KeyBoneLookup].Count = Header.nKeyBoneLookup;
 	Elements[EElement_KeyBoneLookup].Offset = Header.oKeyBoneLookup;
 
-	for (UInt32 i = 0; i < EElement_Count; ++i)
+	for (uint32_t i = 0; i < EElement_Count; ++i)
 	{
 		auto& Element = Elements[i];
 
@@ -214,8 +214,8 @@ bool M2Lib::SkeletonChunk::SKB1Chunk::IntializeElements(UInt32 DataSize)
 			continue;
 		}
 
-		UInt32 NextOffset = DataSize;
-		for (UInt32 j = 0; j < EElement_Count; ++j)
+		uint32_t NextOffset = DataSize;
+		for (uint32_t j = 0; j < EElement_Count; ++j)
 		{
 			if (Elements[j].Count && Elements[j].Offset > Element.Offset)
 			{
@@ -231,19 +231,19 @@ bool M2Lib::SkeletonChunk::SKB1Chunk::IntializeElements(UInt32 DataSize)
 	}
 
 	// load elements
-	for (UInt32 i = 0; i < EElement_Count; ++i)
+	for (uint32_t i = 0; i < EElement_Count; ++i)
 	{
 		Elements[i].Align = 16;
-		if (!Elements[i].Load((UInt8 const*)RawData.data(), 0))
+		if (!Elements[i].Load((uint8_t const*)RawData.data(), 0))
 			return false;
 	}
 
 	return true;
 }
 
-void M2Lib::SkeletonChunk::SKS1Chunk::Load(std::fstream& FileStream, UInt32 Size)
+void M2Lib::SkeletonChunk::SKS1Chunk::Load(std::fstream& FileStream, uint32_t Size)
 {
-	UInt32 pos = FileStream.tellg();
+	uint32_t pos = FileStream.tellg();
 	FileStream.read((char*)&Header, sizeof(SKS1Chunk::Header));
 
 	FileStream.seekg(pos);
@@ -258,7 +258,7 @@ void M2Lib::SkeletonChunk::SKS1Chunk::Save(std::fstream& FileStream)
 	FileStream.write(RawData.data(), RawData.size());
 }
 
-bool M2Lib::SkeletonChunk::SKS1Chunk::IntializeElements(UInt32 DataSize)
+bool M2Lib::SkeletonChunk::SKS1Chunk::IntializeElements(uint32_t DataSize)
 {
 	Elements[EElement_GlobalSequence].Count = Header.nGlobalSequence;
 	Elements[EElement_GlobalSequence].Offset = Header.oGlobalSequence;
@@ -269,7 +269,7 @@ bool M2Lib::SkeletonChunk::SKS1Chunk::IntializeElements(UInt32 DataSize)
 	Elements[EElement_AnimationLookup].Count = Header.nAnimationLookup;
 	Elements[EElement_AnimationLookup].Offset = Header.oAnimationLookup;
 
-	for (UInt32 i = 0; i < EElement_Count; ++i)
+	for (uint32_t i = 0; i < EElement_Count; ++i)
 	{
 		auto& Element = Elements[i];
 
@@ -282,8 +282,8 @@ bool M2Lib::SkeletonChunk::SKS1Chunk::IntializeElements(UInt32 DataSize)
 			continue;
 		}
 
-		UInt32 NextOffset = DataSize;
-		for (UInt32 j = 0; j < EElement_Count; ++j)
+		uint32_t NextOffset = DataSize;
+		for (uint32_t j = 0; j < EElement_Count; ++j)
 		{
 			if (Elements[j].Count && Elements[j].Offset > Element.Offset)
 			{
@@ -299,17 +299,17 @@ bool M2Lib::SkeletonChunk::SKS1Chunk::IntializeElements(UInt32 DataSize)
 	}
 
 	// load elements
-	for (UInt32 i = 0; i < EElement_Count; ++i)
+	for (uint32_t i = 0; i < EElement_Count; ++i)
 	{
 		Elements[i].Align = 16;
-		if (!Elements[i].Load((UInt8 const*)RawData.data(), 0))
+		if (!Elements[i].Load((uint8_t const*)RawData.data(), 0))
 			return false;
 	}
 
 	return true;
 }
 
-void M2Lib::SkeletonChunk::SKPDChunk::Load(std::fstream & FileStream, UInt32 Size)
+void M2Lib::SkeletonChunk::SKPDChunk::Load(std::fstream & FileStream, uint32_t Size)
 {
 	FileStream.read((char*)&Data, sizeof(Data));
 }
@@ -319,9 +319,9 @@ void M2Lib::SkeletonChunk::SKPDChunk::Save(std::fstream & FileStream)
 	FileStream.write((char*)&Data, sizeof(Data));
 }
 
-void M2Lib::SkeletonChunk::AFIDChunk::Load(std::fstream& FileStream, UInt32 Size)
+void M2Lib::SkeletonChunk::AFIDChunk::Load(std::fstream& FileStream, uint32_t Size)
 {
-	UInt32 offs = 0;
+	uint32_t offs = 0;
 	while (offs < Size)
 	{
 		AnimFileInfo info;
@@ -345,16 +345,16 @@ void M2Lib::SkeletonChunk::AFIDChunk::Save(std::fstream& FileStream)
 	}
 }
 
-void M2Lib::SkeletonChunk::BFIDChunk::Load(std::fstream& FileStream, UInt32 Size)
+void M2Lib::SkeletonChunk::BFIDChunk::Load(std::fstream& FileStream, uint32_t Size)
 {
-	UInt32 offs = 0;
+	uint32_t offs = 0;
 	while (offs < Size)
 	{
-		UInt32 boneFileDataId;
+		uint32_t boneFileDataId;
 		FileStream.read((char*)&boneFileDataId, 4);
 		BoneFileDataIds.push_back(boneFileDataId);
 
-		offs += sizeof(UInt32);
+		offs += sizeof(uint32_t);
 	}
 }
 

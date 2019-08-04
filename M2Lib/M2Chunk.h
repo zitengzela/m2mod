@@ -6,7 +6,7 @@ namespace M2Lib
 {
 	namespace M2Chunk
 	{
-		enum class EM2Chunk : UInt32
+		enum class EM2Chunk : uint32_t
 		{
 			Model = 'MD21',
 			Physic = 'PFID',
@@ -21,32 +21,32 @@ namespace M2Lib
 		class PFIDChunk : public ChunkBase
 		{
 		public:
-			void Load(std::fstream& FileStream, UInt32 Size) override;
+			void Load(std::fstream& FileStream, uint32_t Size) override;
 			void Save(std::fstream& FileStream) override;
 
-			UInt32 PhysFileId;
+			uint32_t PhysFileId;
 		};
 
 		class SFIDChunk : public ChunkBase
 		{
 		public:
-			void Load(std::fstream& FileStream, UInt32 Size) override;
+			void Load(std::fstream& FileStream, uint32_t Size) override;
 			void Save(std::fstream& FileStream) override;
 
-			std::vector<UInt32> SkinsFileDataIds;
+			std::vector<uint32_t> SkinsFileDataIds;
 		};
 
 		class AFIDChunk : public ChunkBase
 		{
 		public:
-			void Load(std::fstream& FileStream, UInt32 Size) override;
+			void Load(std::fstream& FileStream, uint32_t Size) override;
 			void Save(std::fstream& FileStream) override;
 
 			struct AnimFileInfo
 			{
-				UInt16 AnimId;
-				UInt16 SubAnimId;
-				UInt32 FileId;
+				uint16_t AnimId;
+				uint16_t SubAnimId;
+				uint32_t FileId;
 			};
 
 			std::vector<AnimFileInfo> AnimInfos;
@@ -55,28 +55,28 @@ namespace M2Lib
 		class BFIDChunk : public ChunkBase
 		{
 		public:
-			void Load(std::fstream& FileStream, UInt32 Size) override;
+			void Load(std::fstream& FileStream, uint32_t Size) override;
 			void Save(std::fstream& FileStream) override;
 
-			std::vector<UInt32> BoneFileDataIds;
+			std::vector<uint32_t> BoneFileDataIds;
 		};
 
 		class SKIDChunk : public ChunkBase
 		{
 		public:
-			void Load(std::fstream& FileStream, UInt32 Size) override;
+			void Load(std::fstream& FileStream, uint32_t Size) override;
 			void Save(std::fstream& FileStream) override;
 
-			UInt32 SkeletonFileDataId;
+			uint32_t SkeletonFileDataId;
 		};
 
 		class TXIDChunk : public ChunkBase
 		{
 		public:
-			void Load(std::fstream& FileStream, UInt32 Size) override;
+			void Load(std::fstream& FileStream, uint32_t Size) override;
 			void Save(std::fstream& FileStream) override;
 
-			std::vector<UInt32> TextureFileDataIds;
+			std::vector<uint32_t> TextureFileDataIds;
 		};
 
 		class TXACChunk : public ChunkBase
@@ -87,9 +87,9 @@ namespace M2Lib
 				char unk[2]; // likely used in CM2SceneRender::SetupTextureTransforms and uploaded to the shader directly. 0 otherwise.
 			};
 
-			TXACChunk(UInt32 TextureFlagsCount, UInt32 ParticleEmitterCount);
+			TXACChunk(uint32_t TextureFlagsCount, uint32_t ParticleEmitterCount);
 
-			void Load(std::fstream& FileStream, UInt32 Size) override;
+			void Load(std::fstream& FileStream, uint32_t Size) override;
 			void Save(std::fstream& FileStream) override;
 
 			std::vector<texture_ac> TextureFlagsAC;

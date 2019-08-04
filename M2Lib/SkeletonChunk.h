@@ -7,7 +7,7 @@ namespace M2Lib
 {
 	namespace SkeletonChunk
 	{
-		enum class ESkeletonChunk : UInt32
+		enum class ESkeletonChunk : uint32_t
 		{
 			SKL1 = 'SKL1',
 			SKA1 = 'SKA1',
@@ -23,15 +23,15 @@ namespace M2Lib
 		{
 			struct CHeader
 			{
-				UInt32 _0x00;
-				UInt32 nName;
-				UInt32 oName;
-				UInt8 _0x0c[4];
+				uint32_t _0x00;
+				uint32_t nName;
+				uint32_t oName;
+				uint8_t _0x0c[4];
 			} Header;
 
 			std::vector<char> RawData;
 
-			bool IntializeElements(UInt32 DataSize);
+			bool IntializeElements(uint32_t DataSize);
 
 		public:
 			enum EElement
@@ -40,7 +40,7 @@ namespace M2Lib
 				EElement_Count
 			};
 
-			void Load(std::fstream& FileStream, UInt32 Size) override;
+			void Load(std::fstream& FileStream, uint32_t Size) override;
 			void Save(std::fstream& FileStream) override;
 
 			DataElement Elements[EElement_Count];
@@ -50,15 +50,15 @@ namespace M2Lib
 		{
 			struct CHeader
 			{
-				UInt32 nAttachment;
-				UInt32 oAttachment;
-				UInt32 nAttachmentLookup;
-				UInt32 oAttachmentLookup;
+				uint32_t nAttachment;
+				uint32_t oAttachment;
+				uint32_t nAttachmentLookup;
+				uint32_t oAttachmentLookup;
 			} Header;
 
 			std::vector<char> RawData;
 
-			bool IntializeElements(UInt32 DataSize);
+			bool IntializeElements(uint32_t DataSize);
 
 		public:
 			enum EElement
@@ -68,7 +68,7 @@ namespace M2Lib
 				EElement_Count
 			};
 
-			void Load(std::fstream& FileStream, UInt32 Size) override;
+			void Load(std::fstream& FileStream, uint32_t Size) override;
 			void Save(std::fstream& FileStream) override;
 
 			DataElement Elements[EElement_Count];
@@ -78,15 +78,15 @@ namespace M2Lib
 		{
 			struct CHeader
 			{
-				UInt32 nBone;
-				UInt32 oBone;
-				UInt32 nKeyBoneLookup;
-				UInt32 oKeyBoneLookup;
+				uint32_t nBone;
+				uint32_t oBone;
+				uint32_t nKeyBoneLookup;
+				uint32_t oKeyBoneLookup;
 			} Header;
 
 			std::vector<char> RawData;
 
-			bool IntializeElements(UInt32 DataSize);
+			bool IntializeElements(uint32_t DataSize);
 
 		public:
 			enum EElement
@@ -96,7 +96,7 @@ namespace M2Lib
 				EElement_Count
 			};
 
-			void Load(std::fstream& FileStream, UInt32 Size) override;
+			void Load(std::fstream& FileStream, uint32_t Size) override;
 			void Save(std::fstream& FileStream) override;
 
 			DataElement Elements[EElement_Count];
@@ -106,19 +106,19 @@ namespace M2Lib
 		{
 			struct CHeader
 			{
-				UInt32 nGlobalSequence;		// 4
-				UInt32 oGlobalSequence;
+				uint32_t nGlobalSequence;		// 4
+				uint32_t oGlobalSequence;
 
-				UInt32 nAnimation;			// 64
-				UInt32 oAnimation;
+				uint32_t nAnimation;			// 64
+				uint32_t oAnimation;
 
-				UInt32 nAnimationLookup;	// 2
-				UInt32 oAnimationLookup;
+				uint32_t nAnimationLookup;	// 2
+				uint32_t oAnimationLookup;
 			} Header;
 
 			std::vector<char> RawData;
 
-			bool IntializeElements(UInt32 DataSize);
+			bool IntializeElements(uint32_t DataSize);
 
 		public:
 			enum EElement
@@ -129,7 +129,7 @@ namespace M2Lib
 				EElement_Count
 			};
 
-			void Load(std::fstream& FileStream, UInt32 Size) override;
+			void Load(std::fstream& FileStream, uint32_t Size) override;
 			void Save(std::fstream& FileStream) override;
 
 			DataElement Elements[EElement_Count];
@@ -140,28 +140,28 @@ namespace M2Lib
 		public:
 			struct TData
 			{
-				UInt8 _0x00[8];
+				uint8_t _0x00[8];
 				uint32_t ParentSkeletonFileId;
-				UInt8 _0x0c[4];
+				uint8_t _0x0c[4];
 			} Data;
 
 			ASSERT_SIZE(TData, 16);
 
-			void Load(std::fstream& FileStream, UInt32 Size) override;
+			void Load(std::fstream& FileStream, uint32_t Size) override;
 			void Save(std::fstream& FileStream) override;
 		};
 
 		class AFIDChunk : public ChunkBase
 		{
 		public:
-			void Load(std::fstream& FileStream, UInt32 Size) override;
+			void Load(std::fstream& FileStream, uint32_t Size) override;
 			void Save(std::fstream& FileStream) override;
 
 			struct AnimFileInfo
 			{
-				UInt16 AnimId;
-				UInt16 SubAnimId;
-				UInt32 FileId;
+				uint16_t AnimId;
+				uint16_t SubAnimId;
+				uint32_t FileId;
 			};
 
 			std::vector<AnimFileInfo> AnimInfos;
@@ -170,10 +170,10 @@ namespace M2Lib
 		class BFIDChunk : public ChunkBase
 		{
 		public:
-			void Load(std::fstream& FileStream, UInt32 Size) override;
+			void Load(std::fstream& FileStream, uint32_t Size) override;
 			void Save(std::fstream& FileStream) override;
 
-			std::vector<UInt32> BoneFileDataIds;
+			std::vector<uint32_t> BoneFileDataIds;
 		};
 #pragma pack(pop)
 	}

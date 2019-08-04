@@ -50,7 +50,7 @@ namespace M2Lib
 		class CElement_Name
 		{
 		public:
-			Char8* szName;
+			char* szName;
 
 		public:
 			CElement_Name()
@@ -73,13 +73,13 @@ namespace M2Lib
 		class CElement_GlobalSequence
 		{
 		public:
-			UInt32 Value;
+			uint32_t Value;
 		};
 
 		class CElement_AnimationLookup
 		{
 		public:
-			UInt16 AnimationID;
+			uint16_t AnimationID;
 		};
 
 		ASSERT_SIZE(CElement_GlobalSequence, 4);
@@ -89,26 +89,26 @@ namespace M2Lib
 		class CElement_Animation
 		{
 		public:
-			UInt16 AnimationID;
-			UInt16 AnimationSubID;
-			UInt32 Length;
+			uint16_t AnimationID;
+			uint16_t AnimationSubID;
+			uint32_t Length;
 
-			Float32 MoveSpeed;
+			float MoveSpeed;
 
-			UInt32 Flags;
+			uint32_t Flags;
 
-			SInt16 Rarity;
+			int16_t Rarity;
 
-			UInt16 Padding;
-			UInt32 BlendTimeIn;
-			UInt32 BlendTimeOut;
+			uint16_t Padding;
+			uint32_t BlendTimeIn;
+			uint32_t BlendTimeOut;
 
-			UInt32 PlaySpeed;
+			uint32_t PlaySpeed;
 
 			SVolume BoundingVolume;
 
-			SInt16 NextAnimation;		// index to next animation with same AnimationID, -1 if there are no more.
-			UInt16 NextIndex;			// this animation's index in the list of animations.
+			int16_t NextAnimation;		// index to next animation with same AnimationID, -1 if there are no more.
+			uint16_t NextIndex;			// this animation's index in the list of animations.
 
 			bool IsInline() const { return (Flags & 0x20) != 0; }
 		};
@@ -124,42 +124,42 @@ namespace M2Lib
 			class CChannel
 			{
 			public:
-				UInt32 n;	// number
-				UInt32 o;	// offset
+				uint32_t n;	// number
+				uint32_t o;	// offset
 			};
 
 			// used for times?
 			struct SKey_UInt32
 			{
-				UInt32 Values[1];
+				uint32_t Values[1];
 			};
 
 			// used for position and scale keys.
 			struct SKey_Float32x3
 			{
-				Float32 Values[3];
+				float Values[3];
 			};
 
 			// used for rotation quaternion keys.
 			struct SKey_SInt16x4
 			{
-				UInt16 Values[4];
+				uint16_t Values[4];
 			};
 
 			// used for visibility, probably interpreted as boolean.
 			struct SKey_UInt16
 			{
-				UInt16 Values[1];
+				uint16_t Values[1];
 			};
 
 			// used for light intensity, etc.
 			struct SKey_Float32
 			{
-				Float32 Values[1];
+				float Values[1];
 			};
 
 			enum EInterpolationType
-				: UInt16
+				: uint16_t
 			{
 				EInterpolationType_None = 0,
 				EInterpolationType_Linear = 1,
@@ -175,7 +175,7 @@ namespace M2Lib
 			}
 
 			EInterpolationType InterpolationType;
-			SInt16 GlobalSequenceID;
+			int16_t GlobalSequenceID;
 			M2Array Times;
 			M2Array Keys;
 		};
@@ -197,7 +197,7 @@ namespace M2Lib
 		{
 		public:
 			enum EFlags
-				: UInt32
+				: uint32_t
 			{
 				EFlags_SphericalBillboard = 0x8,
 				EFlags_BilboardLockX = 0x10,
@@ -209,11 +209,11 @@ namespace M2Lib
 			};
 
 		public:
-			SInt32 BoneLookupID;		// index into BoneLookup table or -1.
+			int32_t BoneLookupID;		// index into BoneLookup table or -1.
 			EFlags Flags;				//
-			SInt16 ParentBone;			// index to parent bone or -1.
-			UInt16 SubmeshId;			// // Mesh part ID
-			UInt16 Unknown[2];			// ?
+			int16_t ParentBone;			// index to parent bone or -1.
+			uint16_t SubmeshId;			// // Mesh part ID
+			uint16_t Unknown[2];			// ?
 			CElement_AnimationBlock AnimationBlock_Position;	// Float32x3
 			CElement_AnimationBlock AnimationBlock_Rotation;	// SInt16x4
 			CElement_AnimationBlock AnimationBlock_Scale;		// Float32x3
@@ -228,7 +228,7 @@ namespace M2Lib
 		{
 		public:
 			enum EBoneLookup
-				: SInt16
+				: int16_t
 			{
 				EBoneLookup_ArmL,
 				EBoneLookup_ArmR,
@@ -279,7 +279,7 @@ namespace M2Lib
 		{
 		public:
 			CElement_AnimationBlock AnimationBlock_Color;		// Float32x3
-			CElement_AnimationBlock AnimationBlock_Opacity;		// UInt16
+			CElement_AnimationBlock AnimationBlock_Opacity;		// uint16_t
 		};
 
 		ASSERT_SIZE(CElement_Color, 40);
@@ -290,7 +290,7 @@ namespace M2Lib
 		{
 		public:
 			enum class ETextureType
-				: UInt32
+				: uint32_t
 			{
 				Final_Hardcoded = 0,
 				Skin = 1,
@@ -316,7 +316,7 @@ namespace M2Lib
 			static std::string GetTypeString(ETextureType Type);
 
 			enum class ETextureFlags
-				: UInt32
+				: uint32_t
 			{
 				None = 0,
 				WrapX = 1,
@@ -335,7 +335,7 @@ namespace M2Lib
 		class CElement_Transparency
 		{
 		public:
-			CElement_AnimationBlock AnimationBlock_Transparency;	// UInt16
+			CElement_AnimationBlock AnimationBlock_Transparency;	// uint16_t
 
 		};
 
@@ -358,7 +358,7 @@ namespace M2Lib
 		class CElement_TextureReplace
 		{
 		public:
-			SInt16 TextureID;
+			int16_t TextureID;
 		};
 
 		ASSERT_SIZE(CElement_TextureReplace, 2);
@@ -369,7 +369,7 @@ namespace M2Lib
 		{
 		public:
 			enum EFlags
-				: UInt16
+				: uint16_t
 			{
 				EFlags_None = 0x00,
 				EFlags_Unlit = 0x01,
@@ -383,7 +383,7 @@ namespace M2Lib
 				EFlags_Unk9 = 0x800, // prevent alpha for custom elements. if set, use (fully) opaque or transparent. (litSphere, shadowMonk) (MoP+) 
 			};
 
-			enum EBlend : UInt16
+			enum EBlend : uint16_t
 			{
 				EBlend_Opaque = 0,
 				EBlend_Mod,
@@ -407,7 +407,7 @@ namespace M2Lib
 		class CElement_PartitionedBoneLookup
 		{
 		public:
-			UInt16 BoneIndex;			// index into the model's bone list.
+			uint16_t BoneIndex;			// index into the model's bone list.
 		};
 
 		ASSERT_SIZE(CElement_PartitionedBoneLookup, 2);
@@ -417,7 +417,7 @@ namespace M2Lib
 		class CElement_TextureLookup
 		{
 		public:
-			UInt16 TextureIndex;
+			uint16_t TextureIndex;
 		};
 
 		ASSERT_SIZE(CElement_TextureLookup, 2);
@@ -427,7 +427,7 @@ namespace M2Lib
 		class CElement_TextureUnits
 		{
 		public:
-			UInt16 Unit;
+			uint16_t Unit;
 		};
 
 		ASSERT_SIZE(CElement_TextureUnits, 2);
@@ -437,7 +437,7 @@ namespace M2Lib
 		class CElement_TransparencyLookup
 		{
 		public:
-			UInt16 TransparencyLookup;
+			uint16_t TransparencyLookup;
 		};
 
 		ASSERT_SIZE(CElement_TransparencyLookup, 2);
@@ -447,7 +447,7 @@ namespace M2Lib
 		class CElement_UVAnimationLookup
 		{
 		public:
-			UInt16 TextureIndex;
+			uint16_t TextureIndex;
 		};
 
 		ASSERT_SIZE(CElement_UVAnimationLookup, 2);
@@ -457,7 +457,7 @@ namespace M2Lib
 		class CElement_BoundingTriangle
 		{
 		public:
-			UInt16 Index;
+			uint16_t Index;
 		};
 
 		ASSERT_SIZE(CElement_BoundingTriangle, 2);
@@ -488,7 +488,7 @@ namespace M2Lib
 		{
 		public:
 			enum EID
-				: UInt32
+				: uint32_t
 			{
 				EID_WristL = 0,		// (shield)
 				EID_PalmR = 1,
@@ -549,10 +549,10 @@ namespace M2Lib
 			};
 
 		public:
-			UInt32 ID;					//
-			UInt32 ParentBone;			// parent bone.
+			uint32_t ID;					//
+			uint32_t ParentBone;			// parent bone.
 			C3Vector Position;			// position relative to parent bone.
-			CElement_AnimationBlock AnimationBlock_Visibility;	// UInt16.
+			CElement_AnimationBlock AnimationBlock_Visibility;	// uint16_t.
 		};
 
 		ASSERT_SIZE(CElement_Attachment, 40);
@@ -562,7 +562,7 @@ namespace M2Lib
 		class CElement_AttachmentLookup
 		{
 		public:
-			enum EAttachmentLookup : UInt16
+			enum EAttachmentLookup : uint16_t
 			{
 				EAttachmentLookup_Item_PalmR,
 				EAttachmentLookup_Item_PalmL,
@@ -618,17 +618,17 @@ namespace M2Lib
 			class CTimeLine
 			{
 			public:
-				UInt32 nTimeStamps;
-				UInt32 oTimeStamps;
+				uint32_t nTimeStamps;
+				uint32_t oTimeStamps;
 			};
 
 		public:
-			Char8 ID[4];			// this event's ID.
-			UInt32 SoundID;			// database id of sound to play from SoundEntries.dbc.
-			UInt32 ParentBone;		// parent bone.
+			char ID[4];			// this event's ID.
+			uint32_t SoundID;			// database id of sound to play from SoundEntries.dbc.
+			uint32_t ParentBone;		// parent bone.
 			C3Vector Position;		// position relative to parent bone.
-			UInt16 InterpolationType;
-			SInt16 GlobalSequenceID;
+			uint16_t InterpolationType;
+			int16_t GlobalSequenceID;
 			M2Array TimeLines;
 		};
 
@@ -639,16 +639,16 @@ namespace M2Lib
 		class CElement_Light
 		{
 		public:
-			UInt16 Type;
-			UInt16 ParentBone;
+			uint16_t Type;
+			uint16_t ParentBone;
 			C3Vector Position;
 			CElement_AnimationBlock AnimationBlock_AmbientColor;		// Float32x3
-			CElement_AnimationBlock AnimationBlock_AmbientIntensity;	// Float32
+			CElement_AnimationBlock AnimationBlock_AmbientIntensity;	// float
 			CElement_AnimationBlock AnimationBlock_DiffuseColor;		// Float32x3
-			CElement_AnimationBlock AnimationBlock_DiffuseIntensity;	// Float32
-			CElement_AnimationBlock AnimationBlock_AttenuationStart;	// Float32
-			CElement_AnimationBlock AnimationBlock_AttenuationEnd;		// Float32
-			CElement_AnimationBlock AnimationBlock_Visibility;			// UInt16
+			CElement_AnimationBlock AnimationBlock_DiffuseIntensity;	// float
+			CElement_AnimationBlock AnimationBlock_AttenuationStart;	// float
+			CElement_AnimationBlock AnimationBlock_AttenuationEnd;		// float
+			CElement_AnimationBlock AnimationBlock_Visibility;			// uint16_t
 		};
 
 		ASSERT_SIZE(CElement_Light, 156);
@@ -658,7 +658,7 @@ namespace M2Lib
 		class CElement_Camera
 		{
 		public:
-			enum ECameraType : SInt32
+			enum ECameraType : int32_t
 			{
 				FlyBy = -1,
 				Portrait = 0,
@@ -666,14 +666,14 @@ namespace M2Lib
 			};
 
 			ECameraType Type;
-			Float32 ClipFar;
-			Float32 ClipNear;
+			float ClipFar;
+			float ClipNear;
 			CElement_AnimationBlock AnimationBlock_Position;		// Float32x3
 			C3Vector Position;
 			CElement_AnimationBlock AnimationBlock_Target;			// Float32x3
 			C3Vector Target;
-			CElement_AnimationBlock AnimationBlock_Roll;			// Float32
-			CElement_AnimationBlock AnimationBlock_FieldOfView;		// Float32	// v4
+			CElement_AnimationBlock AnimationBlock_Roll;			// float
+			CElement_AnimationBlock AnimationBlock_FieldOfView;		// float	// v4
 		};
 
 		ASSERT_SIZE(CElement_Camera, 116);
@@ -681,7 +681,7 @@ namespace M2Lib
 		class CElement_Camera_PreCata
 		{
 		public:
-			enum ECameraType : SInt32
+			enum ECameraType : int32_t
 			{
 				FlyBy = -1,
 				Portrait = 0,
@@ -689,14 +689,14 @@ namespace M2Lib
 			};
 
 			ECameraType Type;
-			Float32 FoV;
-			Float32 ClipFar;
-			Float32 ClipNear;
+			float FoV;
+			float ClipFar;
+			float ClipNear;
 			CElement_AnimationBlock AnimationBlock_Position;		// Float32x3
 			C3Vector Position;
 			CElement_AnimationBlock AnimationBlock_Target;			// Float32x3
 			C3Vector Target;
-			CElement_AnimationBlock AnimationBlock_Roll;			// Float32
+			CElement_AnimationBlock AnimationBlock_Roll;			// float
 		};
 
 		ASSERT_SIZE(CElement_Camera_PreCata, 100);
@@ -706,7 +706,7 @@ namespace M2Lib
 		class CElement_CameraLookup
 		{
 		public:
-			UInt16 Index;
+			uint16_t Index;
 		};
 
 		ASSERT_SIZE(CElement_CameraLookup, 2);
@@ -716,24 +716,24 @@ namespace M2Lib
 		class CElement_RibbonEmitter
 		{
 		public:
-			SInt32 ID;
-			SInt32 ParentBone;
+			int32_t ID;
+			int32_t ParentBone;
 			C3Vector Position;
 			M2Array Texture;
 			M2Array RenderFlag;
 			CElement_AnimationBlock AnimationBlock_Color;		// Float32x3
-			CElement_AnimationBlock AnimationBlock_Opacity;		// UInt16
-			CElement_AnimationBlock AnimationBlock_HeightAbove;	// Float32, position of point A of ribbon leading edge.
-			CElement_AnimationBlock AnimationBlock_HeightBelow;	// Float32, position of point B of ribbon leading edge.
-			Float32 EdgesPerSecond;
-			Float32 EdgeLifetime;
-			Float32 EmissionAngle;		// use arcsin(val) to get the angle in degree.
-			UInt16 TextureRows;
-			UInt16 TextureCols;
-			CElement_AnimationBlock AnimationBlock_TexSlotTrack;	// SInt32
-			CElement_AnimationBlock AnimationBlock_Visibility;	// SInt16
-			SInt16 PriorityPlane;
-			UInt16 Padding;
+			CElement_AnimationBlock AnimationBlock_Opacity;		// uint16_t
+			CElement_AnimationBlock AnimationBlock_HeightAbove;	// float, position of point A of ribbon leading edge.
+			CElement_AnimationBlock AnimationBlock_HeightBelow;	// float, position of point B of ribbon leading edge.
+			float EdgesPerSecond;
+			float EdgeLifetime;
+			float EmissionAngle;		// use arcsin(val) to get the angle in degree.
+			uint16_t TextureRows;
+			uint16_t TextureCols;
+			CElement_AnimationBlock AnimationBlock_TexSlotTrack;	// int32_t
+			CElement_AnimationBlock AnimationBlock_Visibility;	// int16_t
+			int16_t PriorityPlane;
+			uint16_t Padding;
 		};
 
 		ASSERT_SIZE(CElement_RibbonEmitter, 176);
@@ -743,36 +743,36 @@ namespace M2Lib
 		class CElement_ParticleEmitter
 		{
 		public:
-			UInt32 ID;				// always -1?
-			UInt32 Flags;
+			uint32_t ID;				// always -1?
+			uint32_t Flags;
 			C3Vector Position;		// position relative to parent bone.
-			UInt16 ParentBone;
-			UInt16 Texture;
+			uint16_t ParentBone;
+			uint16_t Texture;
 			M2Array FileNameModel;	// name of model to spawn *.mdx.
 			M2Array ChildEmitter;
 
-			UInt8 BlendingType;
-			UInt8 EmitterType;
-			UInt16 ParticleColorIndex;
+			uint8_t BlendingType;
+			uint8_t EmitterType;
+			uint16_t ParticleColorIndex;
 
 			fixed_point<uint8_t, 2, 5> multiTextureParamX[2];
 
-			UInt16 TextureTileRotation;
-			UInt16 TextureDimensionsRows;
-			UInt16 TextureDimensionsColumns;
+			uint16_t TextureTileRotation;
+			uint16_t TextureDimensionsRows;
+			uint16_t TextureDimensionsColumns;
 
-			CElement_AnimationBlock AnimationBlock_EmitSpeed;		// Float32
-			CElement_AnimationBlock AnimationBlock_SpeedVariance;	// Float32
-			CElement_AnimationBlock AnimationBlock_VerticalRange;	// Float32
-			CElement_AnimationBlock AnimationBlock_HorizontalRange;	// Float32
-			CElement_AnimationBlock AnimationBlock_Gravity;			// Float32
-			CElement_AnimationBlock AnimationBlock_Lifespan;		// Float32
-			Float32 LifespanVary;
-			CElement_AnimationBlock AnimationBlock_EmissionRate;	// Float32
-			Float32 EmissionRateVary;
-			CElement_AnimationBlock AnimationBlock_EmissionAreaLength;	// Float32
-			CElement_AnimationBlock AnimationBlock_EmissionAreaWidth;	// Float32
-			CElement_AnimationBlock AnimationBlock_zSource;			// Float32
+			CElement_AnimationBlock AnimationBlock_EmitSpeed;		// float
+			CElement_AnimationBlock AnimationBlock_SpeedVariance;	// float
+			CElement_AnimationBlock AnimationBlock_VerticalRange;	// float
+			CElement_AnimationBlock AnimationBlock_HorizontalRange;	// float
+			CElement_AnimationBlock AnimationBlock_Gravity;			// float
+			CElement_AnimationBlock AnimationBlock_Lifespan;		// float
+			float LifespanVary;
+			CElement_AnimationBlock AnimationBlock_EmissionRate;	// float
+			float EmissionRateVary;
+			CElement_AnimationBlock AnimationBlock_EmissionAreaLength;	// float
+			CElement_AnimationBlock AnimationBlock_EmissionAreaWidth;	// float
+			CElement_AnimationBlock AnimationBlock_zSource;			// float
 
 			CElement_FakeAnimationBlock ColorTrack;
 			CElement_FakeAnimationBlock AlphaTrack;
@@ -780,29 +780,29 @@ namespace M2Lib
 			C2Vector ScaleVary;
 			CElement_FakeAnimationBlock HeadCellTrack;
 			CElement_FakeAnimationBlock TailCellTrack;
-			Float32 TailLength;
-			Float32 TwinkleSpeed;
-			Float32 TwinklePercent;
+			float TailLength;
+			float TwinkleSpeed;
+			float TwinklePercent;
 			CRange TwinkleScale;
-			Float32 BurstMultiplier;
-			Float32 Drag;
-			Float32 BaseSpin;
-			Float32 BaseSpinVary;
-			Float32 Spin;
-			Float32 SpinVary;
+			float BurstMultiplier;
+			float Drag;
+			float BaseSpin;
+			float BaseSpinVary;
+			float Spin;
+			float SpinVary;
 
 			M2Box Tumble;
 
 			C3Vector WindVector;
-			Float32 WindTime;
+			float WindTime;
 			
-			Float32 FollowSpeed1;
-			Float32 FollowScale1;
-			Float32 FollowSpeed2;
-			Float32 FollowScale2;
+			float FollowSpeed1;
+			float FollowScale1;
+			float FollowSpeed2;
+			float FollowScale2;
 
 			M2Array SplinePoints;	// C3Vector
-			CElement_AnimationBlock AnimationBlock_EnabledIn;		// UInt16
+			CElement_AnimationBlock AnimationBlock_EnabledIn;		// uint16_t
 
 			vector_2fp_6_9 multiTextureParam0[2];
 			vector_2fp_6_9 multiTextureParam1[2];

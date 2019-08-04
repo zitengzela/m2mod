@@ -37,38 +37,38 @@ namespace M2Lib
 		public:
 			struct CM2Description
 			{
-				Char8 ID[4];	// 'MD20'
-				UInt32 Version;
+				char ID[4];	// 'MD20'
+				uint32_t Version;
 
-				UInt32 nName;
-				UInt32 oName;
+				uint32_t nName;
+				uint32_t oName;
 
 				union
 				{
-					UInt32 Raw;
+					uint32_t Raw;
 					struct {
-						UInt32 flag_tilt_x : 1;
-						UInt32 flag_tilt_y : 1;
-						UInt32 flag_unk_0x4 : 1;
-						UInt32 flag_use_texture_combiner_combos : 1; // add textureCombinerCombos array to end of data
-						UInt32 flag_unk_0x10 : 1;
-						UInt32 flag_load_phys_data : 1;
-						UInt32 flag_unk_0x40 : 1;
-						UInt32 flag_unk_0x80 : 1; // with this flag unset, demon hunter tattoos stop glowing
-						UInt32 flag_camera_related : 1;
-						UInt32 flag_new_particle_record : 1; // In CATA: new version of ParticleEmitters. By default, length of M2ParticleOld is 476. But if 0x200 is set or if version is bigger than 271, length of M2ParticleOld is 492.
-						UInt32 flag_unk_0x400 : 1;
-						UInt32 flag_texture_transforms_use_bone_sequences : 1; // >= WoD 0x800 -- When set, texture transforms are animated using the sequence being played on the bone found by index in tex_unit_lookup_table[textureTransformIndex], instead of using the sequence being played on the model's first bone. Example model: 6DU_HellfireRaid_FelSiege03_Creature
-						UInt32 flag_unk_0x1000 : 1;
-						UInt32 flag_unk_0x2000 : 1; // seen in various legion models
-						UInt32 flag_unk_0x4000 : 1;
-						UInt32 flag_unk_0x8000 : 1; // seen in UI_MainMenu_Legion
-						UInt32 flag_unk_0x10000 : 1;
-						UInt32 flag_unk_0x20000 : 1;
-						UInt32 flag_unk_0x40000 : 1;
-						UInt32 flag_unk_0x80000 : 1;
-						UInt32 flag_unk_0x100000 : 1;
-						UInt32 flag_unk_0x200000 : 1; // apparently: use 24500 upgraded model format: chunked .anim files, change in the exporter reordering sequence+bone blocks before name
+						uint32_t flag_tilt_x : 1;
+						uint32_t flag_tilt_y : 1;
+						uint32_t flag_unk_0x4 : 1;
+						uint32_t flag_use_texture_combiner_combos : 1; // add textureCombinerCombos array to end of data
+						uint32_t flag_unk_0x10 : 1;
+						uint32_t flag_load_phys_data : 1;
+						uint32_t flag_unk_0x40 : 1;
+						uint32_t flag_unk_0x80 : 1; // with this flag unset, demon hunter tattoos stop glowing
+						uint32_t flag_camera_related : 1;
+						uint32_t flag_new_particle_record : 1; // In CATA: new version of ParticleEmitters. By default, length of M2ParticleOld is 476. But if 0x200 is set or if version is bigger than 271, length of M2ParticleOld is 492.
+						uint32_t flag_unk_0x400 : 1;
+						uint32_t flag_texture_transforms_use_bone_sequences : 1; // >= WoD 0x800 -- When set, texture transforms are animated using the sequence being played on the bone found by index in tex_unit_lookup_table[textureTransformIndex], instead of using the sequence being played on the model's first bone. Example model: 6DU_HellfireRaid_FelSiege03_Creature
+						uint32_t flag_unk_0x1000 : 1;
+						uint32_t flag_unk_0x2000 : 1; // seen in various legion models
+						uint32_t flag_unk_0x4000 : 1;
+						uint32_t flag_unk_0x8000 : 1; // seen in UI_MainMenu_Legion
+						uint32_t flag_unk_0x10000 : 1;
+						uint32_t flag_unk_0x20000 : 1;
+						uint32_t flag_unk_0x40000 : 1;
+						uint32_t flag_unk_0x80000 : 1;
+						uint32_t flag_unk_0x100000 : 1;
+						uint32_t flag_unk_0x200000 : 1; // apparently: use 24500 upgraded model format: chunked .anim files, change in the exporter reordering sequence+bone blocks before name
 					};
 				} Flags;
 			} Description;
@@ -77,97 +77,97 @@ namespace M2Lib
 
 			struct CM2Elements
 			{
-				UInt32 nGlobalSequence;		// 4
-				UInt32 oGlobalSequence;
+				uint32_t nGlobalSequence;		// 4
+				uint32_t oGlobalSequence;
 
-				UInt32 nAnimation;			// 64
-				UInt32 oAnimation;
+				uint32_t nAnimation;			// 64
+				uint32_t oAnimation;
 
-				UInt32 nAnimationLookup;	// 2
-				UInt32 oAnimationLookup;
+				uint32_t nAnimationLookup;	// 2
+				uint32_t oAnimationLookup;
 
-				UInt32 nBone;				// 88
-				UInt32 oBone;
+				uint32_t nBone;				// 88
+				uint32_t oBone;
 
-				UInt32 nKeyBoneLookup;		// 2
-				UInt32 oKeyBoneLookup;
+				uint32_t nKeyBoneLookup;		// 2
+				uint32_t oKeyBoneLookup;
 
-				UInt32 nVertex;				// 48
-				UInt32 oVertex;
+				uint32_t nVertex;				// 48
+				uint32_t oVertex;
 
-				UInt32 nSkin;				// 
+				uint32_t nSkin;				// 
 
-				UInt32 nColor;				// 40
-				UInt32 oColor;
+				uint32_t nColor;				// 40
+				uint32_t oColor;
 
-				UInt32 nTexture;			// 16
-				UInt32 oTexture;
+				uint32_t nTexture;			// 16
+				uint32_t oTexture;
 
-				UInt32 nTransparency;		// 20
-				UInt32 oTransparency;
+				uint32_t nTransparency;		// 20
+				uint32_t oTransparency;
 
-				UInt32 nTextureAnimation;	// 60
-				UInt32 oTextureAnimation;
+				uint32_t nTextureAnimation;	// 60
+				uint32_t oTextureAnimation;
 
-				UInt32 nTextureReplace;		// 2
-				UInt32 oTextureReplace;
+				uint32_t nTextureReplace;		// 2
+				uint32_t oTextureReplace;
 
-				UInt32 nTextureFlags;		// 4
-				UInt32 oTextureFlags;
+				uint32_t nTextureFlags;		// 4
+				uint32_t oTextureFlags;
 
-				UInt32 nSkinnedBoneLookup;	// 2
-				UInt32 oSkinnedBoneLookup;
+				uint32_t nSkinnedBoneLookup;	// 2
+				uint32_t oSkinnedBoneLookup;
 
-				UInt32 nTextureLookup;		// 2
-				UInt32 oTextureLookup;
+				uint32_t nTextureLookup;		// 2
+				uint32_t oTextureLookup;
 
-				UInt32 nTextureUnitLookup;	// 2
-				UInt32 oTextureUnitLookup;
+				uint32_t nTextureUnitLookup;	// 2
+				uint32_t oTextureUnitLookup;
 
-				UInt32 nTransparencyLookup;	// 2
-				UInt32 oTransparencyLookup;
+				uint32_t nTransparencyLookup;	// 2
+				uint32_t oTransparencyLookup;
 
-				UInt32 nTextureAnimationLookup;	// 2
-				UInt32 oTextureAnimationLookup;
+				uint32_t nTextureAnimationLookup;	// 2
+				uint32_t oTextureAnimationLookup;
 
 				SVolume CollisionVolume;
 				SVolume BoundingVolume;
 
-				UInt32 nBoundingTriangle;		// 2
-				UInt32 oBoundingTriangle;
+				uint32_t nBoundingTriangle;		// 2
+				uint32_t oBoundingTriangle;
 
-				UInt32 nBoundingVertex;			// 12
-				UInt32 oBoundingVertex;
+				uint32_t nBoundingVertex;			// 12
+				uint32_t oBoundingVertex;
 
-				UInt32 nBoundingNormal;			// 12
-				UInt32 oBoundingNormal;
+				uint32_t nBoundingNormal;			// 12
+				uint32_t oBoundingNormal;
 
-				UInt32 nAttachment;				// 40
-				UInt32 oAttachment;
+				uint32_t nAttachment;				// 40
+				uint32_t oAttachment;
 
-				UInt32 nAttachmentLookup;		// 2
-				UInt32 oAttachmentLookup;
+				uint32_t nAttachmentLookup;		// 2
+				uint32_t oAttachmentLookup;
 
-				UInt32 nEvent;					// 36
-				UInt32 oEvent;
+				uint32_t nEvent;					// 36
+				uint32_t oEvent;
 
-				UInt32 nLight;					// 156
-				UInt32 oLight;
+				uint32_t nLight;					// 156
+				uint32_t oLight;
 
-				UInt32 nCamera;					// 116
-				UInt32 oCamera;
+				uint32_t nCamera;					// 116
+				uint32_t oCamera;
 
-				UInt32 nCameraLookup;			// 2
-				UInt32 oCameraLookup;
+				uint32_t nCameraLookup;			// 2
+				uint32_t oCameraLookup;
 
-				UInt32 nRibbonEmitter;			// 176
-				UInt32 oRibbonEmitter;
+				uint32_t nRibbonEmitter;			// 176
+				uint32_t oRibbonEmitter;
 
-				UInt32 nParticleEmitter;		// 492
-				UInt32 oParticleEmitter;
+				uint32_t nParticleEmitter;		// 492
+				uint32_t oParticleEmitter;
 
-				UInt32 nTextureCombinerCombo;
-				UInt32 oTextureCombinerCombo;
+				uint32_t nTextureCombinerCombo;
+				uint32_t oTextureCombinerCombo;
 
 			} Elements;
 
@@ -188,7 +188,7 @@ namespace M2Lib
 		bool hasLodSkins;
 		bool needRemoveTXIDChunk; // TXID chunk will be removed when model has textures that are not indexed in CASC storage
 
-		UInt32 m_OriginalModelChunkSize;
+		uint32_t m_OriginalModelChunkSize;
 		GlobalSettings* Settings;
 
 		M2I* pInM2I;
@@ -197,12 +197,12 @@ namespace M2Lib
 	public:
 		CM2Header Header;		// used for loading and saving. not used when editing.
 		DataElement Elements[M2Element::EElement__Count__];
-		UInt32 GetLastElementIndex();
+		uint32_t GetLastElementIndex();
 
 		#define SKIN_COUNT 7
 		#define LOD_SKIN_MAX_COUNT 3
 		M2Skin* Skins[SKIN_COUNT];
-		UInt32 OriginalSkinCount;	// skin count before importing m2i
+		uint32_t OriginalSkinCount;	// skin count before importing m2i
 
 		M2(GlobalSettings* Settings = NULL)
 		{
@@ -220,31 +220,31 @@ namespace M2Lib
 
 		~M2();
 
-		UInt32 GetHeaderSize() const;
+		uint32_t GetHeaderSize() const;
 		Expansion GetExpansion() const;
 
 		// loads an M2 from a file.
-		EError Load(const Char16* FileName);
+		EError Load(const wchar_t* FileName);
 
 		void SetReplaceM2(M2* replaceM2 = NULL) { this->replaceM2 = replaceM2; }
 
 		// saves this M2 to a file.
-		EError Save(const Char16* FileName);
+		EError Save(const wchar_t* FileName);
 
 		// exports the loaded M2 as an M2I file.
-		EError ExportM2Intermediate(Char16 const* FileName);
+		EError ExportM2Intermediate(wchar_t const* FileName);
 		// imports an M2I file and merges it with already loaded M2.
-		EError ImportM2Intermediate(Char16 const* FileName);
+		EError ImportM2Intermediate(wchar_t const* FileName);
 		
 		// prints diagnostic information.
 		void PrintInfo();
 		void PrintReferencedFileInfo();
 
-		UInt32 AddBone(M2Element::CElement_Bone const& Bone);
-		UInt32 AddTexture(M2Element::CElement_Texture::ETextureType Type, M2Element::CElement_Texture::ETextureFlags Flags, char const* szTextureSource);
-		UInt32 AddTextureLookup(UInt16 TextureId, bool ForceNewIndex = false);
-		UInt32 GetTextureIndex(M2Element::CElement_Texture::ETextureType Type, const Char8* szTextureSource);
-		std::string GetTexturePath(UInt32 Index);
+		uint32_t AddBone(M2Element::CElement_Bone const& Bone);
+		uint32_t AddTexture(M2Element::CElement_Texture::ETextureType Type, M2Element::CElement_Texture::ETextureFlags Flags, char const* szTextureSource);
+		uint32_t AddTextureLookup(uint16_t TextureId, bool ForceNewIndex = false);
+		uint32_t GetTextureIndex(M2Element::CElement_Texture::ETextureType Type, const char* szTextureSource);
+		std::string GetTexturePath(uint32_t Index);
 		void RemoveTXIDChunk();
 
 		DataElement* GetAnimations();
@@ -259,30 +259,30 @@ namespace M2Lib
 		// utilities and tests
 
 		// averages normals of duplicate vertices within submeshes.
-		void FixSeamsSubMesh(Float32 PositionalTolerance, Float32 AngularTolerance);
+		void FixSeamsSubMesh(float PositionalTolerance, float AngularTolerance);
 		// averages normals of duplicate vertices between body submeshes.
-		void FixSeamsBody(Float32 PositionalTolerance, Float32 AngularTolerance);
+		void FixSeamsBody(float PositionalTolerance, float AngularTolerance);
 		// closes small gaps between clothing and body and copies normals from body to clothing.
-		void FixSeamsClothing(Float32 PositionalTolerance, Float32 AngularTolerance);
+		void FixSeamsClothing(float PositionalTolerance, float AngularTolerance);
 		// averages normals on mesh edges
-		void FixNormals(Float32 AngularTolerance);
+		void FixNormals(float AngularTolerance);
 
 		void DoExtraWork();
 
 		// scales all positional coordinates of vertices, bones, attachments, events, lights, cameras, ribbon emitters, particle emitters.
-		void Scale(Float32 Scale);
+		void Scale(float Scale);
 		// mirrors the portrait camera accross the Y axis
 		void MirrorCamera();
 
 		void SetGlobalBoundingData(BoundaryData& Data);
 
-		UInt32 CloneTexture(UInt16 TextureId);
-		UInt32 AddTextureFlags(M2Element::CElement_TextureFlag::EFlags Flags, M2Element::CElement_TextureFlag::EBlend Blend);
+		uint32_t CloneTexture(uint16_t TextureId);
+		uint32_t AddTextureFlags(M2Element::CElement_TextureFlag::EFlags Flags, M2Element::CElement_TextureFlag::EBlend Blend);
 
 		EError LoadSkins();
 		EError SaveSkins(wchar_t const* M2FileName);
 
-		bool GetFileSkin(std::wstring& SkinFileNameResultBuffer, std::wstring const& M2FileName, UInt32 SkinIndex, bool Save);
+		bool GetFileSkin(std::wstring& SkinFileNameResultBuffer, std::wstring const& M2FileName, uint32_t SkinIndex, bool Save);
 		bool GetFileSkeleton(std::wstring& SkeletonFileNameResultBuffer, std::wstring const& M2FileName, bool Save);
 		bool GetFileParentSkeleton(std::wstring& SkeletonFileNameResultBuffer, std::wstring const& M2FileName, bool Save);
 
@@ -297,18 +297,18 @@ namespace M2Lib
 
 		// post load header
 		void m_LoadElements_CopyHeaderToElements();
-		void m_LoadElements_FindSizes(UInt32 ChunkSize);
+		void m_LoadElements_FindSizes(uint32_t ChunkSize);
 
 		// pre save header
 		void m_SaveElements_FindOffsets();
 
-		void m_FixAnimationOffsets(SInt32 OffsetDelta, SInt32 TotalDelta, M2Element::CElement_AnimationBlock& AnimationBlock, SInt32 iElement);
-		void m_FixAnimationM2Array(SInt32 OffsetDelta, SInt32 TotalDelta, SInt16 GlobalSequenceID, M2Array& Array, SInt32 iElement);
-		void m_FixFakeAnimationBlockOffsets(SInt32 OffsetDelta, SInt32 TotalDelta, M2Element::CElement_FakeAnimationBlock& AnimationBlock, SInt32 iElement);
+		void m_FixAnimationOffsets(int32_t OffsetDelta, int32_t TotalDelta, M2Element::CElement_AnimationBlock& AnimationBlock, int32_t iElement);
+		void m_FixAnimationM2Array(int32_t OffsetDelta, int32_t TotalDelta, int16_t GlobalSequenceID, M2Array& Array, int32_t iElement);
+		void m_FixFakeAnimationBlockOffsets(int32_t OffsetDelta, int32_t TotalDelta, M2Element::CElement_FakeAnimationBlock& AnimationBlock, int32_t iElement);
 
-		void m_FixAnimationOffsets_Old(SInt32 OffsetDelta, SInt32 TotalDelta, M2Element::CElement_AnimationBlock& AnimationBlock, SInt32 iElement);
-		void m_FixAnimationM2Array_Old(SInt32 OffsetDelta, SInt32 TotalDelta, SInt16 GlobalSequenceID, M2Array& Array, SInt32 iElement);
-		void m_FixFakeAnimationBlockOffsets_Old(SInt32 OffsetDelta, SInt32 TotalDelta, M2Element::CElement_FakeAnimationBlock& AnimationBlock, SInt32 iElement);
+		void m_FixAnimationOffsets_Old(int32_t OffsetDelta, int32_t TotalDelta, M2Element::CElement_AnimationBlock& AnimationBlock, int32_t iElement);
+		void m_FixAnimationM2Array_Old(int32_t OffsetDelta, int32_t TotalDelta, int16_t GlobalSequenceID, M2Array& Array, int32_t iElement);
+		void m_FixFakeAnimationBlockOffsets_Old(int32_t OffsetDelta, int32_t TotalDelta, M2Element::CElement_FakeAnimationBlock& AnimationBlock, int32_t iElement);
 
 		void m_SaveElements_CopyElementsToHeader();
 	};

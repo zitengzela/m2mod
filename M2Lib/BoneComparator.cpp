@@ -12,40 +12,40 @@ std::map<unsigned int, std::map<unsigned int, float>> M2Lib::BoneComparator::Dif
 	using namespace M2SkinElement;
 	using namespace M2Element;
 
-	std::map<UInt32, CElement_SubMesh*> OldSubsetsById;
-	std::map<UInt32, CElement_SubMesh*> NewSubsetsById;
+	std::map<uint32_t, CElement_SubMesh*> OldSubsetsById;
+	std::map<uint32_t, CElement_SubMesh*> NewSubsetsById;
 
 	auto OldSubsetCount = OldSkin->Elements[M2SkinElement::EElement_SubMesh].Count;
-	CElement_SubMesh* OldSubsets = OldSkin->Elements[M2SkinElement::EElement_SubMesh].as<CElement_SubMesh>();
+	auto OldSubsets = OldSkin->Elements[M2SkinElement::EElement_SubMesh].as<CElement_SubMesh>();
 
 	auto NewSubsetCount = NewSkin->Elements[M2SkinElement::EElement_SubMesh].Count;
-	CElement_SubMesh* NewSubsets = NewSkin->Elements[M2SkinElement::EElement_SubMesh].as<CElement_SubMesh>();
+	auto NewSubsets = NewSkin->Elements[M2SkinElement::EElement_SubMesh].as<CElement_SubMesh>();
 
 	auto BoneElement = newM2->GetBones();
 
 	std::map<unsigned int, Candidates> OldToNewBoneMap;
 
-	UInt16* OldIndices = OldSkin->Elements[EElement_VertexLookup].as<UInt16>();
-	UInt16* NewIndices = NewSkin->Elements[EElement_VertexLookup].as<UInt16>();
+	auto OldIndices = OldSkin->Elements[EElement_VertexLookup].as<uint16_t>();
+	auto NewIndices = NewSkin->Elements[EElement_VertexLookup].as<uint16_t>();
 
-	CVertex* OldVertices = oldM2->Elements[EElement_Vertex].as<CVertex>();
-	CVertex* NewVertices = newM2->Elements[EElement_Vertex].as<CVertex>();
+	auto OldVertices = oldM2->Elements[EElement_Vertex].as<CVertex>();
+	auto NewVertices = newM2->Elements[EElement_Vertex].as<CVertex>();
 
-	for (UInt32 m = 0; m < OldSubsetCount; ++m)
+	for (uint32_t m = 0; m < OldSubsetCount; ++m)
 	{
 		auto& OldSubSet = OldSubsets[m];
 
-		for (UInt32 n = 0; n < NewSubsetCount; ++n)
+		for (uint32_t n = 0; n < NewSubsetCount; ++n)
 		{
 			auto& NewSubSet = NewSubsets[n];
 
-			for (UInt32 k = OldSubSet.VertexStart; k < OldSubSet.VertexStart + OldSubSet.VertexCount; ++k)
+			for (uint32_t k = OldSubSet.VertexStart; k < OldSubSet.VertexStart + OldSubSet.VertexCount; ++k)
 			{
-				CVertex& OldVertex = OldVertices[OldIndices[k]];
+				auto& OldVertex = OldVertices[OldIndices[k]];
 
-				for (UInt32 l = NewSubSet.VertexStart; l < NewSubSet.VertexStart + NewSubSet.VertexCount; ++l)
+				for (uint32_t l = NewSubSet.VertexStart; l < NewSubSet.VertexStart + NewSubSet.VertexCount; ++l)
 				{
-					CVertex& NewVertex = NewVertices[NewIndices[l]];
+					auto& NewVertex = NewVertices[NewIndices[l]];
 
 					if (floatEq(NewVertex.Position.X, OldVertex.Position.X) &&
 						floatEq(NewVertex.Position.Y, OldVertex.Position.Y) &&
@@ -56,7 +56,7 @@ std::map<unsigned int, std::map<unsigned int, float>> M2Lib::BoneComparator::Dif
 							if (floatEq(OldVertex.BoneWeights[i], 0.0f))
 								continue;
 
-							std::list<UInt32> candidates;
+							std::list<uint32_t> candidates;
 							for (int j = 0; j < 4; ++j)
 							{
 								if (floatEq(NewVertex.BoneWeights[j], 0.0f))

@@ -12,9 +12,9 @@
 using namespace M2Lib::M2Element;
 using namespace M2Lib::M2Chunk;
 
-UInt32 M2Lib::M2::GetLastElementIndex()
+uint32_t M2Lib::M2::GetLastElementIndex()
 {
-	for (SInt32 i = M2Element::EElement__Count__ - 1; i >= 0; --i)
+	for (int32_t i = M2Element::EElement__Count__ - 1; i >= 0; --i)
 	{
 		if (!Elements[i].Data.empty())
 			return i;
@@ -54,16 +54,16 @@ M2Lib::M2::~M2()
 	delete Skeleton;
 	delete ParentSkeleton;
 
-	for (UInt32 i = 0; i < SKIN_COUNT; ++i)
+	for (uint32_t i = 0; i < SKIN_COUNT; ++i)
 		delete Skins[i];
 }
 
-UInt32 M2Lib::M2::GetHeaderSize() const
+uint32_t M2Lib::M2::GetHeaderSize() const
 {
 	return Header.IsLongHeader() && GetExpansion() >= Expansion::Cataclysm ? sizeof(Header) : sizeof(Header) - 8;
 }
 
-M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
+M2Lib::EError M2Lib::M2::Load(const wchar_t* FileName)
 {
 	// check path
 	if (!FileName)
@@ -87,7 +87,7 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 
 	// find file size
 	FileStream.seekg(0, std::ios::end);
-	UInt32 FileSize = (UInt32)FileStream.tellg();
+	uint32_t FileSize = (uint32_t)FileStream.tellg();
 	FileStream.seekg(0, std::ios::beg);
 
 	sLogger.LogInfo("File size: %u", FileSize);
@@ -95,22 +95,22 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 	struct PostChunkInfo
 	{
 		PostChunkInfo() { }
-		PostChunkInfo(UInt32 Offs, UInt32 Size)
+		PostChunkInfo(uint32_t Offs, uint32_t Size)
 		{
 			this->Offs = Offs;
 			this->Size = Size;
 		}
 
-		UInt32 Offs;
-		UInt32 Size;
+		uint32_t Offs;
+		uint32_t Size;
 	};
 
 	std::map<EM2Chunk, PostChunkInfo> PostProcessChunks;
 
 	while (FileStream.tellg() < FileSize)
 	{
-		UInt32 ChunkId;
-		UInt32 ChunkSize;
+		uint32_t ChunkId;
+		uint32_t ChunkSize;
 
 		FileStream.read((char*)&ChunkId, sizeof(ChunkId));
 		FileStream.read((char*)&ChunkSize, sizeof(ChunkSize));
@@ -141,7 +141,7 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 				case EM2Chunk::Skin: Chunk = new SFIDChunk(); break;
 				case EM2Chunk::Texture: Chunk = new TXIDChunk(); break;
 				case EM2Chunk::TXAC:
-					PostProcessChunks[eChunk] = { (UInt32)FileStream.tellg(), ChunkSize };
+					PostProcessChunks[eChunk] = { (uint32_t)FileStream.tellg(), ChunkSize };
 					FileStream.seekg(ChunkSize, std::ios::cur);
 					continue;
 				default:
@@ -149,7 +149,7 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 					break;
 			}
 
-			UInt32 savePos = FileStream.tellg();
+			uint32_t savePos = FileStream.tellg();
 			Chunk->Load(FileStream, ChunkSize);
 			FileStream.seekg(savePos + ChunkSize, std::ios::beg);
 
@@ -160,7 +160,7 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 	auto ModelChunk = (MD21Chunk*)GetChunk(EM2Chunk::Model);
 	if (!ModelChunk)
 	{
-		sLogger.LogError("Error: '%s' chunk not found in model", ChunkIdToStr((UInt32)EM2Chunk::Model, true).c_str());
+		sLogger.LogError("Error: '%s' chunk not found in model", ChunkIdToStr((uint32_t)EM2Chunk::Model, true).c_str());
 		return EError_FailedToLoadM2_FileCorrupt;
 	}
 
@@ -186,7 +186,7 @@ M2Lib::EError M2Lib::M2::Load(const Char16* FileName)
 	m_LoadElements_FindSizes(m_OriginalModelChunkSize);
 
 	// load elements
-	for (UInt32 i = 0; i < EElement__Count__; ++i)
+	for (uint32_t i = 0; i < EElement__Count__; ++i)
 	{
 		Elements[i].Align = 16;
 		if (!Elements[i].Load(ModelChunk->RawData.data(), 0))
@@ -375,7 +375,7 @@ M2Lib::EError M2Lib::M2::SaveSkeleton(std::wstring const& M2FileName)
 
 M2Lib::EError M2Lib::M2::LoadSkins()
 {
-	for (UInt32 i = 0; i < Header.Elements.nSkin; ++i)
+	for (uint32_t i = 0; i < Header.Elements.nSkin; ++i)
 	{
 		std::wstring FileNameSkin;
 		if (!GetFileSkin(FileNameSkin, _FileName, i, false))
@@ -399,14 +399,14 @@ M2Lib::EError M2Lib::M2::SaveSkins(wchar_t const* M2FileName)
 		return EError_FailedToSaveM2;
 
 	// delete existing skin files
-	for (UInt32 i = 0; i < SKIN_COUNT; ++i)
+	for (uint32_t i = 0; i < SKIN_COUNT; ++i)
 	{
 		std::wstring FileNameSkin;
 		if (GetFileSkin(FileNameSkin, M2FileName, i, true))
 			_wremove(FileNameSkin.c_str());
 	}
 
-	for (UInt32 i = 0; i < Header.Elements.nSkin; ++i)
+	for (uint32_t i = 0; i < Header.Elements.nSkin; ++i)
 	{
 		std::wstring FileNameSkin;
 		if (!GetFileSkin(FileNameSkin, M2FileName, i, true))
@@ -420,8 +420,8 @@ M2Lib::EError M2Lib::M2::SaveSkins(wchar_t const* M2FileName)
 
 	// 0x80 = flag_has_lod_skin_files - wrong
 	//if (Header.Description.Flags & 0x80)
-	UInt32 LodSkinCount = skinChunk ? skinChunk->SkinsFileDataIds.size() - Header.Elements.nSkin : (hasLodSkins ? LOD_SKIN_MAX_COUNT : 0);
-	for (UInt32 i = 0; i < LodSkinCount; ++i)
+	uint32_t LodSkinCount = skinChunk ? skinChunk->SkinsFileDataIds.size() - Header.Elements.nSkin : (hasLodSkins ? LOD_SKIN_MAX_COUNT : 0);
+	for (uint32_t i = 0; i < LodSkinCount; ++i)
 	{
 		std::wstring FileNameSkin;
 		if (!GetFileSkin(FileNameSkin, M2FileName, i + 4, true))
@@ -438,14 +438,14 @@ void M2Lib::M2::DoExtraWork()
 {
 	//auto RenderFlags = Elements[EElement_TextureFlags].as<CElement_TextureFlag>();
 	//sLogger.LogInfo("Existing render flags:");
-	//for (UInt32 i = 0; i < Elements[EElement_TextureFlags].Count; ++i)
+	//for (uint32_t i = 0; i < Elements[EElement_TextureFlags].Count; ++i)
 	//	sLogger.LogInfo("\tFlags: %u Blend: %u", RenderFlags[i].Flags, RenderFlags[i].Blend);
 
-	std::map<std::pair<SInt16, SInt16>, UInt32> renderFlagsByStyle;
+	std::map<std::pair<int16_t, int16_t>, uint32_t> renderFlagsByStyle;
 
 	M2SkinElement::TextureLookupRemap textureRemap;
 	// first assign shader data
-	for (UInt32 i = 0; i < SKIN_COUNT; ++i)
+	for (uint32_t i = 0; i < SKIN_COUNT; ++i)
 	{
 		auto Skin = Skins[i];
 		if (!Skin)
@@ -453,7 +453,7 @@ void M2Lib::M2::DoExtraWork()
 
 		auto Materials = Skin->Elements[M2SkinElement::EElement_Material].as<M2SkinElement::CElement_Material>();
 
-		for (UInt32 MeshIndex = 0; MeshIndex < Skin->ExtraDataBySubmeshIndex.size(); ++MeshIndex)
+		for (uint32_t MeshIndex = 0; MeshIndex < Skin->ExtraDataBySubmeshIndex.size(); ++MeshIndex)
 		{
 			auto ExtraData = Skin->ExtraDataBySubmeshIndex[MeshIndex];
 
@@ -467,11 +467,11 @@ void M2Lib::M2::DoExtraWork()
 
 			if (ExtraData->BlendMode != -1)
 			{
-				auto key = std::pair<SInt16, SInt16>(ExtraData->RenderFlags, ExtraData->BlendMode);
+				auto key = std::pair<int16_t, int16_t>(ExtraData->RenderFlags, ExtraData->BlendMode);
 				if (renderFlagsByStyle.find(key) == renderFlagsByStyle.end())
 					renderFlagsByStyle[key] = AddTextureFlags((CElement_TextureFlag::EFlags)ExtraData->RenderFlags, (CElement_TextureFlag::EBlend)ExtraData->BlendMode);
 
-				for (UInt32 j = 0; j < Skin->Header.nMaterial; ++j)
+				for (uint32_t j = 0; j < Skin->Header.nMaterial; ++j)
 				{
 					if (Materials[j].iSubMesh != MeshIndex)
 						continue;
@@ -488,14 +488,14 @@ void M2Lib::M2::DoExtraWork()
 		}
 	}
 
-	for (UInt32 i = 0; i < SKIN_COUNT; ++i)
+	for (uint32_t i = 0; i < SKIN_COUNT; ++i)
 	{
 		auto Skin = Skins[i];
 		if (!Skin)
 			continue;
 
 		// copy materials
-		for (UInt32 MeshIndex = 0; MeshIndex < Skin->ExtraDataBySubmeshIndex.size(); ++MeshIndex)
+		for (uint32_t MeshIndex = 0; MeshIndex < Skin->ExtraDataBySubmeshIndex.size(); ++MeshIndex)
 		{
 			auto ExtraData = Skin->ExtraDataBySubmeshIndex[MeshIndex];
 			if (ExtraData->MaterialOverride < 0)
@@ -506,7 +506,7 @@ void M2Lib::M2::DoExtraWork()
 			else
 			{
 				// translate index from zero skin to current skin
-				for (UInt32 LocalMeshIndex = 0; LocalMeshIndex < Skin->ExtraDataBySubmeshIndex.size(); ++LocalMeshIndex)
+				for (uint32_t LocalMeshIndex = 0; LocalMeshIndex < Skin->ExtraDataBySubmeshIndex.size(); ++LocalMeshIndex)
 				{
 					auto LocalExtraData = Skin->ExtraDataBySubmeshIndex[LocalMeshIndex];
 					if (LocalExtraData->FirstLODMeshIndex == ExtraData->MaterialOverride)
@@ -592,11 +592,11 @@ void M2Lib::M2::FixSkinChunk()
 	if (!skinChunk)
 		return;
 
-	SInt32 SkinDiff = OriginalSkinCount - Header.Elements.nSkin;
+	int32_t SkinDiff = OriginalSkinCount - Header.Elements.nSkin;
 	if (SkinDiff > 0)
 	{
 		sLogger.LogInfo("There was %u more skins in original M2, removing extra from skin chunk", SkinDiff);
-		for (UInt32 i = 0; i < (UInt32)SkinDiff; ++i)
+		for (uint32_t i = 0; i < (uint32_t)SkinDiff; ++i)
 			skinChunk->SkinsFileDataIds.erase(skinChunk->SkinsFileDataIds.begin() + Header.Elements.nSkin);
 	}
 	else if (SkinDiff < 0)
@@ -606,7 +606,7 @@ void M2Lib::M2::FixSkinChunk()
 	}
 }
 
-M2Lib::EError M2Lib::M2::Save(const Char16* FileName)
+M2Lib::EError M2Lib::M2::Save(const wchar_t* FileName)
 {
 	// check path
 	if (!FileName)
@@ -634,32 +634,32 @@ M2Lib::EError M2Lib::M2::Save(const Char16* FileName)
 	m_SaveElements_CopyElementsToHeader();
 
 	// Reserve model chunk header
-	UInt32 const ChunkReserveOffset = 8;
+	uint32_t const ChunkReserveOffset = 8;
 
-	UInt32 ChunkId = REVERSE_CC((UInt32)EM2Chunk::Model);
-	FileStream.write((Char8*)&ChunkId, 4);
+	uint32_t ChunkId = REVERSE_CC((uint32_t)EM2Chunk::Model);
+	FileStream.write((char*)&ChunkId, 4);
 	FileStream.seekp(4, std::ios::cur);		// reserve bytes for chunk size
 
 	//Header.Description.Version = 0x0110;
 	//Header.Description.Flags &= ~0x80;
 
 	// save header
-	UInt32 HeaderSize = GetHeaderSize();
-	FileStream.write((Char8*)&Header, HeaderSize);
+	uint32_t HeaderSize = GetHeaderSize();
+	FileStream.write((char*)&Header, HeaderSize);
 
 	// save elements
-	UInt32 ElementCount = Header.IsLongHeader() ? EElement__Count__ : EElement__Count__ - 1;
-	for (UInt32 i = 0; i < ElementCount; ++i)
+	uint32_t ElementCount = Header.IsLongHeader() ? EElement__Count__ : EElement__Count__ - 1;
+	for (uint32_t i = 0; i < ElementCount; ++i)
 	{
 		if (!Elements[i].Save(FileStream, ChunkReserveOffset))
 			return EError_FailedToSaveM2;
 	}
 
-	UInt32 MD20Size = (UInt32)FileStream.tellp();
+	uint32_t MD20Size = (uint32_t)FileStream.tellp();
 	MD20Size -= ChunkReserveOffset;
 
 	FileStream.seekp(4, std::ios::beg);
-	FileStream.write((Char8*)(&MD20Size), 4);
+	FileStream.write((char*)(&MD20Size), 4);
 
 	FileStream.seekp(0, std::ios::end);
 
@@ -673,13 +673,13 @@ M2Lib::EError M2Lib::M2::Save(const Char16* FileName)
 		//if (chunk.first == 'SFID')
 		//	continue;
 
-		UInt32 ChunkId = REVERSE_CC((UInt32)chunk.first);
+		uint32_t ChunkId = REVERSE_CC((uint32_t)chunk.first);
 
 		FileStream.write((char*)&ChunkId, 4);
 		FileStream.seekp(4, std::ios::cur);		// reserve space for chunk size
-		UInt32 savePos = (UInt32)FileStream.tellp();
+		uint32_t savePos = (uint32_t)FileStream.tellp();
 		chunk.second->Save(FileStream);
-		UInt32 ChunkSize = (UInt32)FileStream.tellp() - savePos;
+		uint32_t ChunkSize = (uint32_t)FileStream.tellp() - savePos;
 		FileStream.seekp(savePos - 4, std::ios::beg);
 		FileStream.write((char*)&ChunkSize, 4);
 		FileStream.seekp(0, std::ios::end);
@@ -710,7 +710,7 @@ M2Lib::EError M2Lib::M2::Save(const Char16* FileName)
 	return EError_OK;
 }
 
-M2Lib::EError M2Lib::M2::ExportM2Intermediate(Char16 const* FileName)
+M2Lib::EError M2Lib::M2::ExportM2Intermediate(wchar_t const* FileName)
 {
 	// open file stream
 	std::fstream FileStream;
@@ -724,17 +724,17 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate(Char16 const* FileName)
 	// get data to save
 	M2Skin* pSkin = Skins[0];
 
-	UInt32 SubsetCount = pSkin->Elements[M2SkinElement::EElement_SubMesh].Count;
+	uint32_t SubsetCount = pSkin->Elements[M2SkinElement::EElement_SubMesh].Count;
 	M2SkinElement::CElement_SubMesh* Subsets = pSkin->Elements[M2SkinElement::EElement_SubMesh].as<M2SkinElement::CElement_SubMesh>();
 
 	CVertex* Vertices = Elements[EElement_Vertex].as<CVertex>();
-	UInt16* Triangles = pSkin->Elements[M2SkinElement::EElement_TriangleIndex].as<UInt16>();
-	UInt16* Indices = pSkin->Elements[M2SkinElement::EElement_VertexLookup].as<UInt16>();
+	uint16_t* Triangles = pSkin->Elements[M2SkinElement::EElement_TriangleIndex].as<uint16_t>();
+	uint16_t* Indices = pSkin->Elements[M2SkinElement::EElement_VertexLookup].as<uint16_t>();
 
 	auto boneElement = GetBones();
 	auto attachmentElement = GetAttachments();
 
-	UInt32 CamerasCount = Elements[EElement_Camera].Count;
+	uint32_t CamerasCount = Elements[EElement_Camera].Count;
 
 	// save signature
 	DataBinary.WriteFourCC(M2I::Signature_M2I0);
@@ -745,7 +745,7 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate(Char16 const* FileName)
 
 	// save subsets
 	DataBinary.WriteUInt32(SubsetCount);
-	for (UInt32 i = 0; i < SubsetCount; ++i)
+	for (uint32_t i = 0; i < SubsetCount; ++i)
 	{
 		M2SkinElement::CElement_SubMesh* pSubsetOut = &Subsets[i];
 
@@ -757,7 +757,7 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate(Char16 const* FileName)
 		DataBinary.WriteSInt16(-1);				// blend type
 		DataBinary.WriteUInt16(0);				// render flags
 		
-		for (UInt32 j = 0; j < MAX_SUBMESH_TEXTURES; ++j)
+		for (uint32_t j = 0; j < MAX_SUBMESH_TEXTURES; ++j)
 		{
 			DataBinary.WriteUInt16(-1);			// texture type
 			DataBinary.WriteASCIIString("");	// texture
@@ -769,17 +769,17 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate(Char16 const* FileName)
 
 		// write vertices
 		DataBinary.WriteUInt32(pSubsetOut->VertexCount);
-		UInt32 VertexEnd = pSubsetOut->VertexStart + pSubsetOut->VertexCount;
-		for (UInt32 k = pSubsetOut->VertexStart; k < VertexEnd; ++k)
+		uint32_t VertexEnd = pSubsetOut->VertexStart + pSubsetOut->VertexCount;
+		for (uint32_t k = pSubsetOut->VertexStart; k < VertexEnd; ++k)
 		{
 			CVertex const& Vertex = Vertices[Indices[k]];
 
 			DataBinary.WriteC3Vector(Vertex.Position);
 
-			for (UInt32 j = 0; j < BONES_PER_VERTEX; ++j)
+			for (uint32_t j = 0; j < BONES_PER_VERTEX; ++j)
 				DataBinary.WriteUInt8(Vertex.BoneWeights[j]);
 
-			for (UInt32 j = 0; j < BONES_PER_VERTEX; ++j)
+			for (uint32_t j = 0; j < BONES_PER_VERTEX; ++j)
 				DataBinary.WriteUInt8(Vertex.BoneIndices[j]);
 
 			DataBinary.WriteC3Vector(Vertex.Normal);
@@ -789,14 +789,14 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate(Char16 const* FileName)
 		}
 
 		// write triangles
-		UInt32 SubsetTriangleCountOut = pSubsetOut->TriangleIndexCount / 3;
+		uint32_t SubsetTriangleCountOut = pSubsetOut->TriangleIndexCount / 3;
 		DataBinary.WriteUInt32(SubsetTriangleCountOut);
 
-		UInt32 TriangleIndexStart = pSubsetOut->GetStartTrianlgeIndex();
-		UInt32 TriangleIndexEnd = pSubsetOut->GetEndTriangleIndex();
-		for (UInt32 k = TriangleIndexStart; k < TriangleIndexEnd; ++k)
+		uint32_t TriangleIndexStart = pSubsetOut->GetStartTrianlgeIndex();
+		uint32_t TriangleIndexEnd = pSubsetOut->GetEndTriangleIndex();
+		for (uint32_t k = TriangleIndexStart; k < TriangleIndexEnd; ++k)
 		{
-			UInt16 TriangleIndexOut = Triangles[k] - pSubsetOut->VertexStart;
+			uint16_t TriangleIndexOut = Triangles[k] - pSubsetOut->VertexStart;
 			assert(TriangleIndexOut < pSubsetOut->VertexCount);
 			DataBinary.WriteUInt16(TriangleIndexOut);
 		}
@@ -804,7 +804,7 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate(Char16 const* FileName)
 
 	// write bones
 	DataBinary.WriteUInt32(boneElement->Count);
-	for (UInt16 i = 0; i < boneElement->Count; i++)
+	for (uint16_t i = 0; i < boneElement->Count; i++)
 	{
 		CElement_Bone& Bone = *boneElement->at<CElement_Bone>(i);
 
@@ -820,7 +820,7 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate(Char16 const* FileName)
 
 	// write attachments
 	DataBinary.WriteUInt32(attachmentElement->Count);
-	for (UInt16 i = 0; i < attachmentElement->Count; i++)
+	for (uint16_t i = 0; i < attachmentElement->Count; i++)
 	{
 		CElement_Attachment& Attachment = *attachmentElement->at<CElement_Attachment>(i);
 
@@ -832,10 +832,10 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate(Char16 const* FileName)
 
 	// write cameras
 	DataBinary.WriteUInt32(CamerasCount);
-	for (UInt16 i = 0; i < CamerasCount; i++)
+	for (uint16_t i = 0; i < CamerasCount; i++)
 	{
-		SInt32 CameraType;
-		Float32 ClipFar, ClipNear, FoV;
+		int32_t CameraType;
+		float ClipFar, ClipNear, FoV;
 		C3Vector Position, Target;
 
 		if (GetExpansion() < Expansion::Cataclysm)
@@ -866,7 +866,7 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate(Char16 const* FileName)
 				auto& LastElement = Elements[LastElementIndex];
 				assert(ExternalAnimations[0].Offset >= LastElement.Offset && ExternalAnimations[0].Offset < LastElement.Offset + LastElement.Data.size());
 
-				Float32* FieldOfView_Keys = (Float32*)LastElement.GetLocalPointer(ExternalAnimations[0].Offset);
+				float* FieldOfView_Keys = (float*)LastElement.GetLocalPointer(ExternalAnimations[0].Offset);
 				FoV = FieldOfView_Keys[0];
 			}
 			else
@@ -889,7 +889,7 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate(Char16 const* FileName)
 	return EError_OK;
 }
 
-M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16 const* FileName)
+M2Lib::EError M2Lib::M2::ImportM2Intermediate(wchar_t const* FileName)
 {
 	bool IgnoreBones = Settings && !Settings->MergeBones;
 	bool IgnoreAttachments = Settings && !Settings->MergeAttachments;
@@ -937,7 +937,7 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16 const* FileName)
 	M2Skin* pOriginalSkin0 = Skins[0];	// save this because we will need to copy materials from it later.
 	OriginalSkinCount = Header.Elements.nSkin;
 	Header.Elements.nSkin = 1;
-	for (UInt32 i = 0; i < SKIN_COUNT; ++i)
+	for (uint32_t i = 0; i < SKIN_COUNT; ++i)
 	{
 		if (Skins[i])
 		{
@@ -973,11 +973,11 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16 const* FileName)
 	// because a few bone indices might have changed during seam and gap fixing
 	// this list will store the new skins
 	M2Skin* NewSkinList[SKIN_COUNT];
-	for (UInt32 i = 0; i < SKIN_COUNT; ++i)
+	for (uint32_t i = 0; i < SKIN_COUNT; ++i)
 		NewSkinList[i] = NULL;
 
 	// for easy looping
-	UInt32 MaxBoneList[SKIN_COUNT - LOD_SKIN_MAX_COUNT + 1];
+	uint32_t MaxBoneList[SKIN_COUNT - LOD_SKIN_MAX_COUNT + 1];
 	MaxBoneList[0] = 256;
 	MaxBoneList[1] = 64;
 	MaxBoneList[2] = 53;
@@ -987,18 +987,18 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16 const* FileName)
 	//MaxBoneList[5] = 64;
 	//MaxBoneList[6] = 64;
 
-	std::vector<UInt16> NewBoneLookup;
-	SInt32 BoneStart = 0;
-	UInt32 iSkin = 0;
+	std::vector<uint16_t> NewBoneLookup;
+	int32_t BoneStart = 0;
+	uint32_t iSkin = 0;
 
-	for (UInt32 iLoD = 0; iLoD < SKIN_COUNT - LOD_SKIN_MAX_COUNT; ++iLoD)
+	for (uint32_t iLoD = 0; iLoD < SKIN_COUNT - LOD_SKIN_MAX_COUNT; ++iLoD)
 	{
 		M2Skin* pNewSkin = new M2Skin(this);
 		assert(SkinBuilder.Build(pNewSkin, MaxBoneList[iLoD], pInM2I, Elements[EElement_Vertex].as<CVertex>(), BoneStart));
 		if (iLoD == 0)
 		{
 			// fill extra data with mesh indexes from zero skin
-			for (UInt32 i = 0; i < pNewSkin->ExtraDataBySubmeshIndex.size(); ++i)
+			for (uint32_t i = 0; i < pNewSkin->ExtraDataBySubmeshIndex.size(); ++i)
 				const_cast<SubmeshExtraData*>(pNewSkin->ExtraDataBySubmeshIndex[i])->FirstLODMeshIndex = i;
 		}
 
@@ -1009,7 +1009,7 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16 const* FileName)
 			NewSkinList[iSkin++] = pNewSkin;
 
 			// copy skin's bone lookup to the global bone lookup list
-			for (UInt32 i = 0; i < SkinBuilder.m_Bones.size(); i++)
+			for (uint32_t i = 0; i < SkinBuilder.m_Bones.size(); i++)
 				NewBoneLookup.push_back(SkinBuilder.m_Bones[i]);
 
 			// advance for where next skin's bone lookup will begin
@@ -1026,7 +1026,7 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16 const* FileName)
 	Header.Elements.nSkin = iSkin;
 
 	// copy materials from old sub meshes to new sub meshes
-	for (UInt32 i = 0; i < SKIN_COUNT; ++i)
+	for (uint32_t i = 0; i < SKIN_COUNT; ++i)
 	{
 		if (NewSkinList[i])
 		{
@@ -1037,7 +1037,7 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16 const* FileName)
 	delete pOriginalSkin0;
 
 	// replace old skins with new
-	for (UInt32 i = 0; i < SKIN_COUNT; ++i)
+	for (uint32_t i = 0; i < SKIN_COUNT; ++i)
 	{
 		if (Skins[i])
 			delete Skins[i];
@@ -1046,11 +1046,11 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(Char16 const* FileName)
 	}
 
 	// copy new bone lookup
-	Elements[EElement_SkinnedBoneLookup].SetDataSize(NewBoneLookup.size(), NewBoneLookup.size() * sizeof(UInt16), false);
-	memcpy(Elements[EElement_SkinnedBoneLookup].Data.data(), &NewBoneLookup[0], NewBoneLookup.size() * sizeof(UInt16));
+	Elements[EElement_SkinnedBoneLookup].SetDataSize(NewBoneLookup.size(), NewBoneLookup.size() * sizeof(uint16_t), false);
+	memcpy(Elements[EElement_SkinnedBoneLookup].Data.data(), &NewBoneLookup[0], NewBoneLookup.size() * sizeof(uint16_t));
 
 	// build vertex bone indices
-	for (UInt32 i = 0; i < Header.Elements.nSkin; ++i)
+	for (uint32_t i = 0; i < Header.Elements.nSkin; ++i)
 	{
 		if (!Skins[i])
 			continue;
@@ -1073,17 +1073,17 @@ void M2Lib::M2::SetGlobalBoundingData(BoundaryData& Data)
 
 	Elements[EElement_BoundingVertex].SetDataSize(BOUNDING_VERTEX_COUNT, sizeof(CElement_BoundingVertices) * BOUNDING_VERTEX_COUNT, false);
 	auto boundingVertices = Elements[EElement_BoundingVertex].as<CElement_BoundingVertices>();
-	for (UInt32 i = 0; i < BOUNDING_VERTEX_COUNT; ++i)
+	for (uint32_t i = 0; i < BOUNDING_VERTEX_COUNT; ++i)
 		boundingVertices[i].Position = ExtraData.BoundingVertices[i];
 
 	Elements[EElement_BoundingNormal].SetDataSize(BOUNDING_TRIANGLE_COUNT, sizeof(CElement_BoundingNormals) * BOUNDING_TRIANGLE_COUNT, false);
 	auto boundingNormals = Elements[EElement_BoundingNormal].as<CElement_BoundingNormals>();
-	for (UInt32 i = 0; i < BOUNDING_TRIANGLE_COUNT; ++i)
+	for (uint32_t i = 0; i < BOUNDING_TRIANGLE_COUNT; ++i)
 		boundingNormals[i].Normal = ExtraData.BoundingNormals[i];
 
 	Elements[EElement_BoundingTriangle].SetDataSize(BOUNDING_TRIANGLE_COUNT * 3, sizeof(CElement_BoundingTriangle) * BOUNDING_TRIANGLE_COUNT * 3, false);
 	auto boundingTriangles = Elements[EElement_BoundingTriangle].as<CElement_BoundingTriangle>();
-	for (UInt32 i = 0; i < BOUNDING_TRIANGLE_COUNT * 3; ++i)
+	for (uint32_t i = 0; i < BOUNDING_TRIANGLE_COUNT * 3; ++i)
 		boundingTriangles[i].Index = BoundaryData::ExtraData::BoundingTriangleVertexMap[i];
 }
 
@@ -1093,7 +1093,7 @@ void M2Lib::M2::PrintInfo()
 	//
 	// just print out any sort of data that we want to analize when troubleshooting
 
-	UInt32 Count = 0;
+	uint32_t Count = 0;
 
 	std::wstring FileOut = FileSystemW::GetParentDirectory(_FileName) + L"\\" + FileSystemW::GetFileName(_FileName) + L".txt";
 
@@ -1106,7 +1106,7 @@ void M2Lib::M2::PrintInfo()
 
 	FileStream << "nName                     " << Header.Description.nName << std::endl;
 	FileStream << "oName                     " << Header.Description.oName << std::endl;
-	FileStream << " Value                    " << Elements[EElement_Name].as<Char8>() << std::endl;
+	FileStream << " Value                    " << Elements[EElement_Name].as<char>() << std::endl;
 	FileStream << std::endl;
 
 	FileStream << "Flags                     " << Header.Description.Flags.Raw << std::endl;
@@ -1155,13 +1155,13 @@ void M2Lib::M2::PrintInfo()
 	FileStream << " DataSize                 " << Elements[EElement_Texture].Data.size() << std::endl;
 	FileStream << std::endl;
 
-    for (UInt32 i = 0; i < Header.Elements.nTexture; ++i)
+    for (uint32_t i = 0; i < Header.Elements.nTexture; ++i)
     {
 		CElement_Texture* texture = Elements[EElement_Texture].as<CElement_Texture>();
 
         FileStream << "\t" << i << std::endl;
-        FileStream << "\tFlags: " << (UInt32)texture[i].Flags << std::endl;
-        FileStream << "\tType: " << (UInt32)texture[i].Type << std::endl;
+        FileStream << "\tFlags: " << (uint32_t)texture[i].Flags << std::endl;
+        FileStream << "\tType: " << (uint32_t)texture[i].Type << std::endl;
         if (texture[i].TexturePath.Count > 1)
 			FileStream << "\tPath: " << GetTexturePath(i) << std::endl;
         else
@@ -1174,7 +1174,7 @@ void M2Lib::M2::PrintInfo()
 	FileStream << " DataSize                 " << Elements[EElement_Transparency].Data.size() << std::endl;
 
 	CElement_Transparency* Transparencies = Elements[EElement_Transparency].as<CElement_Transparency>();
-    for (UInt32 i = 0; i < Header.Elements.nTransparency; ++i)
+    for (uint32_t i = 0; i < Header.Elements.nTransparency; ++i)
     {
         auto transparency = Transparencies[i];
         FileStream << "\t" << i << std::endl;
@@ -1187,11 +1187,11 @@ void M2Lib::M2::PrintInfo()
 
             /*
             EInterpolationType InterpolationType;
-            SInt16 GlobalSequenceID;
-            UInt32 nTimes;
-            UInt32 oTimes;
-            UInt32 nKeys;
-            UInt32 oKeys;
+            int16_t GlobalSequenceID;
+            uint32_t nTimes;
+            uint32_t oTimes;
+            uint32_t nKeys;
+            uint32_t oKeys;
             */
     }
 	FileStream << std::endl;
@@ -1210,7 +1210,7 @@ void M2Lib::M2::PrintInfo()
 	FileStream << "oTextureFlags             " << Header.Elements.oTextureFlags << std::endl;
 	FileStream << " DataSize                 " << Elements[EElement_TextureFlags].Data.size() << std::endl;
 	CElement_TextureFlag* TextureFlags = Elements[EElement_TextureFlags].as<CElement_TextureFlag>();
-    for (UInt32 i = 0; i < Header.Elements.nTextureFlags; ++i)
+    for (uint32_t i = 0; i < Header.Elements.nTextureFlags; ++i)
     {
         auto flag = TextureFlags[i];
         FileStream << "\t-- " << i << std::endl;
@@ -1237,7 +1237,7 @@ void M2Lib::M2::PrintInfo()
 	FileStream << " DataSize                 " << Elements[EElement_TextureLookup].Data.size() << std::endl;
 	FileStream << std::endl;
 
-    for (UInt32 i = 0; i < Header.Elements.nTexture; ++i)
+    for (uint32_t i = 0; i < Header.Elements.nTexture; ++i)
     {
         CElement_TextureLookup* textureLookup = Elements[EElement_TextureLookup].as<CElement_TextureLookup>();
 
@@ -1391,7 +1391,7 @@ void M2Lib::M2::PrintReferencedFileInfo()
 	}
 	if (textureChunk)
 	{
-		UInt32 count = 0;
+		uint32_t count = 0;
 		for (auto textuteFileDataId : textureChunk->TextureFileDataIds)
 			if (textuteFileDataId)
 				++count;
@@ -1406,7 +1406,7 @@ void M2Lib::M2::PrintReferencedFileInfo()
 		else
 		{
 			CElement_Texture* TextureElements = Elements[EElement_Texture].as<CElement_Texture>();
-			for (UInt32 i = 0; i < Elements[EElement_Texture].Count; ++i)
+			for (uint32_t i = 0; i < Elements[EElement_Texture].Count; ++i)
 			{
 				auto& textureElement = TextureElements[i];
 				if (textureElement.Type != CElement_Texture::ETextureType::Final_Hardcoded)
@@ -1438,7 +1438,7 @@ void M2Lib::M2::PrintReferencedFileInfo()
 
 		int count = 0;
 
-		for (UInt32 j = 0; j < TextureElement.Count; ++j)
+		for (uint32_t j = 0; j < TextureElement.Count; ++j)
 		{
 			if (!Textures[j].TexturePath.Offset)
 				continue;
@@ -1451,7 +1451,7 @@ void M2Lib::M2::PrintReferencedFileInfo()
 
 		sLogger.LogInfo("Total texture referenced inplace: %u", count);
 
-		for (UInt32 j = 0; j < TextureElement.Count; ++j)
+		for (uint32_t j = 0; j < TextureElement.Count; ++j)
 		{
 			if (!Textures[j].TexturePath.Offset)
 				continue;
@@ -1486,7 +1486,7 @@ void M2Lib::M2::PrintReferencedFileInfo()
 }
 
 // Gets the .skin file names.
-bool M2Lib::M2::GetFileSkin(std::wstring& SkinFileNameResultBuffer, std::wstring const& M2FileName, UInt32 SkinIndex, bool Save)
+bool M2Lib::M2::GetFileSkin(std::wstring& SkinFileNameResultBuffer, std::wstring const& M2FileName, uint32_t SkinIndex, bool Save)
 {
 	M2Chunk::SFIDChunk* skinChunk;
 	if (Save && replaceM2)
@@ -1497,7 +1497,7 @@ bool M2Lib::M2::GetFileSkin(std::wstring& SkinFileNameResultBuffer, std::wstring
 	if (skinChunk)
 	{
 		//sLogger.LogInfo("Skin chunk detected");
-		SInt32 chunkIndex = -1;
+		int32_t chunkIndex = -1;
 		if (SkinIndex < SKIN_COUNT - LOD_SKIN_MAX_COUNT)
 		{
 			if (SkinIndex < Header.Elements.nSkin)
@@ -1619,20 +1619,20 @@ bool M2Lib::M2::GetFileParentSkeleton(std::wstring& SkeletonFileNameResultBuffer
 	return true;
 }
 
-void M2Lib::M2::FixSeamsSubMesh(Float32 PositionalTolerance, Float32 AngularTolerance)
+void M2Lib::M2::FixSeamsSubMesh(float PositionalTolerance, float AngularTolerance)
 {
 	// gather up sub meshes
 	std::vector< std::vector< M2SkinElement::CElement_SubMesh* > > SubMeshes;
 
 	M2SkinElement::CElement_SubMesh* Subsets = Skins[0]->Elements[M2SkinElement::EElement_SubMesh].as<M2SkinElement::CElement_SubMesh>();
-	UInt32 SubsetCount = Skins[0]->Elements[M2SkinElement::EElement_SubMesh].Count;
-	for (UInt32 i = 0; i < SubsetCount; ++i)
+	uint32_t SubsetCount = Skins[0]->Elements[M2SkinElement::EElement_SubMesh].Count;
+	for (uint32_t i = 0; i < SubsetCount; ++i)
 	{
-		UInt16 ThisID = Subsets[i].ID;
+		uint16_t ThisID = Subsets[i].ID;
 		bool MakeNew = true;
-		for (UInt32 j = 0; j < SubMeshes.size(); j++)
+		for (uint32_t j = 0; j < SubMeshes.size(); j++)
 		{
-			for (UInt32 k = 0; k < SubMeshes[j].size(); k++)
+			for (uint32_t k = 0; k < SubMeshes[j].size(); k++)
 			{
 				if (SubMeshes[j][k]->ID == ThisID)
 				{
@@ -1653,25 +1653,25 @@ void M2Lib::M2::FixSeamsSubMesh(Float32 PositionalTolerance, Float32 AngularTole
 	}
 
 	// find and merge duplicate vertices
-	UInt32 VertexListLength = Elements[EElement_Vertex].Count;
+	uint32_t VertexListLength = Elements[EElement_Vertex].Count;
 	CVertex* VertexList = Elements[EElement_Vertex].as<CVertex>();
 	std::vector< CVertex* > SimilarVertices;
-	for (UInt32 iSubMesh1 = 0; iSubMesh1 < SubMeshes.size(); iSubMesh1++)
+	for (uint32_t iSubMesh1 = 0; iSubMesh1 < SubMeshes.size(); iSubMesh1++)
 	{
-		for (UInt32 iSubSet1 = 0; iSubSet1 < SubMeshes[iSubMesh1].size(); iSubSet1++)
+		for (uint32_t iSubSet1 = 0; iSubSet1 < SubMeshes[iSubMesh1].size(); iSubSet1++)
 		{
 			M2SkinElement::CElement_SubMesh* pSubSet1 = SubMeshes[iSubMesh1][iSubSet1];
 
-			UInt32 VertexAEnd = pSubSet1->VertexStart + pSubSet1->VertexCount;
-			for (UInt32 iVertexA = pSubSet1->VertexStart; iVertexA < VertexAEnd; iVertexA++)
+			uint32_t VertexAEnd = pSubSet1->VertexStart + pSubSet1->VertexCount;
+			for (uint32_t iVertexA = pSubSet1->VertexStart; iVertexA < VertexAEnd; iVertexA++)
 			{
 				bool AddedVertexA = false;
-				for (UInt32 iSubSet2 = 0; iSubSet2 < SubMeshes[iSubMesh1].size(); iSubSet2++)
+				for (uint32_t iSubSet2 = 0; iSubSet2 < SubMeshes[iSubMesh1].size(); iSubSet2++)
 				{
 					M2SkinElement::CElement_SubMesh* pSubSet2 = SubMeshes[iSubMesh1][iSubSet2];
 
-					UInt32 VertexBEnd = pSubSet2->VertexStart + pSubSet2->VertexCount;
-					for (UInt32 iVertexB = pSubSet2->VertexStart; iVertexB < VertexBEnd; iVertexB++)
+					uint32_t VertexBEnd = pSubSet2->VertexStart + pSubSet2->VertexCount;
+					for (uint32_t iVertexB = pSubSet2->VertexStart; iVertexB < VertexBEnd; iVertexB++)
 					{
 						if (iVertexA == iVertexB)
 							continue;
@@ -1694,7 +1694,7 @@ void M2Lib::M2::FixSeamsSubMesh(Float32 PositionalTolerance, Float32 AngularTole
 					// sum positions and normals
 					C3Vector NewPosition, NewNormal;
 
-					for (UInt32 iSimilarVertex = 0; iSimilarVertex < SimilarVertices.size(); iSimilarVertex++)
+					for (uint32_t iSimilarVertex = 0; iSimilarVertex < SimilarVertices.size(); iSimilarVertex++)
 					{
 						CVertex* pSimilarVertex = SimilarVertices[iSimilarVertex];
 
@@ -1703,27 +1703,27 @@ void M2Lib::M2::FixSeamsSubMesh(Float32 PositionalTolerance, Float32 AngularTole
 					}
 
 					// average position and normalize normal
-					Float32 invSimilarCount = 1.f / (Float32)SimilarVertices.size();
+					float invSimilarCount = 1.f / (float)SimilarVertices.size();
 
 					NewPosition = NewPosition * invSimilarCount;
 					NewNormal = NewNormal * invSimilarCount;
 
-					UInt8 NewBoneWeights[BONES_PER_VERTEX], NewBoneIndices[BONES_PER_VERTEX];
-					for (UInt32 i = 0; i < BONES_PER_VERTEX; ++i)
+					uint8_t NewBoneWeights[BONES_PER_VERTEX], NewBoneIndices[BONES_PER_VERTEX];
+					for (uint32_t i = 0; i < BONES_PER_VERTEX; ++i)
 					{
 						NewBoneWeights[i] = SimilarVertices[0]->BoneWeights[i];
 						NewBoneIndices[i] = SimilarVertices[0]->BoneIndices[i];
 					}
 
 					// assign new values back into similar vertices
-					for (UInt32 iSimilarVertex = 0; iSimilarVertex < SimilarVertices.size(); iSimilarVertex++)
+					for (uint32_t iSimilarVertex = 0; iSimilarVertex < SimilarVertices.size(); iSimilarVertex++)
 					{
 						CVertex* pSimilarVertex = SimilarVertices[iSimilarVertex];
 
 						pSimilarVertex->Position = NewPosition;
 						pSimilarVertex->Normal = NewNormal;
 
-						for (UInt32 i = 0; i < BONES_PER_VERTEX; ++i)
+						for (uint32_t i = 0; i < BONES_PER_VERTEX; ++i)
 						{
 							pSimilarVertex->BoneWeights[i] = NewBoneWeights[i];
 							pSimilarVertex->BoneIndices[i] = NewBoneIndices[i];
@@ -1737,7 +1737,7 @@ void M2Lib::M2::FixSeamsSubMesh(Float32 PositionalTolerance, Float32 AngularTole
 	}
 }
 
-void M2Lib::M2::FixSeamsBody(Float32 PositionalTolerance, Float32 AngularTolerance)
+void M2Lib::M2::FixSeamsBody(float PositionalTolerance, float AngularTolerance)
 {
 	// sub meshes that are divided up accross multiple bone partitions will have multiple sub mesh entries with the same ID in the M2.
 	// we need to gather each body submesh up into a list and average normals of vertices that are similar between other sub meshes.
@@ -1748,12 +1748,12 @@ void M2Lib::M2::FixSeamsBody(Float32 PositionalTolerance, Float32 AngularToleran
 
 	// gather up the body submeshes
 	M2SkinElement::CElement_SubMesh* SubMeshList = Skins[0]->Elements[M2SkinElement::EElement_SubMesh].as<M2SkinElement::CElement_SubMesh>();
-	UInt32 SubsetCount = Skins[0]->Elements[M2SkinElement::EElement_SubMesh].Count;
-	for (UInt32 i = 0; i < SubsetCount; i++)
+	uint32_t SubsetCount = Skins[0]->Elements[M2SkinElement::EElement_SubMesh].Count;
+	for (uint32_t i = 0; i < SubsetCount; i++)
 	{
 		// determine type of subset
-		UInt16 ThisID = SubMeshList[i].ID;
-		UInt16 Mod = ThisID;
+		uint16_t ThisID = SubMeshList[i].ID;
+		uint16_t Mod = ThisID;
 		while (Mod > 10)
 		{
 			Mod %= 10;
@@ -1763,9 +1763,9 @@ void M2Lib::M2::FixSeamsBody(Float32 PositionalTolerance, Float32 AngularToleran
 			// this subset is part of the character's body
 			// add it to the list of submeshes
 			bool MakeNew = true;
-			for (UInt32 j = 0; j < CompiledSubMeshList.size(); j++)
+			for (uint32_t j = 0; j < CompiledSubMeshList.size(); j++)
 			{
-				for (UInt32 k = 0; k < CompiledSubMeshList[j].size(); k++)
+				for (uint32_t k = 0; k < CompiledSubMeshList[j].size(); k++)
 				{
 					if (CompiledSubMeshList[j][k]->ID == ThisID)
 					{
@@ -1789,22 +1789,22 @@ void M2Lib::M2::FixSeamsBody(Float32 PositionalTolerance, Float32 AngularToleran
 	}
 
 	// find and merge duplicate vertices
-	UInt32 VertexListLength = Elements[EElement_Vertex].Count;
+	uint32_t VertexListLength = Elements[EElement_Vertex].Count;
 	CVertex* VertexList = Elements[EElement_Vertex].as<CVertex>();
 	std::vector< CVertex* > SimilarVertices;
-	for (SInt32 iSubMesh1 = 0; iSubMesh1 < (SInt32)CompiledSubMeshList.size() - 1; iSubMesh1++)
+	for (int32_t iSubMesh1 = 0; iSubMesh1 < (int32_t)CompiledSubMeshList.size() - 1; iSubMesh1++)
 	{
-		for (SInt32 iSubSet1 = 0; iSubSet1 < (SInt32)CompiledSubMeshList[iSubMesh1].size(); iSubSet1++)
+		for (int32_t iSubSet1 = 0; iSubSet1 < (int32_t)CompiledSubMeshList[iSubMesh1].size(); iSubSet1++)
 		{
 			// gather duplicate vertices
 			// for each vertex in the subset, compare it against vertices in the other subsets
 			// find duplicates and sum their normals
-			UInt32 iVertexAEnd = CompiledSubMeshList[iSubMesh1][iSubSet1]->VertexStart + CompiledSubMeshList[iSubMesh1][iSubSet1]->VertexCount;
-			for (UInt32 iVertexA = CompiledSubMeshList[iSubMesh1][iSubSet1]->VertexStart; iVertexA < iVertexAEnd; iVertexA++)
+			uint32_t iVertexAEnd = CompiledSubMeshList[iSubMesh1][iSubSet1]->VertexStart + CompiledSubMeshList[iSubMesh1][iSubSet1]->VertexCount;
+			for (uint32_t iVertexA = CompiledSubMeshList[iSubMesh1][iSubSet1]->VertexStart; iVertexA < iVertexAEnd; iVertexA++)
 			{
 				// gather duplicate vertices from other submeshes
 				bool AddedVertex1 = false;
-				for (SInt32 iSubMesh2 = iSubMesh1 + 1; iSubMesh2 < (SInt32)CompiledSubMeshList.size(); iSubMesh2++)
+				for (int32_t iSubMesh2 = iSubMesh1 + 1; iSubMesh2 < (int32_t)CompiledSubMeshList.size(); iSubMesh2++)
 				{
 					// check that we don't check against ourselves
 					if (iSubMesh2 == iSubMesh1)
@@ -1813,11 +1813,11 @@ void M2Lib::M2::FixSeamsBody(Float32 PositionalTolerance, Float32 AngularToleran
 						continue;
 					}
 					// go through subsets
-					for (SInt32 iSubSet2 = 0; iSubSet2 < (SInt32)CompiledSubMeshList[iSubMesh2].size(); iSubSet2++)
+					for (int32_t iSubSet2 = 0; iSubSet2 < (int32_t)CompiledSubMeshList[iSubMesh2].size(); iSubSet2++)
 					{
 						// go through vertices in subset
-						UInt32 iVertexBEnd = CompiledSubMeshList[iSubMesh2][iSubSet2]->VertexStart + CompiledSubMeshList[iSubMesh2][iSubSet2]->VertexCount;
-						for (UInt32 iVertexB = CompiledSubMeshList[iSubMesh2][iSubSet2]->VertexStart; iVertexB < iVertexBEnd; iVertexB++)
+						uint32_t iVertexBEnd = CompiledSubMeshList[iSubMesh2][iSubSet2]->VertexStart + CompiledSubMeshList[iSubMesh2][iSubSet2]->VertexCount;
+						for (uint32_t iVertexB = CompiledSubMeshList[iSubMesh2][iSubSet2]->VertexStart; iVertexB < iVertexBEnd; iVertexB++)
 						{
 							if (CVertex::CompareSimilar(VertexList[iVertexA], VertexList[iVertexB], false, false, true, PositionalTolerance, AngularTolerance))
 							{
@@ -1840,7 +1840,7 @@ void M2Lib::M2::FixSeamsBody(Float32 PositionalTolerance, Float32 AngularToleran
 					// sum positions and normals
 					C3Vector NewPosition, NewNormal;
 
-					for (UInt32 iSimilarVertex = 0; iSimilarVertex < SimilarVertices.size(); iSimilarVertex++)
+					for (uint32_t iSimilarVertex = 0; iSimilarVertex < SimilarVertices.size(); iSimilarVertex++)
 					{
 						CVertex* pSimilarVertex = SimilarVertices[iSimilarVertex];
 
@@ -1849,27 +1849,27 @@ void M2Lib::M2::FixSeamsBody(Float32 PositionalTolerance, Float32 AngularToleran
 					}
 
 					// average position and normalize normal
-					Float32 invSimilarCount = 1.0f / (Float32)SimilarVertices.size();
+					float invSimilarCount = 1.0f / (float)SimilarVertices.size();
 
 					NewPosition = NewPosition * invSimilarCount;
 					NewNormal = NewNormal * invSimilarCount;
 
-					UInt8 NewBoneWeights[BONES_PER_VERTEX], NewBoneIndices[BONES_PER_VERTEX];
-					for (UInt32 i = 0; i < BONES_PER_VERTEX; ++i)
+					uint8_t NewBoneWeights[BONES_PER_VERTEX], NewBoneIndices[BONES_PER_VERTEX];
+					for (uint32_t i = 0; i < BONES_PER_VERTEX; ++i)
 					{
 						NewBoneWeights[i] = SimilarVertices[0]->BoneWeights[i];
 						NewBoneIndices[i] = SimilarVertices[0]->BoneIndices[i];
 					}
 
 					// assign new values back into similar vertices
-					for (UInt32 iSimilarVertex = 0; iSimilarVertex < SimilarVertices.size(); iSimilarVertex++)
+					for (uint32_t iSimilarVertex = 0; iSimilarVertex < SimilarVertices.size(); iSimilarVertex++)
 					{
 						CVertex* pSimilarVertex = SimilarVertices[iSimilarVertex];
 
 						pSimilarVertex->Position = NewPosition;
 						pSimilarVertex->Normal = NewNormal;
 
-						for (UInt32 i = 0; i < BONES_PER_VERTEX; ++i)
+						for (uint32_t i = 0; i < BONES_PER_VERTEX; ++i)
 						{
 							pSimilarVertex->BoneWeights[i] = NewBoneWeights[i];
 							pSimilarVertex->BoneIndices[i] = NewBoneIndices[i];
@@ -1884,22 +1884,22 @@ void M2Lib::M2::FixSeamsBody(Float32 PositionalTolerance, Float32 AngularToleran
 	}
 }
 
-void M2Lib::M2::FixSeamsClothing(Float32 PositionalTolerance, Float32 AngularTolerance)
+void M2Lib::M2::FixSeamsClothing(float PositionalTolerance, float AngularTolerance)
 {
 	CVertex* VertexList = Elements[EElement_Vertex].as<CVertex>();
 
-	UInt32 SubMeshListLength = Skins[0]->Elements[M2SkinElement::EElement_SubMesh].Count;
+	uint32_t SubMeshListLength = Skins[0]->Elements[M2SkinElement::EElement_SubMesh].Count;
 	M2SkinElement::CElement_SubMesh* SubMeshList = Skins[0]->Elements[M2SkinElement::EElement_SubMesh].as<M2SkinElement::CElement_SubMesh>();
 
 	std::vector< M2SkinElement::CElement_SubMesh* > SubMeshBodyList;	// gathered body sub meshes
 	std::vector< M2SkinElement::CElement_SubMesh* > SubMeshGarbList;	// gathered clothing sub meshes
 
-	for (UInt32 i = 0; i < SubMeshListLength; i++)
+	for (uint32_t i = 0; i < SubMeshListLength; i++)
 	{
-		UInt16 ThisID = SubMeshList[i].ID;
+		uint16_t ThisID = SubMeshList[i].ID;
 
 		// gather body sub meshes
-		UInt16 Mod = ThisID;
+		uint16_t Mod = ThisID;
 		if (Mod > 10)
 		{
 			Mod %= 10;
@@ -1934,16 +1934,16 @@ void M2Lib::M2::FixSeamsClothing(Float32 PositionalTolerance, Float32 AngularTol
 	}
 
 	// copy vertex properties from main body vertex to duplicate clothing vertices
-	for (UInt32 iSubMeshGarb = 0; iSubMeshGarb < SubMeshGarbList.size(); iSubMeshGarb++)
+	for (uint32_t iSubMeshGarb = 0; iSubMeshGarb < SubMeshGarbList.size(); iSubMeshGarb++)
 	{
 		M2SkinElement::CElement_SubMesh* pSubMeshGarb = SubMeshGarbList[iSubMeshGarb];
-		for (UInt32 iSubMeshBody = 0; iSubMeshBody < SubMeshBodyList.size(); iSubMeshBody++)
+		for (uint32_t iSubMeshBody = 0; iSubMeshBody < SubMeshBodyList.size(); iSubMeshBody++)
 		{
 			M2SkinElement::CElement_SubMesh* pSubMeshBody = SubMeshBodyList[iSubMeshBody];
 
-			for (SInt32 iVertexGarb = pSubMeshGarb->VertexStart; iVertexGarb < pSubMeshGarb->VertexStart + pSubMeshGarb->VertexCount; iVertexGarb++)
+			for (int32_t iVertexGarb = pSubMeshGarb->VertexStart; iVertexGarb < pSubMeshGarb->VertexStart + pSubMeshGarb->VertexCount; iVertexGarb++)
 			{
-				for (SInt32 iVertexBody = pSubMeshBody->VertexStart; iVertexBody < pSubMeshBody->VertexStart + pSubMeshBody->VertexCount; iVertexBody++)
+				for (int32_t iVertexBody = pSubMeshBody->VertexStart; iVertexBody < pSubMeshBody->VertexStart + pSubMeshBody->VertexCount; iVertexBody++)
 				{
 					if (CVertex::CompareSimilar(VertexList[iVertexGarb], VertexList[iVertexBody], false, false, true, PositionalTolerance, AngularTolerance))
 					{
@@ -1954,7 +1954,7 @@ void M2Lib::M2::FixSeamsClothing(Float32 PositionalTolerance, Float32 AngularTol
 						pVertexOther->Position = pVertexBody->Position;
 						pVertexOther->Normal = pVertexBody->Normal;
 
-						for (UInt32 i = 0; i < BONES_PER_VERTEX; ++i)
+						for (uint32_t i = 0; i < BONES_PER_VERTEX; ++i)
 						{
 							pVertexOther->BoneWeights[i] = pVertexBody->BoneWeights[i];
 							pVertexOther->BoneIndices[i] = pVertexBody->BoneIndices[i];
@@ -1966,13 +1966,13 @@ void M2Lib::M2::FixSeamsClothing(Float32 PositionalTolerance, Float32 AngularTol
 	}
 }
 
-void M2Lib::M2::FixNormals(Float32 AngularTolerance)
+void M2Lib::M2::FixNormals(float AngularTolerance)
 {
 	auto pSkin = Skins[0];
 	auto& SubMeshes = pSkin->Elements[M2SkinElement::EElement_SubMesh];
 	auto VertexList = Elements[EElement_Vertex].as<CVertex>();
 
-	for (UInt32 i = 0; i < SubMeshes.Count; ++i)
+	for (uint32_t i = 0; i < SubMeshes.Count; ++i)
 	{
 		auto SubmeshI = SubMeshes.at<M2SkinElement::CElement_SubMesh>(i);
 		if (!IsAlignedSubset(SubmeshI->ID))
@@ -1982,21 +1982,21 @@ void M2Lib::M2::FixNormals(Float32 AngularTolerance)
 
 		//sLogger.LogInfo("Mesh %u Edges %u", SubmeshI->ID, EdgesI.size());
 
-		std::unordered_set<UInt16> verticesI;
+		std::unordered_set<uint16_t> verticesI;
 		for (auto& edge : EdgesI)
 		{
 			verticesI.insert(edge.A);
 			verticesI.insert(edge.B);
 		}
 
-		for (UInt32 j = 0; j < SubMeshes.Count; ++j)
+		for (uint32_t j = 0; j < SubMeshes.Count; ++j)
 		{
 			auto SubmeshJ = SubMeshes.at<M2SkinElement::CElement_SubMesh>(j);
 			if (!IsAlignedSubset(SubmeshJ->ID))
 				continue;
 
 			auto EdgesJ = pSkin->GetEdges(SubmeshJ);
-			std::unordered_set<UInt16> verticesJ;
+			std::unordered_set<uint16_t> verticesJ;
 			for (auto& edge : EdgesJ)
 			{
 				verticesJ.insert(edge.A);
@@ -2016,7 +2016,7 @@ void M2Lib::M2::FixNormals(Float32 AngularTolerance)
 
 					auto vertexJ = &VertexList[jVertex];
 
-					static Float32 const tolerance = 1e-4;
+					static float const tolerance = 1e-4;
 
 					/*if (!floatEq(vertexI->Position.X, vertexJ->Position.X, tolerance) ||
 						!floatEq(vertexI->Position.Y, vertexJ->Position.Y, tolerance) ||
@@ -2051,13 +2051,13 @@ void M2Lib::M2::FixNormals(Float32 AngularTolerance)
 	}
 }
 
-void M2Lib::M2::Scale(Float32 Scale)
+void M2Lib::M2::Scale(float Scale)
 {
 	// vertices
 	{
-		UInt32 VertexListLength = Elements[EElement_Vertex].Count;
+		uint32_t VertexListLength = Elements[EElement_Vertex].Count;
 		CVertex* VertexList = Elements[EElement_Vertex].as<CVertex>();
-		for (UInt32 i = 0; i < VertexListLength; i++)
+		for (uint32_t i = 0; i < VertexListLength; i++)
 		{
 			CVertex& Vertex = VertexList[i];
 			Vertex.Position = Vertex.Position * Scale;
@@ -2067,9 +2067,9 @@ void M2Lib::M2::Scale(Float32 Scale)
 	// bones
 	{
 		auto boneElement = GetBones();
-		UInt32 BoneListLength = boneElement->Count;
+		uint32_t BoneListLength = boneElement->Count;
 		CElement_Bone* BoneList = boneElement->as<CElement_Bone>();
-		for (UInt32 i = 0; i < BoneListLength; i++)
+		for (uint32_t i = 0; i < BoneListLength; i++)
 		{
 			CElement_Bone& Bone = BoneList[i];
 			Bone.Position = Bone.Position * Scale;
@@ -2079,9 +2079,9 @@ void M2Lib::M2::Scale(Float32 Scale)
 	// attachments
 	{
 		auto attachmentElement = GetAttachments();
-		UInt32 AttachmentListLength = attachmentElement->Count;
+		uint32_t AttachmentListLength = attachmentElement->Count;
 		CElement_Attachment* AttachmentList = attachmentElement->as<CElement_Attachment>();
-		for (UInt32 i = 0; i < AttachmentListLength; i++)
+		for (uint32_t i = 0; i < AttachmentListLength; i++)
 		{
 			CElement_Attachment& Attachment = AttachmentList[i];
 			Attachment.Position = Attachment.Position * Scale;
@@ -2090,9 +2090,9 @@ void M2Lib::M2::Scale(Float32 Scale)
 
 	// events
 	{
-		UInt32 EventListLength = Elements[EElement_Event].Count;
+		uint32_t EventListLength = Elements[EElement_Event].Count;
 		CElement_Event* EventList = Elements[EElement_Event].as<CElement_Event>();
-		for (UInt32 i = 0; i < EventListLength; i++)
+		for (uint32_t i = 0; i < EventListLength; i++)
 		{
 			CElement_Event& Event = EventList[i];
 			Event.Position = Event.Position * Scale;
@@ -2101,9 +2101,9 @@ void M2Lib::M2::Scale(Float32 Scale)
 
 	// lights
 	{
-		UInt32 LightListLength = Elements[EElement_Light].Count;
+		uint32_t LightListLength = Elements[EElement_Light].Count;
 		CElement_Light* LightList = Elements[EElement_Light].as<CElement_Light>();
-		for (UInt32 i = 0; i < LightListLength; i++)
+		for (uint32_t i = 0; i < LightListLength; i++)
 		{
 			CElement_Light& Light = LightList[i];
 			Light.Position = Light.Position * Scale;
@@ -2112,9 +2112,9 @@ void M2Lib::M2::Scale(Float32 Scale)
 
 	// cameras
 	{
-		UInt32 CameraListLength = Elements[EElement_Camera].Count;
+		uint32_t CameraListLength = Elements[EElement_Camera].Count;
 		CElement_Camera* CameraList = Elements[EElement_Camera].as<CElement_Camera>();
-		for (UInt32 i = 0; i < CameraListLength; i++)
+		for (uint32_t i = 0; i < CameraListLength; i++)
 		{
 			CElement_Camera& Camera = CameraList[i];
 			Camera.Position = Camera.Position * Scale;
@@ -2124,9 +2124,9 @@ void M2Lib::M2::Scale(Float32 Scale)
 
 	// ribbon emitters
 	{
-		UInt32 RibbonEmitterListLength = Elements[EElement_RibbonEmitter].Count;
+		uint32_t RibbonEmitterListLength = Elements[EElement_RibbonEmitter].Count;
 		CElement_RibbonEmitter* RibbonEmitterList = Elements[EElement_RibbonEmitter].as<CElement_RibbonEmitter>();
-		for (UInt32 i = 0; i < RibbonEmitterListLength; i++)
+		for (uint32_t i = 0; i < RibbonEmitterListLength; i++)
 		{
 			CElement_RibbonEmitter& RibbonEmitter = RibbonEmitterList[i];
 			RibbonEmitter.Position = RibbonEmitter.Position * Scale;
@@ -2135,9 +2135,9 @@ void M2Lib::M2::Scale(Float32 Scale)
 
 	// particle emitters
 	{
-		UInt32 ParticleEmitterListLength = Elements[EElement_ParticleEmitter].Count;
+		uint32_t ParticleEmitterListLength = Elements[EElement_ParticleEmitter].Count;
 		CElement_ParticleEmitter* ParticleEmitterList = Elements[EElement_ParticleEmitter].as<CElement_ParticleEmitter>();
-		for (UInt32 i = 0; i < ParticleEmitterListLength; i++)
+		for (uint32_t i = 0; i < ParticleEmitterListLength; i++)
 		{
 			CElement_ParticleEmitter& ParticleEmitter = ParticleEmitterList[i];
 			ParticleEmitter.Position = ParticleEmitter.Position * Scale;
@@ -2149,8 +2149,8 @@ void M2Lib::M2::Scale(Float32 Scale)
 void M2Lib::M2::MirrorCamera()
 {
 	CElement_Camera* Cameras = Elements[EElement_Camera].as<CElement_Camera>();
-	UInt32 CameraCount = Elements[EElement_Camera].Count;
-	for (UInt32 iCamera = 0; iCamera < CameraCount; iCamera++)
+	uint32_t CameraCount = Elements[EElement_Camera].Count;
+	for (uint32_t iCamera = 0; iCamera < CameraCount; iCamera++)
 	{
 		if (Cameras->Type == 0)
 		{
@@ -2260,9 +2260,9 @@ void M2Lib::M2::m_LoadElements_CopyHeaderToElements()
 }
 
 
-void M2Lib::M2::m_LoadElements_FindSizes(UInt32 ChunkSize)
+void M2Lib::M2::m_LoadElements_FindSizes(uint32_t ChunkSize)
 {
-	for (UInt32 i = 0; i < EElement__Count__; ++i)
+	for (uint32_t i = 0; i < EElement__Count__; ++i)
 	{
 		auto& Element = Elements[i];
 
@@ -2275,8 +2275,8 @@ void M2Lib::M2::m_LoadElements_FindSizes(UInt32 ChunkSize)
 			continue;
 		}
 
-		UInt32 NextOffset = ChunkSize;
-		for (UInt32 j = 0; j < EElement__Count__; ++j)
+		uint32_t NextOffset = ChunkSize;
+		for (uint32_t j = 0; j < EElement__Count__; ++j)
 		{
 			if (Elements[j].Count && Elements[j].Offset > Element.Offset)
 			{
@@ -2375,19 +2375,19 @@ M2Lib::SkeletonChunk::AFIDChunk* M2Lib::M2::GetSkeletonAFIDChunk()
 void M2Lib::M2::m_SaveElements_FindOffsets()
 {
 	// fix animation offsets and find element offsets
-	SInt32 CurrentOffset = 0;
+	int32_t CurrentOffset = 0;
 	if (Header.IsLongHeader() && GetExpansion() >= Expansion::Cataclysm)
 		CurrentOffset = sizeof(CM2Header) + 8;	// +8 to align data at 16 byte bounds
 	else
 		CurrentOffset = sizeof(CM2Header) - 8;	// -8 because last 2 UInt32s are not saved
 
 	// totaldiff needed to fix animations that are in the end of a chunk
-	SInt32 totalDiff = -(SInt32)m_OriginalModelChunkSize + GetHeaderSize();
-	for (UInt32 iElement = 0; iElement < EElement__Count__; ++iElement)
+	int32_t totalDiff = -(int32_t)m_OriginalModelChunkSize + GetHeaderSize();
+	for (uint32_t iElement = 0; iElement < EElement__Count__; ++iElement)
 		totalDiff += Elements[iElement].Data.size();
 
-	SInt32 OffsetDelta = 0;
-	for (UInt32 iElement = 0; iElement < EElement__Count__; ++iElement)
+	int32_t OffsetDelta = 0;
+	for (uint32_t iElement = 0; iElement < EElement__Count__; ++iElement)
 	{
 		// if this element has data...
 		if (Elements[iElement].Data.empty())
@@ -2410,7 +2410,7 @@ void M2Lib::M2::m_SaveElements_FindOffsets()
 			case EElement_Bone:
 			{
 				CElement_Bone* Bones = Elements[iElement].as<CElement_Bone>();
-				for (UInt32 j = 0; j < Elements[iElement].Count; ++j)
+				for (uint32_t j = 0; j < Elements[iElement].Count; ++j)
 				{
 					m_FixAnimationOffsets(OffsetDelta, totalDiff, Bones[j].AnimationBlock_Position, iElement);
 					m_FixAnimationOffsets(OffsetDelta, totalDiff, Bones[j].AnimationBlock_Rotation, iElement);
@@ -2425,7 +2425,7 @@ void M2Lib::M2::m_SaveElements_FindOffsets()
 			case EElement_Color:
 			{
 				CElement_Color* Colors = Elements[iElement].as<CElement_Color>();
-				for (UInt32 j = 0; j < Elements[iElement].Count; ++j)
+				for (uint32_t j = 0; j < Elements[iElement].Count; ++j)
 				{
 					m_FixAnimationOffsets(OffsetDelta, totalDiff, Colors[j].AnimationBlock_Color, iElement);
 					m_FixAnimationOffsets(OffsetDelta, totalDiff, Colors[j].AnimationBlock_Opacity, iElement);
@@ -2436,7 +2436,7 @@ void M2Lib::M2::m_SaveElements_FindOffsets()
 			case EElement_Texture:
 			{
 				CElement_Texture* Textures = Elements[iElement].as<CElement_Texture>();
-				for (UInt32 j = 0; j < Elements[iElement].Count; ++j)
+				for (uint32_t j = 0; j < Elements[iElement].Count; ++j)
 				{
 					if (Textures[j].TexturePath.Offset)
 					{
@@ -2450,7 +2450,7 @@ void M2Lib::M2::m_SaveElements_FindOffsets()
 			case EElement_Transparency:
 			{
 				CElement_Transparency* Transparencies = Elements[iElement].as<CElement_Transparency>();
-				for (UInt32 j = 0; j < Elements[iElement].Count; ++j)
+				for (uint32_t j = 0; j < Elements[iElement].Count; ++j)
 				{
 					m_FixAnimationOffsets(OffsetDelta, totalDiff, Transparencies[j].AnimationBlock_Transparency, iElement);
 				}
@@ -2459,7 +2459,7 @@ void M2Lib::M2::m_SaveElements_FindOffsets()
 			case EElement_TextureAnimation:
 			{
 				CElement_UVAnimation* Animations = Elements[iElement].as<CElement_UVAnimation>();
-				for (UInt32 j = 0; j < Elements[iElement].Count; ++j)
+				for (uint32_t j = 0; j < Elements[iElement].Count; ++j)
 				{
 					m_FixAnimationOffsets(OffsetDelta, totalDiff, Animations[j].AnimationBlock_Position, iElement);
 					m_FixAnimationOffsets(OffsetDelta, totalDiff, Animations[j].AnimationBlock_Rotation, iElement);
@@ -2483,7 +2483,7 @@ void M2Lib::M2::m_SaveElements_FindOffsets()
 			case EElement_Attachment:
 			{
 				CElement_Attachment* Attachments = Elements[iElement].as<CElement_Attachment>();
-				for (UInt32 j = 0; j < Elements[iElement].Count; ++j)
+				for (uint32_t j = 0; j < Elements[iElement].Count; ++j)
 				{
 					m_FixAnimationOffsets(OffsetDelta, totalDiff, Attachments[j].AnimationBlock_Visibility, iElement);
 				}
@@ -2496,7 +2496,7 @@ void M2Lib::M2::m_SaveElements_FindOffsets()
 			case EElement_Event:
 			{
 				CElement_Event* Events = Elements[iElement].as<CElement_Event>();
-				for (UInt32 j = 0; j < Elements[iElement].Count; ++j)
+				for (uint32_t j = 0; j < Elements[iElement].Count; ++j)
 					m_FixAnimationM2Array(OffsetDelta, totalDiff, Events[j].GlobalSequenceID, Events[j].TimeLines, iElement);
 
 				break;
@@ -2505,7 +2505,7 @@ void M2Lib::M2::m_SaveElements_FindOffsets()
 			case EElement_Light:
 			{
 				CElement_Light* Lights = Elements[iElement].as<CElement_Light>();
-				for (UInt32 j = 0; j < Elements[iElement].Count; ++j)
+				for (uint32_t j = 0; j < Elements[iElement].Count; ++j)
 				{
 					m_FixAnimationOffsets(OffsetDelta, totalDiff, Lights[j].AnimationBlock_AmbientColor, iElement);
 					m_FixAnimationOffsets(OffsetDelta, totalDiff, Lights[j].AnimationBlock_AmbientIntensity, iElement);
@@ -2521,7 +2521,7 @@ void M2Lib::M2::m_SaveElements_FindOffsets()
 			case EElement_Camera:
 			{
 				CElement_Camera* Cameras = Elements[iElement].as<CElement_Camera>();
-				for (UInt32 j = 0; j < Elements[iElement].Count; ++j)
+				for (uint32_t j = 0; j < Elements[iElement].Count; ++j)
 				{
 					m_FixAnimationOffsets(OffsetDelta, totalDiff, Cameras[j].AnimationBlock_Position, iElement);
 					m_FixAnimationOffsets(OffsetDelta, totalDiff, Cameras[j].AnimationBlock_Target, iElement);
@@ -2538,7 +2538,7 @@ void M2Lib::M2::m_SaveElements_FindOffsets()
 			{
 				// untested!
 				CElement_RibbonEmitter* RibbonEmitters = Elements[iElement].as<CElement_RibbonEmitter>();
-				for (UInt32 j = 0; j < Elements[iElement].Count; ++j)
+				for (uint32_t j = 0; j < Elements[iElement].Count; ++j)
 				{
 					VERIFY_OFFSET_LOCAL(RibbonEmitters[j].Texture.Offset);
 					RibbonEmitters[j].Texture.Offset += OffsetDelta;
@@ -2558,7 +2558,7 @@ void M2Lib::M2::m_SaveElements_FindOffsets()
 			case EElement_ParticleEmitter:
 			{
 				CElement_ParticleEmitter* ParticleEmitters = Elements[iElement].as<CElement_ParticleEmitter>();
-				for (UInt32 j = 0; j < Elements[iElement].Count; ++j)
+				for (uint32_t j = 0; j < Elements[iElement].Count; ++j)
 				{
 					if (ParticleEmitters[j].FileNameModel.Count)
 					{
@@ -2616,11 +2616,11 @@ void M2Lib::M2::m_SaveElements_FindOffsets()
 	}
 
 	m_OriginalModelChunkSize = GetHeaderSize();
-	for (UInt32 iElement = 0; iElement < EElement__Count__; ++iElement)
+	for (uint32_t iElement = 0; iElement < EElement__Count__; ++iElement)
 		m_OriginalModelChunkSize += Elements[iElement].Data.size();
 }
 
-void M2Lib::M2::m_FixAnimationM2Array_Old(SInt32 OffsetDelta, SInt32 TotalDelta, SInt16 GlobalSequenceID, M2Array& Array, SInt32 iElement)
+void M2Lib::M2::m_FixAnimationM2Array_Old(int32_t OffsetDelta, int32_t TotalDelta, int16_t GlobalSequenceID, M2Array& Array, int32_t iElement)
 {
 #define IS_LOCAL_ANIMATION(Offset) \
 	(Offset >= Elements[iElement].OffsetOriginal && (Offset < Elements[iElement].OffsetOriginal + Elements[iElement].Data.size()))
@@ -2639,7 +2639,7 @@ void M2Lib::M2::m_FixAnimationM2Array_Old(SInt32 OffsetDelta, SInt32 TotalDelta,
 		{
 			auto SubArrays = (M2Array*)Elements[iElement].GetLocalPointer(Array.Offset);
 
-			for (UInt32 i = 0; i < Array.Count; ++i)
+			for (uint32_t i = 0; i < Array.Count; ++i)
 			{
 				assert("Out of animation index" && i < animationElement->Count);
 				if (!animations[i].IsInline())
@@ -2658,14 +2658,14 @@ void M2Lib::M2::m_FixAnimationM2Array_Old(SInt32 OffsetDelta, SInt32 TotalDelta,
 	else
 	{
 		auto SubArrays = (M2Array*)Elements[iElement].GetLocalPointer(Array.Offset);
-		for (UInt32 i = 0; i < Array.Count; ++i)
+		for (uint32_t i = 0; i < Array.Count; ++i)
 			SubArrays[i].Shift(IS_LOCAL_ANIMATION(SubArrays[i].Offset) ? OffsetDelta : TotalDelta);
 
 		Array.Shift(IS_LOCAL_ANIMATION(Array.Offset) ? OffsetDelta : TotalDelta);
 	}
 }
 
-void M2Lib::M2::m_FixAnimationM2Array(SInt32 OffsetDelta, SInt32 TotalDelta, SInt16 GlobalSequenceID, M2Array& Array, SInt32 iElement)
+void M2Lib::M2::m_FixAnimationM2Array(int32_t OffsetDelta, int32_t TotalDelta, int16_t GlobalSequenceID, M2Array& Array, int32_t iElement)
 {
 	if (!Array.Count)
 		return;
@@ -2673,7 +2673,7 @@ void M2Lib::M2::m_FixAnimationM2Array(SInt32 OffsetDelta, SInt32 TotalDelta, SIn
 	auto SubArrays = (M2Array*)Elements[iElement].GetLocalPointer(Array.Offset);
 	auto& Element = Elements[iElement];
 
-	for (UInt32 i = 0; i < Array.Count; ++i)
+	for (uint32_t i = 0; i < Array.Count; ++i)
 	{
 		if (!SubArrays[i].Offset)
 			continue;
@@ -2682,7 +2682,7 @@ void M2Lib::M2::m_FixAnimationM2Array(SInt32 OffsetDelta, SInt32 TotalDelta, SIn
 		auto animation = GetAnimations()->at<CElement_Animation>(i);
 
 		/*auto lte = SubArrays[i].Offset < Element.Offset ? 1 : 0;
-		auto ext = SubArrays[i].Offset > (UInt32)Element.Data.size() + Element.Offset ? 1 : 0;
+		auto ext = SubArrays[i].Offset > (uint32_t)Element.Data.size() + Element.Offset ? 1 : 0;
 		auto flags = (animation->Flags & 0x20) != 0 ? 1 : 0;
 		if ((lte == 0 && ext == 1 && flags == 0 || i == 68) && iElement == EElement_Transparency)
 		{
@@ -2706,13 +2706,13 @@ void M2Lib::M2::m_FixAnimationM2Array(SInt32 OffsetDelta, SInt32 TotalDelta, SIn
 	Array.Shift(OffsetDelta);
 }
 
-void M2Lib::M2::m_FixAnimationOffsets_Old(SInt32 OffsetDelta, SInt32 TotalDelta, CElement_AnimationBlock& AnimationBlock, SInt32 iElement)
+void M2Lib::M2::m_FixAnimationOffsets_Old(int32_t OffsetDelta, int32_t TotalDelta, CElement_AnimationBlock& AnimationBlock, int32_t iElement)
 {
 	m_FixAnimationM2Array_Old(OffsetDelta, TotalDelta, AnimationBlock.GlobalSequenceID, AnimationBlock.Times, iElement);
 	m_FixAnimationM2Array_Old(OffsetDelta, TotalDelta, AnimationBlock.GlobalSequenceID, AnimationBlock.Keys, iElement);
 }
 
-void M2Lib::M2::m_FixAnimationOffsets(SInt32 OffsetDelta, SInt32 TotalDelta, CElement_AnimationBlock& AnimationBlock, SInt32 iElement)
+void M2Lib::M2::m_FixAnimationOffsets(int32_t OffsetDelta, int32_t TotalDelta, CElement_AnimationBlock& AnimationBlock, int32_t iElement)
 {
 	if (Settings && Settings->FixAnimationsTest)
 	{
@@ -2728,7 +2728,7 @@ void M2Lib::M2::m_FixAnimationOffsets(SInt32 OffsetDelta, SInt32 TotalDelta, CEl
 	m_FixAnimationM2Array(OffsetDelta, TotalDelta, AnimationBlock.GlobalSequenceID, AnimationBlock.Keys, iElement);
 }
 
-void M2Lib::M2::m_FixFakeAnimationBlockOffsets(SInt32 OffsetDelta, SInt32 TotalDelta, CElement_FakeAnimationBlock& AnimationBlock, SInt32 iElement)
+void M2Lib::M2::m_FixFakeAnimationBlockOffsets(int32_t OffsetDelta, int32_t TotalDelta, CElement_FakeAnimationBlock& AnimationBlock, int32_t iElement)
 {
 	if (Settings && Settings->FixAnimationsTest)
 	{
@@ -2744,7 +2744,7 @@ void M2Lib::M2::m_FixFakeAnimationBlockOffsets(SInt32 OffsetDelta, SInt32 TotalD
 	m_FixAnimationM2Array(OffsetDelta, TotalDelta, -1, AnimationBlock.Keys, iElement);
 }
 
-void M2Lib::M2::m_FixFakeAnimationBlockOffsets_Old(SInt32 OffsetDelta, SInt32 TotalDelta, CElement_FakeAnimationBlock& AnimationBlock, SInt32 iElement)
+void M2Lib::M2::m_FixFakeAnimationBlockOffsets_Old(int32_t OffsetDelta, int32_t TotalDelta, CElement_FakeAnimationBlock& AnimationBlock, int32_t iElement)
 {
 	// TP is the best
 	if (AnimationBlock.Times.Count)
@@ -2867,7 +2867,7 @@ void M2Lib::M2::m_SaveElements_CopyElementsToHeader()
 	}
 }
 
-UInt32 M2Lib::M2::AddTexture(CElement_Texture::ETextureType Type, CElement_Texture::ETextureFlags Flags, char const* szTextureSource)
+uint32_t M2Lib::M2::AddTexture(CElement_Texture::ETextureType Type, CElement_Texture::ETextureFlags Flags, char const* szTextureSource)
 {
 	if (Type != CElement_Texture::ETextureType::Final_Hardcoded)
 		szTextureSource = "";
@@ -2875,7 +2875,7 @@ UInt32 M2Lib::M2::AddTexture(CElement_Texture::ETextureType Type, CElement_Textu
 	auto& Element = Elements[EElement_Texture];
 
 	// shift offsets for existing textures
-	for (UInt32 i = 0; i < Element.Count; ++i)
+	for (uint32_t i = 0; i < Element.Count; ++i)
 	{
 		auto texture = Element.at<CElement_Texture>(i);
 		if (texture->TexturePath.Offset)
@@ -2941,7 +2941,7 @@ UInt32 M2Lib::M2::AddTexture(CElement_Texture::ETextureType Type, CElement_Textu
 	return newIndex;
 }
 
-UInt32 M2Lib::M2::CloneTexture(UInt16 TextureId)
+uint32_t M2Lib::M2::CloneTexture(uint16_t TextureId)
 {
 	assert(TextureId < Header.Elements.nTexture && "Too large texture index");
 
@@ -2951,7 +2951,7 @@ UInt32 M2Lib::M2::CloneTexture(UInt16 TextureId)
 	return AddTexture(texture.Type, texture.Flags, texturePath.c_str());
 }
 
-UInt32 M2Lib::M2::AddTextureFlags(CElement_TextureFlag::EFlags Flags, CElement_TextureFlag::EBlend Blend)
+uint32_t M2Lib::M2::AddTextureFlags(CElement_TextureFlag::EFlags Flags, CElement_TextureFlag::EBlend Blend)
 {
 	auto& Element = Elements[EElement_TextureFlags];
 	auto newIndex = Element.Count;
@@ -2973,7 +2973,7 @@ UInt32 M2Lib::M2::AddTextureFlags(CElement_TextureFlag::EFlags Flags, CElement_T
 	return newIndex;
 }
 
-UInt32 M2Lib::M2::GetTextureIndex(M2Element::CElement_Texture::ETextureType Type, const Char8* szTextureSource)
+uint32_t M2Lib::M2::GetTextureIndex(M2Element::CElement_Texture::ETextureType Type, const char* szTextureSource)
 {
 	if (Type == CElement_Texture::ETextureType::Final_Hardcoded)
 	{
@@ -2982,7 +2982,7 @@ UInt32 M2Lib::M2::GetTextureIndex(M2Element::CElement_Texture::ETextureType Type
 			// if file not found - can be custom texture
 			if (auto info = FileStorage::GetInstance()->GetFileInfoByPath(szTextureSource))
 			{
-				for (UInt32 i = 0; i < textureChunk->TextureFileDataIds.size(); ++i)
+				for (uint32_t i = 0; i < textureChunk->TextureFileDataIds.size(); ++i)
 					if (textureChunk->TextureFileDataIds[i] == info.FileDataId)
 						return i;
 			}
@@ -2990,7 +2990,7 @@ UInt32 M2Lib::M2::GetTextureIndex(M2Element::CElement_Texture::ETextureType Type
 	}
 
 	auto& Element = Elements[EElement_Texture];
-	for (UInt32 i = 0; i < Element.Count; ++i)
+	for (uint32_t i = 0; i < Element.Count; ++i)
 	{
 		auto& texture = Element.as<CElement_Texture>()[i];
 		if (texture.Type != Type)
@@ -3001,7 +3001,7 @@ UInt32 M2Lib::M2::GetTextureIndex(M2Element::CElement_Texture::ETextureType Type
 
 		if (texture.TexturePath.Offset)
 		{
-			auto pTexturePath = (Char8 const*)Element.GetLocalPointer(texture.TexturePath.Offset);
+			auto pTexturePath = (char const*)Element.GetLocalPointer(texture.TexturePath.Offset);
 			if (FileStorage::CalculateHash(pTexturePath) == FileStorage::CalculateHash(szTextureSource))
 				return i;
 		}
@@ -3010,7 +3010,7 @@ UInt32 M2Lib::M2::GetTextureIndex(M2Element::CElement_Texture::ETextureType Type
 	return -1;
 }
 
-std::string M2Lib::M2::GetTexturePath(UInt32 Index)
+std::string M2Lib::M2::GetTexturePath(uint32_t Index)
 {
 	auto& TextureElement = Elements[EElement_Texture];
 	assert(__FUNCTION__ "Texture index too large" && Index < TextureElement.Count);
@@ -3043,11 +3043,11 @@ void M2Lib::M2::RemoveTXIDChunk()
 
 	auto chunk = (M2Chunk::TXIDChunk*)chunkItr->second;
 
-	UInt32 newDataLen = 0;
-	std::map<UInt32, std::string> PathsByTextureId;
+	uint32_t newDataLen = 0;
+	std::map<uint32_t, std::string> PathsByTextureId;
 
 	auto& Element = Elements[EElement_Texture];
-	for (UInt32 i = 0; i < chunk->TextureFileDataIds.size(); ++i)
+	for (uint32_t i = 0; i < chunk->TextureFileDataIds.size(); ++i)
 	{
 		assert(i < Element.Count);
 		auto FileDataId = chunk->TextureFileDataIds[i];
@@ -3074,8 +3074,8 @@ void M2Lib::M2::RemoveTXIDChunk()
 		return;
 	}
 
-	UInt32 pathOffset = 0;
-	UInt32 OldSize = Element.Data.size();
+	uint32_t pathOffset = 0;
+	uint32_t OldSize = Element.Data.size();
 	Element.Data.insert(Element.Data.end(), newDataLen, 0);
 	for (auto itr : PathsByTextureId)
 	{
@@ -3092,13 +3092,13 @@ void M2Lib::M2::RemoveTXIDChunk()
 	Chunks.erase(chunkItr);
 }
 
-UInt32 M2Lib::M2::AddTextureLookup(UInt16 TextureId, bool ForceNewIndex /*= false*/)
+uint32_t M2Lib::M2::AddTextureLookup(uint16_t TextureId, bool ForceNewIndex /*= false*/)
 {
 	auto& Element = Elements[EElement_TextureLookup];
 
 	if (!ForceNewIndex)
 	{
-		for (UInt32 i = 0; i < Element.Count; ++i)
+		for (uint32_t i = 0; i < Element.Count; ++i)
 		{
 			auto& lookup = Element.as<CElement_TextureLookup>()[i];
 			if (lookup.TextureIndex == TextureId)
@@ -3117,13 +3117,13 @@ UInt32 M2Lib::M2::AddTextureLookup(UInt16 TextureId, bool ForceNewIndex /*= fals
 	return newIndex;
 }
 
-UInt32 M2Lib::M2::AddBone(CElement_Bone const& Bone)
+uint32_t M2Lib::M2::AddBone(CElement_Bone const& Bone)
 {
 	auto& BoneElement = Elements[M2Element::EElement_Bone];
 	auto newBoneId = BoneElement.Count;
 
 	auto Bones = Elements[M2Element::EElement_Bone].as<CElement_Bone>();
-	for (UInt32 i = 0; i < BoneElement.Count; ++i)
+	for (uint32_t i = 0; i < BoneElement.Count; ++i)
 	{
 		m_FixAnimationOffsets(sizeof(CElement_Bone), 0, Bones[i].AnimationBlock_Position, EElement_Bone);
 		m_FixAnimationOffsets(sizeof(CElement_Bone), 0, Bones[i].AnimationBlock_Rotation, EElement_Bone);

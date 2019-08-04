@@ -6,7 +6,7 @@
 using namespace M2Lib;
 using namespace M2Lib::SkeletonChunk;
 
-EError Skeleton::Load(const Char16* FileName)
+EError Skeleton::Load(const wchar_t* FileName)
 {
 	// check path
 	if (!FileName)
@@ -22,14 +22,14 @@ EError Skeleton::Load(const Char16* FileName)
 
 	// find file size
 	FileStream.seekg(0, std::ios::end);
-	UInt32 FileSize = (UInt32)FileStream.tellg();
+	uint32_t FileSize = (uint32_t)FileStream.tellg();
 	FileStream.seekg(0, std::ios::beg);
 
 	sLogger.LogInfo("Loading skeleton chunks...");
 	while (FileStream.tellg() < FileSize)
 	{
-		UInt32 ChunkId;
-		UInt32 ChunkSize;
+		uint32_t ChunkId;
+		uint32_t ChunkSize;
 
 		FileStream.read((char*)&ChunkId, sizeof(ChunkId));
 		FileStream.read((char*)&ChunkSize, sizeof(ChunkSize));
@@ -52,7 +52,7 @@ EError Skeleton::Load(const Char16* FileName)
 
 		sLogger.LogInfo("Loaded %s skeleton chunk, size %u", ChunkIdToStr(ChunkId, false).c_str(), ChunkSize);
 
-		UInt32 savePos = FileStream.tellg();
+		uint32_t savePos = FileStream.tellg();
 		Chunk->Load(FileStream, ChunkSize);
 		FileStream.seekg(savePos + ChunkSize, std::ios::beg);
 
@@ -63,7 +63,7 @@ EError Skeleton::Load(const Char16* FileName)
 	return EError::EError_OK;
 }
 
-EError Skeleton::Save(const Char16* FileName)
+EError Skeleton::Save(const wchar_t* FileName)
 {
 	// check path
 	if (!FileName)
@@ -97,13 +97,13 @@ EError Skeleton::Save(const Char16* FileName)
 		if (!chunk)
 			continue;
 
-		UInt32 ChunkId = REVERSE_CC((UInt32)chunkId);
+		uint32_t ChunkId = REVERSE_CC((uint32_t)chunkId);
 
 		FileStream.write((char*)&ChunkId, 4);
 		FileStream.seekp(4, std::ios::cur);		// reserve space for chunk size
-		UInt32 savePos = (UInt32)FileStream.tellp();
+		uint32_t savePos = (uint32_t)FileStream.tellp();
 		chunk->Save(FileStream);
-		UInt32 ChunkSize = (UInt32)FileStream.tellp() - savePos;
+		uint32_t ChunkSize = (uint32_t)FileStream.tellp() - savePos;
 		FileStream.seekp(savePos - 4, std::ios::beg);
 		FileStream.write((char*)&ChunkSize, 4);
 		FileStream.seekp(0, std::ios::end);

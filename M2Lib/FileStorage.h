@@ -8,7 +8,7 @@ namespace M2Lib
 {
 	struct FileInfo
 	{
-		UInt32 FileDataId = 0;
+		uint32_t FileDataId = 0;
 		std::string Path;
 
 		static const FileInfo Empty;
@@ -31,8 +31,8 @@ namespace M2Lib
 	private:
 		void ClearStorage() { fileInfosByFileDataId.clear(); fileInfosByNameHash.clear(); }
 
-		std::map<UInt32, FileInfo> fileInfosByFileDataId;
-		std::map<UInt64, FileInfo> fileInfosByNameHash;
+		std::map<uint32_t, FileInfo> fileInfosByFileDataId;
+		std::map<uint64_t, FileInfo> fileInfosByNameHash;
 
 		FileStorage();
 		bool ParseCsv(std::string const& Path, bool CheckExisting = false);
@@ -48,19 +48,19 @@ namespace M2Lib
 			return storage;
 		}
 
-		bool LoadListFileAddons(UInt32& totalAddons);
+		bool LoadListFileAddons(uint32_t& totalAddons);
 		bool LoadStorage(std::string const& ListfilePath);
 
 		static const std::string DefaultListfilePath;
 		static const std::string ListfileAddonsPath;
 
 		bool Loaded() const { return GetStorageSize() > 0; }
-		UInt32 GetStorageSize() const { return fileInfosByFileDataId.size(); }
+		uint32_t GetStorageSize() const { return fileInfosByFileDataId.size(); }
 
 		FileInfo const& GetFileInfoByPartialPath(std::string const& Name);
-		FileInfo const& GetFileInfoByFileDataId(UInt32 FileDataId);
+		FileInfo const& GetFileInfoByFileDataId(uint32_t FileDataId);
 		FileInfo const& GetFileInfoByPath(std::string const& Path);
-		static UInt64 CalculateHash(std::string const& Path);
-		static std::string PathInfo(UInt32 FileDataId);
+		static uint64_t CalculateHash(std::string const& Path);
+		static std::string PathInfo(uint32_t FileDataId);
 	};
 }

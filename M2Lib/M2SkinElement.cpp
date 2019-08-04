@@ -1,6 +1,6 @@
 #include "M2SkinElement.h"
 
-UInt32 M2Lib::GetSubSetType(UInt32 SubsetId)
+uint32_t M2Lib::GetSubSetType(uint32_t SubsetId)
 {
 	switch (SubsetId / 100)
 	{
@@ -77,9 +77,9 @@ UInt32 M2Lib::GetSubSetType(UInt32 SubsetId)
 	return Subset_Unknown;
 }
 
-bool M2Lib::IsAlignedSubset(UInt32 SubsetId)
+bool M2Lib::IsAlignedSubset(uint32_t SubsetId)
 {
-	UInt32 SubsetType = GetSubSetType(SubsetId);
+	uint32_t SubsetType = GetSubSetType(SubsetId);
 	if (SubsetType == Subset_Body)
 		return true;
 
