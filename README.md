@@ -15,7 +15,11 @@ If you wish, you can produce \*.M2 from your edited \*.m2i
 * Use M2Mod to create new m2 file based on exported m2i and base m2.
 * Profit!
 
-To use this model in game, WoW.exe patching is needed.
+To use this model in game, Arctium Launcher is needed
+
+### Misc
+* Keep listfile.csv up to date: donwload Community csv from https://wow.tools/files and place into M2Mod directory
+* If you you custom textures, they must be added to <your filename>.csv into listfile_addons directory. Format is same as in listfile.csv. Id should be completely random and must not overlap with blizz files
 
 ### Credits ###
 * Based on Fr33m4n work, which is base on Redaxle work
