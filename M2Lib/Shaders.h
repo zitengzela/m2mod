@@ -87,10 +87,10 @@ namespace M2Lib
 
 	struct ShaderEffect
 	{
-		unsigned int pixel;
-		unsigned int vertex;
-		unsigned int hull;
-		unsigned int domain;
+		uint32_t pixel;
+		uint32_t vertex;
+		uint32_t hull;
+		uint32_t domain;
 	};
 
 	static constexpr ShaderEffect s_modelShaderEffect[] =

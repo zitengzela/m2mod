@@ -17,18 +17,18 @@ namespace M2Lib
 		class Candidates
 		{
 		public:
-			void AddCandidate(unsigned int BoneId);
+			void AddCandidate(uint32_t BoneId);
 
-			std::map<unsigned int, float> GetWeightedCandidates();
+			std::map<uint32_t, float> GetWeightedCandidates();
 
-			unsigned int Size() const { return BoneUsage.size(); }
+			uint32_t Size() const { return BoneUsage.size(); }
 
 		private:
-			std::map<unsigned int, unsigned int> BoneUsage;
+			std::map<uint32_t, uint32_t> BoneUsage;
 		};
 
-		std::map<unsigned int, std::map<unsigned int, float>> Diff(M2* oldM2, M2* newM2);
+		std::map<uint32_t, std::map<uint32_t, float>> Diff(M2* oldM2, M2* newM2, bool CompareTextures);
 
-		CompareStatus GetDifferenceStatus(std::map<unsigned int, std::map<unsigned int, float>> const& WeightedResult, float weightThreshold);
+		CompareStatus GetDifferenceStatus(std::map<uint32_t, std::map<uint32_t, float>> const& WeightedResult, float weightThreshold);
 	}
 }

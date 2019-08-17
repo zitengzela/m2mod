@@ -13,11 +13,17 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="FileSystem">
-      <UniqueIdentifier>{1188fdff-1a20-4883-aebb-e5df05037b87}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Storage">
       <UniqueIdentifier>{c9552b36-bfbf-49da-ba08-d662650b1fd7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Helpers">
+      <UniqueIdentifier>{1f6ec346-f2a2-46f6-80ea-bda8a013f861}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Helpers\FileSystem">
+      <UniqueIdentifier>{1188fdff-1a20-4883-aebb-e5df05037b87}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Helpers\String">
+      <UniqueIdentifier>{044a3415-3d92-412a-9e3c-f641f3e77c54}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -70,7 +76,7 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="FileSystem.h">
-      <Filter>FileSystem</Filter>
+      <Filter>Helpers\FileSystem</Filter>
     </ClInclude>
     <ClInclude Include="Logger.h">
       <Filter>Header Files</Filter>
@@ -80,6 +86,9 @@
     </ClInclude>
     <ClInclude Include="FileStorage.h">
       <Filter>Storage</Filter>
+    </ClInclude>
+    <ClInclude Include="StringHelpers.h">
+      <Filter>Helpers\String</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -126,7 +135,7 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="FileSystem.cpp">
-      <Filter>FileSystem</Filter>
+      <Filter>Helpers\FileSystem</Filter>
     </ClCompile>
     <ClCompile Include="Logger.cpp">
       <Filter>Source Files</Filter>

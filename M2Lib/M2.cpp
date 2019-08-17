@@ -784,8 +784,8 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate(wchar_t const* FileName)
 
 			DataBinary.WriteC3Vector(Vertex.Normal);
 
-			DataBinary.WriteC2Vector(Vertex.Texture);
-			DataBinary.WriteC2Vector(Vertex.Texture2);
+			for (uint32_t j = 0; j < MAX_SUBMESH_UV; ++j)
+				DataBinary.WriteC2Vector(Vertex.Texture[j]);
 		}
 
 		// write triangles

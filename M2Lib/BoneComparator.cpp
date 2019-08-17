@@ -4,7 +4,7 @@
 #include <set>
 #include <sstream>
 
-std::map<unsigned int, std::map<unsigned int, float>> M2Lib::BoneComparator::Diff(M2* oldM2, M2* newM2)
+std::map<uint32_t, std::map<uint32_t, float>> M2Lib::BoneComparator::Diff(M2* oldM2, M2* newM2, bool CompareTextures)
 {
 	auto OldSkin = oldM2->Skins[0];
 	auto NewSkin = newM2->Skins[0];
@@ -23,7 +23,7 @@ std::map<unsigned int, std::map<unsigned int, float>> M2Lib::BoneComparator::Dif
 
 	auto BoneElement = newM2->GetBones();
 
-	std::map<unsigned int, Candidates> OldToNewBoneMap;
+	std::map<uint32_t, Candidates> OldToNewBoneMap;
 
 	auto OldIndices = OldSkin->Elements[EElement_VertexLookup].as<uint16_t>();
 	auto NewIndices = NewSkin->Elements[EElement_VertexLookup].as<uint16_t>();
@@ -47,42 +47,40 @@ std::map<unsigned int, std::map<unsigned int, float>> M2Lib::BoneComparator::Dif
 				{
 					auto& NewVertex = NewVertices[NewIndices[l]];
 
-					if (floatEq(NewVertex.Position.X, OldVertex.Position.X) &&
-						floatEq(NewVertex.Position.Y, OldVertex.Position.Y) &&
-						floatEq(NewVertex.Position.Z, OldVertex.Position.Z))
+					if (!CVertex::CompareSimilar(OldVertex, NewVertex, CompareTextures, false, false, 0.0f, 0.0f))
+						continue;
+
+					for (int i = 0; i < BONES_PER_VERTEX; ++i)
 					{
-						for (int i = 0; i < 4; ++i)
+						if (floatEq(OldVertex.BoneWeights[i], 0.0f))
+							continue;
+
+						std::list<uint32_t> candidates;
+						for (int j = 0; j < BONES_PER_VERTEX; ++j)
 						{
-							if (floatEq(OldVertex.BoneWeights[i], 0.0f))
+							if (floatEq(NewVertex.BoneWeights[j], 0.0f))
 								continue;
 
-							std::list<uint32_t> candidates;
-							for (int j = 0; j < 4; ++j)
-							{
-								if (floatEq(NewVertex.BoneWeights[j], 0.0f))
-									continue;
-
-								if (floatEq(NewVertex.BoneWeights[j], OldVertex.BoneWeights[i]))
-									candidates.push_back(NewVertex.BoneIndices[j]);
-							}
-
-							if (candidates.size() == 1)
-								OldToNewBoneMap[OldVertex.BoneIndices[i]].AddCandidate(*candidates.begin());
+							if (floatEq(NewVertex.BoneWeights[j], OldVertex.BoneWeights[i]))
+								candidates.push_back(NewVertex.BoneIndices[j]);
 						}
+
+						if (candidates.size() == 1)
+							OldToNewBoneMap[OldVertex.BoneIndices[i]].AddCandidate(*candidates.begin());
 					}
 				}
 			}
 		}
 	}
 
-	std::map<unsigned int, std::map<unsigned int, float>> res;
+	std::map<uint32_t, std::map<uint32_t, float>> res;
 	for (auto itr : OldToNewBoneMap)
 		res[itr.first] = itr.second.GetWeightedCandidates();
 
 	return res;
 }
 
-M2Lib::BoneComparator::CompareStatus M2Lib::BoneComparator::GetDifferenceStatus(std::map<unsigned int, std::map<unsigned int, float>> const& WeightedResult, float weightThreshold)
+M2Lib::BoneComparator::CompareStatus M2Lib::BoneComparator::GetDifferenceStatus(std::map<uint32_t, std::map<uint32_t, float>> const& WeightedResult, float weightThreshold)
 {
 	auto status = CompareStatus::Identical;
 
@@ -120,7 +118,7 @@ M2Lib::BoneComparator::CompareStatus M2Lib::BoneComparator::GetDifferenceStatus(
 	return status;
 }
 
-void M2Lib::BoneComparator::Candidates::AddCandidate(unsigned int BoneId)
+void M2Lib::BoneComparator::Candidates::AddCandidate(uint32_t BoneId)
 {
 	auto itr = BoneUsage.find(BoneId);
 	if (itr == BoneUsage.end())
@@ -129,14 +127,14 @@ void M2Lib::BoneComparator::Candidates::AddCandidate(unsigned int BoneId)
 		++itr->second;
 }
 
-std::map<unsigned int, float> M2Lib::BoneComparator::Candidates::GetWeightedCandidates()
+std::map<uint32_t, float> M2Lib::BoneComparator::Candidates::GetWeightedCandidates()
 {
-	unsigned int totalCnt = 0;
+	uint32_t totalCnt = 0;
 
 	for (auto itr : BoneUsage)
 		totalCnt += itr.second;
 
-	std::map<unsigned int, float> ret;
+	std::map<uint32_t, float> ret;
 	if (totalCnt == 0)
 		return ret;
 

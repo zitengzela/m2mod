@@ -55,8 +55,8 @@ M2Lib::CVertex& M2Lib::CVertex::operator = (const CVertex& Other)
 		BoneIndices[i] = Other.BoneIndices[i];
 	}
 
-	Texture = Other.Texture;
-	Texture2 = Other.Texture2;
+	for (uint32_t i = 0; i < MAX_SUBMESH_UV; ++i)
+		Texture[i] = Other.Texture[i];
 
 	return *this;
 }
@@ -80,11 +80,14 @@ bool M2Lib::CVertex::CompareSimilar(CVertex& A, CVertex& B, bool CompareTextures
 	// compare texture coordinates
 	if (CompareTextures)
 	{
-		if (!floatEq(A.Texture.X, B.Texture.X) || !floatEq(A.Texture.Y, B.Texture.Y))
-			return false;
+		for (uint32_t i = 0; i < MAX_SUBMESH_UV; ++i)
+		{
+			if (!floatEq(A.Texture[i].X, B.Texture[i].X))
+				return false;
 
-		if (!floatEq(A.Texture2.X, B.Texture2.X) || !floatEq(A.Texture2.Y, B.Texture2.Y))
-			return false;
+			if (!floatEq(A.Texture[i].Y, B.Texture[i].Y))
+				return false;
+		}
 	}
 
 	// compare bones
@@ -97,10 +100,9 @@ bool M2Lib::CVertex::CompareSimilar(CVertex& A, CVertex& B, bool CompareTextures
 
 		for (uint32_t i = 0; i < BONES_PER_VERTEX; ++i)
 		{
-			bool HasSameBone = false;
 			for (uint32_t j = 0; j < BONES_PER_VERTEX; ++j)
 			{
-				if (A.BoneIndices[i] == B.BoneIndices[j] && SameBones[j] == false)
+				if (A.BoneIndices[i] == B.BoneIndices[j] && !SameBones[j])
 				{
 					if (floatEq(A.BoneWeights[i], B.BoneWeights[j]) || A.BoneIndices[i] == 0)
 					{
@@ -110,6 +112,7 @@ bool M2Lib::CVertex::CompareSimilar(CVertex& A, CVertex& B, bool CompareTextures
 				}
 			}
 		}
+
 		if (!SameBones[0] || !SameBones[1] || !SameBones[2] || !SameBones[3])
 			return false;
 	}

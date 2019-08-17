@@ -6,16 +6,12 @@
 #include <sstream>
 #include <filesystem>
 
-const M2Lib::FileInfo M2Lib::FileInfo::Empty = { 0, "" };
+const M2Lib::FileInfo M2Lib::FileInfo::Empty = { 0, "", false };
 
 const std::string M2Lib::FileStorage::DefaultListfilePath = FileSystemA::GetCurrentPath() + "\\" + "listfile.csv";
 const std::string M2Lib::FileStorage::ListfileAddonsPath = FileSystemA::GetCurrentPath() + "\\" + "listfile_addons";
 
-M2Lib::FileStorage::FileStorage()
-{
-}
-
-bool M2Lib::FileStorage::ParseCsv(std::string const& Path, bool CheckExisting)
+bool M2Lib::FileStorage::ParseCsv(std::string const& Path, bool IsCustom)
 {
 	std::fstream in;
 	in.open(Path, std::ios::in);
@@ -37,8 +33,8 @@ bool M2Lib::FileStorage::ParseCsv(std::string const& Path, bool CheckExisting)
 		std::getline(stream, fileName, ';');
 
 		auto nameHash = CalculateHash(fileName);
-		FileInfo info = { FileDataId, fileName };
-		if (CheckExisting)
+		FileInfo info = { FileDataId, fileName, IsCustom };
+		if (IsCustom)
 		{
 			auto itr1 = fileInfosByFileDataId.find(FileDataId);
 			if (itr1 != fileInfosByFileDataId.end())

@@ -10,6 +10,7 @@ namespace M2Lib
 	{
 		uint32_t FileDataId = 0;
 		std::string Path;
+		bool IsCustom = false;
 
 		static const FileInfo Empty;
 
@@ -28,14 +29,13 @@ namespace M2Lib
 
 	class FileStorage
 	{
-	private:
 		void ClearStorage() { fileInfosByFileDataId.clear(); fileInfosByNameHash.clear(); }
 
 		std::map<uint32_t, FileInfo> fileInfosByFileDataId;
 		std::map<uint64_t, FileInfo> fileInfosByNameHash;
 
-		FileStorage();
-		bool ParseCsv(std::string const& Path, bool CheckExisting = false);
+		FileStorage() = default;
+		bool ParseCsv(std::string const& Path, bool IsCustom);
 
 	public:
 		static FileStorage* GetInstance()

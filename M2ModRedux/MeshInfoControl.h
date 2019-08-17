@@ -213,7 +213,7 @@ namespace M2ModRedux {
 
 		text += "Shader: " + String::Format("0x{0:X}", SubmeshExtraData->ShaderId) + "\n";
 
-		for (unsigned int i = 0; i < info.Textures.size(); ++i)
+		for (uint32_t i = 0; i < info.Textures.size(); ++i)
 		{
 			auto& texture = info.Textures[i];
 			text += "Texture #" + (i + 1) + " Type: " + gcnew String(M2Lib::M2Element::CElement_Texture::GetTypeString(texture.pTexture->Type).c_str());
@@ -227,7 +227,7 @@ namespace M2ModRedux {
 
 		System::Collections::Generic::List<String^> SrcMaterials;
 		SrcMaterials.Add("");
-		for (unsigned int i = 0; i < infos.size(); ++i)
+		for (uint32_t i = 0; i < infos.size(); ++i)
 		{
 			auto const& info = infos[i];
 

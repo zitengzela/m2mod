@@ -24,6 +24,7 @@ namespace M2Lib
 #define VERTEX_PER_TRIANGLE 3
 #define BONES_PER_VERTEX 4
 #define BONES_PER_TRIANGLE (VERTEX_PER_TRIANGLE * BONES_PER_VERTEX)
+#define MAX_SUBMESH_UV 2
 
 	static float SubmeshPositionalTolerance = 0.0001f;
 	static float SubmeshAngularTolerance = 45.0f;
@@ -109,8 +110,7 @@ namespace M2Lib
 		uint8_t BoneWeights[BONES_PER_VERTEX];
 		uint8_t BoneIndices[BONES_PER_VERTEX];
 		C3Vector Normal;
-		C2Vector Texture;
-		C2Vector Texture2;
+		C2Vector Texture[MAX_SUBMESH_UV];
 
 	public:
 		CVertex();

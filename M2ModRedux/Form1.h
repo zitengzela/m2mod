@@ -1186,7 +1186,7 @@ private: System::Windows::Forms::Button^  clearButton;
 
 			auto transparentRenderFlag = -1;
 			// first assing textures and gloss
-			for (unsigned int i = 0; i < MeshManagementForm->ElementInfoList.Count; ++i)
+			for (uint32_t i = 0; i < MeshManagementForm->ElementInfoList.Count; ++i)
 			{
 				auto Control = MeshManagementForm->ElementInfoList[i];
 
@@ -1335,7 +1335,7 @@ private: System::Windows::Forms::Button^  clearButton;
 		MeshManagementForm = gcnew ElementManagementForm<MeshInfoControl>();
 		MeshManagementForm->Text = "Mesh Management";
 
-		for (unsigned int i = 0; i < MeshInfos.size(); ++i)
+		for (uint32_t i = 0; i < MeshInfos.size(); ++i)
 		{
 			auto Control = gcnew MeshInfoControl();
 			Control->Initialize(preloadM2, i, MeshInfos);

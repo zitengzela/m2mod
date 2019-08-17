@@ -4,6 +4,9 @@
 #include "DataBinary.h"
 #include "M2.h"
 #include "Logger.h"
+#include <functional>
+#include "StringHelpers.h"
+#include "FileStorage.h"
 
 M2Lib::EError M2Lib::M2I::Load(wchar_t const* FileName, M2Lib::M2* pM2, bool IgnoreBones, bool IgnoreAttachments, bool IgnoreCameras, bool IgnoreOriginalMeshIndexes)
 {
@@ -41,14 +44,14 @@ M2Lib::EError M2Lib::M2I::Load(wchar_t const* FileName, M2Lib::M2* pM2, bool Ign
 
 	for (uint32_t i = 0; i < InSubsetCount; i++)
 	{
-		M2I::CSubMesh* pNewSubMesh = new M2I::CSubMesh();
+		CSubMesh* pNewSubMesh = new M2I::CSubMesh();
 
 		// read id
 		pNewSubMesh->ID = DataBinary.Read<uint16_t>();
 		pNewSubMesh->ExtraData.ID = pNewSubMesh->ID;
 
 		if (Version >= MAKE_VERSION(4, 6))
-			pNewSubMesh->ExtraData.Description = DataBinary.ReadASCIIString();
+			pNewSubMesh->ExtraData.Description = StringHelpers::trim_copy(DataBinary.ReadASCIIString());
 		if (Version >= MAKE_VERSION(4, 7))
 		{
 			pNewSubMesh->ExtraData.MaterialOverride = DataBinary.Read<int16_t>();
@@ -63,7 +66,7 @@ M2Lib::EError M2Lib::M2I::Load(wchar_t const* FileName, M2Lib::M2* pM2, bool Ign
 				for (uint32_t j = 0; j < MAX_SUBMESH_TEXTURES; ++j)
 				{
 					pNewSubMesh->ExtraData.TextureType[j] = DataBinary.Read<int16_t>();
-					pNewSubMesh->ExtraData.TextureName[j] = DataBinary.ReadASCIIString();
+					pNewSubMesh->ExtraData.TextureName[j] = StringHelpers::trim_copy(DataBinary.ReadASCIIString());
 				}
 			}
 			else
@@ -73,10 +76,10 @@ M2Lib::EError M2Lib::M2I::Load(wchar_t const* FileName, M2Lib::M2* pM2, bool Ign
 					if (DataBinary.Read<uint8_t>() != 0)
 					{
 						pNewSubMesh->ExtraData.ShaderId = TRANSPARENT_SHADER_ID;
-						pNewSubMesh->ExtraData.TextureType[0] = (int32_t)M2Element::CElement_Texture::ETextureType::Final_Hardcoded;
-						pNewSubMesh->ExtraData.TextureName[0] = DataBinary.ReadASCIIString();
+						pNewSubMesh->ExtraData.TextureType[0] = (int16_t)M2Element::CElement_Texture::ETextureType::Final_Hardcoded;
+						pNewSubMesh->ExtraData.TextureName[0] = StringHelpers::trim_copy(DataBinary.ReadASCIIString());
 
-						pNewSubMesh->ExtraData.RenderFlags = (int32_t)M2Element::CElement_TextureFlag::EFlags::EFlags_TwoSided;
+						pNewSubMesh->ExtraData.RenderFlags = (int16_t)M2Element::CElement_TextureFlag::EFlags::EFlags_TwoSided;
 						pNewSubMesh->ExtraData.BlendMode = DataBinary.Read<uint16_t>();
 					}
 					else
@@ -89,15 +92,15 @@ M2Lib::EError M2Lib::M2I::Load(wchar_t const* FileName, M2Lib::M2* pM2, bool Ign
 					{
 						pNewSubMesh->ExtraData.ShaderId = GLOSS_SHADER_ID;
 
-						pNewSubMesh->ExtraData.TextureType[1] = (int32_t)M2Element::CElement_Texture::ETextureType::Final_Hardcoded;
-						pNewSubMesh->ExtraData.TextureName[1] = DataBinary.ReadASCIIString();
+						pNewSubMesh->ExtraData.TextureType[1] = (int16_t)M2Element::CElement_Texture::ETextureType::Final_Hardcoded;
+						pNewSubMesh->ExtraData.TextureName[1] = StringHelpers::trim_copy(DataBinary.ReadASCIIString());
 					}
 					else
 						DataBinary.ReadASCIIString();
 				}
 				else
 				{
-					pNewSubMesh->ExtraData.TextureName[0] = DataBinary.ReadASCIIString();
+					pNewSubMesh->ExtraData.TextureName[0] = StringHelpers::trim_copy(DataBinary.ReadASCIIString());
 					if (pNewSubMesh->ExtraData.TextureName[0].length() > 0)
 					{
 						pNewSubMesh->ExtraData.ShaderId = TRANSPARENT_SHADER_ID;
@@ -106,7 +109,7 @@ M2Lib::EError M2Lib::M2I::Load(wchar_t const* FileName, M2Lib::M2* pM2, bool Ign
 						pNewSubMesh->ExtraData.BlendMode = (int32_t)M2Element::CElement_TextureFlag::EBlend::EBlend_Decal;
 					}
 
-					pNewSubMesh->ExtraData.TextureName[1] = DataBinary.ReadASCIIString();
+					pNewSubMesh->ExtraData.TextureName[1] = StringHelpers::trim_copy(DataBinary.ReadASCIIString());
 					if (pNewSubMesh->ExtraData.TextureName[1].length() > 0)
 					{
 						pNewSubMesh->ExtraData.ShaderId = GLOSS_SHADER_ID;
@@ -148,9 +151,9 @@ M2Lib::EError M2Lib::M2I::Load(wchar_t const* FileName, M2Lib::M2* pM2, bool Ign
 				InVertex.BoneIndices[k] = DataBinary.Read<uint8_t>();
 
 			InVertex.Normal = DataBinary.ReadC3Vector();
-			InVertex.Texture = DataBinary.ReadC2Vector();
+			InVertex.Texture[0] = DataBinary.ReadC2Vector();
 			if (Version >= MAKE_VERSION(8, 0))
-				InVertex.Texture2 = DataBinary.ReadC2Vector();
+				InVertex.Texture[1] = DataBinary.ReadC2Vector();
 
 			uint16_t VertexIndex = VertexList.size();
 			VertexList.push_back(InVertex);
@@ -181,6 +184,28 @@ M2Lib::EError M2Lib::M2I::Load(wchar_t const* FileName, M2Lib::M2* pM2, bool Ign
 
 		SubMeshList.push_back(pNewSubMesh);
 	}
+
+	auto textureLoop = [=] (std::function<void(CSubMesh*,int16_t, std::string const&)> callback)
+	{
+		for (auto submesh : SubMeshList)
+			for (uint32_t i = 0; i < MAX_SUBMESH_TEXTURES; ++i)
+				callback(submesh, submesh->ExtraData.TextureType[i], submesh->ExtraData.TextureName[i]);
+	};
+
+	textureLoop([](CSubMesh* submesh, int16_t type, std::string const& path)
+	{
+		if (type == (int16_t)M2Element::CElement_Texture::ETextureType::Final_Hardcoded && path.size() <= 1)
+			sLogger.LogError("Submesh with id [%u] has 'hardcoded' texture type, but texture path is not set", submesh->ID);
+	});
+
+	textureLoop([](CSubMesh* submesh, int16_t type, std::string const& path)
+	{
+		if (type == (int16_t)M2Element::CElement_Texture::ETextureType::Final_Hardcoded && path.length() > 0) {
+			auto info = FileStorage::GetInstance()->GetFileInfoByPath(path);
+			if (info.IsEmpty() || info.IsCustom)
+				sLogger.LogInfo("Used custom texture with path: '%s'", path.c_str());
+		}
+	});
 
 	std::map<uint16_t, uint16_t> BoneRemap;
 

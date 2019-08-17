@@ -172,7 +172,7 @@ namespace M2ModRedux {
 			this->resultsTextBox->Multiline = true;
 			this->resultsTextBox->Name = L"resultsTextBox";
 			this->resultsTextBox->ScrollBars = System::Windows::Forms::ScrollBars::Vertical;
-			this->resultsTextBox->Size = System::Drawing::Size(497, 115);
+			this->resultsTextBox->Size = System::Drawing::Size(497, 271);
 			this->resultsTextBox->TabIndex = 8;
 			this->resultsTextBox->TextChanged += gcnew System::EventHandler(this, &CompareBonesForm::resultsTextBox_TextChanged);
 			// 
@@ -221,7 +221,7 @@ namespace M2ModRedux {
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
-			this->ClientSize = System::Drawing::Size(529, 218);
+			this->ClientSize = System::Drawing::Size(529, 374);
 			this->Controls->Add(this->weightThresholdLabel);
 			this->Controls->Add(this->weightThresholdTextBox);
 			this->Controls->Add(this->saveButton);
@@ -296,7 +296,7 @@ namespace M2ModRedux {
 		}
 
 		resultsTextBox->Text = "";
-		auto result = M2Lib::BoneComparator::Diff(&oldM2, &newM2);
+		auto result = M2Lib::BoneComparator::Diff(&oldM2, &newM2, true);
 		if (result.empty())
 		{
 			MessageBox::Show("Empty result from bone comparator");
