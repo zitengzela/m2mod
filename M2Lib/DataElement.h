@@ -7,7 +7,6 @@
 
 namespace M2Lib
 {
-
 	class DataElement
 	{
 	public:
@@ -22,7 +21,7 @@ namespace M2Lib
 
 	public:
 		DataElement();
-		~DataElement();
+		~DataElement() = default;
 
 		// given a global offset, returns a pointer to the data contained in this Element.
 		// asserts if GlobalOffset lies outside of this element.
@@ -47,7 +46,7 @@ namespace M2Lib
 		template <class T>
 		std::vector<T> asVector()
 		{
-			assert("Element data size is less than expected" && sizeof(T) * Count <= Data.size());
+			m2lib_assert("Element data size is less than expected" && sizeof(T) * Count <= Data.size());
 
 			std::vector<T> ret(Count);
 			if (!Data.empty())
@@ -59,7 +58,7 @@ namespace M2Lib
 		template <class T>
 		T* at(uint32_t Index)
 		{
-			assert(__FUNCTION__ " Index too large" && Index < Count);
+			m2lib_assert(__FUNCTION__ " Index too large" && Index < Count);
 
 			return &as<T>()[Index];
 		}

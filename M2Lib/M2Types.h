@@ -16,7 +16,8 @@ namespace M2Lib
 		Cataclysm = 3,
 		MistsOfPandaria = 4,
 		WarlordsOfDraenor = 5,
-		Legion = 6
+		Legion = 6,
+		BfA = 7
 	};
 
 #pragma pack(push,1)
@@ -61,7 +62,7 @@ namespace M2Lib
 		{
 			if (Count/* && Offset*/)
 			{
-				//assert(Offset > 0);
+				//m2lib_assert(Offset > 0);
 				Offset += Delta;
 			}
 			else
@@ -207,7 +208,7 @@ namespace M2Lib
 		EError_FailedToLoadSkeleton_CouldNotOpenFile,
 	};
 
-	std::string GetErrorText(EError Error);
+	M2LIB_API char const* __cdecl GetErrorText(EError Error);
 
 	struct BoundaryData
 	{

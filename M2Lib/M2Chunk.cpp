@@ -1,13 +1,12 @@
 #include "M2Chunk.h"
 #include "M2.h"
-#include "Logger.h"
 #include <fstream>
 #include <assert.h>
 #include <algorithm>
 
 void M2Lib::M2Chunk::PFIDChunk::Load(std::fstream& FileStream, uint32_t Size)
 {
-	assert(Size == 4 && "Bad PFID chunk size");
+	m2lib_assert(Size == 4 && "Bad PFID chunk size");
 
 	FileStream.read((char*)&PhysFileId, 4);
 }
@@ -19,7 +18,7 @@ void M2Lib::M2Chunk::PFIDChunk::Save(std::fstream& FileStream)
 
 void M2Lib::M2Chunk::SFIDChunk::Load(std::fstream& FileStream, uint32_t Size)
 {
-	assert((Size % 4) == 0 && "Bad SFID chunk size");
+	m2lib_assert((Size % 4) == 0 && "Bad SFID chunk size");
 
 	SkinsFileDataIds.resize(Size / 4);
 	for (uint32_t i = 0; i < Size / 4; ++i)
@@ -89,12 +88,12 @@ void M2Lib::M2Chunk::SKIDChunk::Save(std::fstream& FileStream)
 
 void M2Lib::M2Chunk::MD21Chunk::Save(std::fstream& FileStream)
 {
-	assert(false && "Not implemented");
+	m2lib_assert(false && "Not implemented");
 }
 
 void M2Lib::M2Chunk::TXIDChunk::Load(std::fstream & FileStream, uint32_t Size)
 {
-	assert((Size % 4) == 0 && "Bad SFID chunk size");
+	m2lib_assert((Size % 4) == 0 && "Bad SFID chunk size");
 
 	TextureFileDataIds.resize(Size / 4);
 	for (uint32_t i = 0; i < Size / 4; ++i)
@@ -115,7 +114,7 @@ M2Lib::M2Chunk::TXACChunk::TXACChunk(uint32_t TextureFlagsCount, uint32_t Partic
 
 void M2Lib::M2Chunk::TXACChunk::Load(std::fstream & FileStream, uint32_t Size)
 {
-	assert(Size == (TextureFlagsAC.size() + ParticleEmitterAC.size()) * sizeof(texture_ac) && "Bad TXAC chunk size");
+	m2lib_assert(Size == (TextureFlagsAC.size() + ParticleEmitterAC.size()) * sizeof(texture_ac) && "Bad TXAC chunk size");
 
 	for (uint32_t i = 0; i < TextureFlagsAC.size(); ++i)
 		FileStream.read((char*)&TextureFlagsAC[i], sizeof(texture_ac));

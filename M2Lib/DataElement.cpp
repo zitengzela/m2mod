@@ -10,15 +10,11 @@ M2Lib::DataElement::DataElement()
 {
 }
 
-M2Lib::DataElement::~DataElement()
-{
-}
-
 void* M2Lib::DataElement::GetLocalPointer(uint32_t GlobalOffset)
 {
-	assert(GlobalOffset >= Offset);
+	m2lib_assert(GlobalOffset >= Offset);
 	GlobalOffset -= Offset;
-	assert(GlobalOffset < (uint32_t)Data.size());
+	m2lib_assert(GlobalOffset < (uint32_t)Data.size());
 	return &Data[GlobalOffset];
 }
 

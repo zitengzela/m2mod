@@ -23,7 +23,7 @@ bool M2Lib::M2SkinBuilder::CBonePartition::AddTriangle(CVertex* GlobalVertexList
 			TotalWeight += pTriVertex->BoneWeights[j];
 		}
 
-		//assert(TotalWeight == 255);
+		//m2lib_assert(TotalWeight == 255);
 	}
 
 	// count the number of bones used by the triangle that don't exist in partition
@@ -55,7 +55,7 @@ bool M2Lib::M2SkinBuilder::CBonePartition::AddTriangle(CVertex* GlobalVertexList
 	}
 
 	// add triangle index and triangle to the triangle map
-	assert(!HasTriangle(pTriangle->TriangleIndex));
+	m2lib_assert(!HasTriangle(pTriangle->TriangleIndex));
 	TrianglesMap[pTriangle->TriangleIndex] = pTriangle;
 
 	// triangle successfully added
@@ -191,7 +191,7 @@ bool M2Lib::M2SkinBuilder::Build(M2Skin* pResult, uint32_t BoneLoD, M2I* pM2I, C
 			if (!Added)
 			{
 				auto partition = new CBonePartition(BoneLoD);
-				assert(partition->AddTriangle(pGlobalVertexList, &SubMesh->Triangles[j]));
+				m2lib_assert(partition->AddTriangle(pGlobalVertexList, &SubMesh->Triangles[j]));
 				m_BonePartitions.push_back(partition);
 			}
 		}
@@ -222,7 +222,7 @@ bool M2Lib::M2SkinBuilder::Build(M2Skin* pResult, uint32_t BoneLoD, M2I* pM2I, C
 		M2I::CSubMesh* pSubMeshM2I = pM2I->SubMeshList[i];
 		for (uint32_t j = 0; j < pSubMeshM2I->Triangles.size(); ++j)
 		{
-			assert(m_SubMeshList[i]->AddTriangle(&pSubMeshM2I->Triangles[j]));
+			m2lib_assert(m_SubMeshList[i]->AddTriangle(&pSubMeshM2I->Triangles[j]));
 		}
 	}
 
@@ -249,7 +249,7 @@ bool M2Lib::M2SkinBuilder::Build(M2Skin* pResult, uint32_t BoneLoD, M2I* pM2I, C
 						VertexMapped = GlobalToSkinIndexMap[VertexToMap];
 					else
 					{
-						VertexMapped = m_Vertices.size();
+						VertexMapped = (uint16_t)m_Vertices.size();
 						m_Vertices.push_back(VertexToMap);
 						GlobalToSkinIndexMap[VertexToMap] = VertexMapped;
 						++VertexCount;
@@ -319,7 +319,7 @@ bool M2Lib::M2SkinBuilder::Build(M2Skin* pResult, uint32_t BoneLoD, M2I* pM2I, C
 			pSubsetOut->TriangleIndexStart = pSubsetPartitionIn->TriangleIndexStart & 0xFFFF;
 			pSubsetOut->TriangleIndexCount = pSubsetPartitionIn->TriangleIndexCount;
 			pSubsetOut->BoneStart = pSubsetPartitionIn->pBonePartition->BoneStart;
-			pSubsetOut->BoneCount = pSubsetPartitionIn->pBonePartition->Bones.size();
+			pSubsetOut->BoneCount = (uint16_t)pSubsetPartitionIn->pBonePartition->Bones.size();
 
 			// we do the real calculation for this later
 			pSubsetOut->MaxBonesPerVertex = 0;

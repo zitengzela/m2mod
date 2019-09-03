@@ -21,10 +21,6 @@ namespace M2ModRedux {
 			//
 			//TODO: Add the constructor code here
 			//
-
-			auto owner = this->Owner;
-			auto parent = this->Parent;
-			auto parentForm = this->ParentForm;
 		}
 
 		static Drawing::Size^ GetTextDimensions(Control^ control, Drawing::Font^ font, String^ stringData)

@@ -140,7 +140,7 @@ bool M2Lib::CVertex::CompareSimilar(CVertex& A, CVertex& B, bool CompareTextures
 	return true;
 }
 
-std::string M2Lib::GetErrorText(EError Error)
+char const* M2Lib::GetErrorText(EError Error)
 {
 	switch (Error)
 	{
@@ -200,7 +200,7 @@ std::string M2Lib::GetErrorText(EError Error)
 			break;
 	}
 
-	return "error: unrecognized error " + std::to_string(Error);
+	return nullptr;
 }
 
 M2Lib::SubmeshExtraData::SubmeshExtraData()
@@ -409,10 +409,24 @@ bool M2Lib::floatEq(float a, float b, float Tolerance)
 
 std::wstring M2Lib::StringToWString(std::string const& str)
 {
-	return std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(str);
+	try
+	{
+		return std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(str);
+	}
+	catch (std::runtime_error& e)
+	{
+		throw std::runtime_error("Failed to convert string to wstring");
+	}
 }
 
 std::string M2Lib::WStringToString(std::wstring const& str)
 {
-	return std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(str);
+	try
+	{
+		return std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(str);
+	}
+	catch (std::runtime_error& e)
+	{
+		throw std::runtime_error("Failed to convert wstring to string");
+	}
 }

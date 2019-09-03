@@ -1,25 +1,39 @@
 #pragma once
 
+#include "BaseTypes.h"
 #include "M2Types.h"
 #include <string>
 
 namespace M2Lib
 {
-	class GlobalSettings
+#pragma pack(push, 1)
+	struct M2LIB_API_CLASS GlobalSettings
 	{
-	public:
+		char OutputDirectory[1024];
+		char WorkingDirectory[1024];
+		Expansion ForceLoadExpansion = Expansion::None;
 		bool MergeBones = true;
 		bool MergeAttachments = true;
 		bool MergeCameras = true;
 		bool FixSeams = false;
-		bool FixEdgeNormals = false;
+		bool FixEdgeNormals = true;
 		bool IgnoreOriginalMeshIndexes = false;
-		Expansion ForceLoadExpansion = Expansion::None;
-
 		bool FixAnimationsTest = false;
-		bool DisplayErrors = true;
 
-		std::string WorkingDirectory;
-		std::string OutputDirectory;
+		void setOutputDirectory(const char* directory);
+		void setWorkingDirectory(const char* directory);
+
+		GlobalSettings()
+		{
+			memset(OutputDirectory, 0, sizeof(OutputDirectory));
+			memset(WorkingDirectory, 0, sizeof(WorkingDirectory));
+		}
+
+		void operator=(GlobalSettings const& other);
 	};
+
+	ASSERT_SIZE(GlobalSettings, 2048 + 4 + 7);
+
+#pragma pack(pop)
+
 }

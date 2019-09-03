@@ -29,7 +29,7 @@ M2Lib::DataBinary::DataBinary(std::fstream* Stream, EEndianness Endianness)
 	uint8_t EndianTest[2] = { 1, 0 };
 	_EndiannessNative = ((*(int16_t*)EndianTest == 1) ? EEndianness_Little : EEndianness_Big);
 
-	assert(Stream);
+	m2lib_assert(Stream);
 	_Stream = Stream;
 	_Endianness = Endianness;
 }
@@ -47,7 +47,7 @@ std::fstream* M2Lib::DataBinary::GetStream() const
 
 void M2Lib::DataBinary::SetStream(std::fstream* Stream)
 {
-	assert(Stream);
+	m2lib_assert(Stream);
 	_Stream = Stream;
 }
 

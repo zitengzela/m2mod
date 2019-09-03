@@ -128,7 +128,7 @@ void M2Lib::M2Skin::BuildVertexBoneIndices()
 				{
 					sLogger.LogError("%u/%u Bone index = %u, Submesh.ID = %u", iSubMesh, SubMeshListLength, Vertex.BoneIndices[i], SubMesh.ID);
 					sLogger.LogError("%u/%u Submesh.BoneStart = %u, Submesh.BoneCount = %u", iSubMesh, SubMeshListLength, SubMesh.BoneStart, SubMesh.BoneCount);
-					assert(false);
+					m2lib_assert(false);
 				}
 				BoneIndexList[j].BoneIndices[i] = Vertex.BoneWeights[i] ? res : i;
 			}
@@ -235,12 +235,12 @@ void M2Lib::M2Skin::CopyMaterials(M2Skin* pOther)
 	{
 		CElement_SubMesh& SubMesh = SubMeshList[iSubMesh];
 
-		assert(iSubMesh < ExtraDataBySubmeshIndex.size());
+		m2lib_assert(iSubMesh < ExtraDataBySubmeshIndex.size());
 		auto comparisonData = ExtraDataBySubmeshIndex[iSubMesh];
 
 		int32_t SubMeshOtherIndex;
 		CElement_SubMesh* SubMeshOther = pOther->GetSubMesh(*comparisonData, SubMeshOtherIndex);
-		assert(SubMeshOther);
+		m2lib_assert(SubMeshOther);
 
 		SubMesh.CenterBoneIndex = SubMeshOther->CenterBoneIndex;
 		// copy level from original mesh
@@ -345,7 +345,7 @@ M2Lib::M2SkinElement::CElement_SubMesh* M2Lib::M2Skin::GetSubMesh(SubmeshExtraDa
 
 	if (TargetSubMeshData.OriginalSubmeshIndex >= 0)
 	{
-		assert(TargetSubMeshData.OriginalSubmeshIndex < SubMeshListLength);
+		m2lib_assert((uint32_t)TargetSubMeshData.OriginalSubmeshIndex < SubMeshListLength);
 
 		SubMeshIndexOut = TargetSubMeshData.OriginalSubmeshIndex;
 		return &SubMeshList[SubMeshIndexOut];
@@ -583,7 +583,7 @@ void M2Lib::M2Skin::m_LoadElements_FindSizes(uint32_t FileSize)
 			}
 		}
 
-		assert(NextOffset >= Element.Offset && "SKIN Elements are in wrong order");
+		m2lib_assert(NextOffset >= Element.Offset && "SKIN Elements are in wrong order");
 		Element.Data.resize(NextOffset - Element.Offset);
 		Element.SizeOriginal = Element.Data.size();
 	}
@@ -731,7 +731,7 @@ std::vector<M2Lib::M2Skin::MeshInfo> M2Lib::M2Skin::GetMeshInfo()
 		Info.ID = Submeshes[i].ID;
 		Info.pSubMesh = &Submeshes[i];
 
-		assert(i < ExtraDataBySubmeshIndex.size());
+		m2lib_assert(i < ExtraDataBySubmeshIndex.size());
 		auto comparisonData = ExtraDataBySubmeshIndex[i];
 
 		Info.Description = comparisonData->Description;
@@ -746,7 +746,7 @@ std::vector<M2Lib::M2Skin::MeshInfo> M2Lib::M2Skin::GetMeshInfo()
 
 		for (auto Material : Info.Materials)
 		{
-			for (uint32_t k = 0; k < Material->op_count; ++k)
+			for (int16_t k = 0; k < Material->op_count; ++k)
 			{
 				MeshInfo::TextureInfo TextureInfo;
 
@@ -812,7 +812,7 @@ std::unordered_set<M2Lib::M2SkinElement::Edge> M2Lib::M2Skin::GetEdges(CElement_
 	uint32_t TriangleIndexEnd = submesh->GetEndTriangleIndex();
 	for (uint32_t k = TriangleIndexStart; k < TriangleIndexEnd; k += 3)
 	{
-		assert(k + 2 < Elements[M2SkinElement::EElement_TriangleIndex].Count);
+		m2lib_assert(k + 2 < Elements[M2SkinElement::EElement_TriangleIndex].Count);
 
 		uint16_t indexA = Indices[Triangles[k]];
 		uint16_t indexB = Indices[Triangles[k + 1]];

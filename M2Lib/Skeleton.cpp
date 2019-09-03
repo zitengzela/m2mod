@@ -52,7 +52,7 @@ EError Skeleton::Load(const wchar_t* FileName)
 
 		sLogger.LogInfo("Loaded %s skeleton chunk, size %u", ChunkIdToStr(ChunkId, false).c_str(), ChunkSize);
 
-		uint32_t savePos = FileStream.tellg();
+		uint32_t savePos = (uint32_t)FileStream.tellg();
 		Chunk->Load(FileStream, ChunkSize);
 		FileStream.seekg(savePos + ChunkSize, std::ios::beg);
 

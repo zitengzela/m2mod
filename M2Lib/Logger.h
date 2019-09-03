@@ -1,5 +1,6 @@
 #pragma once
 
+#include "BaseTypes.h"
 #include <string>
 #include <list>
 
@@ -7,17 +8,15 @@ namespace M2Lib
 {
 	enum LogLevel
 	{
-		LOG_INFO = 1,
+		LOG_INFO = 0,
+		LOG_WARNING = 1,
 		LOG_ERROR = 2,
-		LOG_WARNING = 3,
 	};
+
+	typedef void(__stdcall* LoggerCallback)(int LogLevel, char const*);
 
 	class Logger
 	{
-	public:
-		typedef void(__stdcall* LoggerCallback)(int LogLevel, char const*);
-
-	private:
 		Logger() = default;
 
 		std::list<LoggerCallback> AttachedCallbacks;
@@ -25,7 +24,7 @@ namespace M2Lib
 		void Log(int LogLevel, char const* format, va_list args);
 
 	public:
-		static Logger & getInstance()
+		static Logger& getInstance()
 		{
 			static Logger l;
 			return l;
@@ -38,6 +37,8 @@ namespace M2Lib
 		void LogError(char const* format, ...);
 		void LogWarning(char const* format, ...);
 	};
+
+	M2LIB_API void __cdecl AttachLoggerCallback(LoggerCallback callback);
 }
 
 #define sLogger M2Lib::Logger::getInstance()

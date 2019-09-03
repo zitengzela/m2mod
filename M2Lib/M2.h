@@ -11,19 +11,28 @@
 #include "M2Element.h"
 #include "M2Skin.h"
 #include "M2Chunk.h"
+#include "Settings.h"
 
 #define DegreesToRadians 0.0174532925f
 
 namespace M2Lib
 {
 	class FileStorage;
-	class GlobalSettings;
+	struct GlobalSettings;
 	class Skeleton;
 
 	namespace SkeletonChunk
 	{
 		class AFIDChunk;
 	}
+
+	M2LIB_API M2LIB_HANDLE __cdecl M2_Create(GlobalSettings* settings = nullptr);
+	M2LIB_API EError __cdecl M2_Load(M2LIB_HANDLE handle, const wchar_t* FileName);
+	M2LIB_API EError __cdecl M2_Save(M2LIB_HANDLE handle, const wchar_t* FileName);
+	M2LIB_API EError __cdecl M2_SetReplaceM2(M2LIB_HANDLE handle, const wchar_t* FileName);
+	M2LIB_API EError __cdecl M2_ExportM2Intermediate(M2LIB_HANDLE handle, const wchar_t* FileName);
+	M2LIB_API EError __cdecl M2_ImportM2Intermediate(M2LIB_HANDLE handle, const wchar_t* FileName);
+	M2LIB_API void __cdecl M2_Free(M2LIB_HANDLE handle);
 
 	// load, export, import merge, save: M2 file.
 	class M2
@@ -189,7 +198,7 @@ namespace M2Lib
 		bool needRemoveTXIDChunk; // TXID chunk will be removed when model has textures that are not indexed in CASC storage
 
 		uint32_t m_OriginalModelChunkSize;
-		GlobalSettings* Settings;
+		GlobalSettings Settings;
 
 		M2I* pInM2I;
 		M2* replaceM2;
@@ -204,19 +213,7 @@ namespace M2Lib
 		M2Skin* Skins[SKIN_COUNT];
 		uint32_t OriginalSkinCount;	// skin count before importing m2i
 
-		M2(GlobalSettings* Settings = NULL)
-		{
-			memset(Skins, 0, sizeof(Skins));
-			Skeleton = NULL;
-			ParentSkeleton = NULL;
-			m_OriginalModelChunkSize = 0;
-			pInM2I = NULL;
-			replaceM2 = NULL;
-			hasLodSkins = false;
-			needRemoveTXIDChunk = false;
-			this->Settings = Settings;
-			OriginalSkinCount = 0;
-		}
+		M2(GlobalSettings* Settings = NULL);
 
 		~M2();
 
@@ -226,7 +223,7 @@ namespace M2Lib
 		// loads an M2 from a file.
 		EError Load(const wchar_t* FileName);
 
-		void SetReplaceM2(M2* replaceM2 = NULL) { this->replaceM2 = replaceM2; }
+		EError SetReplaceM2(const wchar_t* FileName);
 
 		// saves this M2 to a file.
 		EError Save(const wchar_t* FileName);

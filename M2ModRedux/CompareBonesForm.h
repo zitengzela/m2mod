@@ -280,29 +280,6 @@ namespace M2ModRedux {
 		RegistyStore::SetValue(RegistyStore::Value::NewCompareM2, newM2TextBox->Text);
 		RegistyStore::SetValue(RegistyStore::Value::CompareWeightThreshold, weightThresholdTextBox->Text);
 
-		M2Lib::M2 oldM2, newM2;
-		auto Error = oldM2.Load(StringConverter(oldM2TextBox->Text).ToStringW());
-		if (Error != M2Lib::EError_OK)
-		{
-			MessageBox::Show(String::Format("Failed to load '{0}': {1}", oldM2TextBox->Text, gcnew String(M2Lib::GetErrorText(Error).c_str())), "Error", Windows::Forms::MessageBoxButtons::OK, Windows::Forms::MessageBoxIcon::Error);
-			return;
-		}
-
-		Error = newM2.Load(StringConverter(newM2TextBox->Text).ToStringW());
-		if (Error != M2Lib::EError_OK)
-		{
-			MessageBox::Show(String::Format("Failed to load '{0}': {1}", newM2TextBox->Text, gcnew String(M2Lib::GetErrorText(Error).c_str())), "Error", Windows::Forms::MessageBoxButtons::OK, Windows::Forms::MessageBoxIcon::Error);
-			return;
-		}
-
-		resultsTextBox->Text = "";
-		auto result = M2Lib::BoneComparator::Diff(&oldM2, &newM2, true);
-		if (result.empty())
-		{
-			MessageBox::Show("Empty result from bone comparator");
-			return;
-		}
-
 		float weightTreshold;
 		if (!float::TryParse(weightThresholdTextBox->Text, weightTreshold))
 		{
@@ -310,60 +287,26 @@ namespace M2ModRedux {
 			weightThresholdTextBox->Text = "0";
 		}
 
-		auto compareStatus = M2Lib::BoneComparator::GetDifferenceStatus(result, weightTreshold);
+		M2LIB_HANDLE wrapper = M2Lib::BoneComparator::Wrapper_Create(StringConverter(oldM2TextBox->Text).ToStringW(), StringConverter(newM2TextBox->Text).ToStringW(), weightTreshold, true, nullptr);
 
-		if (compareStatus == M2Lib::BoneComparator::CompareStatus::Identical)
+		auto errorStatus = M2Lib::BoneComparator::Wrapper_GetErrorStatus(wrapper);
+		if (errorStatus != M2Lib::EError_OK)
 		{
-			resultsTextBox->Text += "# Old and new model bones are identical\r\n";
-			return;
-		}
-		else if (compareStatus == M2Lib::BoneComparator::CompareStatus::IdenticalWithinThreshold)
-		{
-			resultsTextBox->Text += "# Old and new model bones are identical within given threshold " + weightTreshold.ToString("0.00") + "\r\n";
+			MessageBox::Show(String::Format("Failed to compare: {0}", gcnew String(M2Lib::GetErrorText(errorStatus))), "Error", Windows::Forms::MessageBoxButtons::OK, Windows::Forms::MessageBoxIcon::Error);
+			M2Lib::BoneComparator::Wrapper_Free(wrapper);
 			return;
 		}
 
-		resultsTextBox->Text += "# Old M2: " + oldM2TextBox->Text + "\r\n";
-		resultsTextBox->Text += "# New M2: " + newM2TextBox->Text + "\r\n";
-		resultsTextBox->Text += "# Weight threshold: " + weightThresholdTextBox->Text + "\r\n";
-		resultsTextBox->Text += "# Use this file with Blender\r\n";
-		resultsTextBox->Text += "# \r\n";
-		resultsTextBox->Text += "# Output [old bone]: [new bone #1] (probability weight) [new bone #2] (probability weight) ...\r\n";
-		resultsTextBox->Text += "# To use this file in Blender you MUST remove extra bone candidates to make sure only one bone present\r\n";
-		resultsTextBox->Text += "# Bring contents to format: [old bone]: [new bone]\r\n";
-		resultsTextBox->Text += "# E.g.:\r\n";
-		resultsTextBox->Text += "# 13: 14\r\n";
-		resultsTextBox->Text += "#\r\n";
-		resultsTextBox->Text += "# If any <no candidate> lines present - remove, but most likely you won't be able to use this file for conversion\r\n";
-
-		for (auto itr : result)
+		resultsTextBox->Text = "";
+		if (M2Lib::BoneComparator::Wrapper_DiffSize(wrapper) == 0)
 		{
-			auto weighted = itr.second;
-
-			if (weighted.size() == 1 && weighted.begin()->first == itr.first)
-				continue;
-
-			resultsTextBox->Text += itr.first.ToString() + ": ";
-
-			for (auto itr = weighted.begin(); itr != weighted.end();)
-			{
-				if (weightTreshold > 0 && weightTreshold > itr->second)
-					weighted.erase(itr++);
-				else
-					++itr;
-			}
-
-			if (weighted.empty())
-				resultsTextBox->Text += "<no candidate>";
-			else
-			{
-				for (auto candidate : weighted)
-				{
-					resultsTextBox->Text += candidate.first.ToString() + "(" + candidate.second.ToString("0.00") + ") ";
-				}
-			}
-			resultsTextBox->Text += "\r\n";
+			MessageBox::Show("Empty result from bone comparator");
+			M2Lib::BoneComparator::Wrapper_Free(wrapper);
+			return;
 		}
+
+		resultsTextBox->Text = gcnew String(M2Lib::BoneComparator::Wrapper_GetStringResult(wrapper));
+		M2Lib::BoneComparator::Wrapper_Free(wrapper);
 	}
 
 	private: System::Void resultsTextBox_TextChanged(System::Object^  sender, System::EventArgs^  e) {

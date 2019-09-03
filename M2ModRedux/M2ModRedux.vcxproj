@@ -48,7 +48,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <LibraryPath>..\CascLib\bin\CascLib\Win32\ReleaseAD;$(SolutionDir)$(Configuration);$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SolutionDir)$(Configuration);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -79,7 +79,7 @@
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>M2Lib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>M2Lib.lib</AdditionalDependencies>
       <SubSystem>Windows</SubSystem>
       <EntryPointSymbol>
       </EntryPointSymbol>
@@ -106,17 +106,11 @@
     <ClInclude Include="CompareBonesForm.h">
       <FileType>CppForm</FileType>
     </ClInclude>
-    <ClInclude Include="ElementManagementForm.h">
-      <FileType>CppForm</FileType>
-    </ClInclude>
     <ClInclude Include="ErrorForm.h">
       <FileType>CppForm</FileType>
     </ClInclude>
     <ClInclude Include="Form1.h">
       <FileType>CppForm</FileType>
-    </ClInclude>
-    <ClInclude Include="MeshInfoControl.h">
-      <FileType>CppControl</FileType>
     </ClInclude>
     <ClInclude Include="RegistryStore.h" />
     <ClInclude Include="resource.h" />
@@ -135,9 +129,6 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="CompareBonesForm.resx" />
-    <EmbeddedResource Include="ElementManagementForm.resx">
-      <DependentUpon>ElementManagementForm.h</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="ErrorForm.resx">
       <DependentUpon>ErrorForm.h</DependentUpon>
     </EmbeddedResource>
@@ -145,15 +136,17 @@
       <DependentUpon>Form1.h</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="MeshInfoControl.resx">
-      <DependentUpon>MeshInfoControl.h</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="SettingsForm.resx">
       <DependentUpon>SettingsForm.h</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UpdateForm.resx">
       <DependentUpon>UpdateForm.h</DependentUpon>
     </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\M2Lib\M2Lib.vcxproj">
+      <Project>{881dd3b6-0c01-44ba-86a4-09c9adc86ecb}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

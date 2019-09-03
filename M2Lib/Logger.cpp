@@ -40,8 +40,13 @@ void M2Lib::Logger::Log(int LogLevel, char const* format, va_list args)
 {
 	char text[4096];
 
-	vsprintf(text, format, args);
+	vsprintf_s(text, sizeof(text), format, args);
 
 	for (auto callback : AttachedCallbacks)
 		callback(LogLevel, text);
+}
+
+void M2Lib::AttachLoggerCallback(M2Lib::LoggerCallback callback)
+{
+	sLogger.AttachCallback(callback);
 }

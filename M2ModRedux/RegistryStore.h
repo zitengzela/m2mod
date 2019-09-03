@@ -29,7 +29,6 @@ namespace M2ModRedux
 			IgnoreOriginalMeshIndexes,
 
 			FixAnimationsTest,
-			DisplayErrors,
 
 			WorkingDirectory,
 			OutputDirectory,

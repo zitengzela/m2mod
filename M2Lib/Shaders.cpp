@@ -1,5 +1,6 @@
 #include "Shaders.h"
 #include "M2Types.h"
+#include <stdexcept>
 
 bool M2Lib::IsValidShaderId(uint16_t ShaderId)
 {
@@ -15,7 +16,7 @@ bool M2Lib::IsValidShaderId(uint16_t ShaderId)
 
 uint32_t M2Lib::GetOpCountForShader(uint16_t ShaderId)
 {
-	assert(IsValidShaderId(ShaderId) && "Invalid shader Id");
+	m2lib_assert(IsValidShaderId(ShaderId) && "Invalid shader Id");
 
 	ShaderId = ShaderId & 0x7FFF;
 
@@ -35,6 +36,6 @@ uint32_t M2Lib::GetOpCountForShader(uint16_t ShaderId)
 			break;
 	}
 
-	assert(false && "Unknown hull shader id");
+	m2lib_assert(false && "Unknown hull shader id");
 	return 1;
 }

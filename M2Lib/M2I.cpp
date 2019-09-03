@@ -155,7 +155,7 @@ M2Lib::EError M2Lib::M2I::Load(wchar_t const* FileName, M2Lib::M2* pM2, bool Ign
 			if (Version >= MAKE_VERSION(8, 0))
 				InVertex.Texture[1] = DataBinary.ReadC2Vector();
 
-			uint16_t VertexIndex = VertexList.size();
+			uint16_t VertexIndex = (uint16_t)VertexList.size();
 			VertexList.push_back(InVertex);
 			pNewSubMesh->Indices.push_back(VertexIndex);
 
@@ -202,7 +202,7 @@ M2Lib::EError M2Lib::M2I::Load(wchar_t const* FileName, M2Lib::M2* pM2, bool Ign
 	{
 		if (type == (int16_t)M2Element::CElement_Texture::ETextureType::Final_Hardcoded && path.length() > 0) {
 			auto info = FileStorage::GetInstance()->GetFileInfoByPath(path);
-			if (info.IsEmpty() || info.IsCustom)
+			if (!info || info->IsCustom)
 				sLogger.LogInfo("Used custom texture with path: '%s'", path.c_str());
 		}
 	});
@@ -399,9 +399,9 @@ M2Lib::EError M2Lib::M2I::Load(wchar_t const* FileName, M2Lib::M2* pM2, bool Ign
 					auto ExternalAnimations = (M2Array*)pM2->Elements[M2Element::EElement_Camera].GetLocalPointer(pCameraToMod->AnimationBlock_FieldOfView.Keys.Offset);
 
 					auto LastElementIndex = pM2->GetLastElementIndex();
-					assert(LastElementIndex != M2Element::EElement__Count__);
+					m2lib_assert(LastElementIndex != M2Element::EElement__Count__);
 					auto& LastElement = pM2->Elements[LastElementIndex];
-					assert(ExternalAnimations[0].Offset >= LastElement.Offset && ExternalAnimations[0].Offset < LastElement.Offset + LastElement.Data.size());
+					m2lib_assert(ExternalAnimations[0].Offset >= LastElement.Offset && ExternalAnimations[0].Offset < LastElement.Offset + LastElement.Data.size());
 
 					float* FieldOfView_Keys = (float*)LastElement.GetLocalPointer(ExternalAnimations[0].Offset);
 					auto value = DataBinary.Read<float>();

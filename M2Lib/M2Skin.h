@@ -76,7 +76,6 @@ namespace M2Lib
 		// pointer to M2 that this skin belongs to.
 		M2* pM2;
 
-
 	public:
 		// loads an M2 skin from a file.
 		EError Load(const wchar_t* FileName);

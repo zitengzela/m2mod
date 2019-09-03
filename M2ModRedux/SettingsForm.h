@@ -52,8 +52,8 @@ namespace M2ModRedux {
 			else
 				forceExpansionComboBox->SelectedIndex = 0;
 
-			workingDirectoryTextBox->Text = gcnew String(settings->WorkingDirectory.c_str());
-			outputDirectoryTextBox->Text = gcnew String(settings->OutputDirectory.c_str());
+			workingDirectoryTextBox->Text = gcnew String(settings->WorkingDirectory);
+			outputDirectoryTextBox->Text = gcnew String(settings->OutputDirectory);
 
 			checkBoxMergeBones->Checked = settings->MergeBones;
 			checkBoxMergeAttachments->Checked = settings->MergeAttachments;
@@ -62,14 +62,14 @@ namespace M2ModRedux {
 			checkBoxFixEdgeNormals->Checked = settings->FixEdgeNormals;
 			checkBoxIgnoreOriginalMeshIndexes->Checked = settings->IgnoreOriginalMeshIndexes;
 			testFixAnimationsCheckBox->Checked = settings->FixAnimationsTest;
-			checkBoxDisplayErrors->Checked = settings->DisplayErrors;
 		}
 
 		M2Lib::GlobalSettings ProduceSettings()
 		{
 			M2Lib::GlobalSettings settings;
 
-			settings.WorkingDirectory = StringConverter(workingDirectoryTextBox->Text->Trim()).ToStringA();			settings.OutputDirectory = StringConverter(outputDirectoryTextBox->Text->Trim()).ToStringA();
+			settings.setWorkingDirectory(StringConverter(workingDirectoryTextBox->Text->Trim()).ToStringA());
+			settings.setOutputDirectory(StringConverter(outputDirectoryTextBox->Text->Trim()).ToStringA());
 
 			settings.MergeBones = checkBoxMergeBones->Checked;
 			settings.MergeAttachments = checkBoxMergeAttachments->Checked;
@@ -78,7 +78,6 @@ namespace M2ModRedux {
 			settings.FixEdgeNormals = checkBoxFixEdgeNormals->Checked;
 			settings.IgnoreOriginalMeshIndexes = checkBoxIgnoreOriginalMeshIndexes->Checked;
 			settings.FixAnimationsTest = testFixAnimationsCheckBox->Checked;
-			settings.DisplayErrors = checkBoxDisplayErrors->Checked;
 
 			if (forceExpansionComboBox->SelectedIndex > 0)
 				settings.ForceLoadExpansion = (M2Lib::Expansion)(forceExpansionComboBox->SelectedIndex - 1);

@@ -5,7 +5,7 @@
 
 void M2Lib::SkeletonChunk::SKL1Chunk::Load(std::fstream& FileStream, uint32_t Size)
 {
-	uint32_t pos = FileStream.tellg();
+	uint32_t pos = (uint32_t)FileStream.tellg();
 	FileStream.read((char*)&Header, sizeof(SKL1Chunk::Header));
 
 	FileStream.seekg(pos);
@@ -49,7 +49,7 @@ bool M2Lib::SkeletonChunk::SKL1Chunk::IntializeElements(uint32_t DataSize)
 			}
 		}
 
-		assert(NextOffset >= Element.Offset && "SKL1 elements are in wrong order");
+		m2lib_assert(NextOffset >= Element.Offset && "SKL1 elements are in wrong order");
 		Element.Data.resize(NextOffset - Element.Offset);
 		Element.SizeOriginal = Element.Data.size();
 	}
@@ -67,7 +67,7 @@ bool M2Lib::SkeletonChunk::SKL1Chunk::IntializeElements(uint32_t DataSize)
 
 void M2Lib::SkeletonChunk::SKA1Chunk::Load(std::fstream& FileStream, uint32_t Size)
 {
-	uint32_t pos = FileStream.tellg();
+	uint32_t pos = (uint32_t)FileStream.tellg();
 	FileStream.read((char*)&Header, sizeof(SKA1Chunk::Header));
 
 	FileStream.seekg(pos);
@@ -102,7 +102,7 @@ void M2Lib::SkeletonChunk::SKA1Chunk::Save(std::fstream& FileStream)
 	FileStream.write((char*)&Header, sizeof(Header));
 	// save elements
 	for (uint32_t i = 0; i != EElement_Count; i++)
-		assert("Failed to write chunk element" && Elements[i].Save(FileStream, StartPos));
+		m2lib_assert("Failed to write chunk element" && Elements[i].Save(FileStream, StartPos));
 }
 
 bool M2Lib::SkeletonChunk::SKA1Chunk::IntializeElements(uint32_t DataSize)
@@ -137,7 +137,7 @@ bool M2Lib::SkeletonChunk::SKA1Chunk::IntializeElements(uint32_t DataSize)
 			}
 		}
 
-		assert(NextOffset >= Element.Offset && "SKA1 elements are in wrong order");
+		m2lib_assert(NextOffset >= Element.Offset && "SKA1 elements are in wrong order");
 		Element.Data.resize(NextOffset - Element.Offset);
 		Element.SizeOriginal = Element.Data.size();
 	}
@@ -155,7 +155,7 @@ bool M2Lib::SkeletonChunk::SKA1Chunk::IntializeElements(uint32_t DataSize)
 
 void M2Lib::SkeletonChunk::SKB1Chunk::Load(std::fstream& FileStream, uint32_t Size)
 {
-	uint32_t pos = FileStream.tellg();
+	uint32_t pos = (uint32_t)FileStream.tellg();
 	FileStream.read((char*)&Header, sizeof(SKB1Chunk::Header));
 
 	FileStream.seekg(pos);
@@ -190,7 +190,7 @@ void M2Lib::SkeletonChunk::SKB1Chunk::Save(std::fstream& FileStream)
 	FileStream.write((char*)&Header, sizeof(Header));
 	// save elements
 	for (uint32_t i = 0; i != EElement_Count; i++)
-		assert("Failed to write chunk element" && Elements[i].Save(FileStream, StartPos));
+		m2lib_assert("Failed to write chunk element" && Elements[i].Save(FileStream, StartPos));
 }
 
 bool M2Lib::SkeletonChunk::SKB1Chunk::IntializeElements(uint32_t DataSize)
@@ -225,7 +225,7 @@ bool M2Lib::SkeletonChunk::SKB1Chunk::IntializeElements(uint32_t DataSize)
 			}
 		}
 
-		assert(NextOffset >= Element.Offset && "SKB1 elements are in wrong order");
+		m2lib_assert(NextOffset >= Element.Offset && "SKB1 elements are in wrong order");
 		Element.Data.resize(NextOffset - Element.Offset);
 		Element.SizeOriginal = Element.Data.size();
 	}
@@ -243,7 +243,7 @@ bool M2Lib::SkeletonChunk::SKB1Chunk::IntializeElements(uint32_t DataSize)
 
 void M2Lib::SkeletonChunk::SKS1Chunk::Load(std::fstream& FileStream, uint32_t Size)
 {
-	uint32_t pos = FileStream.tellg();
+	uint32_t pos = (uint32_t)FileStream.tellg();
 	FileStream.read((char*)&Header, sizeof(SKS1Chunk::Header));
 
 	FileStream.seekg(pos);
@@ -293,7 +293,7 @@ bool M2Lib::SkeletonChunk::SKS1Chunk::IntializeElements(uint32_t DataSize)
 			}
 		}
 
-		assert(NextOffset >= Element.Offset && "SKS1 elements are in wrong order");
+		m2lib_assert(NextOffset >= Element.Offset && "SKS1 elements are in wrong order");
 		Element.Data.resize(NextOffset - Element.Offset);
 		Element.SizeOriginal = Element.Data.size();
 	}
