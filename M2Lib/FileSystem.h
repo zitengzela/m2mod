@@ -1,6 +1,5 @@
 #pragma once
 
-#include "BaseTypes.h"
 #include <string>
 
 namespace M2Lib

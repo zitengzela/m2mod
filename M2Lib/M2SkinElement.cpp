@@ -9,6 +9,8 @@ uint32_t M2Lib::GetSubSetType(uint32_t SubsetId)
 		case 3:
 		case 17:
 			return Subset_Facial;
+		default:
+			break;
 	}
 
 	switch (SubsetId / 100)
