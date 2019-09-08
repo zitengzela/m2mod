@@ -68,8 +68,8 @@ namespace M2ModRedux {
 		{
 			M2Lib::Settings settings;
 
-			settings.setWorkingDirectory(StringConverter(workingDirectoryTextBox->Text->Trim()).ToStringA());
-			settings.setOutputDirectory(StringConverter(outputDirectoryTextBox->Text->Trim()).ToStringA());
+			settings.setWorkingDirectory(StringConverter(workingDirectoryTextBox->Text->Trim()).ToStringW());
+			settings.setOutputDirectory(StringConverter(outputDirectoryTextBox->Text->Trim()).ToStringW());
 
 			settings.MergeBones = checkBoxMergeBones->Checked;
 			settings.MergeAttachments = checkBoxMergeAttachments->Checked;

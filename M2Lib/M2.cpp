@@ -350,7 +350,7 @@ M2Lib::EError M2Lib::M2::LoadSkeleton()
 		if (auto info = storageRef->GetFileInfoByFileDataId(chunk->Data.ParentSkeletonFileId))
 		{
 			std::filesystem::path ParentSkeletonPath;
-			if (strlen(Settings.WorkingDirectory))
+			if (wcslen(Settings.WorkingDirectory))
 				ParentSkeletonPath = std::filesystem::path(Settings.WorkingDirectory) / info->Path;
 			else
 				ParentSkeletonPath = std::filesystem::path(_FileName).parent_path() / std::filesystem::path(info->Path).filename();
@@ -1556,9 +1556,9 @@ bool M2Lib::M2::GetFileSkin(std::wstring& SkinFileNameResultBuffer, std::wstring
 		{
 			//sLogger.LogInfo("Skin listfile entry: %s", path.c_str());
 
-			if (!Save && strlen(Settings.WorkingDirectory))
+			if (!Save && wcslen(Settings.WorkingDirectory))
 				SkinFileNameResultBuffer = std::filesystem::path(Settings.WorkingDirectory) / info->Path;
-			else if (Save && strlen(Settings.OutputDirectory))
+			else if (Save && wcslen(Settings.OutputDirectory))
 				SkinFileNameResultBuffer = std::filesystem::path(Settings.OutputDirectory) / info->Path;
 			else
 				SkinFileNameResultBuffer = std::filesystem::path(M2FileName).parent_path() / std::filesystem::path(info->Path).filename();
@@ -1609,9 +1609,9 @@ bool M2Lib::M2::GetFileSkeleton(std::wstring& SkeletonFileNameResultBuffer, std:
 
 	if (auto info = storageRef->GetFileInfoByFileDataId(chunk->SkeletonFileDataId))
 	{
-		if (!Save && strlen(Settings.WorkingDirectory))
+		if (!Save && wcslen(Settings.WorkingDirectory))
 			SkeletonFileNameResultBuffer = std::filesystem::path(Settings.WorkingDirectory) / info->Path;
-		else if (Save && strlen(Settings.OutputDirectory))
+		else if (Save && wcslen(Settings.OutputDirectory))
 			SkeletonFileNameResultBuffer = std::filesystem::path(Settings.OutputDirectory) / info->Path;
 		else
 		{
@@ -1650,9 +1650,9 @@ bool M2Lib::M2::GetFileParentSkeleton(std::wstring& SkeletonFileNameResultBuffer
 
 	sLogger.LogInfo("Parent skeleton listfile entry: %s", info->Path.c_str());
 
-	if (!Save && strlen(Settings.WorkingDirectory))
+	if (!Save && wcslen(Settings.WorkingDirectory))
 		SkeletonFileNameResultBuffer = std::filesystem::path(Settings.WorkingDirectory) / info->Path;
-	else if (Save && strlen(Settings.OutputDirectory))
+	else if (Save && wcslen(Settings.OutputDirectory))
 		SkeletonFileNameResultBuffer = std::filesystem::path(Settings.OutputDirectory) / info->Path;
 	else
 		SkeletonFileNameResultBuffer = std::filesystem::path(M2FileName).parent_path() / std::filesystem::path(info->Path).filename();

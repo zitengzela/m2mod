@@ -1,14 +1,14 @@
 #include "Settings.h"
 #include <fstream>
 
-void M2Lib::Settings::setOutputDirectory(const char* directory)
+void M2Lib::Settings::setOutputDirectory(const wchar_t* directory)
 {
-	strcpy_s(OutputDirectory, sizeof(OutputDirectory), directory);
+	wcscpy_s(OutputDirectory, sizeof(OutputDirectory) / sizeof(wchar_t), directory);
 }
 
-void M2Lib::Settings::setWorkingDirectory(const char* directory)
+void M2Lib::Settings::setWorkingDirectory(const wchar_t* directory)
 {
-	strcpy_s(WorkingDirectory, sizeof(WorkingDirectory), directory);
+	wcscpy_s(WorkingDirectory, sizeof(WorkingDirectory) / sizeof(wchar_t), directory);
 }
 
 void M2Lib::Settings::setMappingsDirectory(const wchar_t* directory)

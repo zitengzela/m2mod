@@ -137,9 +137,9 @@ namespace M2ModRedux
 					this->checkBoxReplaceM2->Checked = Boolean::Parse(value->ToString());
 
 				if (auto value = RegistyStore::GetValue(RegistyStore::Value::WorkingDirectory))
-					settings->setWorkingDirectory(StringConverter((String^)value).ToStringA());
+					settings->setWorkingDirectory(StringConverter((String^)value).ToStringW());
 				if (auto value = RegistyStore::GetValue(RegistyStore::Value::OutputDirectory))
-					settings->setOutputDirectory(StringConverter((String^)value).ToStringA());
+					settings->setOutputDirectory(StringConverter((String^)value).ToStringW());
 
 				if (auto value = RegistyStore::GetValue(RegistyStore::Value::ForceExportExpansion))
 					settings->ForceLoadExpansion = (M2Lib::Expansion)Int32::Parse(value->ToString());
@@ -1159,7 +1159,7 @@ private: System::Windows::Forms::Button^  clearButton;
 
 		auto fileName = Path::GetFileName(checkBoxReplaceM2->Checked ? textBoxReplaceM2->Text : textBoxInputM2Imp->Text);
 		String^ ExportFileName;
-		if (settings && strlen(settings->OutputDirectory))
+		if (settings && wcslen(settings->OutputDirectory))
 		{
 			auto outputDirectory = gcnew String(settings->OutputDirectory);
 
