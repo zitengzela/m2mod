@@ -3,14 +3,16 @@
 #include "BaseTypes.h"
 #include "M2Types.h"
 #include <string>
+#include "FileStorage.h"
 
 namespace M2Lib
 {
 #pragma pack(push, 1)
-	struct M2LIB_API_CLASS GlobalSettings
+	struct M2LIB_API_CLASS Settings
 	{
 		char OutputDirectory[1024];
 		char WorkingDirectory[1024];
+		wchar_t MappingsDirectory[1024];
 		Expansion ForceLoadExpansion = Expansion::None;
 		bool MergeBones = true;
 		bool MergeAttachments = true;
@@ -22,18 +24,18 @@ namespace M2Lib
 
 		void setOutputDirectory(const char* directory);
 		void setWorkingDirectory(const char* directory);
+		void setMappingsDirectory(const wchar_t* directory);
 
-		GlobalSettings()
+		Settings()
 		{
-			memset(OutputDirectory, 0, sizeof(OutputDirectory));
-			memset(WorkingDirectory, 0, sizeof(WorkingDirectory));
+			setOutputDirectory("");
+			setWorkingDirectory("");
+			setMappingsDirectory(L"");
 		}
 
-		void operator=(GlobalSettings const& other);
+		void operator=(Settings const& other);
 	};
 
-	ASSERT_SIZE(GlobalSettings, 2048 + 4 + 7);
-
+	ASSERT_SIZE(Settings, 1024 * 2 + sizeof(wchar_t) * 1024 + 4 + 7);
 #pragma pack(pop)
-
 }

@@ -44,7 +44,7 @@ namespace M2ModRedux {
 			this->Icon = (cli::safe_cast<System::Drawing::Icon^>(resources->GetObject(L"$this.Icon")));
 		}
 
-		void Setup(M2Lib::GlobalSettings* settings)
+		void Setup(M2Lib::Settings* settings)
 		{
 			M2Lib::Expansion ExpansionIndex = settings->ForceLoadExpansion;
 			if (ExpansionIndex != M2Lib::Expansion::None)
@@ -64,9 +64,9 @@ namespace M2ModRedux {
 			testFixAnimationsCheckBox->Checked = settings->FixAnimationsTest;
 		}
 
-		M2Lib::GlobalSettings ProduceSettings()
+		M2Lib::Settings ProduceSettings()
 		{
-			M2Lib::GlobalSettings settings;
+			M2Lib::Settings settings;
 
 			settings.setWorkingDirectory(StringConverter(workingDirectoryTextBox->Text->Trim()).ToStringA());
 			settings.setOutputDirectory(StringConverter(outputDirectoryTextBox->Text->Trim()).ToStringA());
@@ -133,7 +133,7 @@ private: System::Windows::Forms::FolderBrowserDialog^  directoryBrowserDialog;
 private: System::Windows::Forms::GroupBox^  outputDirectoryGroupBox;
 private: System::Windows::Forms::Button^  outputDirectoryBrowseButton;
 private: System::Windows::Forms::TextBox^  outputDirectoryTextBox;
-private: System::Windows::Forms::CheckBox^  checkBoxDisplayErrors;
+
 
 
 
@@ -164,7 +164,6 @@ private: System::Windows::Forms::CheckBox^  checkBoxDisplayErrors;
 			this->label1 = (gcnew System::Windows::Forms::Label());
 			this->forceExpansionComboBox = (gcnew System::Windows::Forms::ComboBox());
 			this->groupBox3 = (gcnew System::Windows::Forms::GroupBox());
-			this->checkBoxDisplayErrors = (gcnew System::Windows::Forms::CheckBox());
 			this->checkBoxFixEdgeNormals = (gcnew System::Windows::Forms::CheckBox());
 			this->checkBoxIgnoreOriginalMeshIndexes = (gcnew System::Windows::Forms::CheckBox());
 			this->testFixAnimationsCheckBox = (gcnew System::Windows::Forms::CheckBox());
@@ -212,7 +211,6 @@ private: System::Windows::Forms::CheckBox^  checkBoxDisplayErrors;
 			this->toolTip1->SetToolTip(this->forceExpansionComboBox, L"All input M2\'s will be treated accordingly");
 			this->groupBox3->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
 				| System::Windows::Forms::AnchorStyles::Right));
-			this->groupBox3->Controls->Add(this->checkBoxDisplayErrors);
 			this->groupBox3->Controls->Add(this->checkBoxFixEdgeNormals);
 			this->groupBox3->Controls->Add(this->checkBoxIgnoreOriginalMeshIndexes);
 			this->groupBox3->Controls->Add(this->testFixAnimationsCheckBox);
@@ -226,16 +224,6 @@ private: System::Windows::Forms::CheckBox^  checkBoxDisplayErrors;
 			this->groupBox3->TabIndex = 2;
 			this->groupBox3->TabStop = false;
 			this->groupBox3->Text = L"Import Settings";
-			this->checkBoxDisplayErrors->AutoSize = true;
-			this->checkBoxDisplayErrors->Checked = true;
-			this->checkBoxDisplayErrors->CheckState = System::Windows::Forms::CheckState::Checked;
-			this->checkBoxDisplayErrors->Location = System::Drawing::Point(9, 88);
-			this->checkBoxDisplayErrors->Name = L"checkBoxDisplayErrors";
-			this->checkBoxDisplayErrors->Size = System::Drawing::Size(90, 17);
-			this->checkBoxDisplayErrors->TabIndex = 23;
-			this->checkBoxDisplayErrors->Text = L"Display Errors";
-			this->toolTip1->SetToolTip(this->checkBoxDisplayErrors, L"Errors will be displayed in popups");
-			this->checkBoxDisplayErrors->UseVisualStyleBackColor = true;
 			this->checkBoxFixEdgeNormals->AutoSize = true;
 			this->checkBoxFixEdgeNormals->Location = System::Drawing::Point(131, 42);
 			this->checkBoxFixEdgeNormals->Name = L"checkBoxFixEdgeNormals";

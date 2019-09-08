@@ -58,7 +58,7 @@ namespace M2ModRedux
 		auto repoVersion = GetRepoVersion();
 		if (String::IsNullOrEmpty(repoVersion))
 		{
-			MessageBox::Show("Failed to checkupdates", "Error", MessageBoxButtons::OK, MessageBoxIcon::Error);
+			MessageBox::Show("Failed to check updates", "Error", MessageBoxButtons::OK, MessageBoxIcon::Error);
 			return 0;
 		}
 		else if (repoVersion == currentVersion)

@@ -10,6 +10,7 @@
 #include <list>
 #include <assert.h>
 #include <unordered_map>
+#include "StringHelpers.h"
 
 using namespace M2Lib::M2SkinElement;
 
@@ -26,7 +27,7 @@ M2Lib::EError M2Lib::M2Skin::Load(wchar_t const* FileName)
 	if (FileStream.fail())
 		return EError_FailedToLoadSKIN_CouldNotOpenFile;
 
-	sLogger.LogInfo("Loading skin at %s", WStringToString(FileName).c_str());
+	sLogger.LogInfo("Loading skin at %s", StringHelpers::WStringToString(FileName).c_str());
 
 	// find file size
 	FileStream.seekg(0, std::ios::end);
@@ -65,7 +66,7 @@ M2Lib::EError M2Lib::M2Skin::Save(const wchar_t* FileName)
 	if (!FileSystemW::IsDirectory(directory) && !FileSystemW::CreateDirectory(directory))
 		return EError_FailedToSaveM2;
 
-	sLogger.LogInfo("Saving skin to %s", WStringToString(FileName).c_str());
+	sLogger.LogInfo("Saving skin to %s", StringHelpers::WStringToString(FileName).c_str());
 
 	// open file stream
 	std::fstream FileStream;

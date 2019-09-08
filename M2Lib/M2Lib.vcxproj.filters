@@ -90,6 +90,12 @@
     <ClInclude Include="BoneComparator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="lookup.h">
+      <Filter>Helpers\String</Filter>
+    </ClInclude>
+    <ClInclude Include="StringHash.h">
+      <Filter>Helpers\String</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="M2.cpp">
@@ -148,6 +154,15 @@
     </ClCompile>
     <ClCompile Include="BoneComparator.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="StringHelpers.cpp">
+      <Filter>Helpers\String</Filter>
+    </ClCompile>
+    <ClCompile Include="lookup3.cpp">
+      <Filter>Helpers\String</Filter>
+    </ClCompile>
+    <ClCompile Include="StringHash.cpp">
+      <Filter>Helpers\String</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

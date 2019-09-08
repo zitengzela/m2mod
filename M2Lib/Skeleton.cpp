@@ -2,6 +2,7 @@
 #include "DataBinary.h"
 #include "Logger.h"
 #include "FileSystem.h"
+#include "StringHelpers.h"
 
 using namespace M2Lib;
 using namespace M2Lib::SkeletonChunk;
@@ -12,7 +13,7 @@ EError Skeleton::Load(const wchar_t* FileName)
 	if (!FileName)
 		return EError_FailedToLoadSkeleton_NoFileSpecified;
 	
-	sLogger.LogInfo("Loading skeleton at %s", WStringToString(FileName).c_str());
+	sLogger.LogInfo("Loading skeleton at %s", StringHelpers::WStringToString(FileName).c_str());
 
 	// open file stream
 	std::fstream FileStream;
@@ -79,7 +80,7 @@ EError Skeleton::Save(const wchar_t* FileName)
 	if (FileStream.fail())
 		return EError_FailedToSaveM2;
 
-	sLogger.LogInfo("Saving skeleton to %s", WStringToString(FileName).c_str());
+	sLogger.LogInfo("Saving skeleton to %s", StringHelpers::WStringToString(FileName).c_str());
 
 	// SKS1 chunk must be loaded before other animation-dependent chunks (checked client)
 	std::list<ESkeletonChunk> ExplicitOrder = { ESkeletonChunk::SKL1, ESkeletonChunk::SKS1 };

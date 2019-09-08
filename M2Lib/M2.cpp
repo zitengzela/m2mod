@@ -9,6 +9,8 @@
 #include <sstream>
 #include <set>
 #include <iostream>
+#include "StringHelpers.h"
+#include "StringHash.h"
 
 using namespace M2Lib::M2Element;
 using namespace M2Lib::M2Chunk;
@@ -22,6 +24,11 @@ uint32_t M2Lib::M2::GetLastElementIndex()
 	}
 
 	return M2Element::EElement__Count__;
+}
+
+M2Lib::Settings const* M2Lib::M2::GetSettings()
+{
+	return &Settings;
 }
 
 M2Lib::Expansion M2Lib::M2::GetExpansion() const
@@ -46,7 +53,7 @@ bool M2Lib::M2::CM2Header::IsLongHeader() const
 	return Description.Flags.flag_use_texture_combiner_combos;
 }
 
-M2Lib::M2::M2(GlobalSettings* Settings)
+M2Lib::M2::M2(M2Lib::Settings* Settings)
 {
 	memset(Skins, 0, sizeof(Skins));
 	Skeleton = NULL;
@@ -58,6 +65,8 @@ M2Lib::M2::M2(GlobalSettings* Settings)
 	needRemoveTXIDChunk = false;
 	if (Settings)
 		this->Settings = *Settings;
+
+	storageRef = StorageManager::GetInstance()->GetStorage(this->Settings.MappingsDirectory);
 
 	OriginalSkinCount = 0;
 }
@@ -98,11 +107,11 @@ M2Lib::EError M2Lib::M2::Load(const wchar_t* FileName)
 	FileStream.open(FileName, std::ios::in | std::ios::binary);
 	if (FileStream.fail())
 	{
-		sLogger.LogError("Error: Failed to open file %s", WStringToString(FileName).c_str());
+		sLogger.LogError("Error: Failed to open file %s", StringHelpers::WStringToString(FileName).c_str());
 		return EError_FailedToLoadM2_CouldNotOpenFile;
 	}
 
-	sLogger.LogInfo("Loading model at %s", WStringToString(FileName).c_str());
+	sLogger.LogInfo("Loading model at %s", StringHelpers::WStringToString(FileName).c_str());
 
 	// find file size
 	FileStream.seekg(0, std::ios::end);
@@ -226,7 +235,7 @@ M2Lib::EError M2Lib::M2::Load(const wchar_t* FileName)
 	{
 		sLogger.LogInfo("Used skin files:");
 		for (auto fileDataId : chunk->SkinsFileDataIds)
-			sLogger.LogInfo("\t[%u] %s", fileDataId, FileStorage::PathInfo(fileDataId));
+			sLogger.LogInfo("\t[%u] %s", fileDataId, storageRef->PathInfo(fileDataId));
 	}
 
 	auto Error = LoadSkins();
@@ -245,14 +254,14 @@ M2Lib::EError M2Lib::M2::Load(const wchar_t* FileName)
 			if (!GetFileSkin(FileNameSkin, _FileName, SKIN_COUNT - LOD_SKIN_MAX_COUNT + i, false))
 				continue;
 
-			sLogger.LogInfo("Loading skin '%s'...", WStringToString(FileSystemW::GetBaseName(FileNameSkin)).c_str());
+			sLogger.LogInfo("Loading skin '%s'...", StringHelpers::WStringToString(FileSystemW::GetBaseName(FileNameSkin)).c_str());
 			M2Skin LoDSkin(this);
 			if (EError Error = LoDSkin.Load(FileNameSkin.c_str()))
 			{
-				if (Error = EError_FailedToLoadSKIN_CouldNotOpenFile)
+				if (Error == EError_FailedToLoadSKIN_CouldNotOpenFile)
 					continue;
 
-				sLogger.LogError("Error: Failed to load #%u lod skin %s", i, WStringToString(FileSystemW::GetBaseName(FileNameSkin)).c_str());
+				sLogger.LogError("Error: Failed to load #%u lod skin %s", i, StringHelpers::WStringToString(FileSystemW::GetBaseName(FileNameSkin)).c_str());
 				return Error;
 			}
 			else
@@ -280,7 +289,7 @@ M2Lib::EError M2Lib::M2::Load(const wchar_t* FileName)
 	if (auto chunk = (SKIDChunk*)GetChunk(EM2Chunk::Skeleton))
 	{
 		sLogger.LogInfo("Used skeleton file:");
-		sLogger.LogInfo("\t[%u] %s", chunk->SkeletonFileDataId, FileStorage::PathInfo(chunk->SkeletonFileDataId));
+		sLogger.LogInfo("\t[%u] %s", chunk->SkeletonFileDataId, storageRef->PathInfo(chunk->SkeletonFileDataId));
 	}
 
 	Error = LoadSkeleton();
@@ -318,7 +327,7 @@ M2Lib::EError M2Lib::M2::LoadSkeleton()
 
 	if (!FileSystemW::IsFile(FileNameSkeleton))
 	{
-		sLogger.LogError("Error: Skeleton file %s not found!", WStringToString(FileNameSkeleton).c_str());
+		sLogger.LogError("Error: Skeleton file %s not found!", StringHelpers::WStringToString(FileNameSkeleton).c_str());
 		return EError_FailedToLoadSkeleton_CouldNotOpenFile;
 	}
 
@@ -338,26 +347,26 @@ M2Lib::EError M2Lib::M2::LoadSkeleton()
 
 	if (auto chunk = (SkeletonChunk::SKPDChunk*)Skeleton->GetChunk(SkeletonChunk::ESkeletonChunk::SKPD))
 	{
-		if (auto info = FileStorage::GetInstance()->GetFileInfoByFileDataId(chunk->Data.ParentSkeletonFileId))
+		if (auto info = storageRef->GetFileInfoByFileDataId(chunk->Data.ParentSkeletonFileId))
 		{
 			std::wstring ParentSkeletonFileName;
 			if (strlen(Settings.WorkingDirectory))
-				ParentSkeletonFileName = StringToWString(FileSystemA::Combine(Settings.WorkingDirectory, info->Path.c_str(), NULL));
+				ParentSkeletonFileName = StringHelpers::StringToWString(FileSystemA::Combine(Settings.WorkingDirectory, info->Path.c_str(), NULL));
 			else
 			{
-				ParentSkeletonFileName = StringToWString(FileSystemA::GetBaseName(info->Path.c_str()));
+				ParentSkeletonFileName = StringHelpers::StringToWString(FileSystemA::GetBaseName(info->Path.c_str()));
 				ParentSkeletonFileName = FileSystemW::GetParentDirectory(_FileName) + L"\\" + ParentSkeletonFileName;
 			}
 			auto parentSkeleton = new M2Lib::Skeleton();
 			auto Error = parentSkeleton->Load(ParentSkeletonFileName.c_str());
 			if (Error == EError_OK)
 			{
-				sLogger.LogInfo("Parent skeleton file [%u] %s loaded", chunk->Data.ParentSkeletonFileId, WStringToString(ParentSkeletonFileName).c_str());
+				sLogger.LogInfo("Parent skeleton file [%u] %s loaded", chunk->Data.ParentSkeletonFileId, StringHelpers::WStringToString(ParentSkeletonFileName).c_str());
 				ParentSkeleton = parentSkeleton;
 			}
 			else
 			{
-				sLogger.LogError("Error: Failed to load parent skeleton file [%u] %s", chunk->Data.ParentSkeletonFileId, WStringToString(ParentSkeletonFileName).c_str());
+				sLogger.LogError("Error: Failed to load parent skeleton file [%u] %s", chunk->Data.ParentSkeletonFileId, StringHelpers::WStringToString(ParentSkeletonFileName).c_str());
 				delete parentSkeleton;
 				return EError_FailedToLoadSkeleton_CouldNotOpenFile;
 			}
@@ -656,7 +665,7 @@ M2Lib::EError M2Lib::M2::Save(const wchar_t* FileName)
 	if (FileStream.fail())
 		return EError_FailedToSaveM2;
 
-	sLogger.LogInfo("Saving model to %s", WStringToString(FileName).c_str());
+	sLogger.LogInfo("Saving model to %s", StringHelpers::WStringToString(FileName).c_str());
 
 	// fill elements header data
 	m_SaveElements_FindOffsets();
@@ -727,14 +736,14 @@ M2Lib::EError M2Lib::M2::Save(const wchar_t* FileName)
 	{
 		sLogger.LogInfo("INFO: Put your skins to:");
 		for (auto fileDataId : chunk->SkinsFileDataIds) {
-			sLogger.LogInfo("\t%s", FileStorage::PathInfo(fileDataId));
+			sLogger.LogInfo("\t%s", storageRef->PathInfo(fileDataId));
 			}
 	}
 
 	if (auto chunk = (SKIDChunk*)GetChunk(EM2Chunk::Skeleton))
 	{
 		sLogger.LogInfo("INFO: Put your skeleton to:");
-		sLogger.LogInfo("\t%s", FileStorage::PathInfo(chunk->SkeletonFileDataId));
+		sLogger.LogInfo("\t%s", storageRef->PathInfo(chunk->SkeletonFileDataId));
 	}
 
 	return EError_OK;
@@ -1387,31 +1396,31 @@ void M2Lib::M2::PrintReferencedFileInfo()
 		sLogger.LogInfo("Total skin files referenced: %u", skinChunk->SkinsFileDataIds.size());
 		for (auto skinFileDataId : skinChunk->SkinsFileDataIds)
 			if (skinFileDataId)
-				sLogger.LogInfo("\t[%u] %s", skinFileDataId, FileStorage::PathInfo(skinFileDataId));
+				sLogger.LogInfo("\t[%u] %s", skinFileDataId, storageRef->PathInfo(skinFileDataId));
 	}
 	if (skeletonChunk)
 	{
 		sLogger.LogInfo("Skeleton file referenced:");
-		sLogger.LogInfo("\t[%u] %s", skeletonChunk->SkeletonFileDataId, FileStorage::PathInfo(skeletonChunk->SkeletonFileDataId));
+		sLogger.LogInfo("\t[%u] %s", skeletonChunk->SkeletonFileDataId, storageRef->PathInfo(skeletonChunk->SkeletonFileDataId));
 		if (Skeleton)
 		{
 			using namespace SkeletonChunk;
 
 			if (auto skpdChunk = (SKPDChunk*)Skeleton->GetChunk(ESkeletonChunk::SKPD))
-				sLogger.LogInfo("\tParent skeleton file: [%u] %s", skpdChunk->Data.ParentSkeletonFileId, FileStorage::PathInfo(skpdChunk->Data.ParentSkeletonFileId));
+				sLogger.LogInfo("\tParent skeleton file: [%u] %s", skpdChunk->Data.ParentSkeletonFileId, storageRef->PathInfo(skpdChunk->Data.ParentSkeletonFileId));
 			else
 				sLogger.LogInfo("\tNo parent skeleton referenced");
 			if (auto afidChunk = (AFIDChunk*)Skeleton->GetChunk(ESkeletonChunk::AFID))
 			{
 				sLogger.LogInfo("\tTotal skeleton animation files referenced: %u", afidChunk->AnimInfos.size());
 				for (auto anim : afidChunk->AnimInfos)
-					sLogger.LogInfo("\t\t[%u] %s", anim.FileId, FileStorage::PathInfo(anim.FileId));
+					sLogger.LogInfo("\t\t[%u] %s", anim.FileId, storageRef->PathInfo(anim.FileId));
 			}
 			if (auto boneChunk = (BFIDChunk*)Skeleton->GetChunk(ESkeletonChunk::BFID))
 			{
 				sLogger.LogInfo("\tTotal skeleton bone files referenced: %u", boneChunk->BoneFileDataIds.size());
 				for (auto bone : boneChunk->BoneFileDataIds)
-					sLogger.LogInfo("\t\t[%u] %s", bone, FileStorage::PathInfo(bone));
+					sLogger.LogInfo("\t\t[%u] %s", bone, storageRef->PathInfo(bone));
 			}
 		}
 		else
@@ -1427,7 +1436,7 @@ void M2Lib::M2::PrintReferencedFileInfo()
 		sLogger.LogInfo("Total texture referenced in chunk: %u", count);
 		for (auto textuteFileDataId : textureChunk->TextureFileDataIds)
 			if (textuteFileDataId)
-				sLogger.LogInfo("\t[%u] %s", textuteFileDataId, FileStorage::PathInfo(textuteFileDataId));
+				sLogger.LogInfo("\t[%u] %s", textuteFileDataId, storageRef->PathInfo(textuteFileDataId));
 
 		if (textureChunk->TextureFileDataIds.size() != Elements[EElement_Texture].Count)
 			sLogger.LogInfo("\tError: M2 texture block element count is not equal to chunk element count! (%u vs %u)", Elements[EElement_Texture].Count, textureChunk->TextureFileDataIds.size());
@@ -1447,7 +1456,7 @@ void M2Lib::M2::PrintReferencedFileInfo()
 
 				if (textureElement.TexturePath.Offset && FileDataId && textureElement.TexturePath.Count > 1)
 				{
-					auto storagePath = FileStorage::PathInfo(FileDataId);
+					auto storagePath = storageRef->PathInfo(FileDataId);
 					sLogger.LogInfo("\tWarning: Texture #%u file is stored in both chunk and texture element.\r\n"
 						"\t\tElement path: %s\r\n"
 						"\t\tChunk path: [%u] %s", i, localTexturePath, FileDataId, storagePath);
@@ -1495,19 +1504,19 @@ void M2Lib::M2::PrintReferencedFileInfo()
 	if (auto physChunk = (PFIDChunk*)GetChunk(EM2Chunk::Physic))
 	{
 		sLogger.LogInfo("Physics file referenced:");
-		sLogger.LogInfo("\t[%u] %s", physChunk->PhysFileId, FileStorage::PathInfo(physChunk->PhysFileId));
+		sLogger.LogInfo("\t[%u] %s", physChunk->PhysFileId, storageRef->PathInfo(physChunk->PhysFileId));
 	}
 	if (auto afidChunk = (AFIDChunk*)GetChunk(EM2Chunk::Animation))
 	{
 		sLogger.LogInfo("Total animation files referenced: %u", afidChunk->AnimInfos.size());
 		for (auto anim : afidChunk->AnimInfos)
-			sLogger.LogInfo("\t[%u] %s", anim.FileId, FileStorage::PathInfo(anim.FileId));
+			sLogger.LogInfo("\t[%u] %s", anim.FileId, storageRef->PathInfo(anim.FileId));
 	}
 	if (auto boneChunk = (BFIDChunk*)GetChunk(EM2Chunk::Bone))
 	{
 		sLogger.LogInfo("Total bone files referenced: [%u]", boneChunk->BoneFileDataIds.size());
 		for (auto bone : boneChunk->BoneFileDataIds)
-			sLogger.LogInfo("\t[%u] %s", bone, FileStorage::PathInfo(bone));
+			sLogger.LogInfo("\t[%u] %s", bone, storageRef->PathInfo(bone));
 	}
 
 	sLogger.LogInfo("======END OF REFERENCED FILE INFO======");
@@ -1541,17 +1550,17 @@ bool M2Lib::M2::GetFileSkin(std::wstring& SkinFileNameResultBuffer, std::wstring
 		}
 
 		auto skinFileDataId = skinChunk->SkinsFileDataIds[chunkIndex];
-		if (auto info = FileStorage::GetInstance()->GetFileInfoByFileDataId(skinFileDataId))
+		if (auto info = storageRef->GetFileInfoByFileDataId(skinFileDataId))
 		{
 			//sLogger.LogInfo("Skin listfile entry: %s", path.c_str());
 
 			if (!Save && strlen(Settings.WorkingDirectory))
-				SkinFileNameResultBuffer = StringToWString(FileSystemA::Combine(Settings.WorkingDirectory, info->Path.c_str(), NULL));
+				SkinFileNameResultBuffer = StringHelpers::StringToWString(FileSystemA::Combine(Settings.WorkingDirectory, info->Path.c_str(), NULL));
 			else if (Save && strlen(Settings.OutputDirectory))
-				SkinFileNameResultBuffer = StringToWString(FileSystemA::Combine(Settings.OutputDirectory, info->Path.c_str(), NULL));
+				SkinFileNameResultBuffer = StringHelpers::StringToWString(FileSystemA::Combine(Settings.OutputDirectory, info->Path.c_str(), NULL));
 			else
 			{
-				auto SkinFileName = StringToWString(FileSystemA::GetBaseName(info->Path.c_str()));
+				auto SkinFileName = StringHelpers::StringToWString(FileSystemA::GetBaseName(info->Path.c_str()));
 				SkinFileNameResultBuffer = FileSystemW::Combine(FileSystemW::GetParentDirectory(M2FileName).c_str(), SkinFileName.c_str(), NULL);
 			}
 			
@@ -1591,16 +1600,16 @@ bool M2Lib::M2::GetFileSkeleton(std::wstring& SkeletonFileNameResultBuffer, std:
 	if (!chunk)
 		return false;
 
-	if (auto info = FileStorage::GetInstance()->GetFileInfoByFileDataId(chunk->SkeletonFileDataId))
+	if (auto info = storageRef->GetFileInfoByFileDataId(chunk->SkeletonFileDataId))
 	{
 		if (!Save && strlen(Settings.WorkingDirectory))
-			SkeletonFileNameResultBuffer = StringToWString(FileSystemA::Combine(Settings.WorkingDirectory, info->Path.c_str(), NULL));
+			SkeletonFileNameResultBuffer = StringHelpers::StringToWString(FileSystemA::Combine(Settings.WorkingDirectory, info->Path.c_str(), NULL));
 		else if (Save && strlen(Settings.OutputDirectory))
-			SkeletonFileNameResultBuffer = StringToWString(FileSystemA::Combine(Settings.OutputDirectory, info->Path.c_str(), NULL));
+			SkeletonFileNameResultBuffer = StringHelpers::StringToWString(FileSystemA::Combine(Settings.OutputDirectory, info->Path.c_str(), NULL));
 		else
 		{
 			sLogger.LogInfo("Skeleton listfile entry: %s", info->Path.c_str());
-			auto SkeletonFileName = StringToWString(FileSystemA::GetBaseName(info->Path.c_str()));
+			auto SkeletonFileName = StringHelpers::StringToWString(FileSystemA::GetBaseName(info->Path.c_str()));
 			SkeletonFileNameResultBuffer = FileSystemW::GetParentDirectory(M2FileName) + L"\\" + SkeletonFileName;
 		}
 		return true;
@@ -1623,7 +1632,7 @@ bool M2Lib::M2::GetFileParentSkeleton(std::wstring& SkeletonFileNameResultBuffer
 	if (!chunk)
 		return false;
 
-	auto info = FileStorage::GetInstance()->GetFileInfoByFileDataId(chunk->Data.ParentSkeletonFileId);
+	auto info = storageRef->GetFileInfoByFileDataId(chunk->Data.ParentSkeletonFileId);
 	if (!info)
 	{
 		sLogger.LogError("Can't determine parent skeleton [%u] file name for model. Parent skeleton will not be saved", chunk->Data.ParentSkeletonFileId);
@@ -1633,12 +1642,12 @@ bool M2Lib::M2::GetFileParentSkeleton(std::wstring& SkeletonFileNameResultBuffer
 	sLogger.LogInfo("Parent skeleton listfile entry: %s", info->Path.c_str());
 
 	if (!Save && strlen(Settings.WorkingDirectory))
-		SkeletonFileNameResultBuffer = StringToWString(FileSystemA::Combine(Settings.WorkingDirectory, info->Path.c_str(), NULL));
+		SkeletonFileNameResultBuffer = StringHelpers::StringToWString(FileSystemA::Combine(Settings.WorkingDirectory, info->Path.c_str(), NULL));
 	else if (Save && strlen(Settings.OutputDirectory))
-		SkeletonFileNameResultBuffer = StringToWString(FileSystemA::Combine(Settings.OutputDirectory, info->Path.c_str(), NULL));
+		SkeletonFileNameResultBuffer = StringHelpers::StringToWString(FileSystemA::Combine(Settings.OutputDirectory, info->Path.c_str(), NULL));
 	else
 	{
-		auto SkeletonFileName = StringToWString(FileSystemA::GetBaseName(info->Path.c_str()));
+		auto SkeletonFileName = StringHelpers::StringToWString(FileSystemA::GetBaseName(info->Path.c_str()));
 		SkeletonFileNameResultBuffer = FileSystemW::Combine(FileSystemW::GetParentDirectory(M2FileName).c_str(), SkeletonFileName.c_str(), NULL);
 	}
 
@@ -2924,9 +2933,9 @@ uint32_t M2Lib::M2::AddTexture(CElement_Texture::ETextureType Type, CElement_Tex
 			inplacePath = false;
 			textureChunk->TextureFileDataIds.push_back(0);
 		}
-		else if (auto info = FileStorage::GetInstance()->GetFileInfoByPath(szTextureSource))
+		else if (auto info = storageRef->GetFileInfoByPath(szTextureSource))
 		{
-			sLogger.LogInfo("Texture %s is indexed in CASC by FileDataId = %u%s", szTextureSource, info->FileDataId, info->IsCustom ? " (custom file)" : "");
+			sLogger.LogInfo("Texture %s is indexed in CASC by FileDataId = %u", szTextureSource, info->FileDataId);
 			inplacePath = false;
 			textureChunk->TextureFileDataIds.push_back(info->FileDataId);
 		}
@@ -3006,7 +3015,7 @@ uint32_t M2Lib::M2::GetTextureIndex(M2Element::CElement_Texture::ETextureType Ty
 		if (auto textureChunk = (M2Chunk::TXIDChunk*)GetChunk(EM2Chunk::Texture))
 		{
 			// if file not found - can be custom texture
-			if (auto info = FileStorage::GetInstance()->GetFileInfoByPath(szTextureSource))
+			if (auto info = storageRef->GetFileInfoByPath(szTextureSource))
 			{
 				for (uint32_t i = 0; i < textureChunk->TextureFileDataIds.size(); ++i)
 					if (textureChunk->TextureFileDataIds[i] == info->FileDataId)
@@ -3028,7 +3037,7 @@ uint32_t M2Lib::M2::GetTextureIndex(M2Element::CElement_Texture::ETextureType Ty
 		if (texture.TexturePath.Offset)
 		{
 			auto pTexturePath = (char const*)Element.GetLocalPointer(texture.TexturePath.Offset);
-			if (FileStorage::CalculateHash(pTexturePath) == FileStorage::CalculateHash(szTextureSource))
+			if (CalcStringHash<char>(pTexturePath) == CalcStringHash<char>(szTextureSource))
 				return i;
 		}
 	}
@@ -3053,7 +3062,7 @@ std::string M2Lib::M2::GetTexturePath(uint32_t Index)
 	if (!textureChunk || textureChunk->TextureFileDataIds.size() <= Index)
 		return "";
 
-	return FileStorage::GetInstance()->GetFileInfoByFileDataId(textureChunk->TextureFileDataIds[Index])->Path.c_str();
+	return storageRef->GetFileInfoByFileDataId(textureChunk->TextureFileDataIds[Index])->Path.c_str();
 }
 
 void M2Lib::M2::RemoveTXIDChunk()
@@ -3080,7 +3089,7 @@ void M2Lib::M2::RemoveTXIDChunk()
 		if (!FileDataId)
 			continue;
 
-		auto info = FileStorage::GetInstance()->GetFileInfoByFileDataId(FileDataId);
+		auto info = storageRef->GetFileInfoByFileDataId(FileDataId);
 		if (!info)
 		{
 			sLogger.LogError("Error: failed to get path for FileDataId = [%u] for texture #%u. FileStorage is not initialized or listfile is not loaded or not up to date", FileDataId, i);
@@ -3164,7 +3173,7 @@ uint32_t M2Lib::M2::AddBone(CElement_Bone const& Bone)
 	return newBoneId;
 }
 
-M2LIB_HANDLE M2Lib::M2_Create(GlobalSettings* settings)
+M2LIB_HANDLE M2Lib::M2_Create(Settings* settings)
 {
 	return static_cast<M2LIB_HANDLE>(new M2(settings));
 }

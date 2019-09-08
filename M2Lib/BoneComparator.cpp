@@ -4,6 +4,7 @@
 #include <set>
 #include <sstream>
 #include <iomanip>
+#include "StringHelpers.h"
 
 M2Lib::BoneComparator::WeightedDifferenceMap M2Lib::BoneComparator::Diff(M2* oldM2, M2* newM2, bool CompareTextures)
 {
@@ -123,7 +124,7 @@ M2Lib::BoneComparator::ComparatorWrapper::~ComparatorWrapper()
 	delete newM2;
 }
 
-M2Lib::BoneComparator::ComparatorWrapper::ComparatorWrapper(wchar_t const* oldM2Path, wchar_t const* newM2Path, float weightThreshold, bool compareTextures, GlobalSettings* settings)
+M2Lib::BoneComparator::ComparatorWrapper::ComparatorWrapper(wchar_t const* oldM2Path, wchar_t const* newM2Path, float weightThreshold, bool compareTextures, Settings* settings)
 {
 	oldM2 = new M2(settings);
 	newM2 = new M2(settings);
@@ -157,8 +158,8 @@ M2Lib::BoneComparator::ComparatorWrapper::ComparatorWrapper(wchar_t const* oldM2
 		return;
 	}
 
-	buffer += "# Old M2: " + WStringToString(oldM2Path) + "\r\n";
-	buffer += "# New M2: "  + WStringToString(newM2Path) + "\r\n";
+	buffer += "# Old M2: " + StringHelpers::WStringToString(oldM2Path) + "\r\n";
+	buffer += "# New M2: " + StringHelpers::WStringToString(newM2Path) + "\r\n";
 	buffer += "# Weight threshold: " + std::to_string(weightThreshold) + "\r\n";
 	buffer += "# Use this file with Blender\r\n";
 	buffer += "# \r\n";
@@ -246,7 +247,7 @@ std::map<uint32_t, float> M2Lib::BoneComparator::Candidates::GetWeightedCandidat
 	return ret;
 }
 
-M2LIB_HANDLE M2Lib::BoneComparator::Wrapper_Create(wchar_t const* oldM2Path, wchar_t const* newM2Path, float weightThreshold, bool compareTextures, GlobalSettings* settings){
+M2LIB_HANDLE M2Lib::BoneComparator::Wrapper_Create(wchar_t const* oldM2Path, wchar_t const* newM2Path, float weightThreshold, bool compareTextures, Settings* settings){
 	return new ComparatorWrapper(oldM2Path, newM2Path, weightThreshold, compareTextures, settings);
 }
 

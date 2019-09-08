@@ -1,37 +1,45 @@
 #include "FileStorage.h"
 #include "FileSystem.h"
 #include "Logger.h"
+#include "StringHelpers.h"
+#include "StringHash.h"
 #include <fstream>
 #include <algorithm>
 #include <sstream>
 #include <filesystem>
+#include <locale>
 
-const std::string M2Lib::FileStorage::DefaultListfilePath = FileSystemA::GetCurrentPath() + "\\" + "listfile.csv";
-const std::string M2Lib::FileStorage::ListfileAddonsPath = FileSystemA::GetCurrentPath() + "\\" + "listfile_addons";
+const std::wstring M2Lib::FileStorage::DefaultMappingsPath = FileSystemW::GetCurrentPath() + L"\\" + L"mappings";
 
-M2Lib::FileInfo::FileInfo(uint32_t FileDataId, const char* Path, bool IsCustom)
+M2Lib::FileInfo::FileInfo(uint32_t FileDataId, const char* Path)
 {
 	this->FileDataId = FileDataId;
 	this->Path = Path;
-	this->IsCustom = IsCustom;
 }
 
-uint32_t M2Lib::FileInfo_GetFileDataId(FileInfo* pointer)
+void M2Lib::FileStorage::ClearStorage()
 {
-	return pointer->FileDataId;
+	loadFailed = false;
+	for (auto& info : fileInfosByFileDataId)
+		delete info.second;
+	fileInfosByFileDataId.clear();
+
+	for (auto& info : fileInfosByNameHash)
+		delete info.second;
+	fileInfosByNameHash.clear();
 }
 
-char const* M2Lib::FileInfo_GetPath(FileInfo* pointer)
+uint32_t M2Lib::FileInfo_GetFileDataId(M2LIB_HANDLE handle)
 {
-	return pointer->Path.c_str();
+	return static_cast<FileInfo*>(handle)->FileDataId;
 }
 
-bool M2Lib::FileInfo_IsCustom(FileInfo* pointer)
+char const* M2Lib::FileInfo_GetPath(M2LIB_HANDLE handle)
 {
-	return pointer->IsCustom;
+	return static_cast<FileInfo*>(handle)->Path.c_str();
 }
 
-bool M2Lib::FileStorage::ParseCsv(std::string const& Path, bool IsCustom)
+bool M2Lib::FileStorage::ParseCsv(std::wstring const& Path)
 {
 	std::fstream in;
 	in.open(Path, std::ios::in);
@@ -52,24 +60,22 @@ bool M2Lib::FileStorage::ParseCsv(std::string const& Path, bool IsCustom)
 		uint32_t FileDataId = std::stoul(tmp);
 		std::getline(stream, fileName, ';');
 
-		auto nameHash = CalculateHash(fileName);
-		if (IsCustom)
+		auto itr1 = fileInfosByFileDataId.find(FileDataId);
+		if (itr1 != fileInfosByFileDataId.end())
 		{
-			auto itr1 = fileInfosByFileDataId.find(FileDataId);
-			if (itr1 != fileInfosByFileDataId.end())
-			{
-				sLogger.LogWarning("Duplicate storage entry for FileDataId '%u' '%s' (already used by path '%s'), skipping", FileDataId, fileName.c_str(), itr1->second->Path.c_str());
-				continue;
-			}
-			auto itr2 = fileInfosByNameHash.find(nameHash);
-			if (itr2 != fileInfosByNameHash.end())
-			{
-				sLogger.LogWarning("Duplicate storage entry for path '%s' (already uses FileDataId '%u'), skipping", itr2->second->Path.c_str(), FileDataId);
-				continue;
-			}
+			sLogger.LogWarning("Duplicate storageRef entry '%u':'%s' (already used: '%u':'%s'), skipping", FileDataId, fileName.c_str(), itr1->second->FileDataId, itr1->second->Path.c_str());
+			continue;
 		}
 
-		auto info = new FileInfo(FileDataId, fileName.c_str(), IsCustom);
+		auto nameHash = CalcStringHash(fileName);
+		auto itr2 = fileInfosByNameHash.find(nameHash);
+		if (itr2 != fileInfosByNameHash.end())
+		{
+			sLogger.LogWarning("Duplicate storageRef entry '%u':'%s' (already used: '%u':'%s'), skipping (%llu vs %llu)", FileDataId, fileName.c_str(), itr2->second->FileDataId, itr2->second->Path.c_str(), nameHash, CalcStringHash(itr2->second->Path));
+			continue;
+		}
+
+		auto info = new FileInfo(FileDataId, fileName.c_str());
 
 		fileInfosByFileDataId[FileDataId] = info;
 		fileInfosByNameHash[nameHash] = info;
@@ -79,69 +85,83 @@ bool M2Lib::FileStorage::ParseCsv(std::string const& Path, bool IsCustom)
 	return true;
 }
 
-bool M2Lib::FileStorage::LoadStorage(std::string const& ListfilePath)
+bool M2Lib::FileStorage::LoadStorage()
 {
-	ClearStorage();
-	sLogger.LogInfo("Loading listfile at '%s'", ListfilePath.c_str());
+	if (!fileInfosByFileDataId.empty())
+		return true;
 
-	if (!ParseCsv(ListfilePath, false))
-	{
-		sLogger.LogError("Failed to open listfile at path: '%s'", ListfilePath.c_str());
+	if (!LoadMappings()) {
+		loadFailed = true;
+
 		return false;
 	}
 
-	uint32_t addonCount = 0;
-	if (!LoadListFileAddons(addonCount))
-	{
-		sLogger.LogWarning("Failed to load listfile addons at '%s'", ListfileAddonsPath.c_str());
-		return false;
-	}
-
-	sLogger.LogInfo("Loaded %u entries listfile entries (including %u custom ones)", fileInfosByFileDataId.size(), addonCount);
+	sLogger.LogInfo("Loaded %u mapping entries", fileInfosByFileDataId.size());
 	
 	return true;
 }
 
-M2Lib::FileStorage::~FileStorage()
+void M2Lib::FileStorage::ResetLoadFailed()
 {
-	for (auto& info : fileInfosByFileDataId)
-		delete info.second;
-	fileInfosByFileDataId.clear();
-
-	for (auto& info : fileInfosByNameHash)
-		delete info.second;
-	fileInfosByNameHash.clear();
+	loadFailed = false;
 }
 
-bool M2Lib::FileStorage::LoadListFileAddons(uint32_t& totalAddons)
+M2Lib::FileStorage::FileStorage(std::wstring const& mappingsDirectory)
 {
-	if (!std::filesystem::is_directory(ListfileAddonsPath)) {
-		sLogger.LogWarning("Listfile addons directory '%s' does not exist", ListfileAddonsPath.c_str());
+	SetMappingsDirectory(mappingsDirectory);
+}
+
+void M2Lib::FileStorage::SetMappingsDirectory(std::wstring const& mappingsDirectory)
+{
+	this->mappingsDirectory = mappingsDirectory;
+	ClearStorage();
+}
+
+M2Lib::FileStorage::~FileStorage()
+{
+	ClearStorage();
+}
+
+bool M2Lib::FileStorage::LoadMappings()
+{
+	if (loadFailed)
+		return false;
+
+	auto directory = mappingsDirectory.length() > 0 ? mappingsDirectory : DefaultMappingsPath;
+	if (!std::filesystem::is_directory(directory)) {
+		sLogger.LogWarning("Mappings directory '%s' does not exist", StringHelpers::WStringToString(directory).c_str());
 		return false;
 	}
+
+	sLogger.LogInfo("Loading mappings at '%s'", StringHelpers::WStringToString(directory).c_str());
+
 	std::filesystem::directory_iterator itr;
 
-	const uint32_t currentCount = fileInfosByFileDataId.size();
-	bool ok = true;
-	for (auto& p : std::filesystem::directory_iterator(ListfileAddonsPath))
+	for (auto& p : std::filesystem::directory_iterator(directory))
 	{
 		if (p.path().extension().string() != ".csv")
 			continue;
 
-		sLogger.LogInfo("Loading listfile addon '%s'", p.path().filename().string().c_str());
-		if (!ParseCsv(p.path().string(), true)) {
-			sLogger.LogError("Failed to parse listfile addon file '%s'", p.path().filename().string().c_str());
-			ok = false;
+		sLogger.LogInfo("Loading mapping '%s'", p.path().filename().string().c_str());
+
+		try
+		{
+			if (!ParseCsv(p.path().wstring()))
+				sLogger.LogError("Failed to parse mapping file '%s'", p.path().filename().string().c_str());
+		}
+		catch (std::exception& e)
+		{
+			sLogger.LogError("Failed to parse mapping file '%s': %s", p.path().filename().string().c_str(), e.what());
 		}
 	}
-
-	totalAddons = fileInfosByFileDataId.size() - currentCount;
 
 	return true;
 }
 
-M2Lib::FileInfo const* M2Lib::FileStorage::GetFileInfoByPartialPath(std::string const & Name) const
+M2Lib::FileInfo const* M2Lib::FileStorage::GetFileInfoByPartialPath(std::string const & Name)
 {
+	LoadStorage();
+
 	const auto normalizePath = [](std::string path) -> std::string
 	{
 		path = FileSystemA::NormalizePath(path);
@@ -154,15 +174,17 @@ M2Lib::FileInfo const* M2Lib::FileStorage::GetFileInfoByPartialPath(std::string 
 
 	for (auto& itr : fileInfosByFileDataId)
 	{
-		if (normalizePath(itr.second->Path.c_str()).find(NameCopy) != std::string::npos)
+		if (normalizePath(itr.second->Path).find(NameCopy) != std::string::npos)
 			return itr.second;
 	}
 
 	return nullptr;
 }
 
-M2Lib::FileInfo const* M2Lib::FileStorage::GetFileInfoByFileDataId(uint32_t FileDataId) const
+M2Lib::FileInfo const* M2Lib::FileStorage::GetFileInfoByFileDataId(uint32_t FileDataId)
 {
+	LoadStorage();
+
 	auto itr = fileInfosByFileDataId.find(FileDataId);
 	if (itr == fileInfosByFileDataId.end())
 		return nullptr;
@@ -170,9 +192,11 @@ M2Lib::FileInfo const* M2Lib::FileStorage::GetFileInfoByFileDataId(uint32_t File
 	return itr->second;
 }
 
-M2Lib::FileInfo const* M2Lib::FileStorage::GetFileInfoByPath(std::string const& Path) const
+M2Lib::FileInfo const* M2Lib::FileStorage::GetFileInfoByPath(std::string const& Path)
 {
-	uint64_t hash = CalculateHash(Path);
+	LoadStorage();
+
+	uint64_t hash = CalcStringHash(Path);
 	auto itr = fileInfosByNameHash.find(hash);
 	if (itr != fileInfosByNameHash.end())
 		return itr->second;
@@ -180,41 +204,58 @@ M2Lib::FileInfo const* M2Lib::FileStorage::GetFileInfoByPath(std::string const& 
 	return nullptr;
 }
 
-uint64_t M2Lib::FileStorage::CalculateHash(std::string const & FileName)
-{
-	auto name = FileName;
-	std::transform(name.begin(), name.end(), name.begin(), [](auto c) {return std::tolower(c); });
-
-	name = FileSystemA::NormalizePath(name);
-
-	static std::hash<std::string> hasher;
-
-	return hasher(name);
-}
-
 char const* M2Lib::FileStorage::PathInfo(uint32_t FileDataId)
 {
 	if (!FileDataId)
 		return "<none>";
 
-	auto info = GetInstance()->GetFileInfoByFileDataId(FileDataId);
+	auto info = GetFileInfoByFileDataId(FileDataId);
 	if (!info)
 		return "<not found in listfile>";
 
 	return info->Path.c_str();
+}
+
+M2Lib::FileStorage* M2Lib::StorageManager::GetStorage(std::wstring const& mappingDirectory)
+{
+	const auto hash = CalcStringHash(mappingDirectory);
+	auto itr = storages.find(hash);
+	if (itr != storages.end()) {
+
+		itr->second->ResetLoadFailed();
+		return itr->second;
+	}
+
+	auto storage = new FileStorage(mappingDirectory);
+	storages[hash] = storage;
+
+	return storage;
+}
+
+M2Lib::StorageManager::~StorageManager()
+{
+	for (auto storage : storages)
+		delete storage.second;
+
+	storages.clear();
+}
+
+M2LIB_HANDLE M2Lib::FileStorage_Get(const wchar_t* mappingsDirectory)
+{
+	return static_cast<M2LIB_HANDLE>(StorageManager::GetInstance()->GetStorage(mappingsDirectory));
 };
 
-void M2Lib::LoadFileStorage(const char* path)
+void M2Lib::FileStorage_SetMappingsDirectory(M2LIB_HANDLE handle, const wchar_t* mappingsDirectory)
 {
-	FileStorage::GetInstance()->LoadStorage(path);
+	static_cast<FileStorage*>(handle)->SetMappingsDirectory(mappingsDirectory);
 }
 
-M2Lib::FileInfo const* M2Lib::GetFileInfoByFileDataId(uint32_t FileDataId)
+M2LIB_HANDLE M2Lib::FileStorage_GetFileInfoByFileDataId(M2LIB_HANDLE handle, uint32_t FileDataId)
 {
-	return FileStorage::GetInstance()->GetFileInfoByFileDataId(FileDataId);
+	return (M2LIB_HANDLE)static_cast<FileStorage*>(handle)->GetFileInfoByFileDataId(FileDataId);
 }
 
-M2Lib::FileInfo const* M2Lib::GetFileInfoByPartialPath(char const* Path)
+M2LIB_HANDLE M2Lib::FileStorage_GetFileInfoByPartialPath(M2LIB_HANDLE handle, char const* Path)
 {
-	return FileStorage::GetInstance()->GetFileInfoByPartialPath(Path);
+	return (M2LIB_HANDLE)static_cast<FileStorage*>(handle)->GetFileInfoByPartialPath(Path);
 }

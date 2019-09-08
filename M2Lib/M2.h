@@ -18,7 +18,7 @@
 namespace M2Lib
 {
 	class FileStorage;
-	struct GlobalSettings;
+	struct Settings;
 	class Skeleton;
 
 	namespace SkeletonChunk
@@ -26,7 +26,7 @@ namespace M2Lib
 		class AFIDChunk;
 	}
 
-	M2LIB_API M2LIB_HANDLE __cdecl M2_Create(GlobalSettings* settings = nullptr);
+	M2LIB_API M2LIB_HANDLE __cdecl M2_Create(Settings* settings = nullptr);
 	M2LIB_API EError __cdecl M2_Load(M2LIB_HANDLE handle, const wchar_t* FileName);
 	M2LIB_API EError __cdecl M2_Save(M2LIB_HANDLE handle, const wchar_t* FileName);
 	M2LIB_API EError __cdecl M2_SetReplaceM2(M2LIB_HANDLE handle, const wchar_t* FileName);
@@ -195,10 +195,11 @@ namespace M2Lib
 		M2Lib::Skeleton* Skeleton;
 		M2Lib::Skeleton* ParentSkeleton;
 		bool hasLodSkins;
-		bool needRemoveTXIDChunk; // TXID chunk will be removed when model has textures that are not indexed in CASC storage
+		bool needRemoveTXIDChunk; // TXID chunk will be removed when model has textures that are not indexed in CASC storageRef
 
 		uint32_t m_OriginalModelChunkSize;
-		GlobalSettings Settings;
+		Settings Settings;
+		FileStorage* storageRef;
 
 		M2I* pInM2I;
 		M2* replaceM2;
@@ -207,13 +208,14 @@ namespace M2Lib
 		CM2Header Header;		// used for loading and saving. not used when editing.
 		DataElement Elements[M2Element::EElement__Count__];
 		uint32_t GetLastElementIndex();
+		M2Lib::Settings const* GetSettings();
 
-		#define SKIN_COUNT 7
+#define SKIN_COUNT 7
 		#define LOD_SKIN_MAX_COUNT 3
 		M2Skin* Skins[SKIN_COUNT];
 		uint32_t OriginalSkinCount;	// skin count before importing m2i
 
-		M2(GlobalSettings* Settings = NULL);
+		M2(M2Lib::Settings* Settings = NULL);
 
 		~M2();
 

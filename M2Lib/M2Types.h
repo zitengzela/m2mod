@@ -2,7 +2,6 @@
 
 #include "BaseTypes.h"
 #include <vector>
-#include <assert.h>
 #include <string>
 
 namespace M2Lib
@@ -261,7 +260,4 @@ namespace M2Lib
 	};
 
 	bool floatEq(float a, float b, float Tolerance = 1e-4);
-
-	std::wstring StringToWString(std::string const& str);
-	std::string WStringToString(std::wstring const& str);
 }

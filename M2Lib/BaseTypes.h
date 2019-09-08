@@ -1,7 +1,10 @@
 #pragma once
 #include <cstdint>
 
-#ifdef M2LIB_EXPORT
+#ifdef M2LIB_SHARED
+# define M2LIB_API 
+# define M2LIB_API_CLASS 
+#elif defined(M2LIB_EXPORT)
 # define M2LIB_API extern "C" __declspec(dllexport)
 # define M2LIB_API_CLASS __declspec(dllexport)
 #else

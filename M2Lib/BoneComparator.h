@@ -32,7 +32,7 @@ namespace M2Lib
 
 		CompareStatus GetDifferenceStatus(WeightedDifferenceMap const& WeightedResult, float weightThreshold);
 
-		M2LIB_API M2LIB_HANDLE __cdecl Wrapper_Create(wchar_t const* oldM2Path, wchar_t const* newM2Path, float weightThreshold, bool compareTextures, GlobalSettings* settings);
+		M2LIB_API M2LIB_HANDLE __cdecl Wrapper_Create(wchar_t const* oldM2Path, wchar_t const* newM2Path, float weightThreshold, bool compareTextures, Settings* settings);
 		M2LIB_API EError __cdecl Wrapper_GetErrorStatus(M2LIB_HANDLE pointer);
 		M2LIB_API CompareStatus __cdecl Wrapper_GetResult(M2LIB_HANDLE pointer);
 		M2LIB_API const char* __cdecl Wrapper_GetStringResult(M2LIB_HANDLE pointer);
@@ -42,7 +42,7 @@ namespace M2Lib
 		class ComparatorWrapper
 		{
 		public:
-			ComparatorWrapper(wchar_t const* oldM2Path, wchar_t const* newM2Path, float weightThreshold, bool compareTextures, GlobalSettings* settings);
+			ComparatorWrapper(wchar_t const* oldM2Path, wchar_t const* newM2Path, float weightThreshold, bool compareTextures, Settings* settings);
 			~ComparatorWrapper();
 			
 			EError GetErrorStatus() const;

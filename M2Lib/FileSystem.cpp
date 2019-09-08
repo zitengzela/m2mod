@@ -65,6 +65,15 @@ std::basic_string<char> M2Lib::FileSystem<char>::GetCurrentPath()
 	return std::string(Directory);
 }
 
+template <>
+std::basic_string<wchar_t> M2Lib::FileSystem<wchar_t>::GetCurrentPath()
+{
+	wchar_t Directory[1024];
+	GetCurrentDirectoryW(sizeof(Directory) / sizeof(wchar_t), Directory);
+
+	return std::wstring(Directory);
+}
+
 template<class T>
 std::basic_string<T> M2Lib::FileSystem<T>::GetParentDirectory(std::basic_string<T> path)
 {

@@ -1,9 +1,7 @@
 #include "M2Types.h"
 #define _USE_MATH_DEFINES
-#include <math.h>
-#include <assert.h>
+#include <cmath>
 #include <algorithm>
-#include <codecvt>
 
 M2Lib::CTriangle::CTriangle()
 {
@@ -405,28 +403,4 @@ M2Lib::C3Vector M2Lib::C3Vector::CalculateNormal(C3Vector const& v1, C3Vector co
 bool M2Lib::floatEq(float a, float b, float Tolerance)
 {
 	return std::fabsf(a - b) < Tolerance;
-}
-
-std::wstring M2Lib::StringToWString(std::string const& str)
-{
-	try
-	{
-		return std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(str);
-	}
-	catch (std::runtime_error& e)
-	{
-		throw std::runtime_error("Failed to convert string to wstring");
-	}
-}
-
-std::string M2Lib::WStringToString(std::wstring const& str)
-{
-	try
-	{
-		return std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(str);
-	}
-	catch (std::runtime_error& e)
-	{
-		throw std::runtime_error("Failed to convert wstring to string");
-	}
 }

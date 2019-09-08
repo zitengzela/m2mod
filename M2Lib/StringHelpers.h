@@ -49,5 +49,8 @@ namespace  M2Lib {
 			trim(s, characters);
 			return s;
 		}
+
+		std::wstring StringToWString(std::string const& str);
+		std::string WStringToString(std::wstring const& str);
 	};
 }

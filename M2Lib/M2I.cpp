@@ -7,6 +7,7 @@
 #include <functional>
 #include "StringHelpers.h"
 #include "FileStorage.h"
+#include "Shaders.h"
 
 M2Lib::EError M2Lib::M2I::Load(wchar_t const* FileName, M2Lib::M2* pM2, bool IgnoreBones, bool IgnoreAttachments, bool IgnoreCameras, bool IgnoreOriginalMeshIndexes)
 {
@@ -185,25 +186,27 @@ M2Lib::EError M2Lib::M2I::Load(wchar_t const* FileName, M2Lib::M2* pM2, bool Ign
 		SubMeshList.push_back(pNewSubMesh);
 	}
 
-	auto textureLoop = [=] (std::function<void(CSubMesh*,int16_t, std::string const&)> callback)
+	auto textureLoop = [=] (std::function<void(CSubMesh*, int)> callback)
 	{
 		for (auto submesh : SubMeshList)
 			for (uint32_t i = 0; i < MAX_SUBMESH_TEXTURES; ++i)
-				callback(submesh, submesh->ExtraData.TextureType[i], submesh->ExtraData.TextureName[i]);
+				callback(submesh, i);
 	};
 
-	textureLoop([](CSubMesh* submesh, int16_t type, std::string const& path)
+	textureLoop([](CSubMesh* submesh, int textureIndex)
 	{
-		if (type == (int16_t)M2Element::CElement_Texture::ETextureType::Final_Hardcoded && path.size() <= 1)
-			sLogger.LogError("Submesh with id [%u] has 'hardcoded' texture type, but texture path is not set", submesh->ID);
+		if (submesh->ExtraData.TextureType[textureIndex] == (int16_t)M2Element::CElement_Texture::ETextureType::Final_Hardcoded && submesh->ExtraData.TextureName[textureIndex].size() <= 1)
+		{
+			if (textureIndex == 0 || submesh->ExtraData.ShaderId != -1 && GetOpCountForShader(submesh->ExtraData.ShaderId) > textureIndex)
+				sLogger.LogError("Submesh with id [%u] has 'hardcoded' texture type, but texture path is not set", submesh->ID);
+		}
 	});
 
-	textureLoop([](CSubMesh* submesh, int16_t type, std::string const& path)
+	textureLoop([=](CSubMesh* submesh, int textureIndex)
 	{
-		if (type == (int16_t)M2Element::CElement_Texture::ETextureType::Final_Hardcoded && path.length() > 0) {
-			auto info = FileStorage::GetInstance()->GetFileInfoByPath(path);
-			if (!info || info->IsCustom)
-				sLogger.LogInfo("Used custom texture with path: '%s'", path.c_str());
+		auto const& path = submesh->ExtraData.TextureName[textureIndex];
+		if (submesh->ExtraData.TextureType[textureIndex] == (int16_t)M2Element::CElement_Texture::ETextureType::Final_Hardcoded && path.length() > 0) {
+			sLogger.LogInfo("Used custom texture with path: '%s'", path.c_str());
 		}
 	});
 
