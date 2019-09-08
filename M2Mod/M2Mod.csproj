@@ -164,7 +164,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="app.ico" />
-    <Content Include="app2.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

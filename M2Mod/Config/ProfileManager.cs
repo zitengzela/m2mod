@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
 using Newtonsoft.Json;
@@ -29,7 +30,8 @@ namespace M2Mod.Config
             try
             {
                 if (string.IsNullOrWhiteSpace(file))
-                    file = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location) ?? "", ProfilesFile);
+                    file = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location) ?? "",
+                        ProfilesFile);
 
                 config = LoadProfiles(file);
             }
@@ -46,6 +48,8 @@ namespace M2Mod.Config
                 Profiles.Clear();
                 Profiles.AddRange(config.Profiles);
             }
+
+            CurrentProfile = Profiles.FirstOrDefault(_ => _.Id == config.ActiveProfile) ?? Profiles.First();
         }
 
         public static void Save()

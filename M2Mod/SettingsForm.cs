@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Windows.Forms;
 using M2Mod.Config;
 using M2Mod.Interop.Structures;
@@ -43,6 +44,7 @@ namespace M2Mod
 
             workingDirectoryTextBox.Text = settings.WorkingDirectory;
             outputDirectoryTextBox.Text = settings.OutputDirectory;
+            mappingsDirectoryTextBox.Text = settings.MappingsDirectory;
 
             checkBoxMergeBones.Checked = settings.MergeBones;
             checkBoxMergeAttachments.Checked = settings.MergeAttachments;
@@ -59,6 +61,7 @@ namespace M2Mod
             {
                 WorkingDirectory = workingDirectoryTextBox.Text.Trim(),
                 OutputDirectory = outputDirectoryTextBox.Text.Trim(),
+                MappingsDirectory = mappingsDirectoryTextBox.Text.Trim(),
 
                 MergeBones = checkBoxMergeBones.Checked,
                 MergeAttachments = checkBoxMergeAttachments.Checked,
@@ -77,7 +80,7 @@ namespace M2Mod
             {
                 if (!Directory.Exists(workingDirectoryTextBox.Text))
                 {
-                    MessageBox.Show("Working directory does not exist", "M2LibError", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show("Working directory does not exist", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
             }
@@ -86,7 +89,16 @@ namespace M2Mod
             {
                 if (!Directory.Exists(outputDirectoryTextBox.Text))
                 {
-                    MessageBox.Show("Output directory does not exist", "M2LibError", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show("Output directory does not exist", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+            }
+
+            if (mappingsDirectoryTextBox.Text.Length > 0)
+            {
+                if (!Directory.Exists(mappingsDirectoryTextBox.Text))
+                {
+                    MessageBox.Show("Mappings directory does not exist", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
             }
@@ -96,26 +108,37 @@ namespace M2Mod
 
         private void WorkingDirectoryBrowseButton_Click(object sender, EventArgs e)
         {
-            var path = workingDirectoryTextBox.Text;
-            if (path.Length > 0 && Directory.Exists(path))
-                directoryBrowserDialog.SelectedPath = path;
+            using (var dialog = new FolderBrowserDialog())
+            {
+                var path = workingDirectoryTextBox.Text;
+                if (path.Length > 0 && Directory.Exists(path))
+                    dialog.SelectedPath = path;
+                else
+                    dialog.SelectedPath = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
 
-            directoryBrowserDialog.Description = "Select working directory:";
+                dialog.Description = "Select working directory:";
 
-            if (directoryBrowserDialog.ShowDialog() == DialogResult.OK)
-                workingDirectoryTextBox.Text = directoryBrowserDialog.SelectedPath;
+                if (dialog.ShowDialog() == DialogResult.OK)
+                    workingDirectoryTextBox.Text = dialog.SelectedPath;
+            }
         }
 
         private void OutputDirectoryBrowseButton_Click(object sender, EventArgs e)
         {
-            var path = outputDirectoryTextBox.Text;
-            if (path.Length > 0 && Directory.Exists(path))
-                directoryBrowserDialog.SelectedPath = path;
+            using (var dialog = new FolderBrowserDialog())
+            {
+                var path = outputDirectoryTextBox.Text;
+                if (path.Length > 0 && Directory.Exists(path))
+                    dialog.SelectedPath = path;
+                else
+                    dialog.SelectedPath = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
 
-            directoryBrowserDialog.Description = "Select output directory:";
+                dialog.ShowNewFolderButton = true;
+                dialog.Description = "Select output directory:";
 
-            if (directoryBrowserDialog.ShowDialog() == DialogResult.OK)
-                outputDirectoryTextBox.Text = directoryBrowserDialog.SelectedPath;
+                if (dialog.ShowDialog() == DialogResult.OK)
+                    outputDirectoryTextBox.Text = dialog.SelectedPath;
+            }
         }
 
         private void CloseButton_Click(object sender, EventArgs e)
@@ -172,6 +195,24 @@ namespace M2Mod
                 form.ShowDialog();
 
             SetupProfiles();
+        }
+
+        private void MappingsDirectoryButton_Click(object sender, EventArgs e)
+        {
+            using (var dialog = new FolderBrowserDialog())
+            {
+                var path = mappingsDirectoryTextBox.Text;
+                if (path.Length > 0 && Directory.Exists(path))
+                    dialog.SelectedPath = path;
+                else
+                    dialog.SelectedPath = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+
+                dialog.ShowNewFolderButton = false;
+                dialog.Description = "Select mappings directory:";
+
+                if (dialog.ShowDialog() == DialogResult.OK)
+                    mappingsDirectoryTextBox.Text = dialog.SelectedPath;
+            }
         }
     }
 }

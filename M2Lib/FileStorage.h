@@ -61,11 +61,14 @@ namespace M2Lib
 			return &instance;
 		}
 
-		FileStorage* GetStorage(std::wstring const& mappingDirectory);
 		~StorageManager();
+
+		FileStorage* GetStorage(std::wstring const& mappingDirectory);
+		void Clear();
 	};
 
 	M2LIB_API M2LIB_HANDLE __cdecl FileStorage_Get(const wchar_t* mappingsDirectory);
+	M2LIB_API void __cdecl FileStorage_Clear();
 	M2LIB_API void __cdecl FileStorage_SetMappingsDirectory(M2LIB_HANDLE handle, const wchar_t* mappingsDirectory);
 	M2LIB_API M2LIB_HANDLE __cdecl FileStorage_GetFileInfoByFileDataId(M2LIB_HANDLE handle, uint32_t FileDataId);
 	M2LIB_API M2LIB_HANDLE __cdecl FileStorage_GetFileInfoByPartialPath(M2LIB_HANDLE handle, char const* Path);

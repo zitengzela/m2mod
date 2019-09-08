@@ -9,6 +9,7 @@ namespace M2Mod
         {
             WorkingDirectory = "",
             OutputDirectory = "",
+            MappingsDirectory = "",
             ForceLoadExpansion = Expansion.None,
             MergeBones = true,
             MergeAttachments = true,

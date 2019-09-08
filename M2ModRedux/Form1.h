@@ -68,6 +68,7 @@ namespace M2ModRedux
 	private: System::Windows::Forms::ToolStripMenuItem^  checkUpdatesToolStripMenuItem;
 	private: System::Windows::Forms::Panel^ panel2;
 	private: System::Windows::Forms::RichTextBox^ logTextBox;
+	private: System::Windows::Forms::Button^ button1;
 
 
 
@@ -301,6 +302,7 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->panelInputM2Import = (gcnew System::Windows::Forms::Panel());
 				 this->panelInputM2I = (gcnew System::Windows::Forms::Panel());
 				 this->cascTabPage = (gcnew System::Windows::Forms::TabPage());
+				 this->button1 = (gcnew System::Windows::Forms::Button());
 				 this->panel2 = (gcnew System::Windows::Forms::Panel());
 				 this->fileTestLabel = (gcnew System::Windows::Forms::Label());
 				 this->fileTestButton = (gcnew System::Windows::Forms::Button());
@@ -695,6 +697,7 @@ private: System::Windows::Forms::Button^  clearButton;
 				 // 
 				 // cascTabPage
 				 // 
+				 this->cascTabPage->Controls->Add(this->button1);
 				 this->cascTabPage->Controls->Add(this->panel2);
 				 this->cascTabPage->Controls->Add(this->loadListfileButton);
 				 this->cascTabPage->Location = System::Drawing::Point(4, 22);
@@ -704,6 +707,17 @@ private: System::Windows::Forms::Button^  clearButton;
 				 this->cascTabPage->TabIndex = 3;
 				 this->cascTabPage->Text = L"CASC";
 				 this->cascTabPage->UseVisualStyleBackColor = true;
+				 // 
+				 // button1
+				 // 
+				 this->button1->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Right));
+				 this->button1->Location = System::Drawing::Point(330, 3);
+				 this->button1->Name = L"button1";
+				 this->button1->Size = System::Drawing::Size(108, 23);
+				 this->button1->TabIndex = 11;
+				 this->button1->Text = L"Reload Listfile";
+				 this->button1->UseVisualStyleBackColor = true;
+				 this->button1->Click += gcnew System::EventHandler(this, &Form1::Button1_Click);
 				 // 
 				 // panel2
 				 // 
@@ -1331,5 +1345,8 @@ private: System::Windows::Forms::Button^  clearButton;
 		auto func = gcnew Func<int>(updater, &Updater::CheckUpdates);
 		Task::Run(func);
 	}
-	};
+	private: System::Void Button1_Click(System::Object^ sender, System::EventArgs^ e) {
+		M2Lib::FileStorage_Clear();
+	}
+};
 }

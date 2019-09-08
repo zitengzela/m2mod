@@ -35,13 +35,19 @@ namespace M2Mod.Interop
         public static extern string GetErrorText(M2LibError errNo);
 
         [DllImport("M2Lib.dll", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void LoadFileStorage([MarshalAs(UnmanagedType.LPStr)] string filePath);
+        public static extern IntPtr FileStorage_Get([MarshalAs(UnmanagedType.LPStr)] string mappingsDirectory);
 
         [DllImport("M2Lib.dll", CallingConvention = CallingConvention.Cdecl)]
-        public static extern IntPtr GetFileInfoByFileDataId(uint fileDataId);
+        public static extern void FileStorage_Clear();
 
         [DllImport("M2Lib.dll", CallingConvention = CallingConvention.Cdecl)]
-        public static extern IntPtr GetFileInfoByPartialPath([MarshalAs(UnmanagedType.LPStr)]string path);
+        public static extern void FileStorage_SetMappingsDirectory(IntPtr handle, [MarshalAs(UnmanagedType.LPStr)] string mappingsDirectory);
+
+        [DllImport("M2Lib.dll", CallingConvention = CallingConvention.Cdecl)]
+        public static extern IntPtr FileStorage_GetFileInfoByFileDataId(IntPtr handle, uint fileDataId);
+
+        [DllImport("M2Lib.dll", CallingConvention = CallingConvention.Cdecl)]
+        public static extern IntPtr FileStorage_GetFileInfoByPartialPath(IntPtr handle, [MarshalAs(UnmanagedType.LPStr)]string path);
 
         [DllImport("M2Lib.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern uint FileInfo_GetFileDataId(IntPtr pointer);
@@ -49,9 +55,6 @@ namespace M2Mod.Interop
         [DllImport("M2Lib.dll", CallingConvention = CallingConvention.Cdecl)]
         [return: MarshalAs(UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof(ConstCharPtrMarshaller))]
         public static extern string FileInfo_GetPath(IntPtr pointer);
-
-        [DllImport("M2Lib.dll", CallingConvention = CallingConvention.Cdecl)]
-        public static extern bool FileInfo_IsCustom(IntPtr pointer);
 
         public delegate void LoggerDelegate(int logLevel, string message);
 

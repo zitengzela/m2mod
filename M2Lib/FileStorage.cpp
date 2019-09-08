@@ -23,9 +23,6 @@ void M2Lib::FileStorage::ClearStorage()
 	for (auto& info : fileInfosByFileDataId)
 		delete info.second;
 	fileInfosByFileDataId.clear();
-
-	for (auto& info : fileInfosByNameHash)
-		delete info.second;
 	fileInfosByNameHash.clear();
 }
 
@@ -232,7 +229,7 @@ M2Lib::FileStorage* M2Lib::StorageManager::GetStorage(std::wstring const& mappin
 	return storage;
 }
 
-M2Lib::StorageManager::~StorageManager()
+void M2Lib::StorageManager::Clear()
 {
 	for (auto storage : storages)
 		delete storage.second;
@@ -240,9 +237,19 @@ M2Lib::StorageManager::~StorageManager()
 	storages.clear();
 }
 
+M2Lib::StorageManager::~StorageManager()
+{
+	Clear();
+}
+
 M2LIB_HANDLE M2Lib::FileStorage_Get(const wchar_t* mappingsDirectory)
 {
 	return static_cast<M2LIB_HANDLE>(StorageManager::GetInstance()->GetStorage(mappingsDirectory));
+}
+
+void M2Lib::FileStorage_Clear()
+{
+	StorageManager::GetInstance()->Clear();
 };
 
 void M2Lib::FileStorage_SetMappingsDirectory(M2LIB_HANDLE handle, const wchar_t* mappingsDirectory)

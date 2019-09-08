@@ -40,6 +40,8 @@ namespace M2Mod
 
             InitializeProfiles();
             InitializeFormData();
+
+            formInitialized = true;
         }
 
         private void InitializeFormData()
@@ -392,16 +394,15 @@ namespace M2Mod
         {
             _ignoreErrors = false;
 
-            using (var dialog = new OpenFileDialog())
+            using (var dialog = new FolderBrowserDialog())
             {
-                dialog.InitialDirectory = Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location ?? "");
-                dialog.FileName = "listfile.csv";
-                dialog.Filter = "WoW Listfile|*.csv";
+                dialog.ShowNewFolderButton = false;
+                dialog.SelectedPath = Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location ?? "");
                 var result = dialog.ShowDialog();
                 if (result != DialogResult.OK)
                     return;
 
-                Imports.LoadFileStorage(dialog.FileName);
+                ProfileManager.CurrentProfile.Settings.MappingsDirectory = dialog.SelectedPath;
             }
         }
 
@@ -419,9 +420,10 @@ namespace M2Mod
             if (testInputTextBox.Text.Length == 0)
                 return;
 
+            var fileStorage = Imports.FileStorage_Get(ProfileManager.CurrentProfile.Settings.MappingsDirectory);
             if (uint.TryParse(testInputTextBox.Text, out var fileDataId))
             {
-                var info = Imports.GetFileInfoByFileDataId(fileDataId);
+                var info = Imports.FileStorage_GetFileInfoByFileDataId(fileStorage, fileDataId);
                 if (info != IntPtr.Zero)
                     testOutputTextBox.Text = Imports.FileInfo_GetPath(info);
                 else
@@ -429,7 +431,7 @@ namespace M2Mod
             }
             else
             {
-                var info = Imports.GetFileInfoByPartialPath(testInputTextBox.Text);
+                var info = Imports.FileStorage_GetFileInfoByPartialPath(fileStorage, testInputTextBox.Text);
                 if (info != IntPtr.Zero)
                 {
                     testInputTextBox.Text = Imports.FileInfo_GetPath(info);
@@ -520,6 +522,7 @@ namespace M2Mod
         }
 
         private Task _updateTask;
+        private bool formInitialized;
 
         private void CheckUpdatesToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -577,7 +580,8 @@ namespace M2Mod
             {
                 var outputDirectory = ProfileManager.CurrentProfile.Settings.OutputDirectory;
 
-                var info = Imports.GetFileInfoByPartialPath(fileName);
+                var fileStorage = Imports.FileStorage_Get(ProfileManager.CurrentProfile.Settings.MappingsDirectory);
+                var info = Imports.FileStorage_GetFileInfoByPartialPath(fileStorage, fileName);
                 if (info == IntPtr.Zero)
                 {
                     SetStatus("Failed to determine model relative path in storage");
@@ -612,11 +616,16 @@ namespace M2Mod
 
         private void ProfilesComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (ProfileManager.CurrentProfile != null)
+            if (formInitialized && ProfileManager.CurrentProfile != null)
                 SaveFormDataToProfile(ProfileManager.CurrentProfile);
 
             ProfileManager.CurrentProfile = profilesComboBox.SelectedItem as SettingsProfile;
             InitializeFormData();
+        }
+
+        private void ClearStoragesButton_Click(object sender, EventArgs e)
+        {
+            Imports.FileStorage_Clear();
         }
     }
 }

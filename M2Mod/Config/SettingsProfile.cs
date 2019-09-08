@@ -6,10 +6,15 @@ namespace M2Mod.Config
 {
     public class SettingsProfile
     {
-        public readonly Guid Id;
+        public Guid Id;
         public string Name;
         public Settings Settings;
         public FormData FormData;
+
+        public SettingsProfile()
+        {
+
+        }
 
         public SettingsProfile(string name, Settings settings, FormData formData)
         {

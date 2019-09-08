@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 
 namespace M2Mod.Interop.Structures
 {
-    [StructLayout(LayoutKind.Sequential)]
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
     public struct Settings
     {
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 1024)]
@@ -19,7 +19,6 @@ namespace M2Mod.Interop.Structures
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 1024)]
         public string MappingsDirectory;
 
-        public IntPtr FileStorage;
         public Expansion ForceLoadExpansion;
         [MarshalAs(UnmanagedType.U1)] public bool MergeBones;
         [MarshalAs(UnmanagedType.U1)] public bool MergeAttachments;

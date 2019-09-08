@@ -56,7 +56,7 @@
             this.fileTestButton = new System.Windows.Forms.Button();
             this.testOutputTextBox = new System.Windows.Forms.TextBox();
             this.testInputTextBox = new System.Windows.Forms.TextBox();
-            this.loadListfileButton = new System.Windows.Forms.Button();
+            this.loadMappingsButton = new System.Windows.Forms.Button();
             this.tabLog = new System.Windows.Forms.TabPage();
             this.logTextBox = new System.Windows.Forms.RichTextBox();
             this.clearButton = new System.Windows.Forms.Button();
@@ -82,6 +82,7 @@
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.profilesComboBox = new System.Windows.Forms.ComboBox();
             this.profileLabel = new System.Windows.Forms.Label();
+            this.clearStoragesButton = new System.Windows.Forms.Button();
             this.panelImputM2Exp.SuspendLayout();
             this.panelReplaceM2.SuspendLayout();
             this.panel1.SuspendLayout();
@@ -336,8 +337,9 @@
             // 
             // cascTabPage
             // 
+            this.cascTabPage.Controls.Add(this.clearStoragesButton);
             this.cascTabPage.Controls.Add(this.panel2);
-            this.cascTabPage.Controls.Add(this.loadListfileButton);
+            this.cascTabPage.Controls.Add(this.loadMappingsButton);
             this.cascTabPage.Location = new System.Drawing.Point(4, 22);
             this.cascTabPage.Name = "cascTabPage";
             this.cascTabPage.Padding = new System.Windows.Forms.Padding(3);
@@ -397,16 +399,16 @@
             this.testInputTextBox.TabIndex = 6;
             this.testInputTextBox.KeyDown += new System.Windows.Forms.KeyEventHandler(this.TestInputTextBox_KeyDown);
             // 
-            // loadListfileButton
+            // loadMappingsButton
             // 
-            this.loadListfileButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.loadListfileButton.Location = new System.Drawing.Point(444, 3);
-            this.loadListfileButton.Name = "loadListfileButton";
-            this.loadListfileButton.Size = new System.Drawing.Size(108, 23);
-            this.loadListfileButton.TabIndex = 3;
-            this.loadListfileButton.Text = "Reload Listfile";
-            this.loadListfileButton.UseVisualStyleBackColor = true;
-            this.loadListfileButton.Click += new System.EventHandler(this.LoadListfileButton_Click);
+            this.loadMappingsButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.loadMappingsButton.Location = new System.Drawing.Point(444, 3);
+            this.loadMappingsButton.Name = "loadMappingsButton";
+            this.loadMappingsButton.Size = new System.Drawing.Size(108, 23);
+            this.loadMappingsButton.TabIndex = 3;
+            this.loadMappingsButton.Text = "Reload mappings";
+            this.loadMappingsButton.UseVisualStyleBackColor = true;
+            this.loadMappingsButton.Click += new System.EventHandler(this.LoadListfileButton_Click);
             // 
             // tabLog
             // 
@@ -636,6 +638,7 @@
             // 
             // profilesComboBox
             // 
+            this.profilesComboBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.profilesComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.profilesComboBox.FormattingEnabled = true;
             this.profilesComboBox.Location = new System.Drawing.Point(444, 3);
@@ -646,12 +649,25 @@
             // 
             // profileLabel
             // 
+            this.profileLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.profileLabel.AutoSize = true;
+            this.profileLabel.BackColor = System.Drawing.Color.Transparent;
             this.profileLabel.Location = new System.Drawing.Point(402, 6);
             this.profileLabel.Name = "profileLabel";
             this.profileLabel.Size = new System.Drawing.Size(36, 13);
             this.profileLabel.TabIndex = 37;
             this.profileLabel.Text = "Profile";
+            // 
+            // clearStoragesButton
+            // 
+            this.clearStoragesButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.clearStoragesButton.Location = new System.Drawing.Point(330, 3);
+            this.clearStoragesButton.Name = "clearStoragesButton";
+            this.clearStoragesButton.Size = new System.Drawing.Size(108, 23);
+            this.clearStoragesButton.TabIndex = 11;
+            this.clearStoragesButton.Text = "Clear storages";
+            this.clearStoragesButton.UseVisualStyleBackColor = true;
+            this.clearStoragesButton.Click += new System.EventHandler(this.ClearStoragesButton_Click);
             // 
             // M2Mod
             // 
@@ -724,7 +740,7 @@
         private System.Windows.Forms.Button fileTestButton;
         private System.Windows.Forms.TextBox testOutputTextBox;
         private System.Windows.Forms.TextBox testInputTextBox;
-        private System.Windows.Forms.Button loadListfileButton;
+        private System.Windows.Forms.Button loadMappingsButton;
         private System.Windows.Forms.TabPage tabLog;
         private System.Windows.Forms.RichTextBox logTextBox;
         private System.Windows.Forms.Button clearButton;
@@ -749,6 +765,7 @@
         private System.Windows.Forms.SaveFileDialog saveFileDialog1;
         private System.Windows.Forms.ComboBox profilesComboBox;
         private System.Windows.Forms.Label profileLabel;
+        private System.Windows.Forms.Button clearStoragesButton;
     }
 }
 
