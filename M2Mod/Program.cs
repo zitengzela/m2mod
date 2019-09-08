@@ -13,7 +13,7 @@ namespace M2Mod
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new M2Mod());
+            Application.Run(new M2ModForm());
         }
     }
 }

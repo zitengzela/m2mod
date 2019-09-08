@@ -1,6 +1,6 @@
 ﻿namespace M2Mod
 {
-    partial class M2Mod
+    partial class M2ModForm
     {
         /// <summary>
         /// Required designer variable.
@@ -39,7 +39,8 @@
             this.buttonReplaceM2Browse = new System.Windows.Forms.Button();
             this.panel1 = new System.Windows.Forms.Panel();
             this.importButtonGo = new System.Windows.Forms.Button();
-            this.importButtonPreload = new System.Windows.Forms.Button();
+            this.preloadButtonContextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.importCancelButton = new System.Windows.Forms.Button();
             this.extraworkPanel = new System.Windows.Forms.Panel();
             this.panelInputM2Import = new System.Windows.Forms.Panel();
@@ -51,6 +52,7 @@
             this.buttonInputM2IBrowse = new System.Windows.Forms.Button();
             this.textBoxInputM2I = new System.Windows.Forms.TextBox();
             this.cascTabPage = new System.Windows.Forms.TabPage();
+            this.unloadMappingsButton = new System.Windows.Forms.Button();
             this.panel2 = new System.Windows.Forms.Panel();
             this.fileTestLabel = new System.Windows.Forms.Label();
             this.fileTestButton = new System.Windows.Forms.Button();
@@ -75,17 +77,19 @@
             this.buttonOutputM2IBrowse = new System.Windows.Forms.Button();
             this.label7 = new System.Windows.Forms.Label();
             this.tabExport = new System.Windows.Forms.TabPage();
-            this.exportButtonGo = new System.Windows.Forms.Button();
+            this.goButtonContextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.customMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tabControl = new System.Windows.Forms.TabControl();
-            this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
-            this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.profilesComboBox = new System.Windows.Forms.ComboBox();
             this.profileLabel = new System.Windows.Forms.Label();
-            this.clearStoragesButton = new System.Windows.Forms.Button();
+            this.exportButtonGo = new M2Mod.SplitButton();
+            this.importButtonPreload = new M2Mod.SplitButton();
+            this.loadProfilesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.panelImputM2Exp.SuspendLayout();
             this.panelReplaceM2.SuspendLayout();
             this.panel1.SuspendLayout();
+            this.preloadButtonContextMenuStrip.SuspendLayout();
             this.panelInputM2Import.SuspendLayout();
             this.panelInputM2I.SuspendLayout();
             this.cascTabPage.SuspendLayout();
@@ -96,6 +100,7 @@
             this.tabImport.SuspendLayout();
             this.panelOutputM2I.SuspendLayout();
             this.tabExport.SuspendLayout();
+            this.goButtonContextMenuStrip.SuspendLayout();
             this.tabControl.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -211,18 +216,19 @@
             this.importButtonGo.UseVisualStyleBackColor = true;
             this.importButtonGo.Click += new System.EventHandler(this.ImportButtonGo_Click);
             // 
-            // importButtonPreload
+            // preloadButtonContextMenuStrip
             // 
-            this.importButtonPreload.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.importButtonPreload.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.importButtonPreload.Location = new System.Drawing.Point(54, 9);
-            this.importButtonPreload.Name = "importButtonPreload";
-            this.importButtonPreload.Size = new System.Drawing.Size(142, 38);
-            this.importButtonPreload.TabIndex = 28;
-            this.importButtonPreload.Text = "Preload";
-            this.toolTip1.SetToolTip(this.importButtonPreload, "Load source M2 and import M2I");
-            this.importButtonPreload.UseVisualStyleBackColor = true;
-            this.importButtonPreload.Click += new System.EventHandler(this.ImportButtonPreload_Click);
+            this.preloadButtonContextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripMenuItem1});
+            this.preloadButtonContextMenuStrip.Name = "goButtonContextMenuStrip";
+            this.preloadButtonContextMenuStrip.Size = new System.Drawing.Size(131, 26);
+            // 
+            // toolStripMenuItem1
+            // 
+            this.toolStripMenuItem1.Name = "toolStripMenuItem1";
+            this.toolStripMenuItem1.Size = new System.Drawing.Size(130, 22);
+            this.toolStripMenuItem1.Text = "Customize";
+            this.toolStripMenuItem1.Click += new System.EventHandler(this.ToolStripMenuItem1_Click);
             // 
             // importCancelButton
             // 
@@ -337,7 +343,7 @@
             // 
             // cascTabPage
             // 
-            this.cascTabPage.Controls.Add(this.clearStoragesButton);
+            this.cascTabPage.Controls.Add(this.unloadMappingsButton);
             this.cascTabPage.Controls.Add(this.panel2);
             this.cascTabPage.Controls.Add(this.loadMappingsButton);
             this.cascTabPage.Location = new System.Drawing.Point(4, 22);
@@ -347,6 +353,17 @@
             this.cascTabPage.TabIndex = 3;
             this.cascTabPage.Text = "CASC";
             this.cascTabPage.UseVisualStyleBackColor = true;
+            // 
+            // unloadMappingsButton
+            // 
+            this.unloadMappingsButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.unloadMappingsButton.Location = new System.Drawing.Point(330, 3);
+            this.unloadMappingsButton.Name = "unloadMappingsButton";
+            this.unloadMappingsButton.Size = new System.Drawing.Size(108, 23);
+            this.unloadMappingsButton.TabIndex = 11;
+            this.unloadMappingsButton.Text = "Unload mappings";
+            this.unloadMappingsButton.UseVisualStyleBackColor = true;
+            this.unloadMappingsButton.Click += new System.EventHandler(this.LoadMappingsButton_Click);
             // 
             // panel2
             // 
@@ -406,7 +423,7 @@
             this.loadMappingsButton.Name = "loadMappingsButton";
             this.loadMappingsButton.Size = new System.Drawing.Size(108, 23);
             this.loadMappingsButton.TabIndex = 3;
-            this.loadMappingsButton.Text = "Reload mappings";
+            this.loadMappingsButton.Text = "Load mappings";
             this.loadMappingsButton.UseVisualStyleBackColor = true;
             this.loadMappingsButton.Click += new System.EventHandler(this.LoadListfileButton_Click);
             // 
@@ -465,6 +482,7 @@
             // 
             // menuStrip1
             // 
+            this.menuStrip1.BackColor = System.Drawing.SystemColors.Control;
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileToolStripMenuItem,
             this.toolsToolStripMenuItem});
@@ -478,6 +496,7 @@
             // 
             this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.settingsToolStripMenuItem,
+            this.loadProfilesToolStripMenuItem,
             this.checkUpdatesToolStripMenuItem,
             this.exitToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
@@ -487,21 +506,21 @@
             // settingsToolStripMenuItem
             // 
             this.settingsToolStripMenuItem.Name = "settingsToolStripMenuItem";
-            this.settingsToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.settingsToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.settingsToolStripMenuItem.Text = "Settings";
             this.settingsToolStripMenuItem.Click += new System.EventHandler(this.SettingsToolStripMenuItem_Click);
             // 
             // checkUpdatesToolStripMenuItem
             // 
             this.checkUpdatesToolStripMenuItem.Name = "checkUpdatesToolStripMenuItem";
-            this.checkUpdatesToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.checkUpdatesToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.checkUpdatesToolStripMenuItem.Text = "Check updates";
             this.checkUpdatesToolStripMenuItem.Click += new System.EventHandler(this.CheckUpdatesToolStripMenuItem_Click);
             // 
             // exitToolStripMenuItem
             // 
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.exitToolStripMenuItem.Text = "Exit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.ExitToolStripMenuItem_Click);
             // 
@@ -595,18 +614,19 @@
             this.tabExport.Text = "Export";
             this.tabExport.UseVisualStyleBackColor = true;
             // 
-            // exportButtonGo
+            // goButtonContextMenuStrip
             // 
-            this.exportButtonGo.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.exportButtonGo.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.exportButtonGo.Location = new System.Drawing.Point(214, 188);
-            this.exportButtonGo.Name = "exportButtonGo";
-            this.exportButtonGo.Size = new System.Drawing.Size(142, 38);
-            this.exportButtonGo.TabIndex = 26;
-            this.exportButtonGo.Text = "Go!";
-            this.toolTip1.SetToolTip(this.exportButtonGo, "Click this to perform operations.");
-            this.exportButtonGo.UseVisualStyleBackColor = true;
-            this.exportButtonGo.Click += new System.EventHandler(this.ExportButtonGo_Click);
+            this.goButtonContextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.customMenuItem});
+            this.goButtonContextMenuStrip.Name = "goButtonContextMenuStrip";
+            this.goButtonContextMenuStrip.Size = new System.Drawing.Size(131, 26);
+            // 
+            // customMenuItem
+            // 
+            this.customMenuItem.Name = "customMenuItem";
+            this.customMenuItem.Size = new System.Drawing.Size(130, 22);
+            this.customMenuItem.Text = "Customize";
+            this.customMenuItem.Click += new System.EventHandler(this.CustomMenuItem_Click);
             // 
             // tabControl
             // 
@@ -623,10 +643,6 @@
             this.tabControl.SelectedIndex = 0;
             this.tabControl.Size = new System.Drawing.Size(568, 256);
             this.tabControl.TabIndex = 33;
-            // 
-            // openFileDialog1
-            // 
-            this.openFileDialog1.FileName = "openFileDialog1";
             // 
             // toolTip1
             // 
@@ -658,18 +674,42 @@
             this.profileLabel.TabIndex = 37;
             this.profileLabel.Text = "Profile";
             // 
-            // clearStoragesButton
+            // exportButtonGo
             // 
-            this.clearStoragesButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.clearStoragesButton.Location = new System.Drawing.Point(330, 3);
-            this.clearStoragesButton.Name = "clearStoragesButton";
-            this.clearStoragesButton.Size = new System.Drawing.Size(108, 23);
-            this.clearStoragesButton.TabIndex = 11;
-            this.clearStoragesButton.Text = "Clear storages";
-            this.clearStoragesButton.UseVisualStyleBackColor = true;
-            this.clearStoragesButton.Click += new System.EventHandler(this.ClearStoragesButton_Click);
+            this.exportButtonGo.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            this.exportButtonGo.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.exportButtonGo.Location = new System.Drawing.Point(214, 188);
+            this.exportButtonGo.Menu = this.goButtonContextMenuStrip;
+            this.exportButtonGo.Name = "exportButtonGo";
+            this.exportButtonGo.Size = new System.Drawing.Size(142, 38);
+            this.exportButtonGo.TabIndex = 26;
+            this.exportButtonGo.Text = "Go!";
+            this.toolTip1.SetToolTip(this.exportButtonGo, "Click this to perform operations.");
+            this.exportButtonGo.UseVisualStyleBackColor = true;
+            this.exportButtonGo.Click += new System.EventHandler(this.ExportButtonGo_Click);
             // 
-            // M2Mod
+            // importButtonPreload
+            // 
+            this.importButtonPreload.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            this.importButtonPreload.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.importButtonPreload.Location = new System.Drawing.Point(54, 9);
+            this.importButtonPreload.Menu = this.preloadButtonContextMenuStrip;
+            this.importButtonPreload.Name = "importButtonPreload";
+            this.importButtonPreload.Size = new System.Drawing.Size(142, 38);
+            this.importButtonPreload.TabIndex = 28;
+            this.importButtonPreload.Text = "Preload";
+            this.toolTip1.SetToolTip(this.importButtonPreload, "Load source M2 and import M2I");
+            this.importButtonPreload.UseVisualStyleBackColor = true;
+            this.importButtonPreload.Click += new System.EventHandler(this.ImportButtonPreload_Click);
+            // 
+            // loadProfilesToolStripMenuItem
+            // 
+            this.loadProfilesToolStripMenuItem.Name = "loadProfilesToolStripMenuItem";
+            this.loadProfilesToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.loadProfilesToolStripMenuItem.Text = "Load profiles";
+            this.loadProfilesToolStripMenuItem.Click += new System.EventHandler(this.LoadProfilesToolStripMenuItem_Click);
+            // 
+            // M2ModForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -679,7 +719,7 @@
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.menuStrip1);
             this.Controls.Add(this.tabControl);
-            this.Name = "M2Mod";
+            this.Name = "M2ModForm";
             this.Text = "M2Mod";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.M2Mod_FormClosing);
             this.panelImputM2Exp.ResumeLayout(false);
@@ -687,6 +727,7 @@
             this.panelReplaceM2.ResumeLayout(false);
             this.panelReplaceM2.PerformLayout();
             this.panel1.ResumeLayout(false);
+            this.preloadButtonContextMenuStrip.ResumeLayout(false);
             this.panelInputM2Import.ResumeLayout(false);
             this.panelInputM2Import.PerformLayout();
             this.panelInputM2I.ResumeLayout(false);
@@ -704,6 +745,7 @@
             this.panelOutputM2I.ResumeLayout(false);
             this.panelOutputM2I.PerformLayout();
             this.tabExport.ResumeLayout(false);
+            this.goButtonContextMenuStrip.ResumeLayout(false);
             this.tabControl.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -723,7 +765,7 @@
         private System.Windows.Forms.Button buttonReplaceM2Browse;
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.Button importButtonGo;
-        private System.Windows.Forms.Button importButtonPreload;
+        private SplitButton importButtonPreload;
         private System.Windows.Forms.Button importCancelButton;
         private System.Windows.Forms.Panel extraworkPanel;
         private System.Windows.Forms.Panel panelInputM2Import;
@@ -759,13 +801,16 @@
         private System.Windows.Forms.Button buttonOutputM2IBrowse;
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.TabPage tabExport;
-        private System.Windows.Forms.Button exportButtonGo;
+        private SplitButton exportButtonGo;
         private System.Windows.Forms.TabControl tabControl;
-        private System.Windows.Forms.OpenFileDialog openFileDialog1;
-        private System.Windows.Forms.SaveFileDialog saveFileDialog1;
         private System.Windows.Forms.ComboBox profilesComboBox;
         private System.Windows.Forms.Label profileLabel;
-        private System.Windows.Forms.Button clearStoragesButton;
+        private System.Windows.Forms.Button unloadMappingsButton;
+        private System.Windows.Forms.ContextMenuStrip goButtonContextMenuStrip;
+        private System.Windows.Forms.ToolStripMenuItem customMenuItem;
+        private System.Windows.Forms.ContextMenuStrip preloadButtonContextMenuStrip;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem1;
+        private System.Windows.Forms.ToolStripMenuItem loadProfilesToolStripMenuItem;
     }
 }
 

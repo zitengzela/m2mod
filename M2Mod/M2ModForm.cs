@@ -14,15 +14,16 @@ using Newtonsoft.Json.Linq;
 
 namespace M2Mod
 {
-    public partial class M2Mod : Form
+    public partial class M2ModForm : Form
     {
-        private const string _m2Filter = "M2 Files|*.m2|All Files|*.*";
-        private const string _m2IFilter = "M2I Files|*.m2i|All Files|*.*";
+        private const string M2Filter = "M2 Files|*.m2|All Files|*.*";
+        private const string M2IFilter = "M2I Files|*.m2i|All Files|*.*";
+        private const string JsonFilter = "Profiles Files|*.json|All Files|*.*";
 
         private bool _ignoreErrors;
-        private IntPtr preloadM2 = IntPtr.Zero;
+        private IntPtr _preloadM2 = IntPtr.Zero;
 
-        public M2Mod()
+        public M2ModForm()
         {
             InitializeComponent();
 
@@ -127,58 +128,66 @@ namespace M2Mod
 
         private void ButtonInputM2ExpBrowse_Click(object sender, EventArgs e)
         {
-            openFileDialog1.Filter = _m2Filter;
-
-            try
+            using (var dialog = new OpenFileDialog())
             {
-                openFileDialog1.FileName = textBoxInputM2Exp.Text;
-                openFileDialog1.InitialDirectory = Path.GetDirectoryName(textBoxInputM2Exp.Text);
-            }
-            catch
-            {
-                // ignored
-            }
+                dialog.Filter = M2Filter;
 
-            if (openFileDialog1.ShowDialog() == DialogResult.OK)
-            {
-                textBoxInputM2Exp.Text = textBoxInputM2Imp.Text = openFileDialog1.FileName;
+                try
+                {
+                    dialog.FileName = textBoxInputM2Exp.Text;
+                    dialog.InitialDirectory = Path.GetDirectoryName(textBoxInputM2Exp.Text);
+                }
+                catch
+                {
+                    // ignored
+                }
 
-                textBoxOutputM2I.Text = textBoxInputM2I.Text = Path.ChangeExtension(openFileDialog1.FileName, "m2i");
+                if (dialog.ShowDialog() == DialogResult.OK)
+                {
+                    textBoxInputM2Exp.Text = textBoxInputM2Imp.Text = dialog.FileName;
+                    textBoxOutputM2I.Text = textBoxInputM2I.Text = Path.ChangeExtension(dialog.FileName, "m2i");
+                }
             }
         }
 
         private void ButtonOutputM2IBrowse_Click(object sender, EventArgs e)
         {
-            saveFileDialog1.Filter = _m2IFilter;
-            try
+            using (var dialog = new SaveFileDialog())
             {
-                saveFileDialog1.FileName = textBoxOutputM2I.Text;
-                saveFileDialog1.InitialDirectory = Path.GetDirectoryName(textBoxOutputM2I.Text);
-            }
-            catch
-            {
-                // ignored
-            }
+                dialog.Filter = M2IFilter;
+                try
+                {
+                    dialog.FileName = textBoxOutputM2I.Text;
+                    dialog.InitialDirectory = Path.GetDirectoryName(textBoxOutputM2I.Text);
+                }
+                catch
+                {
+                    // ignored
+                }
 
-            if (saveFileDialog1.ShowDialog() == DialogResult.OK)
-                textBoxOutputM2I.Text = saveFileDialog1.FileName;
+                if (dialog.ShowDialog() == DialogResult.OK)
+                    textBoxOutputM2I.Text = dialog.FileName;
+            }
         }
 
         private void ButtonInputM2IBrowse_Click(object sender, EventArgs e)
         {
-            openFileDialog1.Filter = _m2IFilter;
-            try
+            using (var dialog = new OpenFileDialog())
             {
-                openFileDialog1.FileName = textBoxInputM2I.Text;
-                openFileDialog1.InitialDirectory = Path.GetDirectoryName(textBoxInputM2I.Text);
-            }
-            catch
-            {
-                // ignored
-            }
+                dialog.Filter = M2IFilter;
+                try
+                {
+                    dialog.FileName = textBoxInputM2I.Text;
+                    dialog.InitialDirectory = Path.GetDirectoryName(textBoxInputM2I.Text);
+                }
+                catch
+                {
+                    // ignored
+                }
 
-            if (openFileDialog1.ShowDialog() == DialogResult.OK)
-                textBoxInputM2I.Text = openFileDialog1.FileName;
+                if (dialog.ShowDialog() == DialogResult.OK)
+                    textBoxInputM2I.Text = dialog.FileName;
+            }
         }
 
         private void ImportButtonPreload_Click(object sender, EventArgs e)
@@ -188,10 +197,10 @@ namespace M2Mod
             importButtonPreload.Refresh();
             SetStatus("Preloading...");
 
-            if (preloadM2 != IntPtr.Zero)
+            if (_preloadM2 != IntPtr.Zero)
             {
-                Imports.M2_Free(preloadM2);
-                preloadM2 = IntPtr.Zero;
+                Imports.M2_Free(_preloadM2);
+                _preloadM2 = IntPtr.Zero;
             }
 
             // Check fields.
@@ -210,9 +219,9 @@ namespace M2Mod
                 return;
             }
 
-            preloadM2 = Imports.M2_Create(ref ProfileManager.CurrentProfile.Settings);
+            _preloadM2 = Imports.M2_Create(ref ProfileManager.CurrentProfile.Settings);
 
-            var Error = Imports.M2_Load(preloadM2, textBoxInputM2Imp.Text);
+            var Error = Imports.M2_Load(_preloadM2, textBoxInputM2Imp.Text);
             if (Error != M2LibError.OK)
             {
                 SetStatus(Imports.GetErrorText(Error));
@@ -222,7 +231,7 @@ namespace M2Mod
 
             if (checkBoxReplaceM2.Checked)
             {
-                Error = Imports.M2_SetReplaceM2(preloadM2, textBoxReplaceM2.Text);
+                Error = Imports.M2_SetReplaceM2(_preloadM2, textBoxReplaceM2.Text);
                 if (Error != M2LibError.OK)
                 {
                     SetStatus(Imports.GetErrorText(Error));
@@ -232,7 +241,7 @@ namespace M2Mod
             }
 
             // import M2I
-            Error = Imports.M2_ImportM2Intermediate(preloadM2, textBoxInputM2I.Text);
+            Error = Imports.M2_ImportM2Intermediate(_preloadM2, textBoxInputM2I.Text);
             if (Error != M2LibError.OK)
             {
                 SetStatus(Imports.GetErrorText(Error));
@@ -273,15 +282,20 @@ namespace M2Mod
                 checkBoxReplaceM2.Enabled = true;
                 panelReplaceM2.Enabled = checkBoxReplaceM2.Checked;
 
-                if (preloadM2 != IntPtr.Zero)
+                if (_preloadM2 != IntPtr.Zero)
                 {
-                    Imports.M2_Free(preloadM2);
-                    preloadM2 = IntPtr.Zero;
+                    Imports.M2_Free(_preloadM2);
+                    _preloadM2 = IntPtr.Zero;
                 }
             }
         }
 
         private void SettingsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            OpenSettings();
+        }
+
+        private void OpenSettings()
         {
             using (var form = new SettingsForm())
                 form.ShowDialog();
@@ -375,19 +389,22 @@ namespace M2Mod
 
         private void ButtonReplaceM2Browse_Click(object sender, EventArgs e)
         {
-            openFileDialog1.Filter = _m2Filter;
-            try
+            using (var dialog = new OpenFileDialog())
             {
-                openFileDialog1.FileName = textBoxReplaceM2.Text;
-                openFileDialog1.InitialDirectory = Path.GetDirectoryName(textBoxReplaceM2.Text);
-            }
-            catch
-            {
-                // ignored
-            }
+                dialog.Filter = M2Filter;
+                try
+                {
+                    dialog.FileName = textBoxReplaceM2.Text;
+                    dialog.InitialDirectory = Path.GetDirectoryName(textBoxReplaceM2.Text);
+                }
+                catch
+                {
+                    // ignored
+                }
 
-            if (openFileDialog1.ShowDialog() == DialogResult.OK)
-                textBoxReplaceM2.Text = openFileDialog1.FileName;
+                if (dialog.ShowDialog() == DialogResult.OK)
+                    textBoxReplaceM2.Text = dialog.FileName;
+            }
         }
 
         private void LoadListfileButton_Click(object sender, EventArgs e)
@@ -567,7 +584,7 @@ namespace M2Mod
             importButtonPreload.Refresh();
             SetStatus("Importing...");
 
-            if (preloadM2 == IntPtr.Zero)
+            if (_preloadM2 == IntPtr.Zero)
             {
                 SetStatus("Error: Model not preloaded");
                 PreloadTransition(false);
@@ -602,7 +619,7 @@ namespace M2Mod
                 Directory.CreateDirectory(directory);
 
             // export M2
-            var error = Imports.M2_Save(preloadM2, ExportFileName);
+            var error = Imports.M2_Save(_preloadM2, ExportFileName);
             if (error != M2LibError.OK)
             {
                 SetStatus(Imports.GetErrorText(error));
@@ -623,9 +640,44 @@ namespace M2Mod
             InitializeFormData();
         }
 
-        private void ClearStoragesButton_Click(object sender, EventArgs e)
+        private void LoadMappingsButton_Click(object sender, EventArgs e)
         {
             Imports.FileStorage_Clear();
+        }
+
+        private void CustomMenuItem_Click(object sender, EventArgs e)
+        {
+            OpenSettings();
+            ExportButtonGo_Click(this, e);
+        }
+
+        private void ToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            OpenSettings();
+            ImportButtonPreload_Click(this, e);
+        }
+
+        private void LoadProfilesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            using (var dialog = new OpenFileDialog())
+            {
+                dialog.Filter = JsonFilter;
+                try
+                {
+                    dialog.FileName = "profiles.json";
+                    dialog.InitialDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                }
+                catch
+                {
+                    // ignored
+                }
+
+                if (dialog.ShowDialog() == DialogResult.OK && ProfileManager.Load(dialog.FileName, false))
+                {
+                    InitializeProfiles();
+                    InitializeFormData();
+                }
+            }
         }
     }
 }

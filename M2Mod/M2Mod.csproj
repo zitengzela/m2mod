@@ -93,11 +93,11 @@
     <Compile Include="Interop\Structures\M2LibError.cs" />
     <Compile Include="Interop\Structures\Expansion.cs" />
     <Compile Include="Interop\Structures\Settings.cs" />
-    <Compile Include="M2Mod.cs">
+    <Compile Include="M2ModForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="M2Mod.Designer.cs">
-      <DependentUpon>M2Mod.cs</DependentUpon>
+    <Compile Include="M2ModForm.Designer.cs">
+      <DependentUpon>M2ModForm.cs</DependentUpon>
     </Compile>
     <Compile Include="ManageProfilesForm.cs">
       <SubType>Form</SubType>
@@ -116,6 +116,12 @@
       <DependentUpon>SettingsForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Config\SettingsProfile.cs" />
+    <Compile Include="SplitButton.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="SplitButton.Designer.cs">
+      <DependentUpon>SplitButton.cs</DependentUpon>
+    </Compile>
     <Compile Include="Version.cs" />
     <EmbeddedResource Include="CompareBonesForm.resx">
       <DependentUpon>CompareBonesForm.cs</DependentUpon>
@@ -126,8 +132,8 @@
     <EmbeddedResource Include="ErrorForm.resx">
       <DependentUpon>ErrorForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="M2Mod.resx">
-      <DependentUpon>M2Mod.cs</DependentUpon>
+    <EmbeddedResource Include="M2ModForm.resx">
+      <DependentUpon>M2ModForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ManageProfilesForm.resx">
       <DependentUpon>ManageProfilesForm.cs</DependentUpon>
@@ -144,6 +150,9 @@
     </Compile>
     <EmbeddedResource Include="SettingsForm.resx">
       <DependentUpon>SettingsForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SplitButton.resx">
+      <DependentUpon>SplitButton.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">

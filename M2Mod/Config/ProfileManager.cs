@@ -24,7 +24,7 @@ namespace M2Mod.Config
 
         public static void RemoveProfile(Guid Id) => Profiles.RemoveAll(_ => _.Id == Id);
 
-        public static void Load(string file, bool createDefault)
+        public static bool Load(string file, bool createDefault)
         {
             ConfigFile config = new ConfigFile();
             try
@@ -47,9 +47,13 @@ namespace M2Mod.Config
             {
                 Profiles.Clear();
                 Profiles.AddRange(config.Profiles);
+
+                CurrentProfile = Profiles.FirstOrDefault(_ => _.Id == config.ActiveProfile) ?? Profiles.First();
+
+                return true;
             }
 
-            CurrentProfile = Profiles.FirstOrDefault(_ => _.Id == config.ActiveProfile) ?? Profiles.First();
+            return false;
         }
 
         public static void Save()
