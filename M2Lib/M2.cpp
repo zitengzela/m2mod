@@ -8,9 +8,9 @@
 #include "Logger.h"
 #include <sstream>
 #include <set>
-#include <iostream>
 #include "StringHelpers.h"
 #include "StringHash.h"
+#include <filesystem>
 
 using namespace M2Lib::M2Element;
 using namespace M2Lib::M2Chunk;
@@ -254,14 +254,14 @@ M2Lib::EError M2Lib::M2::Load(const wchar_t* FileName)
 			if (!GetFileSkin(FileNameSkin, _FileName, SKIN_COUNT - LOD_SKIN_MAX_COUNT + i, false))
 				continue;
 
-			sLogger.LogInfo("Loading skin '%s'...", StringHelpers::WStringToString(FileSystemW::GetBaseName(FileNameSkin)).c_str());
+			sLogger.LogInfo("Loading skin '%s'...", StringHelpers::WStringToString(FileNameSkin).c_str());
 			M2Skin LoDSkin(this);
 			if (EError Error = LoDSkin.Load(FileNameSkin.c_str()))
 			{
 				if (Error == EError_FailedToLoadSKIN_CouldNotOpenFile)
 					continue;
 
-				sLogger.LogError("Error: Failed to load #%u lod skin %s", i, StringHelpers::WStringToString(FileSystemW::GetBaseName(FileNameSkin)).c_str());
+				sLogger.LogError("Error: Failed to load #%u lod skin %s", i, StringHelpers::WStringToString(FileNameSkin).c_str());
 				return Error;
 			}
 			else
@@ -325,7 +325,7 @@ M2Lib::EError M2Lib::M2::LoadSkeleton()
 	if (!GetFileSkeleton(FileNameSkeleton, _FileName, false))
 		return EError_OK;
 
-	if (!FileSystemW::IsFile(FileNameSkeleton))
+	if (!std::filesystem::exists(FileNameSkeleton))
 	{
 		sLogger.LogError("Error: Skeleton file %s not found!", StringHelpers::WStringToString(FileNameSkeleton).c_str());
 		return EError_FailedToLoadSkeleton_CouldNotOpenFile;
@@ -349,24 +349,22 @@ M2Lib::EError M2Lib::M2::LoadSkeleton()
 	{
 		if (auto info = storageRef->GetFileInfoByFileDataId(chunk->Data.ParentSkeletonFileId))
 		{
-			std::wstring ParentSkeletonFileName;
+			std::filesystem::path ParentSkeletonPath;
 			if (strlen(Settings.WorkingDirectory))
-				ParentSkeletonFileName = StringHelpers::StringToWString(FileSystemA::Combine(Settings.WorkingDirectory, info->Path.c_str(), NULL));
+				ParentSkeletonPath = std::filesystem::path(Settings.WorkingDirectory) / info->Path;
 			else
-			{
-				ParentSkeletonFileName = StringHelpers::StringToWString(FileSystemA::GetBaseName(info->Path.c_str()));
-				ParentSkeletonFileName = FileSystemW::GetParentDirectory(_FileName) + L"\\" + ParentSkeletonFileName;
-			}
+				ParentSkeletonPath = std::filesystem::path(_FileName).parent_path() / std::filesystem::path(info->Path).filename();
+
 			auto parentSkeleton = new M2Lib::Skeleton();
-			auto Error = parentSkeleton->Load(ParentSkeletonFileName.c_str());
+			auto Error = parentSkeleton->Load(ParentSkeletonPath.c_str());
 			if (Error == EError_OK)
 			{
-				sLogger.LogInfo("Parent skeleton file [%u] %s loaded", chunk->Data.ParentSkeletonFileId, StringHelpers::WStringToString(ParentSkeletonFileName).c_str());
+				sLogger.LogInfo("Parent skeleton file [%u] %s loaded", chunk->Data.ParentSkeletonFileId, ParentSkeletonPath.string().c_str());
 				ParentSkeleton = parentSkeleton;
 			}
 			else
 			{
-				sLogger.LogError("Error: Failed to load parent skeleton file [%u] %s", chunk->Data.ParentSkeletonFileId, StringHelpers::WStringToString(ParentSkeletonFileName).c_str());
+				sLogger.LogError("Error: Failed to load parent skeleton file [%u] %s", chunk->Data.ParentSkeletonFileId, ParentSkeletonPath.string().c_str());
 				delete parentSkeleton;
 				return EError_FailedToLoadSkeleton_CouldNotOpenFile;
 			}
@@ -650,9 +648,13 @@ M2Lib::EError M2Lib::M2::Save(const wchar_t* FileName)
 	if (!FileName)
 		return EError_FailedToSaveM2_NoFileSpecified;
 
-	auto directory = FileSystemW::GetParentDirectory(FileName);
-	if (!FileSystemW::IsDirectory(directory) && !FileSystemW::CreateDirectory(directory))
+	auto directory = std::filesystem::path(FileName).parent_path();
+	if (!std::filesystem::is_directory(directory) && !std::filesystem::create_directories(directory))
+	{
+		sLogger.LogError("Failed to write to directory '%s'", directory.string().c_str());
+
 		return EError_FailedToSaveM2;
+	}
 
 	if (replaceM2)
 		this->replaceM2 = replaceM2;
@@ -1132,7 +1134,7 @@ void M2Lib::M2::PrintInfo()
 
 	uint32_t Count = 0;
 
-	std::wstring FileOut = FileSystemW::GetParentDirectory(_FileName) + L"\\" + FileSystemW::GetFileName(_FileName) + L".txt";
+	std::wstring FileOut = std::filesystem::path(_FileName).replace_extension("txt");
 
 	std::fstream FileStream;
 	FileStream.open(FileOut.c_str(), std::ios::out | std::ios::trunc);
@@ -1555,15 +1557,12 @@ bool M2Lib::M2::GetFileSkin(std::wstring& SkinFileNameResultBuffer, std::wstring
 			//sLogger.LogInfo("Skin listfile entry: %s", path.c_str());
 
 			if (!Save && strlen(Settings.WorkingDirectory))
-				SkinFileNameResultBuffer = StringHelpers::StringToWString(FileSystemA::Combine(Settings.WorkingDirectory, info->Path.c_str(), NULL));
+				SkinFileNameResultBuffer = std::filesystem::path(Settings.WorkingDirectory) / info->Path;
 			else if (Save && strlen(Settings.OutputDirectory))
-				SkinFileNameResultBuffer = StringHelpers::StringToWString(FileSystemA::Combine(Settings.OutputDirectory, info->Path.c_str(), NULL));
+				SkinFileNameResultBuffer = std::filesystem::path(Settings.OutputDirectory) / info->Path;
 			else
-			{
-				auto SkinFileName = StringHelpers::StringToWString(FileSystemA::GetBaseName(info->Path.c_str()));
-				SkinFileNameResultBuffer = FileSystemW::Combine(FileSystemW::GetParentDirectory(M2FileName).c_str(), SkinFileName.c_str(), NULL);
-			}
-			
+				SkinFileNameResultBuffer = std::filesystem::path(M2FileName).parent_path() / std::filesystem::path(info->Path).filename();
+
 			return true;
 		}
 
@@ -1578,14 +1577,22 @@ bool M2Lib::M2::GetFileSkin(std::wstring& SkinFileNameResultBuffer, std::wstring
 		case 1:
 		case 2:
 		case 3:
-			std::swprintf((wchar_t*)SkinFileNameResultBuffer.data(), SkinFileNameResultBuffer.size(), L"%s\\%s0%u.skin",
-				FileSystemW::GetParentDirectory(M2FileName).c_str(), FileSystemW::GetFileName(M2FileName).c_str(), SkinIndex);
+			std::swprintf((wchar_t*)SkinFileNameResultBuffer.data(),
+				SkinFileNameResultBuffer.size(),
+				L"%s\\%s0%u.skin",
+				std::filesystem::path(M2FileName).parent_path().c_str(),
+				std::filesystem::path(M2FileName).stem().c_str(),
+				SkinIndex);
 			break;
 		case 4:
 		case 5:
 		case 6:
-			std::swprintf((wchar_t*)SkinFileNameResultBuffer.data(), SkinFileNameResultBuffer.size(), L"%s\\%s_LOD0%u.skin",
-				FileSystemW::GetParentDirectory(M2FileName).c_str(), FileSystemW::GetFileName(M2FileName).c_str(), SkinIndex - 3);
+			std::swprintf((wchar_t*)SkinFileNameResultBuffer.data(),
+				SkinFileNameResultBuffer.size(),
+				L"%s\\%s_LOD0%u.skin",
+				std::filesystem::path(M2FileName).parent_path().c_str(),
+				std::filesystem::path(M2FileName).stem().c_str(),
+				SkinIndex - 3);
 			break;
 		default:
 			return false;
@@ -1603,22 +1610,24 @@ bool M2Lib::M2::GetFileSkeleton(std::wstring& SkeletonFileNameResultBuffer, std:
 	if (auto info = storageRef->GetFileInfoByFileDataId(chunk->SkeletonFileDataId))
 	{
 		if (!Save && strlen(Settings.WorkingDirectory))
-			SkeletonFileNameResultBuffer = StringHelpers::StringToWString(FileSystemA::Combine(Settings.WorkingDirectory, info->Path.c_str(), NULL));
+			SkeletonFileNameResultBuffer = std::filesystem::path(Settings.WorkingDirectory) / info->Path;
 		else if (Save && strlen(Settings.OutputDirectory))
-			SkeletonFileNameResultBuffer = StringHelpers::StringToWString(FileSystemA::Combine(Settings.OutputDirectory, info->Path.c_str(), NULL));
+			SkeletonFileNameResultBuffer = std::filesystem::path(Settings.OutputDirectory) / info->Path;
 		else
 		{
 			sLogger.LogInfo("Skeleton listfile entry: %s", info->Path.c_str());
-			auto SkeletonFileName = StringHelpers::StringToWString(FileSystemA::GetBaseName(info->Path.c_str()));
-			SkeletonFileNameResultBuffer = FileSystemW::GetParentDirectory(M2FileName) + L"\\" + SkeletonFileName;
+			SkeletonFileNameResultBuffer = std::filesystem::path(M2FileName).parent_path() / std::filesystem::path(info->Path).filename();
 		}
 		return true;
 	}
 	
 	SkeletonFileNameResultBuffer.resize(1024);
 	sLogger.LogWarning("Warning: skeleton FileDataId [%u] not found in listfile! Listfile is not up to date! Trying default skeleton name", chunk->SkeletonFileDataId);
-	std::swprintf((wchar_t*)SkeletonFileNameResultBuffer.data(), SkeletonFileNameResultBuffer.size(), L"%s\\%s.skel",
-		FileSystemW::GetParentDirectory(M2FileName).c_str(), FileSystemW::GetFileName(M2FileName).c_str());
+	std::swprintf((wchar_t*)SkeletonFileNameResultBuffer.data(),
+		SkeletonFileNameResultBuffer.size(),
+		L"%s\\%s.skel",
+		std::filesystem::path(M2FileName).parent_path().c_str(),
+		std::filesystem::path(M2FileName).stem().c_str());
 
 	return true;
 }
@@ -1642,14 +1651,11 @@ bool M2Lib::M2::GetFileParentSkeleton(std::wstring& SkeletonFileNameResultBuffer
 	sLogger.LogInfo("Parent skeleton listfile entry: %s", info->Path.c_str());
 
 	if (!Save && strlen(Settings.WorkingDirectory))
-		SkeletonFileNameResultBuffer = StringHelpers::StringToWString(FileSystemA::Combine(Settings.WorkingDirectory, info->Path.c_str(), NULL));
+		SkeletonFileNameResultBuffer = std::filesystem::path(Settings.WorkingDirectory) / info->Path;
 	else if (Save && strlen(Settings.OutputDirectory))
-		SkeletonFileNameResultBuffer = StringHelpers::StringToWString(FileSystemA::Combine(Settings.OutputDirectory, info->Path.c_str(), NULL));
+		SkeletonFileNameResultBuffer = std::filesystem::path(Settings.OutputDirectory) / info->Path;
 	else
-	{
-		auto SkeletonFileName = StringHelpers::StringToWString(FileSystemA::GetBaseName(info->Path.c_str()));
-		SkeletonFileNameResultBuffer = FileSystemW::Combine(FileSystemW::GetParentDirectory(M2FileName).c_str(), SkeletonFileName.c_str(), NULL);
-	}
+		SkeletonFileNameResultBuffer = std::filesystem::path(M2FileName).parent_path() / std::filesystem::path(info->Path).filename();
 
 	return true;
 }

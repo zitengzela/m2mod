@@ -9,7 +9,7 @@
 #include <filesystem>
 #include <locale>
 
-const std::wstring M2Lib::FileStorage::DefaultMappingsPath = FileSystemW::GetCurrentPath() + L"\\" + L"mappings";
+const std::wstring M2Lib::FileStorage::DefaultMappingsPath = std::filesystem::current_path() / L"mappings";
 
 M2Lib::FileInfo::FileInfo(uint32_t FileDataId, const char* Path)
 {

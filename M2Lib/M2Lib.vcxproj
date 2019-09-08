@@ -137,8 +137,8 @@
     <ClInclude Include="M2Types.h" />
     <ClInclude Include="Settings.h" />
     <ClInclude Include="SkeletonChunk.h" />
-    <ClInclude Include="StringHelpers.h" />
     <ClInclude Include="StringHash.h" />
+    <ClInclude Include="StringHelpers.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BoneComparator.cpp" />
@@ -161,8 +161,8 @@
     <ClCompile Include="Shaders.cpp" />
     <ClCompile Include="Skeleton.cpp" />
     <ClCompile Include="SkeletonChunk.cpp" />
-    <ClCompile Include="StringHelpers.cpp" />
     <ClCompile Include="StringHash.cpp" />
+    <ClCompile Include="StringHelpers.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

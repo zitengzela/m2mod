@@ -3,6 +3,7 @@
 #include "Logger.h"
 #include "FileSystem.h"
 #include "StringHelpers.h"
+#include <filesystem>
 
 using namespace M2Lib;
 using namespace M2Lib::SkeletonChunk;
@@ -70,9 +71,13 @@ EError Skeleton::Save(const wchar_t* FileName)
 	if (!FileName)
 		return EError_FailedToSaveM2_NoFileSpecified;
 
-	auto directory = FileSystemW::GetParentDirectory(FileName);
-	if (!FileSystemW::IsDirectory(directory) && !FileSystemW::CreateDirectory(directory))
+	auto directory = std::filesystem::path(FileName).parent_path();
+	if (!std::filesystem::is_directory(directory) && !std::filesystem::create_directories(directory))
+	{
+		sLogger.LogError("Failed to write to directory '%s'", directory.string().c_str());
+
 		return EError_FailedToSaveM2;
+	}
 
 	// open file stream
 	std::fstream FileStream;

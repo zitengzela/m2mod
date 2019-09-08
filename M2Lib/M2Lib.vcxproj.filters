@@ -84,9 +84,6 @@
     <ClInclude Include="FileStorage.h">
       <Filter>Storage</Filter>
     </ClInclude>
-    <ClInclude Include="StringHelpers.h">
-      <Filter>Helpers\String</Filter>
-    </ClInclude>
     <ClInclude Include="BoneComparator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -94,6 +91,9 @@
       <Filter>Helpers\String</Filter>
     </ClInclude>
     <ClInclude Include="StringHash.h">
+      <Filter>Helpers\String</Filter>
+    </ClInclude>
+    <ClInclude Include="StringHelpers.h">
       <Filter>Helpers\String</Filter>
     </ClInclude>
   </ItemGroup>

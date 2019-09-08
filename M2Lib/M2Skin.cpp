@@ -11,6 +11,7 @@
 #include <assert.h>
 #include <unordered_map>
 #include "StringHelpers.h"
+#include <filesystem>
 
 using namespace M2Lib::M2SkinElement;
 
@@ -62,9 +63,13 @@ M2Lib::EError M2Lib::M2Skin::Load(wchar_t const* FileName)
 
 M2Lib::EError M2Lib::M2Skin::Save(const wchar_t* FileName)
 {
-	auto directory = FileSystemW::GetParentDirectory(FileName);
-	if (!FileSystemW::IsDirectory(directory) && !FileSystemW::CreateDirectory(directory))
+	auto directory = std::filesystem::path(FileName).parent_path();
+	if (!std::filesystem::is_directory(directory) && !std::filesystem::create_directories(directory))
+	{
+		sLogger.LogError("Failed to write to directory '%s'", directory.string().c_str());
+
 		return EError_FailedToSaveM2;
+	}
 
 	sLogger.LogInfo("Saving skin to %s", StringHelpers::WStringToString(FileName).c_str());
 
@@ -414,7 +419,7 @@ void M2Lib::M2Skin::GetSubMeshFlags(uint32_t SubMeshIndex, std::vector< CElement
 
 bool M2Lib::M2Skin::PrintInfo()
 {
-	std::wstring FileOut = FileSystemW::GetParentDirectory(_FileName) + L"\\" + FileSystemW::GetFileName(_FileName) + L".txt";
+	std::wstring FileOut = std::filesystem::path(_FileName).replace_extension("txt");
 
 	std::fstream FileStream;
 	FileStream.open(FileOut.c_str(), std::ios::out | std::ios::trunc);
