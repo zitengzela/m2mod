@@ -2,12 +2,17 @@
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using M2Mod.Config;
 using M2Mod.Interop.Structures;
 
 namespace M2Mod
 {
     public partial class SettingsForm : Form
     {
+        private SettingsProfile _lastProfile;
+
+        private SettingsProfile SelectedProfile => profilesComboBox.SelectedItem as SettingsProfile;
+
         public SettingsForm()
         {
             InitializeComponent();
@@ -17,9 +22,21 @@ namespace M2Mod
             forceExpansionComboBox.Items.AddRange(Enum.GetValues(typeof(Expansion)).Cast<object>().ToArray());
             forceExpansionComboBox.SelectedItem = forceExpansionComboBox.Items.Cast<Expansion>()
                 .FirstOrDefault(_ => _ == Expansion.None);
+
+            SetupProfiles();
         }
 
-        public void Setup(Settings settings)
+        private void SetupProfiles()
+        {
+            profilesComboBox.Items.Clear();
+            profilesComboBox.Items.AddRange(ProfileManager.GetProfiles().Cast<object>().ToArray());
+            profilesComboBox.SelectedItem = _lastProfile != null
+                ? profilesComboBox.Items.Cast<SettingsProfile>()
+                      .FirstOrDefault(_ => _.Id == _lastProfile.Id) ?? profilesComboBox.Items[0]
+                : profilesComboBox.Items[0];
+        }
+
+        private void SetupControls(Settings settings)
         {
             forceExpansionComboBox.SelectedItem = forceExpansionComboBox.Items.Cast<Expansion>()
                 .FirstOrDefault(_ => _ == settings.ForceLoadExpansion);
@@ -36,7 +53,7 @@ namespace M2Mod
             testFixAnimationsCheckBox.Checked = settings.FixAnimationsTest;
         }
 
-        public Settings ProduceSettings()
+        private Settings ProduceSettings()
         {
             return new Settings()
             {
@@ -74,7 +91,7 @@ namespace M2Mod
                 }
             }
 
-            DialogResult = DialogResult.OK;
+            SelectedProfile.Settings = ProduceSettings();
         }
 
         private void WorkingDirectoryBrowseButton_Click(object sender, EventArgs e)
@@ -101,9 +118,60 @@ namespace M2Mod
                 outputDirectoryTextBox.Text = directoryBrowserDialog.SelectedPath;
         }
 
-        private void CancelButton_Click(object sender, EventArgs e)
+        private void CloseButton_Click(object sender, EventArgs e)
         {
+            if (SettingsChanged(ProduceSettings(), SelectedProfile.Settings))
+            {
+                if (DialogResult.OK != MessageBox.Show("Your unsaved changes will be lost. Are you sure?", "Warning",
+                        MessageBoxButtons.OKCancel, MessageBoxIcon.Warning))
+                    return;
+            }
+
             DialogResult = DialogResult.Cancel;
+        }
+
+        private void ProfilesComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (_lastProfile == profilesComboBox.SelectedItem)
+                return;
+
+            if (_lastProfile != null && SettingsChanged(ProduceSettings(), _lastProfile.Settings))
+            {
+                var res = MessageBox.Show("Your unsaved changes will be lost. Are you sure?", "Warning",
+                    MessageBoxButtons.OKCancel, MessageBoxIcon.Warning);
+                if (res == DialogResult.Cancel)
+                {
+                    profilesComboBox.SelectedItem = _lastProfile;
+                    return;
+                }
+            }
+
+            this.SetupControls(ProfileManager.CurrentProfile.Settings);
+
+            this._lastProfile = SelectedProfile;
+        }
+
+        private static bool SettingsChanged(Settings Old, Settings New)
+        {
+            return
+                Old.WorkingDirectory != New.WorkingDirectory ||
+                Old.OutputDirectory != New.OutputDirectory ||
+                Old.MergeBones != New.MergeBones ||
+                Old.MergeAttachments != New.MergeAttachments ||
+                Old.MergeCameras != New.MergeCameras ||
+                Old.FixSeams != New.FixSeams ||
+                Old.FixEdgeNormals != New.FixEdgeNormals ||
+                Old.IgnoreOriginalMeshIndexes != New.IgnoreOriginalMeshIndexes ||
+                Old.FixAnimationsTest != New.FixAnimationsTest ||
+                Old.ForceLoadExpansion != New.ForceLoadExpansion;
+        }
+
+        private void EditProfilesButton_Click(object sender, EventArgs e)
+        {
+            using (var form = new ManageProfilesForm())
+                form.ShowDialog();
+
+            SetupProfiles();
         }
     }
 }

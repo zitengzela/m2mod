@@ -1,4 +1,6 @@
-﻿using System.Runtime.InteropServices;
+﻿using System;
+using System.ComponentModel;
+using System.Runtime.InteropServices;
 
 namespace M2Mod.Interop.Structures
 {
@@ -6,11 +8,18 @@ namespace M2Mod.Interop.Structures
     public struct Settings
     {
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 1024)]
+        [DefaultValue("")]
         public string OutputDirectory;
 
+        [DefaultValue("")]
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 1024)]
         public string WorkingDirectory;
 
+        [DefaultValue("")]
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 1024)]
+        public string MappingsDirectory;
+
+        public IntPtr FileStorage;
         public Expansion ForceLoadExpansion;
         [MarshalAs(UnmanagedType.U1)] public bool MergeBones;
         [MarshalAs(UnmanagedType.U1)] public bool MergeAttachments;

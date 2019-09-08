@@ -7,9 +7,9 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using M2Mod.Config;
 using M2Mod.Interop;
 using M2Mod.Interop.Structures;
-using M2Mod.Registry;
 using Newtonsoft.Json.Linq;
 
 namespace M2Mod
@@ -19,8 +19,7 @@ namespace M2Mod
         private const string _m2Filter = "M2 Files|*.m2|All Files|*.*";
         private const string _m2IFilter = "M2I Files|*.m2i|All Files|*.*";
 
-        private Settings _settings = Defaults.Settings;
-        private bool _ignoreErrors = false;
+        private bool _ignoreErrors;
         private IntPtr preloadM2 = IntPtr.Zero;
 
         public M2Mod()
@@ -36,17 +35,31 @@ namespace M2Mod
             Text = $"M2Mod {VersionString} built at {buildDate}";
 
             InitializeLogger();
-            LoadSettingsFromRegistry();
+
+            ProfileManager.Load("", true);
+
+            InitializeProfiles();
+            InitializeFormData();
+        }
+
+        private void InitializeFormData()
+        {
+            textBoxInputM2Exp.Text = ProfileManager.CurrentProfile.FormData.InputM2Exp;
+            textBoxOutputM2I.Text = ProfileManager.CurrentProfile.FormData.OutputM2I;
+            textBoxInputM2Imp.Text = ProfileManager.CurrentProfile.FormData.InputM2Imp;
+            textBoxInputM2I.Text = ProfileManager.CurrentProfile.FormData.InputM2I;
+            textBoxReplaceM2.Text = ProfileManager.CurrentProfile.FormData.ReplaceM2;
+            checkBoxReplaceM2.Checked = ProfileManager.CurrentProfile.FormData.ReplaceM2Checked;
         }
 
         private static string VersionString => $"v{Version.Major}.{Version.Minor}.{Version.Patch}";
 
-        private Imports.LoggerDelegate dlg;
+        private Imports.LoggerDelegate logDelegate;
 
         private void InitializeLogger()
         {
-            dlg = Log;
-            Imports.AttachLoggerCallback(dlg);
+            logDelegate = Log;
+            Imports.AttachLoggerCallback(logDelegate);
         }
 
         private void Log(int logLevel, string message)
@@ -108,96 +121,6 @@ namespace M2Mod
 
             logTextBox.SelectionStart = logTextBox.TextLength;
             logTextBox.ScrollToCaret();
-        }
-
-        private void LoadSettingsFromRegistry()
-        {
-            foreach (var enumVal in Enum.GetValues(typeof(RegistryValue)).Cast<RegistryValue>())
-            {
-                string value = null;
-                try
-                {
-                    value = RegistryStore.GetValue(enumVal).ToString();
-                }
-                catch
-                {
-                    continue;
-                }
-
-                if (string.IsNullOrEmpty(value))
-                    continue;
-
-                try
-                {
-                    switch (enumVal)
-                    {
-                        case RegistryValue.ExportM2:
-                            textBoxInputM2Exp.Text = value;
-                            break;
-                        case RegistryValue.ExportM2I:
-                            textBoxOutputM2I.Text = value;
-                            break;
-                        case RegistryValue.ImportInM2:
-                            textBoxInputM2Imp.Text = value;
-                            break;
-                        case RegistryValue.ImportM2I:
-                            textBoxInputM2I.Text = value;
-                            break;
-                        case RegistryValue.ImportOutM2:
-                            break;
-
-                        case RegistryValue.ImportReplaceM2:
-                            textBoxReplaceM2.Text = value;
-                            break;
-                        case RegistryValue.ReplaceM2Checked:
-                            checkBoxReplaceM2.Checked = bool.Parse(value);
-                            break;
-
-                        case RegistryValue.MergeBones:
-                            _settings.MergeBones = bool.Parse(value);
-                            break;
-                        case RegistryValue.MergeAttachments:
-                            _settings.MergeAttachments = bool.Parse(value);
-                            break;
-                        case RegistryValue.MergeCameras:
-                            _settings.MergeCameras = bool.Parse(value);
-                            break;
-                        case RegistryValue.FixSeams:
-                            _settings.FixSeams = bool.Parse(value);
-                            break;
-                        case RegistryValue.FixEdgeNormals:
-                            _settings.FixEdgeNormals = bool.Parse(value);
-                            break;
-                        case RegistryValue.ForceExportExpansion:
-                            _settings.ForceLoadExpansion = (Expansion) Enum.Parse(typeof(Expansion), value);
-                            break;
-                        case RegistryValue.IgnoreOriginalMeshIndexes:
-                            _settings.IgnoreOriginalMeshIndexes = bool.Parse(value);
-                            break;
-
-                        case RegistryValue.FixAnimationsTest:
-                            _settings.FixAnimationsTest = bool.Parse(value);
-                            break;
-
-                        case RegistryValue.WorkingDirectory:
-                            _settings.WorkingDirectory = value;
-                            break;
-
-                        case RegistryValue.OutputDirectory:
-                            _settings.OutputDirectory = value;
-                            break;
-
-                        case RegistryValue.OldCompareM2:
-                        case RegistryValue.NewCompareM2:
-                        case RegistryValue.CompareWeightThreshold:
-                            break;
-                    }
-                }
-                catch
-                {
-                    Log((int) LogLevel.Warning, $"Failed to parse {enumVal} registry value");
-                }
-            }
         }
 
         private void ButtonInputM2ExpBrowse_Click(object sender, EventArgs e)
@@ -285,7 +208,7 @@ namespace M2Mod
                 return;
             }
 
-            preloadM2 = Imports.M2_Create(ref _settings);
+            preloadM2 = Imports.M2_Create(ref ProfileManager.CurrentProfile.Settings);
 
             var Error = Imports.M2_Load(preloadM2, textBoxInputM2Imp.Text);
             if (Error != M2LibError.OK)
@@ -359,11 +282,20 @@ namespace M2Mod
         private void SettingsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             using (var form = new SettingsForm())
-            {
-                form.Setup(_settings);
-                if (form.ShowDialog() == DialogResult.OK)
-                    _settings = form.ProduceSettings();
-            }
+                form.ShowDialog();
+
+            InitializeProfiles();
+            InitializeFormData();
+        }
+
+        private void InitializeProfiles()
+        {
+            var profileGuid = ProfileManager.CurrentProfile?.Id ?? Guid.Empty;
+
+            profilesComboBox.Items.Clear();
+            profilesComboBox.Items.AddRange(ProfileManager.GetProfiles().Cast<object>().ToArray());
+            profilesComboBox.SelectedItem = ProfileManager.GetProfiles().FirstOrDefault(_ => _.Id == profileGuid) ??
+                                            profilesComboBox.Items[0];
         }
 
         private void ExitToolStripMenuItem_Click(object sender, EventArgs e)
@@ -399,7 +331,7 @@ namespace M2Mod
                 return;
             }
 
-            var m2 = Imports.M2_Create(ref _settings);
+            var m2 = Imports.M2_Create(ref ProfileManager.CurrentProfile.Settings);
 
             // import M2
             var error = Imports.M2_Load(m2, textBoxInputM2Exp.Text);
@@ -516,75 +448,21 @@ namespace M2Mod
             TestFiles();
         }
 
+        private void SaveFormDataToProfile(SettingsProfile profile)
+        {
+            profile.FormData.InputM2Exp = textBoxInputM2Exp.Text;
+            profile.FormData.OutputM2I = this.textBoxOutputM2I.Text;
+            profile.FormData.InputM2Imp = this.textBoxInputM2Imp.Text;
+            profile.FormData.InputM2I = this.textBoxInputM2I.Text;
+            profile.FormData.ReplaceM2 = this.textBoxReplaceM2.Text;
+            profile.FormData.ReplaceM2Checked = this.checkBoxReplaceM2.Checked;
+        }
+
         private void M2Mod_FormClosing(object sender, FormClosingEventArgs e)
         {
-            foreach (var enumVal in Enum.GetValues(typeof(RegistryValue)).Cast<RegistryValue>())
-            {
-                object value = null;
-                switch (enumVal)
-                {
-                    case RegistryValue.ExportM2:
-                        value = textBoxInputM2Exp.Text;
-                        break;
-                    case RegistryValue.ExportM2I:
-                        value = this.textBoxOutputM2I.Text;
-                        break;
-                    case RegistryValue.ImportInM2:
-                        value = this.textBoxInputM2Imp.Text;
-                        break;
-                    case RegistryValue.ImportM2I:
-                        value = this.textBoxInputM2I.Text;
-                        break;
-                    case RegistryValue.ImportReplaceM2:
-                        value = this.textBoxReplaceM2.Text;
-                        break;
-                    case RegistryValue.ReplaceM2Checked:
-                        value = this.checkBoxReplaceM2.Checked;
-                        break;
-                    case RegistryValue.WorkingDirectory:
-                        value = _settings.WorkingDirectory;
-                        break;
-                    case RegistryValue.OutputDirectory:
-                        value = _settings.OutputDirectory;
-                        break;
-                    case RegistryValue.ForceExportExpansion:
-                        value = _settings.ForceLoadExpansion;
-                        break;
-                    case RegistryValue.MergeAttachments:
-                        value = _settings.MergeAttachments;
-                        break;
-                    case RegistryValue.MergeBones:
-                        value = _settings.MergeBones;
-                        break;
-                    case RegistryValue.MergeCameras:
-                        value = _settings.MergeCameras;
-                        break;
-                    case RegistryValue.FixSeams:
-                        value = _settings.FixSeams;
-                        break;
-                    case RegistryValue.FixEdgeNormals:
-                        value = _settings.FixEdgeNormals;
-                        break;
-                    case RegistryValue.IgnoreOriginalMeshIndexes:
-                        value = _settings.IgnoreOriginalMeshIndexes;
-                        break;
-                    case RegistryValue.FixAnimationsTest:
-                        value = _settings.FixAnimationsTest;
-                        break;
-                }
+            SaveFormDataToProfile(ProfileManager.CurrentProfile);
 
-                if (value == null)
-                    continue;
-
-                try
-                {
-                    RegistryStore.SetValue(enumVal, value);
-                }
-                catch
-                {
-                    // ignored
-                }
-            }
+            ProfileManager.Save();
         }
 
         private string GetTags(string url)
@@ -670,7 +548,6 @@ namespace M2Mod
             _ignoreErrors = false;
             using (var form = new CompareBonesForm())
             {
-                form.Settings = _settings;
                 form.ShowDialog();
             }
         }
@@ -696,9 +573,9 @@ namespace M2Mod
 
             var fileName = Path.GetFileName(checkBoxReplaceM2.Checked ? textBoxReplaceM2.Text : textBoxInputM2Imp.Text);
             string ExportFileName;
-            if (_settings.OutputDirectory.Length > 0)
+            if (ProfileManager.CurrentProfile.Settings.OutputDirectory.Length > 0)
             {
-                var outputDirectory = _settings.OutputDirectory;
+                var outputDirectory = ProfileManager.CurrentProfile.Settings.OutputDirectory;
 
                 var info = Imports.GetFileInfoByPartialPath(fileName);
                 if (info == IntPtr.Zero)
@@ -731,6 +608,15 @@ namespace M2Mod
 
             SetStatus("Import done.");
             PreloadTransition(false);
+        }
+
+        private void ProfilesComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (ProfileManager.CurrentProfile != null)
+                SaveFormDataToProfile(ProfileManager.CurrentProfile);
+
+            ProfileManager.CurrentProfile = profilesComboBox.SelectedItem as SettingsProfile;
+            InitializeFormData();
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using M2Mod.Interop.Structures;
+﻿using M2Mod.Config;
+using M2Mod.Interop.Structures;
 
 namespace M2Mod
 {
@@ -6,6 +7,8 @@ namespace M2Mod
     {
         public static Settings Settings => new Settings()
         {
+            WorkingDirectory = "",
+            OutputDirectory = "",
             ForceLoadExpansion = Expansion.None,
             MergeBones = true,
             MergeAttachments = true,
@@ -15,5 +18,7 @@ namespace M2Mod
             IgnoreOriginalMeshIndexes = false,
             FixAnimationsTest = false,
         };
+
+        public static SettingsProfile SettingsProfile => new SettingsProfile("Default", Settings, new FormData());
     };
 }

@@ -80,6 +80,8 @@
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.profilesComboBox = new System.Windows.Forms.ComboBox();
+            this.profileLabel = new System.Windows.Forms.Label();
             this.panelImputM2Exp.SuspendLayout();
             this.panelReplaceM2.SuspendLayout();
             this.panel1.SuspendLayout();
@@ -512,7 +514,7 @@
             // compareBonesToolStripMenuItem
             // 
             this.compareBonesToolStripMenuItem.Name = "compareBonesToolStripMenuItem";
-            this.compareBonesToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.compareBonesToolStripMenuItem.Size = new System.Drawing.Size(158, 22);
             this.compareBonesToolStripMenuItem.Text = "Compare bones";
             this.compareBonesToolStripMenuItem.Click += new System.EventHandler(this.CompareBonesToolStripMenuItem_Click);
             // 
@@ -632,11 +634,32 @@
             this.toolTip1.UseAnimation = false;
             this.toolTip1.UseFading = false;
             // 
+            // profilesComboBox
+            // 
+            this.profilesComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.profilesComboBox.FormattingEnabled = true;
+            this.profilesComboBox.Location = new System.Drawing.Point(444, 3);
+            this.profilesComboBox.Name = "profilesComboBox";
+            this.profilesComboBox.Size = new System.Drawing.Size(121, 21);
+            this.profilesComboBox.TabIndex = 36;
+            this.profilesComboBox.SelectedIndexChanged += new System.EventHandler(this.ProfilesComboBox_SelectedIndexChanged);
+            // 
+            // profileLabel
+            // 
+            this.profileLabel.AutoSize = true;
+            this.profileLabel.Location = new System.Drawing.Point(402, 6);
+            this.profileLabel.Name = "profileLabel";
+            this.profileLabel.Size = new System.Drawing.Size(36, 13);
+            this.profileLabel.TabIndex = 37;
+            this.profileLabel.Text = "Profile";
+            // 
             // M2Mod
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(569, 301);
+            this.Controls.Add(this.profileLabel);
+            this.Controls.Add(this.profilesComboBox);
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.menuStrip1);
             this.Controls.Add(this.tabControl);
@@ -724,6 +747,8 @@
         private System.Windows.Forms.TabControl tabControl;
         private System.Windows.Forms.OpenFileDialog openFileDialog1;
         private System.Windows.Forms.SaveFileDialog saveFileDialog1;
+        private System.Windows.Forms.ComboBox profilesComboBox;
+        private System.Windows.Forms.Label profileLabel;
     }
 }
 

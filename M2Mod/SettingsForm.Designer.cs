@@ -34,7 +34,6 @@
             this.outputDirectoryGroupBox = new System.Windows.Forms.GroupBox();
             this.outputDirectoryTextBox = new System.Windows.Forms.TextBox();
             this.workingDirectoryTextBox = new System.Windows.Forms.TextBox();
-            this.checkBoxDisplayErrors = new System.Windows.Forms.CheckBox();
             this.checkBoxFixEdgeNormals = new System.Windows.Forms.CheckBox();
             this.checkBoxIgnoreOriginalMeshIndexes = new System.Windows.Forms.CheckBox();
             this.testFixAnimationsCheckBox = new System.Windows.Forms.CheckBox();
@@ -49,8 +48,11 @@
             this.saveButton = new System.Windows.Forms.Button();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.label1 = new System.Windows.Forms.Label();
-            this.cancelButton = new System.Windows.Forms.Button();
+            this.closeButton = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.profilesComboBox = new System.Windows.Forms.ComboBox();
+            this.profilesLabel = new System.Windows.Forms.Label();
+            this.editProfilesButton = new System.Windows.Forms.Button();
             this.outputDirectoryGroupBox.SuspendLayout();
             this.workingDirectoryGroupBox.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -74,7 +76,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.outputDirectoryGroupBox.Controls.Add(this.outputDirectoryBrowseButton);
             this.outputDirectoryGroupBox.Controls.Add(this.outputDirectoryTextBox);
-            this.outputDirectoryGroupBox.Location = new System.Drawing.Point(12, 74);
+            this.outputDirectoryGroupBox.Location = new System.Drawing.Point(12, 95);
             this.outputDirectoryGroupBox.Name = "outputDirectoryGroupBox";
             this.outputDirectoryGroupBox.Size = new System.Drawing.Size(307, 56);
             this.outputDirectoryGroupBox.TabIndex = 30;
@@ -99,19 +101,6 @@
             this.workingDirectoryTextBox.Name = "workingDirectoryTextBox";
             this.workingDirectoryTextBox.Size = new System.Drawing.Size(250, 20);
             this.workingDirectoryTextBox.TabIndex = 5;
-            // 
-            // checkBoxDisplayErrors
-            // 
-            this.checkBoxDisplayErrors.AutoSize = true;
-            this.checkBoxDisplayErrors.Checked = true;
-            this.checkBoxDisplayErrors.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxDisplayErrors.Location = new System.Drawing.Point(9, 88);
-            this.checkBoxDisplayErrors.Name = "checkBoxDisplayErrors";
-            this.checkBoxDisplayErrors.Size = new System.Drawing.Size(90, 17);
-            this.checkBoxDisplayErrors.TabIndex = 23;
-            this.checkBoxDisplayErrors.Text = "Display Errors";
-            this.toolTip1.SetToolTip(this.checkBoxDisplayErrors, "Errors will be displayed in popups");
-            this.checkBoxDisplayErrors.UseVisualStyleBackColor = true;
             // 
             // checkBoxFixEdgeNormals
             // 
@@ -188,7 +177,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.workingDirectoryGroupBox.Controls.Add(this.workingDirectoryBrowseButton);
             this.workingDirectoryGroupBox.Controls.Add(this.workingDirectoryTextBox);
-            this.workingDirectoryGroupBox.Location = new System.Drawing.Point(12, 12);
+            this.workingDirectoryGroupBox.Location = new System.Drawing.Point(12, 33);
             this.workingDirectoryGroupBox.Name = "workingDirectoryGroupBox";
             this.workingDirectoryGroupBox.Size = new System.Drawing.Size(307, 56);
             this.workingDirectoryGroupBox.TabIndex = 29;
@@ -236,7 +225,7 @@
             // saveButton
             // 
             this.saveButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.saveButton.Location = new System.Drawing.Point(151, 315);
+            this.saveButton.Location = new System.Drawing.Point(151, 334);
             this.saveButton.Name = "saveButton";
             this.saveButton.Size = new System.Drawing.Size(81, 29);
             this.saveButton.TabIndex = 27;
@@ -248,7 +237,6 @@
             // 
             this.groupBox3.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.groupBox3.Controls.Add(this.checkBoxDisplayErrors);
             this.groupBox3.Controls.Add(this.checkBoxFixEdgeNormals);
             this.groupBox3.Controls.Add(this.checkBoxIgnoreOriginalMeshIndexes);
             this.groupBox3.Controls.Add(this.testFixAnimationsCheckBox);
@@ -256,7 +244,7 @@
             this.groupBox3.Controls.Add(this.checkBoxMergeCameras);
             this.groupBox3.Controls.Add(this.checkBoxMergeAttachments);
             this.groupBox3.Controls.Add(this.checkBoxMergeBones);
-            this.groupBox3.Location = new System.Drawing.Point(12, 191);
+            this.groupBox3.Location = new System.Drawing.Point(12, 212);
             this.groupBox3.Name = "groupBox3";
             this.groupBox3.Size = new System.Drawing.Size(307, 116);
             this.groupBox3.TabIndex = 26;
@@ -267,20 +255,20 @@
             // 
             this.label1.Location = new System.Drawing.Point(6, 20);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(153, 29);
+            this.label1.Size = new System.Drawing.Size(135, 19);
             this.label1.TabIndex = 1;
             this.label1.Text = "Force Input M2 Expansion:";
             // 
-            // cancelButton
+            // closeButton
             // 
-            this.cancelButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.cancelButton.Location = new System.Drawing.Point(238, 315);
-            this.cancelButton.Name = "cancelButton";
-            this.cancelButton.Size = new System.Drawing.Size(81, 29);
-            this.cancelButton.TabIndex = 28;
-            this.cancelButton.Text = "Cancel";
-            this.cancelButton.UseVisualStyleBackColor = true;
-            this.cancelButton.Click += new System.EventHandler(this.CancelButton_Click);
+            this.closeButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.closeButton.Location = new System.Drawing.Point(238, 334);
+            this.closeButton.Name = "closeButton";
+            this.closeButton.Size = new System.Drawing.Size(81, 29);
+            this.closeButton.TabIndex = 28;
+            this.closeButton.Text = "Close";
+            this.closeButton.UseVisualStyleBackColor = true;
+            this.closeButton.Click += new System.EventHandler(this.CloseButton_Click);
             // 
             // groupBox1
             // 
@@ -288,23 +276,58 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBox1.Controls.Add(this.label1);
             this.groupBox1.Controls.Add(this.forceExpansionComboBox);
-            this.groupBox1.Location = new System.Drawing.Point(12, 136);
+            this.groupBox1.Location = new System.Drawing.Point(12, 157);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Size = new System.Drawing.Size(307, 53);
             this.groupBox1.TabIndex = 25;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Export Settings";
             // 
+            // profilesComboBox
+            // 
+            this.profilesComboBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.profilesComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.profilesComboBox.FormattingEnabled = true;
+            this.profilesComboBox.Location = new System.Drawing.Point(55, 12);
+            this.profilesComboBox.Name = "profilesComboBox";
+            this.profilesComboBox.Size = new System.Drawing.Size(216, 21);
+            this.profilesComboBox.TabIndex = 32;
+            this.profilesComboBox.SelectedIndexChanged += new System.EventHandler(this.ProfilesComboBox_SelectedIndexChanged);
+            // 
+            // profilesLabel
+            // 
+            this.profilesLabel.AutoSize = true;
+            this.profilesLabel.Location = new System.Drawing.Point(18, 15);
+            this.profilesLabel.Name = "profilesLabel";
+            this.profilesLabel.Size = new System.Drawing.Size(36, 13);
+            this.profilesLabel.TabIndex = 33;
+            this.profilesLabel.Text = "Profile";
+            // 
+            // editProfilesButton
+            // 
+            this.editProfilesButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.editProfilesButton.Location = new System.Drawing.Point(277, 12);
+            this.editProfilesButton.Name = "editProfilesButton";
+            this.editProfilesButton.Size = new System.Drawing.Size(37, 22);
+            this.editProfilesButton.TabIndex = 7;
+            this.editProfilesButton.Text = "Edit";
+            this.editProfilesButton.UseVisualStyleBackColor = true;
+            this.editProfilesButton.Click += new System.EventHandler(this.EditProfilesButton_Click);
+            // 
             // SettingsForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(331, 356);
+            this.ClientSize = new System.Drawing.Size(331, 369);
+            this.Controls.Add(this.editProfilesButton);
+            this.Controls.Add(this.profilesLabel);
+            this.Controls.Add(this.profilesComboBox);
             this.Controls.Add(this.outputDirectoryGroupBox);
             this.Controls.Add(this.workingDirectoryGroupBox);
             this.Controls.Add(this.saveButton);
             this.Controls.Add(this.groupBox3);
-            this.Controls.Add(this.cancelButton);
+            this.Controls.Add(this.closeButton);
             this.Controls.Add(this.groupBox1);
             this.Name = "SettingsForm";
             this.Text = "Settings";
@@ -316,6 +339,7 @@
             this.groupBox3.PerformLayout();
             this.groupBox1.ResumeLayout(false);
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -327,7 +351,6 @@
         private System.Windows.Forms.TextBox outputDirectoryTextBox;
         private System.Windows.Forms.ToolTip toolTip1;
         private System.Windows.Forms.TextBox workingDirectoryTextBox;
-        private System.Windows.Forms.CheckBox checkBoxDisplayErrors;
         private System.Windows.Forms.CheckBox checkBoxFixEdgeNormals;
         private System.Windows.Forms.CheckBox checkBoxIgnoreOriginalMeshIndexes;
         private System.Windows.Forms.CheckBox testFixAnimationsCheckBox;
@@ -341,7 +364,10 @@
         private System.Windows.Forms.Button saveButton;
         private System.Windows.Forms.GroupBox groupBox3;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.Button cancelButton;
+        private System.Windows.Forms.Button closeButton;
         private System.Windows.Forms.GroupBox groupBox1;
+        private System.Windows.Forms.ComboBox profilesComboBox;
+        private System.Windows.Forms.Label profilesLabel;
+        private System.Windows.Forms.Button editProfilesButton;
     }
 }

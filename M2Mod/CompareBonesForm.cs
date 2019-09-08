@@ -1,9 +1,9 @@
 ﻿using System;
 using System.IO;
 using System.Windows.Forms;
+using M2Mod.Config;
 using M2Mod.Interop;
 using M2Mod.Interop.Structures;
-using M2Mod.Registry;
 
 namespace M2Mod
 {
@@ -12,17 +12,15 @@ namespace M2Mod
         private const string _m2Filter = "M2 Files|*.m2|All Files|*.*";
         private const string _txtFilter = "Txt Files|*.txt|All Files|*.*";
 
-        public Settings Settings = Defaults.Settings;
-
         public CompareBonesForm()
         {
             InitializeComponent();
 
             this.Icon = Properties.Resources.Icon;
 
-            oldM2TextBox.Text = (RegistryStore.GetValue(RegistryValue.OldCompareM2) ?? "").ToString();
-            newM2TextBox.Text = (RegistryStore.GetValue(RegistryValue.NewCompareM2) ?? "").ToString();
-            weightThresholdTextBox.Text = (RegistryStore.GetValue(RegistryValue.CompareWeightThreshold) ?? "").ToString();
+            oldM2TextBox.Text = ProfileManager.CurrentProfile.FormData.OldCompareM2;
+            newM2TextBox.Text = ProfileManager.CurrentProfile.FormData.NewCompareM2;
+            weightThresholdTextBox.Text = ProfileManager.CurrentProfile.FormData.CompareWeightThreshold.ToString();
         }
 
         private void OldM2BrowseButton_Click(object sender, EventArgs e)
@@ -89,22 +87,22 @@ namespace M2Mod
                 return;
             }
 
-            RegistryStore.SetValue(RegistryValue.OldCompareM2, oldM2TextBox.Text);
-            RegistryStore.SetValue(RegistryValue.NewCompareM2, newM2TextBox.Text);
-            RegistryStore.SetValue(RegistryValue.CompareWeightThreshold, weightThresholdTextBox.Text);
+            ProfileManager.CurrentProfile.FormData.OldCompareM2 = oldM2TextBox.Text;
+            ProfileManager.CurrentProfile.FormData.NewCompareM2 = newM2TextBox.Text;
 
-            if (!float.TryParse(weightThresholdTextBox.Text, out var weightThreshold))
+            if (!float.TryParse(weightThresholdTextBox.Text,
+                out ProfileManager.CurrentProfile.FormData.CompareWeightThreshold))
             {
-                weightThreshold = 0.0f;
+                ProfileManager.CurrentProfile.FormData.CompareWeightThreshold = 0.0f;
                 weightThresholdTextBox.Text = "0";
             }
 
-            IntPtr wrapper = Imports.Wrapper_Create(oldM2TextBox.Text, newM2TextBox.Text, weightThreshold, true, ref this.Settings);
+            IntPtr wrapper = Imports.Wrapper_Create(oldM2TextBox.Text, newM2TextBox.Text, ProfileManager.CurrentProfile.FormData.CompareWeightThreshold, true, ref ProfileManager.CurrentProfile.Settings);
 
             var errorStatus = Imports.Wrapper_GetErrorStatus(wrapper);
             if (errorStatus != M2LibError.OK)
             {
-                MessageBox.Show(String.Format("Failed to compare: {0}", Imports.GetErrorText(errorStatus)), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(string.Format("Failed to compare: {0}", Imports.GetErrorText(errorStatus)), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 Imports.Wrapper_Free(wrapper);
                 return;
             }

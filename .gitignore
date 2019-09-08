@@ -1,6 +1,10 @@
 Debug
+Debug Shared
 Release
 Test
+M2Mod/bin
+M2Mod/obj
+packages
 .vs
 binaries
 *.user
