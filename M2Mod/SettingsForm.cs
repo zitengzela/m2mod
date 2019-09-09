@@ -133,7 +133,6 @@ namespace M2Mod
                 else
                     dialog.SelectedPath = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
 
-                dialog.ShowNewFolderButton = true;
                 dialog.Description = "Select output directory:";
 
                 if (dialog.ShowDialog() == DialogResult.OK)
@@ -169,7 +168,7 @@ namespace M2Mod
                 }
             }
 
-            this.SetupControls(ProfileManager.CurrentProfile.Settings);
+            this.SetupControls((profilesComboBox.SelectedItem as SettingsProfile).Settings);
 
             this._lastProfile = SelectedProfile;
         }
@@ -179,6 +178,7 @@ namespace M2Mod
             return
                 Old.WorkingDirectory != New.WorkingDirectory ||
                 Old.OutputDirectory != New.OutputDirectory ||
+                Old.MappingsDirectory != New.MappingsDirectory ||
                 Old.MergeBones != New.MergeBones ||
                 Old.MergeAttachments != New.MergeAttachments ||
                 Old.MergeCameras != New.MergeCameras ||
@@ -207,7 +207,6 @@ namespace M2Mod
                 else
                     dialog.SelectedPath = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
 
-                dialog.ShowNewFolderButton = false;
                 dialog.Description = "Select mappings directory:";
 
                 if (dialog.ShowDialog() == DialogResult.OK)

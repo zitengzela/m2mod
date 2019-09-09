@@ -47,32 +47,35 @@ bool M2Lib::FileStorage::ParseCsv(std::wstring const& Path)
 	std::string line;
 	while (std::getline(in, line))
 	{
-		if (line.empty() || line.find(';') == std::string::npos)
+		if (line.empty())
 			continue;
 
-		std::istringstream stream(line);
+		auto colonPos = line.find(';');
+		if (colonPos == std::string::npos)
+			continue;
 
-		std::string tmp, fileName;
-		std::getline(stream, tmp, ';');
-		uint32_t FileDataId = std::stoul(tmp);
-		std::getline(stream, fileName, ';');
+		line[colonPos] = '\0';
+		char const* strId = &line[0];
+		char const* fileName = &line[colonPos] + 1;
+
+		uint32_t FileDataId = std::stoul(strId);
 
 		auto itr1 = fileInfosByFileDataId.find(FileDataId);
 		if (itr1 != fileInfosByFileDataId.end())
 		{
-			sLogger.LogWarning("Duplicate storageRef entry '%u':'%s' (already used: '%u':'%s'), skipping", FileDataId, fileName.c_str(), itr1->second->FileDataId, itr1->second->Path.c_str());
+			sLogger.LogWarning("Duplicate storageRef entry '%u':'%s' (already used: '%u':'%s'), skipping", FileDataId, fileName, itr1->second->FileDataId, itr1->second->Path.c_str());
 			continue;
 		}
 
-		auto nameHash = CalcStringHash(fileName);
+		auto nameHash = CalcStringHash<char>(fileName);
 		auto itr2 = fileInfosByNameHash.find(nameHash);
 		if (itr2 != fileInfosByNameHash.end())
 		{
-			sLogger.LogWarning("Duplicate storageRef entry '%u':'%s' (already used: '%u':'%s'), skipping (%llu vs %llu)", FileDataId, fileName.c_str(), itr2->second->FileDataId, itr2->second->Path.c_str(), nameHash, CalcStringHash(itr2->second->Path));
+			sLogger.LogWarning("Duplicate storageRef entry '%u':'%s' (already used: '%u':'%s'), skipping (%llu vs %llu)", FileDataId, fileName, itr2->second->FileDataId, itr2->second->Path.c_str(), nameHash, CalcStringHash(itr2->second->Path));
 			continue;
 		}
 
-		auto info = new FileInfo(FileDataId, fileName.c_str());
+		auto info = new FileInfo(FileDataId, fileName);
 
 		fileInfosByFileDataId[FileDataId] = info;
 		fileInfosByNameHash[nameHash] = info;
@@ -134,9 +137,16 @@ bool M2Lib::FileStorage::LoadMappings()
 
 	std::filesystem::directory_iterator itr;
 
+	const auto isSupportedExtension = [](std::string extension)
+	{
+		std::transform(extension.begin(), extension.end(), extension.begin(), ::tolower);
+		return extension == ".csv" || extension == ".txt";
+	};
+
+	auto now = time(NULL);
 	for (auto& p : std::filesystem::directory_iterator(directory))
 	{
-		if (p.path().extension().string() != ".csv")
+		if (!isSupportedExtension(p.path().extension().string()))
 			continue;
 
 		sLogger.LogInfo("Loading mapping '%s'", p.path().filename().string().c_str());

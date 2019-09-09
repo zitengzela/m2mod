@@ -35,13 +35,13 @@ namespace M2Mod.Interop
         public static extern string GetErrorText(M2LibError errNo);
 
         [DllImport("M2Lib.dll", CallingConvention = CallingConvention.Cdecl)]
-        public static extern IntPtr FileStorage_Get([MarshalAs(UnmanagedType.LPStr)] string mappingsDirectory);
+        public static extern IntPtr FileStorage_Get([MarshalAs(UnmanagedType.LPWStr)] string mappingsDirectory);
 
         [DllImport("M2Lib.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern void FileStorage_Clear();
 
         [DllImport("M2Lib.dll", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void FileStorage_SetMappingsDirectory(IntPtr handle, [MarshalAs(UnmanagedType.LPStr)] string mappingsDirectory);
+        public static extern void FileStorage_SetMappingsDirectory(IntPtr handle, [MarshalAs(UnmanagedType.LPWStr)] string mappingsDirectory);
 
         [DllImport("M2Lib.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern IntPtr FileStorage_GetFileInfoByFileDataId(IntPtr handle, uint fileDataId);
