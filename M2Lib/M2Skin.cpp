@@ -12,6 +12,7 @@
 #include <unordered_map>
 #include "StringHelpers.h"
 #include <filesystem>
+#include "VectorMath.h"
 
 using namespace M2Lib::M2SkinElement;
 
@@ -806,14 +807,15 @@ void M2Lib::M2Skin::CopyMaterial(uint32_t SrcMeshIndex, uint32_t DstMeshIndex)
 	}
 }
 
-std::unordered_set<M2Lib::M2SkinElement::Edge> M2Lib::M2Skin::GetEdges(CElement_SubMesh* submesh)
+std::list<std::shared_ptr<M2Lib::Geometry::Triangle>> M2Lib::M2Skin::GetEdgeTriangles(CElement_SubMesh const* submesh) const
 {
-	uint16_t* Triangles = Elements[M2SkinElement::EElement_TriangleIndex].as<uint16_t>();
-	uint16_t* Indices = Elements[M2SkinElement::EElement_VertexLookup].as<uint16_t>();
+	uint16_t* Triangles = Elements[EElement_TriangleIndex].as<uint16_t>();
+	uint16_t* Indices = Elements[EElement_VertexLookup].as<uint16_t>();
+	auto VertexCount = pM2->Elements[M2Element::EElement_Vertex].Count;
 
-	auto result = std::unordered_set<Edge>();
 	std::unordered_map<uint32_t, int> map;
 
+	std::list<std::shared_ptr<Geometry::Triangle>> triangles;
 	uint32_t TriangleIndexStart = submesh->GetStartTrianlgeIndex();
 	uint32_t TriangleIndexEnd = submesh->GetEndTriangleIndex();
 	for (uint32_t k = TriangleIndexStart; k < TriangleIndexEnd; k += 3)
@@ -821,35 +823,48 @@ std::unordered_set<M2Lib::M2SkinElement::Edge> M2Lib::M2Skin::GetEdges(CElement_
 		m2lib_assert(k + 2 < Elements[M2SkinElement::EElement_TriangleIndex].Count);
 
 		uint16_t indexA = Indices[Triangles[k]];
+		m2lib_assert(indexA < VertexCount);
 		uint16_t indexB = Indices[Triangles[k + 1]];
+		m2lib_assert(indexB < VertexCount);
 		uint16_t indexC = Indices[Triangles[k + 2]];
+		m2lib_assert(indexC < VertexCount);
 
-		auto edgeA = Edge(indexA, indexB);
-		auto edgeB = Edge(indexA, indexC);
-		auto edgeC = Edge(indexC, indexB);
+		auto triangle = std::make_shared<Geometry::Triangle>(indexA, indexB, indexC);
 
-		auto itr = map.find(edgeA.GetHash());
+		auto itr = map.find(triangle->EdgeA->GetHash());
 		if (itr == map.end())
-			map[edgeA.GetHash()] = 1;
+			map[triangle->EdgeA->GetHash()] = 1;
 		else
 			++itr->second;
 
-		itr = map.find(edgeB.GetHash());
+		itr = map.find(triangle->EdgeB->GetHash());
 		if (itr == map.end())
-			map[edgeB.GetHash()] = 1;
+			map[triangle->EdgeB->GetHash()] = 1;
 		else
 			++itr->second;
 
-		itr = map.find(edgeC.GetHash());
+		itr = map.find(triangle->EdgeC->GetHash());
 		if (itr == map.end())
-			map[edgeC.GetHash()] = 1;
+			map[triangle->EdgeC->GetHash()] = 1;
 		else
 			++itr->second;
+
+		triangles.push_back(triangle);
 	}
 
-	for (auto itr : map)
-		if (itr.second == 1)
-			result.insert(Edge((itr.first >> 16) & 0xFFFF, itr.first & 0xFFFF));
+	triangles.remove_if([&](std::shared_ptr<Geometry::Triangle> const& triangle)
+	{
+		auto itr = map.find(triangle->EdgeA->GetHash());
+		triangle->EdgeA->IsUnique = itr != map.end() && itr->second == 1;
 
-	return result;
+		itr = map.find(triangle->EdgeB->GetHash());
+		triangle->EdgeB->IsUnique = itr != map.end() && itr->second == 1;
+
+		itr = map.find(triangle->EdgeC->GetHash());
+		triangle->EdgeC->IsUnique = itr != map.end() && itr->second == 1;
+
+		return !triangle->IsOnEdge();
+	});
+
+	return triangles;
 }

@@ -5,6 +5,7 @@
 #include "M2Types.h"
 #include <vector>
 #include <map>
+#include "VectorMath.h"
 
 namespace M2Lib
 {
@@ -108,7 +109,7 @@ namespace M2Lib
 
 		void CopyMaterial(uint32_t SrcMeshIndex, uint32_t DstMeshIndex);
 
-		std::unordered_set<M2SkinElement::Edge> GetEdges(M2SkinElement::CElement_SubMesh* submesh);
+		std::list<std::shared_ptr<Geometry::Triangle>> GetEdgeTriangles(M2SkinElement::CElement_SubMesh const* submesh) const;
 
 		class MeshInfo
 		{

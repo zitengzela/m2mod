@@ -365,6 +365,11 @@ M2Lib::C3Vector M2Lib::C3Vector::operator / (float Value) const
 	return result;
 }
 
+float M2Lib::C3Vector::Dot(C3Vector const& other) const
+{
+	return X * other.X + Y * other.Y + Z * other.Z;
+}
+
 M2Lib::C3Vector M2Lib::C3Vector::CrossProduct(C3Vector const& other) const
 {
 	C3Vector Product;
@@ -390,13 +395,14 @@ void M2Lib::C3Vector::Normalize()
 	Z = std::min(Z / length, 1.0f);
 }
 
-M2Lib::C3Vector M2Lib::C3Vector::CalculateNormal(C3Vector const& v1, C3Vector const& v2, C3Vector const& v3)
+M2Lib::C3Vector M2Lib::C3Vector::CalculateNormal(C3Vector const& v1, C3Vector const& v2, C3Vector const& v3, bool normalize)
 {
 	C3Vector V = v2 - v1;
 	C3Vector W = v3 - v1;
 
 	C3Vector N = V.CrossProduct(W);
-	N.Normalize();
+	if (normalize)
+		N.Normalize();
 	return N;
 }
 

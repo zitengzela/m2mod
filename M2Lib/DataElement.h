@@ -41,10 +41,10 @@ namespace M2Lib
 		void Clear();
 
 		template <class T>
-		T* as() { return (T*)Data.data(); }
+		T* as() const { return (T*)Data.data(); }
 
 		template <class T>
-		std::vector<T> asVector()
+		std::vector<T> asVector() const
 		{
 			m2lib_assert("Element data size is less than expected" && sizeof(T) * Count <= Data.size());
 
@@ -56,7 +56,7 @@ namespace M2Lib
 		}
 
 		template <class T>
-		T* at(uint32_t Index)
+		T* at(uint32_t Index) const
 		{
 			m2lib_assert(__FUNCTION__ " Index too large" && Index < Count);
 

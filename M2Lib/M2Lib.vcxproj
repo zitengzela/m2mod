@@ -139,6 +139,7 @@
     <ClInclude Include="SkeletonChunk.h" />
     <ClInclude Include="StringHash.h" />
     <ClInclude Include="StringHelpers.h" />
+    <ClInclude Include="VectorMath.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BoneComparator.cpp" />
@@ -153,6 +154,7 @@
     <ClCompile Include="M2Chunk.cpp" />
     <ClCompile Include="M2Element.cpp" />
     <ClCompile Include="M2I.cpp" />
+    <ClCompile Include="M2PostProcessing.cpp" />
     <ClCompile Include="M2Skin.cpp" />
     <ClCompile Include="M2SkinBuilder.cpp" />
     <ClCompile Include="M2SkinElement.cpp" />
@@ -163,6 +165,7 @@
     <ClCompile Include="SkeletonChunk.cpp" />
     <ClCompile Include="StringHash.cpp" />
     <ClCompile Include="StringHelpers.cpp" />
+    <ClCompile Include="VectorMath.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

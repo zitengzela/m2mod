@@ -49,7 +49,7 @@ namespace M2Mod
             checkBoxMergeBones.Checked = settings.MergeBones;
             checkBoxMergeAttachments.Checked = settings.MergeAttachments;
             checkBoxMergeCameras.Checked = settings.MergeCameras;
-            checkBoxFixSeams.Checked = settings.FixSeams;
+            // = settings.FixSeams;
             checkBoxFixEdgeNormals.Checked = settings.FixEdgeNormals;
             checkBoxIgnoreOriginalMeshIndexes.Checked = settings.IgnoreOriginalMeshIndexes;
             testFixAnimationsCheckBox.Checked = settings.FixAnimationsTest;
@@ -66,7 +66,7 @@ namespace M2Mod
                 MergeBones = checkBoxMergeBones.Checked,
                 MergeAttachments = checkBoxMergeAttachments.Checked,
                 MergeCameras = checkBoxMergeCameras.Checked,
-                FixSeams = checkBoxFixSeams.Checked,
+                FixSeams = false,
                 FixEdgeNormals = checkBoxFixEdgeNormals.Checked,
                 IgnoreOriginalMeshIndexes = checkBoxIgnoreOriginalMeshIndexes.Checked,
                 FixAnimationsTest = testFixAnimationsCheckBox.Checked,

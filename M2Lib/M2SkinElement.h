@@ -4,6 +4,7 @@
 #include "M2Types.h"
 #include <map>
 #include <unordered_set>
+#include "VectorMath.h"
 
 namespace M2Lib
 {
@@ -22,37 +23,6 @@ namespace M2Lib
 	namespace M2SkinElement
 	{
 		typedef std::map<uint32_t, uint32_t> TextureLookupRemap;
-
-		class Edge
-		{
-		public:
-			Edge(uint16_t VertexA, uint16_t VertexB)
-			{
-				if (VertexA < VertexB)
-				{
-					A = VertexA;
-					B = VertexB;
-				}
-				else
-				{
-					A = VertexB;
-					B = VertexA;
-				}
-			}
-
-			bool operator==(const Edge& other) const
-			{
-				return A == other.A && B == other.B;
-			}
-
-			uint32_t GetHash() const
-			{
-				return (uint32_t(A) << 16) | uint32_t(B);
-			}
-
-			uint16_t A;
-			uint16_t B;
-		};
 
 		enum EElement
 		{
@@ -194,11 +164,11 @@ namespace M2Lib
 namespace std
 {
 	template<>
-	struct hash<M2Lib::M2SkinElement::Edge>
+	struct hash<M2Lib::Geometry::Edge>
 	{
-		std::size_t operator()(const M2Lib::M2SkinElement::Edge& obj) const
+		std::size_t operator()(const M2Lib::Geometry::Edge& obj) const
 		{
-			uint32_t hash = (((uint32_t)obj.A) << 16) | (uint32_t)obj.B;
+			uint32_t hash = (((uint32_t)obj.A->Index) << 16) | (uint32_t)obj.B->Index;
 
 			return std::hash<uint32_t>()(hash);
 		}

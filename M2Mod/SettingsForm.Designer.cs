@@ -36,7 +36,6 @@
             this.checkBoxFixEdgeNormals = new System.Windows.Forms.CheckBox();
             this.checkBoxIgnoreOriginalMeshIndexes = new System.Windows.Forms.CheckBox();
             this.testFixAnimationsCheckBox = new System.Windows.Forms.CheckBox();
-            this.checkBoxFixSeams = new System.Windows.Forms.CheckBox();
             this.checkBoxMergeCameras = new System.Windows.Forms.CheckBox();
             this.workingDirectoryBrowseButton = new System.Windows.Forms.Button();
             this.workingDirectoryGroupBox = new System.Windows.Forms.GroupBox();
@@ -44,6 +43,9 @@
             this.checkBoxMergeAttachments = new System.Windows.Forms.CheckBox();
             this.checkBoxMergeBones = new System.Windows.Forms.CheckBox();
             this.forceExpansionComboBox = new System.Windows.Forms.ComboBox();
+            this.mappingsDirectoryGroupBox = new System.Windows.Forms.GroupBox();
+            this.mappingsDirectoryButton = new System.Windows.Forms.Button();
+            this.mappingsDirectoryTextBox = new System.Windows.Forms.TextBox();
             this.saveButton = new System.Windows.Forms.Button();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.label1 = new System.Windows.Forms.Label();
@@ -52,14 +54,11 @@
             this.profilesComboBox = new System.Windows.Forms.ComboBox();
             this.profilesLabel = new System.Windows.Forms.Label();
             this.editProfilesButton = new System.Windows.Forms.Button();
-            this.mappingsDirectoryGroupBox = new System.Windows.Forms.GroupBox();
-            this.mappingsDirectoryButton = new System.Windows.Forms.Button();
-            this.mappingsDirectoryTextBox = new System.Windows.Forms.TextBox();
             this.outputDirectoryGroupBox.SuspendLayout();
             this.workingDirectoryGroupBox.SuspendLayout();
+            this.mappingsDirectoryGroupBox.SuspendLayout();
             this.groupBox3.SuspendLayout();
             this.groupBox1.SuspendLayout();
-            this.mappingsDirectoryGroupBox.SuspendLayout();
             this.SuspendLayout();
             // 
             // outputDirectoryBrowseButton
@@ -108,18 +107,18 @@
             // checkBoxFixEdgeNormals
             // 
             this.checkBoxFixEdgeNormals.AutoSize = true;
-            this.checkBoxFixEdgeNormals.Location = new System.Drawing.Point(131, 42);
+            this.checkBoxFixEdgeNormals.Location = new System.Drawing.Point(131, 19);
             this.checkBoxFixEdgeNormals.Name = "checkBoxFixEdgeNormals";
             this.checkBoxFixEdgeNormals.Size = new System.Drawing.Size(108, 17);
             this.checkBoxFixEdgeNormals.TabIndex = 22;
             this.checkBoxFixEdgeNormals.Text = "Fix Edge Normals";
-            this.toolTip1.SetToolTip(this.checkBoxFixEdgeNormals, "Normals will be averaged on similar vertices between meshes");
+            this.toolTip1.SetToolTip(this.checkBoxFixEdgeNormals, "Will fix visual shading difference on sharp edges");
             this.checkBoxFixEdgeNormals.UseVisualStyleBackColor = true;
             // 
             // checkBoxIgnoreOriginalMeshIndexes
             // 
             this.checkBoxIgnoreOriginalMeshIndexes.AutoSize = true;
-            this.checkBoxIgnoreOriginalMeshIndexes.Location = new System.Drawing.Point(131, 65);
+            this.checkBoxIgnoreOriginalMeshIndexes.Location = new System.Drawing.Point(131, 42);
             this.checkBoxIgnoreOriginalMeshIndexes.Name = "checkBoxIgnoreOriginalMeshIndexes";
             this.checkBoxIgnoreOriginalMeshIndexes.Size = new System.Drawing.Size(159, 17);
             this.checkBoxIgnoreOriginalMeshIndexes.TabIndex = 21;
@@ -131,24 +130,13 @@
             // testFixAnimationsCheckBox
             // 
             this.testFixAnimationsCheckBox.AutoSize = true;
-            this.testFixAnimationsCheckBox.Location = new System.Drawing.Point(131, 88);
+            this.testFixAnimationsCheckBox.Location = new System.Drawing.Point(131, 65);
             this.testFixAnimationsCheckBox.Name = "testFixAnimationsCheckBox";
             this.testFixAnimationsCheckBox.Size = new System.Drawing.Size(94, 17);
             this.testFixAnimationsCheckBox.TabIndex = 20;
             this.testFixAnimationsCheckBox.Text = "Test Fix Anims";
             this.toolTip1.SetToolTip(this.testFixAnimationsCheckBox, "Internal testing. Check only if you know what you do");
             this.testFixAnimationsCheckBox.UseVisualStyleBackColor = true;
-            // 
-            // checkBoxFixSeams
-            // 
-            this.checkBoxFixSeams.AutoSize = true;
-            this.checkBoxFixSeams.Location = new System.Drawing.Point(131, 19);
-            this.checkBoxFixSeams.Name = "checkBoxFixSeams";
-            this.checkBoxFixSeams.Size = new System.Drawing.Size(74, 17);
-            this.checkBoxFixSeams.TabIndex = 19;
-            this.checkBoxFixSeams.Text = "Fix Seams";
-            this.toolTip1.SetToolTip(this.checkBoxFixSeams, "Seams between meshes will be eleminated, also normals will be averaged on edges");
-            this.checkBoxFixSeams.UseVisualStyleBackColor = true;
             // 
             // checkBoxMergeCameras
             // 
@@ -225,10 +213,44 @@
             this.forceExpansionComboBox.TabIndex = 0;
             this.toolTip1.SetToolTip(this.forceExpansionComboBox, "All input M2\'s will be treated accordingly");
             // 
+            // mappingsDirectoryGroupBox
+            // 
+            this.mappingsDirectoryGroupBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.mappingsDirectoryGroupBox.Controls.Add(this.mappingsDirectoryButton);
+            this.mappingsDirectoryGroupBox.Controls.Add(this.mappingsDirectoryTextBox);
+            this.mappingsDirectoryGroupBox.Location = new System.Drawing.Point(12, 165);
+            this.mappingsDirectoryGroupBox.Name = "mappingsDirectoryGroupBox";
+            this.mappingsDirectoryGroupBox.Size = new System.Drawing.Size(307, 56);
+            this.mappingsDirectoryGroupBox.TabIndex = 31;
+            this.mappingsDirectoryGroupBox.TabStop = false;
+            this.mappingsDirectoryGroupBox.Text = "Mappings directory";
+            this.toolTip1.SetToolTip(this.mappingsDirectoryGroupBox, "Directory where *.csv files are");
+            // 
+            // mappingsDirectoryButton
+            // 
+            this.mappingsDirectoryButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.mappingsDirectoryButton.Location = new System.Drawing.Point(265, 20);
+            this.mappingsDirectoryButton.Name = "mappingsDirectoryButton";
+            this.mappingsDirectoryButton.Size = new System.Drawing.Size(37, 22);
+            this.mappingsDirectoryButton.TabIndex = 6;
+            this.mappingsDirectoryButton.Text = "...";
+            this.mappingsDirectoryButton.UseVisualStyleBackColor = true;
+            this.mappingsDirectoryButton.Click += new System.EventHandler(this.MappingsDirectoryButton_Click);
+            // 
+            // mappingsDirectoryTextBox
+            // 
+            this.mappingsDirectoryTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.mappingsDirectoryTextBox.Location = new System.Drawing.Point(9, 21);
+            this.mappingsDirectoryTextBox.Name = "mappingsDirectoryTextBox";
+            this.mappingsDirectoryTextBox.Size = new System.Drawing.Size(250, 20);
+            this.mappingsDirectoryTextBox.TabIndex = 5;
+            // 
             // saveButton
             // 
             this.saveButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.saveButton.Location = new System.Drawing.Point(151, 420);
+            this.saveButton.Location = new System.Drawing.Point(151, 387);
             this.saveButton.Name = "saveButton";
             this.saveButton.Size = new System.Drawing.Size(81, 29);
             this.saveButton.TabIndex = 27;
@@ -243,13 +265,12 @@
             this.groupBox3.Controls.Add(this.checkBoxFixEdgeNormals);
             this.groupBox3.Controls.Add(this.checkBoxIgnoreOriginalMeshIndexes);
             this.groupBox3.Controls.Add(this.testFixAnimationsCheckBox);
-            this.groupBox3.Controls.Add(this.checkBoxFixSeams);
             this.groupBox3.Controls.Add(this.checkBoxMergeCameras);
             this.groupBox3.Controls.Add(this.checkBoxMergeAttachments);
             this.groupBox3.Controls.Add(this.checkBoxMergeBones);
             this.groupBox3.Location = new System.Drawing.Point(12, 287);
             this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(307, 116);
+            this.groupBox3.Size = new System.Drawing.Size(307, 91);
             this.groupBox3.TabIndex = 26;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Import Settings";
@@ -265,7 +286,7 @@
             // closeButton
             // 
             this.closeButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.closeButton.Location = new System.Drawing.Point(238, 420);
+            this.closeButton.Location = new System.Drawing.Point(238, 387);
             this.closeButton.Name = "closeButton";
             this.closeButton.Size = new System.Drawing.Size(81, 29);
             this.closeButton.TabIndex = 28;
@@ -318,45 +339,11 @@
             this.editProfilesButton.UseVisualStyleBackColor = true;
             this.editProfilesButton.Click += new System.EventHandler(this.EditProfilesButton_Click);
             // 
-            // mappingsDirectoryGroupBox
-            // 
-            this.mappingsDirectoryGroupBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.mappingsDirectoryGroupBox.Controls.Add(this.mappingsDirectoryButton);
-            this.mappingsDirectoryGroupBox.Controls.Add(this.mappingsDirectoryTextBox);
-            this.mappingsDirectoryGroupBox.Location = new System.Drawing.Point(12, 165);
-            this.mappingsDirectoryGroupBox.Name = "mappingsDirectoryGroupBox";
-            this.mappingsDirectoryGroupBox.Size = new System.Drawing.Size(307, 56);
-            this.mappingsDirectoryGroupBox.TabIndex = 31;
-            this.mappingsDirectoryGroupBox.TabStop = false;
-            this.mappingsDirectoryGroupBox.Text = "Mappings directory";
-            this.toolTip1.SetToolTip(this.mappingsDirectoryGroupBox, "Directory where *.csv files are");
-            // 
-            // mappingsDirectoryButton
-            // 
-            this.mappingsDirectoryButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.mappingsDirectoryButton.Location = new System.Drawing.Point(265, 20);
-            this.mappingsDirectoryButton.Name = "mappingsDirectoryButton";
-            this.mappingsDirectoryButton.Size = new System.Drawing.Size(37, 22);
-            this.mappingsDirectoryButton.TabIndex = 6;
-            this.mappingsDirectoryButton.Text = "...";
-            this.mappingsDirectoryButton.UseVisualStyleBackColor = true;
-            this.mappingsDirectoryButton.Click += new System.EventHandler(this.MappingsDirectoryButton_Click);
-            // 
-            // mappingsDirectoryTextBox
-            // 
-            this.mappingsDirectoryTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.mappingsDirectoryTextBox.Location = new System.Drawing.Point(9, 21);
-            this.mappingsDirectoryTextBox.Name = "mappingsDirectoryTextBox";
-            this.mappingsDirectoryTextBox.Size = new System.Drawing.Size(250, 20);
-            this.mappingsDirectoryTextBox.TabIndex = 5;
-            // 
             // SettingsForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(331, 455);
+            this.ClientSize = new System.Drawing.Size(331, 422);
             this.Controls.Add(this.mappingsDirectoryGroupBox);
             this.Controls.Add(this.editProfilesButton);
             this.Controls.Add(this.profilesLabel);
@@ -373,11 +360,11 @@
             this.outputDirectoryGroupBox.PerformLayout();
             this.workingDirectoryGroupBox.ResumeLayout(false);
             this.workingDirectoryGroupBox.PerformLayout();
+            this.mappingsDirectoryGroupBox.ResumeLayout(false);
+            this.mappingsDirectoryGroupBox.PerformLayout();
             this.groupBox3.ResumeLayout(false);
             this.groupBox3.PerformLayout();
             this.groupBox1.ResumeLayout(false);
-            this.mappingsDirectoryGroupBox.ResumeLayout(false);
-            this.mappingsDirectoryGroupBox.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -392,7 +379,6 @@
         private System.Windows.Forms.CheckBox checkBoxFixEdgeNormals;
         private System.Windows.Forms.CheckBox checkBoxIgnoreOriginalMeshIndexes;
         private System.Windows.Forms.CheckBox testFixAnimationsCheckBox;
-        private System.Windows.Forms.CheckBox checkBoxFixSeams;
         private System.Windows.Forms.CheckBox checkBoxMergeCameras;
         private System.Windows.Forms.Button workingDirectoryBrowseButton;
         private System.Windows.Forms.GroupBox workingDirectoryGroupBox;

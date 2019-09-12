@@ -94,11 +94,12 @@ namespace M2Lib
 		C3Vector operator * (float Value) const;
 		C3Vector operator / (float Value) const;
 
+		float Dot(C3Vector const& other) const;
 		C3Vector CrossProduct(C3Vector const& other) const;
 		void Normalize();
 		float Length() const;
 
-		static C3Vector CalculateNormal(C3Vector const& v1, C3Vector const& v2, C3Vector const& v3);
+		static C3Vector CalculateNormal(C3Vector const& v1, C3Vector const& v2, C3Vector const& v3, bool normalize = true);
 	};
 	ASSERT_SIZE(C3Vector, 12);
 

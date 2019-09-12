@@ -674,8 +674,10 @@ namespace M2Mod
 
                 if (dialog.ShowDialog() == DialogResult.OK && ProfileManager.Load(dialog.FileName, false))
                 {
+                    formInitialized = false;
                     InitializeProfiles();
                     InitializeFormData();
+                    formInitialized = true;
                 }
             }
         }

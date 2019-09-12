@@ -265,6 +265,7 @@ namespace M2Lib
 		void FixSeamsClothing(float PositionalTolerance, float AngularTolerance);
 		// averages normals on mesh edges
 		void FixNormals(float AngularTolerance);
+		void FixNormals(std::list<M2SkinElement::CElement_SubMesh const*> const& a, std::list<M2SkinElement::CElement_SubMesh const*> const& b, float AngularTolerance);
 
 		void DoExtraWork();
 
@@ -283,7 +284,7 @@ namespace M2Lib
 
 		bool GetFileSkin(std::wstring& SkinFileNameResultBuffer, std::wstring const& M2FileName, uint32_t SkinIndex, bool Save);
 		bool GetFileSkeleton(std::wstring& SkeletonFileNameResultBuffer, std::wstring const& M2FileName, bool Save);
-		bool GetFileParentSkeleton(std::wstring& SkeletonFileNameResultBuffer, std::wstring const& M2FileName, bool Save);
+		bool GetFileParentSkeleton(std::wstring& SkeletonFileNameResultBuffer, std::wstring const& M2FileName, bool Save) const;
 
 		EError LoadSkeleton();
 		EError SaveSkeleton(std::wstring const& M2FileName);
