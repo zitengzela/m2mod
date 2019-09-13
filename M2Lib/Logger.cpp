@@ -1,5 +1,4 @@
 #include "Logger.h"
-#include <time.h>
 #include <Windows.h>
 
 void M2Lib::Logger::AttachCallback(LoggerCallback callback)
@@ -12,7 +11,7 @@ void M2Lib::Logger::Remove(LoggerCallback callback)
 	AttachedCallbacks.remove(callback);
 }
 
-void M2Lib::Logger::LogInfo(char const* format, ...)
+void M2Lib::Logger::LogInfo(wchar_t const* format, ...)
 {
 	va_list args;
 	va_start(args, format);
@@ -20,7 +19,7 @@ void M2Lib::Logger::LogInfo(char const* format, ...)
 	va_end(args);
 }
 
-void M2Lib::Logger::LogError(char const* format, ...)
+void M2Lib::Logger::LogError(wchar_t const* format, ...)
 {
 	va_list args;
 	va_start(args, format);
@@ -28,7 +27,7 @@ void M2Lib::Logger::LogError(char const* format, ...)
 	va_end(args);
 }
 
-void M2Lib::Logger::LogWarning(char const* format, ...)
+void M2Lib::Logger::LogWarning(wchar_t const* format, ...)
 {
 	va_list args;
 	va_start(args, format);
@@ -36,11 +35,11 @@ void M2Lib::Logger::LogWarning(char const* format, ...)
 	va_end(args);
 }
 
-void M2Lib::Logger::Log(int LogLevel, char const* format, va_list args)
+void M2Lib::Logger::Log(int LogLevel, wchar_t const* format, va_list args)
 {
-	char text[4096];
+	wchar_t text[4096];
 
-	vsprintf_s(text, sizeof(text), format, args);
+	vswprintf_s(text, sizeof(text) / sizeof(text[0]), format, args);
 
 	for (auto callback : AttachedCallbacks)
 		callback(LogLevel, text);

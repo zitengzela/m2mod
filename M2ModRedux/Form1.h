@@ -104,7 +104,7 @@ namespace M2ModRedux
 			}
 			else
 			{
-				auto info = M2Lib::FileStorage_GetFileInfoByPartialPath(handle, StringConverter(testInputTextBox->Text).ToStringA());
+				auto info = M2Lib::FileStorage_GetFileInfoByPartialPath(handle, StringConverter(testInputTextBox->Text).ToStringW());
 				if (!info)
 					testOutputTextBox->Text = "Not found in storage";
 				else
@@ -1178,7 +1178,7 @@ private: System::Windows::Forms::Button^  clearButton;
 			auto outputDirectory = gcnew String(settings->OutputDirectory);
 
 			auto handle = M2Lib::FileStorage_Get(settings->MappingsDirectory);
-			auto info = M2Lib::FileStorage_GetFileInfoByPartialPath(handle, StringConverter("\\" + fileName).ToStringA());
+			auto info = M2Lib::FileStorage_GetFileInfoByPartialPath(handle, StringConverter("\\" + fileName).ToStringW());
 			if (!info)
 			{
 				SetStatus("Failed to determine model relative path in storage");

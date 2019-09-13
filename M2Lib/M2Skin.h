@@ -121,7 +121,7 @@ namespace M2Lib
 			struct TextureInfo
 			{
 				M2Element::CElement_Texture* pTexture;
-				std::string Name;
+				std::wstring Name;
 			};
 
 			uint32_t ID;

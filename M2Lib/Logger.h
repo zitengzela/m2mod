@@ -1,7 +1,6 @@
 #pragma once
 
 #include "BaseTypes.h"
-#include <string>
 #include <list>
 
 namespace M2Lib
@@ -13,7 +12,7 @@ namespace M2Lib
 		LOG_ERROR = 2,
 	};
 
-	typedef void(__stdcall* LoggerCallback)(int LogLevel, char const*);
+	typedef void(__stdcall* LoggerCallback)(int LogLevel, wchar_t const*);
 
 	class Logger
 	{
@@ -21,7 +20,7 @@ namespace M2Lib
 
 		std::list<LoggerCallback> AttachedCallbacks;
 
-		void Log(int LogLevel, char const* format, va_list args);
+		void Log(int LogLevel, wchar_t const* format, va_list args);
 
 	public:
 		static Logger& getInstance()
@@ -33,9 +32,9 @@ namespace M2Lib
 		void AttachCallback(LoggerCallback callback);
 		void Remove(LoggerCallback callback);
 
-		void LogInfo(char const* format, ...);
-		void LogError(char const* format, ...);
-		void LogWarning(char const* format, ...);
+		void LogInfo(wchar_t const* format, ...);
+		void LogError(wchar_t const* format, ...);
+		void LogWarning(wchar_t const* format, ...);
 	};
 
 	M2LIB_API void __cdecl AttachLoggerCallback(LoggerCallback callback);

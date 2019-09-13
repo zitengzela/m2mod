@@ -3,11 +3,11 @@ using System.Runtime.InteropServices;
 
 namespace M2Mod.Interop
 {
-    class ConstCharPtrMarshaller : ICustomMarshaler
+    class ConstWCharPtrMarshaller : ICustomMarshaler
     {
         public object MarshalNativeToManaged(IntPtr pNativeData)
         {
-            return Marshal.PtrToStringAnsi(pNativeData);
+            return Marshal.PtrToStringUni(pNativeData);
         }
 
         public IntPtr MarshalManagedToNative(object managedObj)
@@ -28,7 +28,7 @@ namespace M2Mod.Interop
             return IntPtr.Size;
         }
 
-        static readonly ConstCharPtrMarshaller instance = new ConstCharPtrMarshaller();
+        static readonly ConstWCharPtrMarshaller instance = new ConstWCharPtrMarshaller();
 
         public static ICustomMarshaler GetInstance(string cookie)
         {

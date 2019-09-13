@@ -29,7 +29,7 @@ M2Lib::EError M2Lib::M2Skin::Load(wchar_t const* FileName)
 	if (FileStream.fail())
 		return EError_FailedToLoadSKIN_CouldNotOpenFile;
 
-	sLogger.LogInfo("Loading skin at %s", StringHelpers::WStringToString(FileName).c_str());
+	sLogger.LogInfo(L"Loading skin at %s", FileName);
 
 	// find file size
 	FileStream.seekg(0, std::ios::end);
@@ -67,12 +67,12 @@ M2Lib::EError M2Lib::M2Skin::Save(const wchar_t* FileName)
 	auto directory = std::filesystem::path(FileName).parent_path();
 	if (!std::filesystem::is_directory(directory) && !std::filesystem::create_directories(directory))
 	{
-		sLogger.LogError("Failed to write to directory '%s'", directory.string().c_str());
+		sLogger.LogError(L"Failed to write to directory '%s'", directory.wstring().c_str());
 
 		return EError_FailedToSaveM2;
 	}
 
-	sLogger.LogInfo("Saving skin to %s", StringHelpers::WStringToString(FileName).c_str());
+	sLogger.LogInfo(L"Saving skin to %s", FileName);
 
 	// open file stream
 	std::fstream FileStream;
@@ -133,8 +133,8 @@ void M2Lib::M2Skin::BuildVertexBoneIndices()
 				auto res = m_ReverseBoneLookup(Vertex.BoneIndices[i], &BoneLookupList[SubMesh.BoneStart], SubMesh.BoneCount);
 				if (Vertex.BoneWeights[i] && res == -1)
 				{
-					sLogger.LogError("%u/%u Bone index = %u, Submesh.ID = %u", iSubMesh, SubMeshListLength, Vertex.BoneIndices[i], SubMesh.ID);
-					sLogger.LogError("%u/%u Submesh.BoneStart = %u, Submesh.BoneCount = %u", iSubMesh, SubMeshListLength, SubMesh.BoneStart, SubMesh.BoneCount);
+					sLogger.LogError(L"%u/%u Bone index = %u, Submesh.ID = %u", iSubMesh, SubMeshListLength, Vertex.BoneIndices[i], SubMesh.ID);
+					sLogger.LogError(L"%u/%u Submesh.BoneStart = %u, Submesh.BoneCount = %u", iSubMesh, SubMeshListLength, SubMesh.BoneStart, SubMesh.BoneCount);
 					m2lib_assert(false);
 				}
 				BoneIndexList[j].BoneIndices[i] = Vertex.BoneWeights[i] ? res : i;
@@ -705,7 +705,7 @@ bool M2Lib::M2Skin::AddShader(uint16_t ShaderId, int16_t const* TextureTypes, st
 		{
 			if (i != 0)
 			{
-				sLogger.LogError("Failed to apply shader data: texture not set for op#%u (total %u ops)", i, OpCountForShader);
+				sLogger.LogError(L"Failed to apply shader data: texture not set for op#%u (total %u ops)", i, OpCountForShader);
 				return false;
 			}
 

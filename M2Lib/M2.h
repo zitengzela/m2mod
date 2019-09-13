@@ -243,7 +243,7 @@ namespace M2Lib
 		uint32_t AddTexture(M2Element::CElement_Texture::ETextureType Type, M2Element::CElement_Texture::ETextureFlags Flags, char const* szTextureSource);
 		uint32_t AddTextureLookup(uint16_t TextureId, bool ForceNewIndex = false);
 		uint32_t GetTextureIndex(M2Element::CElement_Texture::ETextureType Type, const char* szTextureSource);
-		std::string GetTexturePath(uint32_t Index);
+		std::wstring GetTexturePath(uint32_t Index);
 		void RemoveTXIDChunk();
 
 		DataElement* GetAnimations();

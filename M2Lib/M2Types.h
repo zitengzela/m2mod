@@ -208,7 +208,7 @@ namespace M2Lib
 		EError_FailedToLoadSkeleton_CouldNotOpenFile,
 	};
 
-	M2LIB_API char const* __cdecl GetErrorText(EError Error);
+	M2LIB_API wchar_t const* __cdecl GetErrorText(EError Error);
 
 	struct BoundaryData
 	{

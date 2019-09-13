@@ -65,7 +65,7 @@ void M2Lib::M2::FixNormals(float AngularTolerance)
 		}
 	}
 
-	sLogger.LogInfo("Body mesh count: %u, armor mesh count: %u, unk mesh count: %u", body.size(), armor.size(), rest.size());
+	sLogger.LogInfo(L"Body mesh count: %u, armor mesh count: %u, unk mesh count: %u", body.size(), armor.size(), rest.size());
 
 	triangleLookup.Initialize(pSkin);
 	FixNormals(body, body, 30.0f);

@@ -5,7 +5,7 @@
 
 namespace M2Lib
 {
-	std::string ChunkIdToStr(uint32_t ChunkId, bool Reverse);
+	std::wstring ChunkIdToStr(uint32_t ChunkId, bool Reverse);
 
 	class ChunkBase
 	{

@@ -93,7 +93,7 @@
     <Compile Include="ErrorForm.Designer.cs">
       <DependentUpon>ErrorForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Interop\ConstCharPtrMarshaller.cs" />
+    <Compile Include="Interop\ConstWCharPtrMarshaller.cs" />
     <Compile Include="Interop\Imports.cs" />
     <Compile Include="Interop\Structures\CompareStatus.cs" />
     <Compile Include="Interop\Structures\LogLevel.cs" />
