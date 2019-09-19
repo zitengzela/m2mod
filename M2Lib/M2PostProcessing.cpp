@@ -1,5 +1,6 @@
 #include "M2.h"
 #include "Logger.h"
+#include <set>
 
 using namespace M2Lib::M2Element;
 using namespace M2Lib::M2Chunk;
@@ -43,6 +44,7 @@ void M2Lib::M2::FixNormals(float AngularTolerance)
 	uint32_t meshCount = pSkin->Elements[EElement_SubMesh].Count;
 	std::list<CElement_SubMesh const*> body, armor, rest;
 
+	std::set<uint32_t> bodyMeshIds;
 	uint32_t unkCount = 0;
 	for (uint32_t i = 0; i < meshCount; ++i)
 	{
@@ -50,6 +52,7 @@ void M2Lib::M2::FixNormals(float AngularTolerance)
 		switch (GetSubSetType(submesh->ID))
 		{
 			case Subset_Body:
+				bodyMeshIds.insert(submesh->ID);
 				body.push_back(submesh);
 				break;
 			case Subset_Armor:
@@ -65,48 +68,62 @@ void M2Lib::M2::FixNormals(float AngularTolerance)
 		}
 	}
 
-	sLogger.LogInfo(L"Body mesh count: %u, armor mesh count: %u, unk mesh count: %u", body.size(), armor.size(), rest.size());
+	sLogger.LogInfo(L"Body mesh count: %u, armor mesh count: %u, rest mesh count: %u", body.size(), armor.size(), rest.size());
+
+	//sLogger.LogInfo(L"Body meshes:");
+	//for (auto id : bodyMeshIds)
+	//	sLogger.LogInfo(L"%u", id);
 
 	triangleLookup.Initialize(pSkin);
-	FixNormals(body, body, 30.0f);
+
+	FixNormals(body, body, -1.0f, false);
+	FixNormals(body, armor, -1.0f, true);
 }
 
-void M2Lib::M2::FixNormals(std::list<CElement_SubMesh const*> const& a, std::list<CElement_SubMesh const*> const& b, float AngularTolerance)
+void M2Lib::M2::FixNormals(std::list<CElement_SubMesh const*> const& source, std::list<CElement_SubMesh const*> const& target, float AngularTolerance, bool preferSource)
 {
 	auto pSkin = Skins[0];
 	auto VertexList = Elements[EElement_Vertex].as<CVertex>();
 	auto VertexCount = Elements[EElement_Vertex].Count;
 
-	for (auto SubmeshI : a)
+	// lookup hash map to make it slow af
+	std::set<uint32_t> processedVertices;
+	for (auto SubmeshI : source)
 	{
 		//sLogger.LogInfo("Mesh %u Edges %u", SubmeshI->ID, EdgesI.size());
 		std::unordered_set<std::shared_ptr<Geometry::Vertex>> verticesI;
-		auto trianglesI = triangleLookup.GetEdgeTriangles(SubmeshI);
 
-		//sLogger.LogError("Mesh %u edge triangles: %u", SubmeshI->ID, trianglesI.size());
-		for (auto& triangle : *trianglesI)
+		for (auto SubmeshJ : target)
 		{
-			if (triangle->EdgeA->IsUnique)
+			if (SubmeshI == SubmeshJ)
+				continue;
+
+			if (verticesI.empty())
 			{
-				verticesI.insert(triangle->EdgeA->A);
-				verticesI.insert(triangle->EdgeA->B);
+				auto trianglesI = triangleLookup.GetEdgeTriangles(SubmeshI);
+				//sLogger.LogError("Mesh %u edge triangles: %u", SubmeshI->ID, trianglesI.size());
+				for (auto& triangle : *trianglesI)
+				{
+					if (triangle->EdgeA->IsUnique)
+					{
+						verticesI.insert(triangle->EdgeA->A);
+						verticesI.insert(triangle->EdgeA->B);
+					}
+
+					if (triangle->EdgeB->IsUnique)
+					{
+						verticesI.insert(triangle->EdgeB->A);
+						verticesI.insert(triangle->EdgeB->B);
+					}
+
+					if (triangle->EdgeC->IsUnique)
+					{
+						verticesI.insert(triangle->EdgeC->A);
+						verticesI.insert(triangle->EdgeC->B);
+					}
+				}
 			}
 
-			if (triangle->EdgeB->IsUnique)
-			{
-				verticesI.insert(triangle->EdgeB->A);
-				verticesI.insert(triangle->EdgeB->B);
-			}
-
-			if (triangle->EdgeC->IsUnique)
-			{
-				verticesI.insert(triangle->EdgeC->A);
-				verticesI.insert(triangle->EdgeC->B);
-			}
-		}
-
-		for (auto SubmeshJ : b)
-		{
 			auto trianglesJ = triangleLookup.GetEdgeTriangles(SubmeshJ);
 			//sLogger.LogError("Mesh %u edge triangles: %u", SubmeshJ->ID, trianglesJ.size());
 			std::unordered_set<std::shared_ptr<Geometry::Vertex>> verticesJ;
@@ -131,13 +148,14 @@ void M2Lib::M2::FixNormals(std::list<CElement_SubMesh const*> const& a, std::lis
 				}
 			}
 
-			//sLogger.LogError("I vertices to check: %u", verticesI.size());
-			//sLogger.LogError("J vertices to check: %u", verticesJ.size());
 			for (auto iVertex : verticesI)
 			{
 				m2lib_assert(iVertex->Index < VertexCount);
 				auto vertexI = &VertexList[iVertex->Index];
-				//sLogger.LogError("Vertex %u out of %u", iVertex->pEdge->pTriangle->A, VertexCount);
+				if (processedVertices.find(iVertex->Index) != processedVertices.end())
+					continue;
+				processedVertices.insert(iVertex->Index);
+
 				m2lib_assert(iVertex->pEdge->pTriangle->A < VertexCount);
 				auto vertexA1 = &VertexList[iVertex->pEdge->pTriangle->A];
 				m2lib_assert(iVertex->pEdge->pTriangle->B < VertexCount);
@@ -150,8 +168,11 @@ void M2Lib::M2::FixNormals(std::list<CElement_SubMesh const*> const& a, std::lis
 
 				for (auto jVertex : verticesJ)
 				{
-					if (iVertex->Index == jVertex->Index)
+					if (processedVertices.find(jVertex->Index) != processedVertices.end())
 						continue;
+					processedVertices.insert(jVertex->Index);
+					//if (iVertex->Index == jVertex->Index)
+					//	continue;
 
 					auto vertexJ = &VertexList[jVertex->Index];
 
@@ -171,7 +192,7 @@ void M2Lib::M2::FixNormals(std::list<CElement_SubMesh const*> const& a, std::lis
 
 					Geometry::Plane b(vertexA2->Position, vertexB2->Position, vertexC2->Position);
 
-					if (Geometry::CalculateAngle(a, b) > AngularTolerance)
+					if (AngularTolerance > 0.0f && Geometry::CalculateAngle(a, b) > AngularTolerance)
 						continue;
 
 					normalsToAvg.emplace_back(b.Normal, vertexJ);
@@ -180,17 +201,22 @@ void M2Lib::M2::FixNormals(std::list<CElement_SubMesh const*> const& a, std::lis
 				if (!normalsToAvg.empty())
 				{
 					C3Vector newNormal = a.Normal;
-					for (auto itr : normalsToAvg)
-						newNormal = newNormal + itr.first;
 
-					// if normal is zero, then possibly something is wrong
-					// perhaps it's two surfaces on each other
-					if (floatEq(newNormal.Length(), 0.0f))
-						continue;
+					if (!preferSource)
+					{
+						for (auto itr : normalsToAvg)
+							newNormal = newNormal + itr.first;
 
-					newNormal.Normalize();
+						// if normal is zero, then possibly something is wrong
+						// perhaps it's two surfaces on each other
+						if (floatEq(newNormal.Length(), 0.0f))
+							continue;
 
-					vertexI->Normal = newNormal;
+						newNormal.Normalize();
+
+						vertexI->Normal = newNormal;
+					}
+
 					for (auto itr : normalsToAvg)
 						itr.second->Normal = newNormal;
 				}

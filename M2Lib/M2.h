@@ -265,7 +265,7 @@ namespace M2Lib
 		void FixSeamsClothing(float PositionalTolerance, float AngularTolerance);
 		// averages normals on mesh edges
 		void FixNormals(float AngularTolerance);
-		void FixNormals(std::list<M2SkinElement::CElement_SubMesh const*> const& a, std::list<M2SkinElement::CElement_SubMesh const*> const& b, float AngularTolerance);
+		void FixNormals(std::list<M2SkinElement::CElement_SubMesh const*> const& source, std::list<M2SkinElement::CElement_SubMesh const*> const& target, float AngularTolerance, bool preferSource);
 
 		void DoExtraWork();
 

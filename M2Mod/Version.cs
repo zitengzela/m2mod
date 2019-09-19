@@ -5,6 +5,6 @@ namespace M2Mod
     {
         public static readonly int Major = 8;
         public static readonly int Minor = 2;
-        public static readonly int Patch = 1;
+        public static readonly int Patch = 2;
     }
 }
