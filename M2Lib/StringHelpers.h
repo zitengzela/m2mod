@@ -3,6 +3,18 @@
 #include <string>
 #include <algorithm>
 
+namespace std
+{
+	template <class _Elem, class _Traits>
+	inline std::basic_ostream<_Elem, _Traits>& __CLRCALL_OR_CDECL rendl(
+		std::basic_ostream<_Elem, _Traits>& _Ostr) { // insert newline and flush stream
+		_Ostr.put(_Ostr.widen('\r'));
+		_Ostr.put(_Ostr.widen('\n'));
+		_Ostr.flush();
+		return _Ostr;
+	}
+}
+
 namespace  M2Lib {
 	namespace StringHelpers
 	{

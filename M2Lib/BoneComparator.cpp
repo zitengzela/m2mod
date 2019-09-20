@@ -140,36 +140,33 @@ M2Lib::BoneComparator::ComparatorWrapper::ComparatorWrapper(wchar_t const* oldM2
 	diffMap = Diff(oldM2, newM2, compareTextures);
 	compareStatus = GetDifferenceStatus(diffMap, weightThreshold);
 
-	auto to_string_with_precision = [](float val, int precision = 2)
-	{
-		std::stringstream ss;
-		ss << std::setprecision(2) << val;
-		return ss.str();
-	};
+	std::wstringstream ss;
 
 	if (compareStatus == CompareStatus::Identical)
 	{
-		buffer += "# Old and new model bones are identical\r\n";
+		ss << L"# Old and new model bones are identical" << std::rendl;
+		buffer = ss.str();
 		return;
 	}
 	else if (compareStatus == CompareStatus::IdenticalWithinThreshold)
 	{
-		buffer += "# Old and new model bones are identical within given threshold " + to_string_with_precision(weightThreshold) + "\r\n";
+		ss << L"# Old and new model bones are identical within given threshold " << std::setprecision(2) << weightThreshold << std::rendl;
+		buffer = ss.str();
 		return;
 	}
 
-	buffer += "# Old M2: " + StringHelpers::WStringToString(oldM2Path) + "\r\n";
-	buffer += "# New M2: " + StringHelpers::WStringToString(newM2Path) + "\r\n";
-	buffer += "# Weight threshold: " + std::to_string(weightThreshold) + "\r\n";
-	buffer += "# Use this file with Blender\r\n";
-	buffer += "# \r\n";
-	buffer += "# Output [old bone]: [new bone #1] (probability weight) [new bone #2] (probability weight) ...\r\n";
-	buffer += "# To use this file in Blender you MUST remove extra bone candidates to make sure only one bone present\r\n";
-	buffer += "# Bring contents to format: [old bone]: [new bone]\r\n";
-	buffer += "# E.g.:\r\n";
-	buffer += "# 13: 14\r\n";
-	buffer += "#\r\n";
-	buffer += "# If any <no candidate> lines present - remove, but most likely you won't be able to use this file for conversion\r\n";
+	ss << L"# Old M2: " << oldM2Path << std::rendl;
+	ss << L"# New M2: " << newM2Path << std::rendl;
+	ss << L"# Weight threshold: " << std::setprecision(2) << weightThreshold << std::rendl;
+	ss << L"# Use this file with Blender" << std::rendl;
+	ss << L"# " << std::rendl;
+	ss << L"# Output [old bone]: [new bone #1] (probability weight) [new bone #2] (probability weight) ..." << std::rendl;
+	ss << L"# To use this file in Blender you MUST remove extra bone candidates to make sure only one bone present" << std::rendl;
+	ss << L"# Bring contents to format: [old bone]: [new bone]" << std::rendl;
+	ss << L"# E.g.:" << std::rendl;
+	ss << L"# 13: 14" << std::rendl;
+	ss << L"#" << std::rendl;
+	ss << L"# If any <no candidate> lines present - remove, but most likely you won't be able to use this file for conversion" << std::rendl;
 
 	for (auto itr : diffMap)
 	{
@@ -178,7 +175,7 @@ M2Lib::BoneComparator::ComparatorWrapper::ComparatorWrapper(wchar_t const* oldM2
 		if (weighted.size() == 1 && weighted.begin()->first == itr.first)
 			continue;
 
-		buffer += std::to_string(itr.first) + ": ";
+		ss << std::to_wstring(itr.first) << ": ";
 
 		for (auto itr = weighted.begin(); itr != weighted.end();)
 		{
@@ -189,16 +186,21 @@ M2Lib::BoneComparator::ComparatorWrapper::ComparatorWrapper(wchar_t const* oldM2
 		}
 
 		if (weighted.empty())
-			buffer += "<no candidate>";
+			ss << L"<no candidate>";
 		else
 		{
 			for (auto candidate : weighted)
 			{
-				buffer += std::to_string(candidate.first) + "(" + to_string_with_precision(candidate.second, 2) + ") ";
+				ss << std::to_wstring(candidate.first);
+				if (weighted.size() > 1)
+					ss << "(" << std::setprecision(2) << candidate.second << ")";
+				ss << " ";
 			}
 		}
-		buffer += "\r\n";
+		ss << std::rendl;
 	}
+
+	buffer = ss.str();
 }
 
 M2Lib::EError M2Lib::BoneComparator::ComparatorWrapper::GetErrorStatus() const
@@ -211,7 +213,7 @@ M2Lib::BoneComparator::CompareStatus M2Lib::BoneComparator::ComparatorWrapper::G
 	return compareStatus;
 }
 
-const char* M2Lib::BoneComparator::ComparatorWrapper::GetStringResult() const
+const wchar_t* M2Lib::BoneComparator::ComparatorWrapper::GetStringResult() const
 {
 	return buffer.c_str();
 }
@@ -261,7 +263,7 @@ M2Lib::BoneComparator::CompareStatus M2Lib::BoneComparator::Wrapper_GetResult(M2
 	return static_cast<ComparatorWrapper*>(pointer)->GetResult();
 }
 
-const char* M2Lib::BoneComparator::Wrapper_GetStringResult(M2LIB_HANDLE pointer)
+const wchar_t* M2Lib::BoneComparator::Wrapper_GetStringResult(M2LIB_HANDLE pointer)
 {
 	return static_cast<ComparatorWrapper*>(pointer)->GetStringResult();
 }
