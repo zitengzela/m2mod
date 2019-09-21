@@ -62,14 +62,11 @@ namespace M2Mod.Interop
         public static extern void AttachLoggerCallback(LoggerDelegate callback);
 
         [DllImport("M2Lib.dll", CallingConvention = CallingConvention.Cdecl)]
-        public static extern IntPtr Wrapper_Create([MarshalAs(UnmanagedType.LPWStr)]string oldM2Path, [MarshalAs(UnmanagedType.LPWStr)]string newM2Path, float weightThreshold, bool compareTextures, ref Settings settings);
+        public static extern IntPtr Wrapper_Create(IntPtr oldM2, IntPtr newM2, float weightThreshold, bool compareTextures);
 
         [DllImport("M2Lib.dll", CallingConvention = CallingConvention.Cdecl)]
-        public static extern M2LibError Wrapper_GetErrorStatus(IntPtr pointer);
-
-        [DllImport("M2Lib.dll", CallingConvention = CallingConvention.Cdecl)]
-
         public static extern CompareStatus Wrapper_GetResult(IntPtr pointer);
+
         [DllImport("M2Lib.dll", CallingConvention = CallingConvention.Cdecl)]
         [return: MarshalAs(UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof(ConstWCharPtrMarshaller))]
         public static extern string Wrapper_GetStringResult(IntPtr pointer);

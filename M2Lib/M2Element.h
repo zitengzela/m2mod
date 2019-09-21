@@ -110,16 +110,33 @@ namespace M2Lib
 			int16_t NextAnimation;		// index to next animation with same AnimationID, -1 if there are no more.
 			uint16_t NextIndex;			// this animation's index in the list of animations.
 
-			bool IsInline() const { return (Flags & 0x20) != 0; }
+			bool IsInplace() const { return (Flags & 0x20) != 0; }
 		};
 
 		ASSERT_SIZE(CElement_Animation, 64);
 
+		enum EInterpolationType
+			: uint16_t
+		{
+			EInterpolationType_None = 0,
+			EInterpolationType_Linear = 1,
+			EInterpolationType_Bezier = 2,
+			EInterpolationType_Hermite = 3,
+		};
+
+		struct M2TrackBase
+		{
+			EInterpolationType InterpolationType;
+			int16_t GlobalSequenceID;
+			M2Array TimeStamps;
+		};
+
+		ASSERT_SIZE(M2TrackBase, 0xC);
+
 		//
 		// generic animation block header.
-		class CElement_AnimationBlock
+		struct M2Track : M2TrackBase
 		{
-		public:
 			// an animation will reference several of these, and each of these in turn corresponds to a bone (my best guess).
 			class CChannel
 			{
@@ -158,29 +175,10 @@ namespace M2Lib
 				float Values[1];
 			};
 
-			enum EInterpolationType
-				: uint16_t
-			{
-				EInterpolationType_None = 0,
-				EInterpolationType_Linear = 1,
-				EInterpolationType_Hermite = 2,
-			};
-
-		public:
-
-			CElement_AnimationBlock()
-			{
-				InterpolationType = EInterpolationType_None;
-				GlobalSequenceID = -1;
-			}
-
-			EInterpolationType InterpolationType;
-			int16_t GlobalSequenceID;
-			M2Array Times;
-			M2Array Keys;
+			M2Array Values;
 		};
 
-		ASSERT_SIZE(CElement_AnimationBlock, 20);
+		ASSERT_SIZE(M2Track, 20);
 
 		class CElement_FakeAnimationBlock
 		{
@@ -208,15 +206,14 @@ namespace M2Lib
 				EFlags_AnimScaled = 0x1000,		// set blend_modificator to helmetAnimScalingRec.m_amount for this bone
 			};
 
-		public:
 			int32_t BoneLookupID;		// index into BoneLookup table or -1.
 			EFlags Flags;				//
 			int16_t ParentBone;			// index to parent bone or -1.
 			uint16_t SubmeshId;			// // Mesh part ID
 			uint16_t Unknown[2];			// ?
-			CElement_AnimationBlock AnimationBlock_Position;	// Float32x3
-			CElement_AnimationBlock AnimationBlock_Rotation;	// SInt16x4
-			CElement_AnimationBlock AnimationBlock_Scale;		// Float32x3
+			M2Track AnimationBlock_Position;	// Float32x3
+			M2Track AnimationBlock_Rotation;	// SInt16x4
+			M2Track AnimationBlock_Scale;		// Float32x3
 			C3Vector Position;
 		};
 
@@ -278,8 +275,8 @@ namespace M2Lib
 		class CElement_Color
 		{
 		public:
-			CElement_AnimationBlock AnimationBlock_Color;		// Float32x3
-			CElement_AnimationBlock AnimationBlock_Opacity;		// uint16_t
+			M2Track AnimationBlock_Color;		// Float32x3
+			M2Track AnimationBlock_Opacity;		// uint16_t
 		};
 
 		ASSERT_SIZE(CElement_Color, 40);
@@ -335,7 +332,7 @@ namespace M2Lib
 		class CElement_Transparency
 		{
 		public:
-			CElement_AnimationBlock AnimationBlock_Transparency;	// uint16_t
+			M2Track AnimationBlock_Transparency;	// uint16_t
 
 		};
 
@@ -346,9 +343,9 @@ namespace M2Lib
 		class CElement_UVAnimation
 		{
 		public:
-			CElement_AnimationBlock AnimationBlock_Position;	// Float32x3
-			CElement_AnimationBlock AnimationBlock_Rotation;	// SInt16x4
-			CElement_AnimationBlock AnimationBlock_Scale;		// Float32x3
+			M2Track AnimationBlock_Position;	// Float32x3
+			M2Track AnimationBlock_Rotation;	// SInt16x4
+			M2Track AnimationBlock_Scale;		// Float32x3
 		};
 
 		ASSERT_SIZE(CElement_UVAnimation, 60);
@@ -552,7 +549,7 @@ namespace M2Lib
 			uint32_t ID;					//
 			uint32_t ParentBone;			// parent bone.
 			C3Vector Position;			// position relative to parent bone.
-			CElement_AnimationBlock AnimationBlock_Visibility;	// uint16_t.
+			M2Track AnimationBlock_Visibility;	// uint16_t.
 		};
 
 		ASSERT_SIZE(CElement_Attachment, 40);
@@ -642,13 +639,13 @@ namespace M2Lib
 			uint16_t Type;
 			uint16_t ParentBone;
 			C3Vector Position;
-			CElement_AnimationBlock AnimationBlock_AmbientColor;		// Float32x3
-			CElement_AnimationBlock AnimationBlock_AmbientIntensity;	// float
-			CElement_AnimationBlock AnimationBlock_DiffuseColor;		// Float32x3
-			CElement_AnimationBlock AnimationBlock_DiffuseIntensity;	// float
-			CElement_AnimationBlock AnimationBlock_AttenuationStart;	// float
-			CElement_AnimationBlock AnimationBlock_AttenuationEnd;		// float
-			CElement_AnimationBlock AnimationBlock_Visibility;			// uint16_t
+			M2Track AnimationBlock_AmbientColor;		// Float32x3
+			M2Track AnimationBlock_AmbientIntensity;	// float
+			M2Track AnimationBlock_DiffuseColor;		// Float32x3
+			M2Track AnimationBlock_DiffuseIntensity;	// float
+			M2Track AnimationBlock_AttenuationStart;	// float
+			M2Track AnimationBlock_AttenuationEnd;		// float
+			M2Track AnimationBlock_Visibility;			// uint16_t
 		};
 
 		ASSERT_SIZE(CElement_Light, 156);
@@ -668,12 +665,12 @@ namespace M2Lib
 			ECameraType Type;
 			float ClipFar;
 			float ClipNear;
-			CElement_AnimationBlock AnimationBlock_Position;		// Float32x3
+			M2Track AnimationBlock_Position;		// Float32x3
 			C3Vector Position;
-			CElement_AnimationBlock AnimationBlock_Target;			// Float32x3
+			M2Track AnimationBlock_Target;			// Float32x3
 			C3Vector Target;
-			CElement_AnimationBlock AnimationBlock_Roll;			// float
-			CElement_AnimationBlock AnimationBlock_FieldOfView;		// float	// v4
+			M2Track AnimationBlock_Roll;			// float
+			M2Track AnimationBlock_FieldOfView;		// float	// v4
 		};
 
 		ASSERT_SIZE(CElement_Camera, 116);
@@ -692,11 +689,11 @@ namespace M2Lib
 			float FoV;
 			float ClipFar;
 			float ClipNear;
-			CElement_AnimationBlock AnimationBlock_Position;		// Float32x3
+			M2Track AnimationBlock_Position;		// Float32x3
 			C3Vector Position;
-			CElement_AnimationBlock AnimationBlock_Target;			// Float32x3
+			M2Track AnimationBlock_Target;			// Float32x3
 			C3Vector Target;
-			CElement_AnimationBlock AnimationBlock_Roll;			// float
+			M2Track AnimationBlock_Roll;			// float
 		};
 
 		ASSERT_SIZE(CElement_Camera_PreCata, 100);
@@ -721,17 +718,17 @@ namespace M2Lib
 			C3Vector Position;
 			M2Array Texture;
 			M2Array RenderFlag;
-			CElement_AnimationBlock AnimationBlock_Color;		// Float32x3
-			CElement_AnimationBlock AnimationBlock_Opacity;		// uint16_t
-			CElement_AnimationBlock AnimationBlock_HeightAbove;	// float, position of point A of ribbon leading edge.
-			CElement_AnimationBlock AnimationBlock_HeightBelow;	// float, position of point B of ribbon leading edge.
+			M2Track AnimationBlock_Color;		// Float32x3
+			M2Track AnimationBlock_Opacity;		// uint16_t
+			M2Track AnimationBlock_HeightAbove;	// float, position of point A of ribbon leading edge.
+			M2Track AnimationBlock_HeightBelow;	// float, position of point B of ribbon leading edge.
 			float EdgesPerSecond;
 			float EdgeLifetime;
 			float EmissionAngle;		// use arcsin(val) to get the angle in degree.
 			uint16_t TextureRows;
 			uint16_t TextureCols;
-			CElement_AnimationBlock AnimationBlock_TexSlotTrack;	// int32_t
-			CElement_AnimationBlock AnimationBlock_Visibility;	// int16_t
+			M2Track AnimationBlock_TexSlotTrack;	// int32_t
+			M2Track AnimationBlock_Visibility;	// int16_t
 			int16_t PriorityPlane;
 			uint16_t Padding;
 		};
@@ -761,18 +758,18 @@ namespace M2Lib
 			uint16_t TextureDimensionsRows;
 			uint16_t TextureDimensionsColumns;
 
-			CElement_AnimationBlock AnimationBlock_EmitSpeed;		// float
-			CElement_AnimationBlock AnimationBlock_SpeedVariance;	// float
-			CElement_AnimationBlock AnimationBlock_VerticalRange;	// float
-			CElement_AnimationBlock AnimationBlock_HorizontalRange;	// float
-			CElement_AnimationBlock AnimationBlock_Gravity;			// float
-			CElement_AnimationBlock AnimationBlock_Lifespan;		// float
+			M2Track AnimationBlock_EmitSpeed;		// float
+			M2Track AnimationBlock_SpeedVariance;	// float
+			M2Track AnimationBlock_VerticalRange;	// float
+			M2Track AnimationBlock_HorizontalRange;	// float
+			M2Track AnimationBlock_Gravity;			// float
+			M2Track AnimationBlock_Lifespan;		// float
 			float LifespanVary;
-			CElement_AnimationBlock AnimationBlock_EmissionRate;	// float
+			M2Track AnimationBlock_EmissionRate;	// float
 			float EmissionRateVary;
-			CElement_AnimationBlock AnimationBlock_EmissionAreaLength;	// float
-			CElement_AnimationBlock AnimationBlock_EmissionAreaWidth;	// float
-			CElement_AnimationBlock AnimationBlock_zSource;			// float
+			M2Track AnimationBlock_EmissionAreaLength;	// float
+			M2Track AnimationBlock_EmissionAreaWidth;	// float
+			M2Track AnimationBlock_zSource;			// float
 
 			CElement_FakeAnimationBlock ColorTrack;
 			CElement_FakeAnimationBlock AlphaTrack;
@@ -802,7 +799,7 @@ namespace M2Lib
 			float FollowScale2;
 
 			M2Array SplinePoints;	// C3Vector
-			CElement_AnimationBlock AnimationBlock_EnabledIn;		// uint16_t
+			M2Track AnimationBlock_EnabledIn;		// uint16_t
 
 			vector_2fp_6_9 multiTextureParam0[2];
 			vector_2fp_6_9 multiTextureParam1[2];

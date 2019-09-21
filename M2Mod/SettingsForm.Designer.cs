@@ -313,20 +313,21 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.profilesComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.profilesComboBox.FormattingEnabled = true;
-            this.profilesComboBox.Location = new System.Drawing.Point(55, 12);
+            this.profilesComboBox.Location = new System.Drawing.Point(76, 12);
             this.profilesComboBox.Name = "profilesComboBox";
-            this.profilesComboBox.Size = new System.Drawing.Size(216, 21);
+            this.profilesComboBox.Size = new System.Drawing.Size(195, 21);
             this.profilesComboBox.TabIndex = 32;
             this.profilesComboBox.SelectedIndexChanged += new System.EventHandler(this.ProfilesComboBox_SelectedIndexChanged);
             // 
             // profilesLabel
             // 
             this.profilesLabel.AutoSize = true;
-            this.profilesLabel.Location = new System.Drawing.Point(18, 15);
+            this.profilesLabel.Location = new System.Drawing.Point(34, 15);
             this.profilesLabel.Name = "profilesLabel";
             this.profilesLabel.Size = new System.Drawing.Size(36, 13);
             this.profilesLabel.TabIndex = 33;
             this.profilesLabel.Text = "Profile";
+            this.profilesLabel.TextAlign = System.Drawing.ContentAlignment.TopRight;
             // 
             // editProfilesButton
             // 

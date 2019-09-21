@@ -34,6 +34,8 @@
             this.duplicateButton = new System.Windows.Forms.Button();
             this.editButton = new System.Windows.Forms.Button();
             this.closeButton = new System.Windows.Forms.Button();
+            this.moveUpButton = new System.Windows.Forms.Button();
+            this.moveDownButton = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // profilesListBox
@@ -45,8 +47,9 @@
             this.profilesListBox.Location = new System.Drawing.Point(12, 12);
             this.profilesListBox.Name = "profilesListBox";
             this.profilesListBox.ScrollAlwaysVisible = true;
-            this.profilesListBox.Size = new System.Drawing.Size(160, 147);
+            this.profilesListBox.Size = new System.Drawing.Size(160, 186);
             this.profilesListBox.TabIndex = 0;
+            this.profilesListBox.DoubleClick += new System.EventHandler(this.ProfilesListBox_DoubleClick);
             // 
             // addButton
             // 
@@ -95,7 +98,7 @@
             // closeButton
             // 
             this.closeButton.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.closeButton.Location = new System.Drawing.Point(62, 170);
+            this.closeButton.Location = new System.Drawing.Point(62, 213);
             this.closeButton.Name = "closeButton";
             this.closeButton.Size = new System.Drawing.Size(62, 23);
             this.closeButton.TabIndex = 5;
@@ -103,11 +106,35 @@
             this.closeButton.UseVisualStyleBackColor = true;
             this.closeButton.Click += new System.EventHandler(this.CloseButton_Click);
             // 
+            // moveUpButton
+            // 
+            this.moveUpButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.moveUpButton.Location = new System.Drawing.Point(178, 128);
+            this.moveUpButton.Name = "moveUpButton";
+            this.moveUpButton.Size = new System.Drawing.Size(62, 23);
+            this.moveUpButton.TabIndex = 6;
+            this.moveUpButton.Text = "Up";
+            this.moveUpButton.UseVisualStyleBackColor = true;
+            this.moveUpButton.Click += new System.EventHandler(this.MoveUpButton_Click);
+            // 
+            // moveDownButton
+            // 
+            this.moveDownButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.moveDownButton.Location = new System.Drawing.Point(178, 157);
+            this.moveDownButton.Name = "moveDownButton";
+            this.moveDownButton.Size = new System.Drawing.Size(62, 23);
+            this.moveDownButton.TabIndex = 7;
+            this.moveDownButton.Text = "Down";
+            this.moveDownButton.UseVisualStyleBackColor = true;
+            this.moveDownButton.Click += new System.EventHandler(this.MoveDownButton_Click);
+            // 
             // ManageProfilesForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(245, 198);
+            this.ClientSize = new System.Drawing.Size(245, 241);
+            this.Controls.Add(this.moveDownButton);
+            this.Controls.Add(this.moveUpButton);
             this.Controls.Add(this.closeButton);
             this.Controls.Add(this.editButton);
             this.Controls.Add(this.duplicateButton);
@@ -128,5 +155,7 @@
         private System.Windows.Forms.Button duplicateButton;
         private System.Windows.Forms.Button editButton;
         private System.Windows.Forms.Button closeButton;
+        private System.Windows.Forms.Button moveUpButton;
+        private System.Windows.Forms.Button moveDownButton;
     }
 }

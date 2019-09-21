@@ -28,12 +28,11 @@ namespace M2Lib
 		};
 
 		typedef std::map<uint32_t /*BoneId*/, std::map<uint32_t /*BoneId*/, float /*Probability*/>> WeightedDifferenceMap;
-		WeightedDifferenceMap Diff(M2* oldM2, M2* newM2, bool CompareTextures);
+		WeightedDifferenceMap Diff(M2 const* oldM2, M2 const* newM2, bool CompareTextures);
 
 		CompareStatus GetDifferenceStatus(WeightedDifferenceMap const& WeightedResult, float weightThreshold);
 
-		M2LIB_API M2LIB_HANDLE __cdecl Wrapper_Create(wchar_t const* oldM2Path, wchar_t const* newM2Path, float weightThreshold, bool compareTextures, Settings* settings);
-		M2LIB_API EError __cdecl Wrapper_GetErrorStatus(M2LIB_HANDLE pointer);
+		M2LIB_API M2LIB_HANDLE __cdecl Wrapper_Create(M2LIB_HANDLE oldM2, M2LIB_HANDLE newM2, float weightThreshold, bool compareTextures);
 		M2LIB_API CompareStatus __cdecl Wrapper_GetResult(M2LIB_HANDLE pointer);
 		M2LIB_API const wchar_t* __cdecl Wrapper_GetStringResult(M2LIB_HANDLE pointer);
 		M2LIB_API uint32_t __cdecl Wrapper_DiffSize(M2LIB_HANDLE pointer);
@@ -42,19 +41,15 @@ namespace M2Lib
 		class ComparatorWrapper
 		{
 		public:
-			ComparatorWrapper(wchar_t const* oldM2Path, wchar_t const* newM2Path, float weightThreshold, bool compareTextures, Settings* settings);
-			~ComparatorWrapper();
+			ComparatorWrapper(M2 const* oldM2, M2 const* newM2, float weightThreshold, bool compareTextures);
+			~ComparatorWrapper() = default;
 			
-			EError GetErrorStatus() const;
 			CompareStatus GetResult() const;
 			const wchar_t* GetStringResult() const;
 			uint32_t DiffSize() const;
 			
 		private:
 			CompareStatus compareStatus;
-			EError errorStatus;
-			M2* oldM2 = nullptr;
-			M2* newM2 = nullptr;
 			WeightedDifferenceMap diffMap;
 			std::wstring buffer;
 		};

@@ -280,33 +280,41 @@ namespace M2ModRedux {
 		RegistyStore::SetValue(RegistyStore::Value::NewCompareM2, newM2TextBox->Text);
 		RegistyStore::SetValue(RegistyStore::Value::CompareWeightThreshold, weightThresholdTextBox->Text);
 
-		float weightTreshold;
-		if (!float::TryParse(weightThresholdTextBox->Text, weightTreshold))
+		float weightThreshold;
+		if (!float::TryParse(weightThresholdTextBox->Text, weightThreshold))
 		{
-			weightTreshold = 0.0;
+			weightThreshold = 0.0;
 			weightThresholdTextBox->Text = "0";
 		}
 
-		M2LIB_HANDLE wrapper = M2Lib::BoneComparator::Wrapper_Create(StringConverter(oldM2TextBox->Text).ToStringW(), StringConverter(newM2TextBox->Text).ToStringW(), weightTreshold, true, nullptr);
+		M2LIB_HANDLE wrapper = nullptr;
+		M2LIB_HANDLE oldM2 = nullptr, newM2 = nullptr;
 
-		auto errorStatus = M2Lib::BoneComparator::Wrapper_GetErrorStatus(wrapper);
-		if (errorStatus != M2Lib::EError_OK)
+		oldM2 = M2Lib::M2_Create();
+		auto errorStatus = M2Lib::M2_Load(oldM2, StringConverter(oldM2TextBox->Text).ToStringW());
+		if (errorStatus == M2Lib::EError_OK)
 		{
-			MessageBox::Show(String::Format("Failed to compare: {0}", gcnew String(M2Lib::GetErrorText(errorStatus))), "Error", Windows::Forms::MessageBoxButtons::OK, Windows::Forms::MessageBoxIcon::Error);
-			M2Lib::BoneComparator::Wrapper_Free(wrapper);
-			return;
-		}
+			newM2 = M2Lib::M2_Create();
+			errorStatus = M2Lib::M2_Load(oldM2, StringConverter(newM2TextBox->Text).ToStringW());
+			if (errorStatus == M2Lib::EError_OK)
+			{
+				wrapper = M2Lib::BoneComparator::Wrapper_Create(oldM2, newM2, weightThreshold, true);
 
-		resultsTextBox->Text = "";
-		if (M2Lib::BoneComparator::Wrapper_DiffSize(wrapper) == 0)
-		{
-			MessageBox::Show("Empty result from bone comparator");
-			M2Lib::BoneComparator::Wrapper_Free(wrapper);
-			return;
+				resultsTextBox->Text = "";
+				if (M2Lib::BoneComparator::Wrapper_DiffSize(wrapper) != 0)
+					resultsTextBox->Text = gcnew String(M2Lib::BoneComparator::Wrapper_GetStringResult(wrapper));
+				else
+					MessageBox::Show("Empty result from bone comparator");
+			}
+			else
+				MessageBox::Show(String::Format("Failed to load new m2 at {0}", newM2TextBox->Text), "Error", Windows::Forms::MessageBoxButtons::OK, Windows::Forms::MessageBoxIcon::Error);
 		}
+		else
+			MessageBox::Show(String::Format("Failed to load old m2 at {0}", oldM2TextBox->Text), "Error", Windows::Forms::MessageBoxButtons::OK, Windows::Forms::MessageBoxIcon::Error);
 
-		resultsTextBox->Text = gcnew String(M2Lib::BoneComparator::Wrapper_GetStringResult(wrapper));
 		M2Lib::BoneComparator::Wrapper_Free(wrapper);
+		M2Lib::M2_Free(oldM2);
+		M2Lib::M2_Free(newM2);
 	}
 
 	private: System::Void resultsTextBox_TextChanged(System::Object^  sender, System::EventArgs^  e) {

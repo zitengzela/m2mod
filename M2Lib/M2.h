@@ -209,6 +209,7 @@ namespace M2Lib
 		DataElement Elements[M2Element::EElement__Count__];
 		uint32_t GetLastElementIndex();
 		M2Lib::Settings const* GetSettings();
+		wchar_t const* GetFileName() const { return _FileName.c_str(); }
 
 #define SKIN_COUNT 7
 		#define LOD_SKIN_MAX_COUNT 3
@@ -302,11 +303,11 @@ namespace M2Lib
 		// pre save header
 		void m_SaveElements_FindOffsets();
 
-		void m_FixAnimationOffsets(int32_t OffsetDelta, int32_t TotalDelta, M2Element::CElement_AnimationBlock& AnimationBlock, int32_t iElement);
+		void m_FixAnimationOffsets(int32_t OffsetDelta, int32_t TotalDelta, M2Element::M2Track& AnimationBlock, int32_t iElement);
 		void m_FixAnimationM2Array(int32_t OffsetDelta, int32_t TotalDelta, int16_t GlobalSequenceID, M2Array& Array, int32_t iElement);
 		void m_FixFakeAnimationBlockOffsets(int32_t OffsetDelta, int32_t TotalDelta, M2Element::CElement_FakeAnimationBlock& AnimationBlock, int32_t iElement);
 
-		void m_FixAnimationOffsets_Old(int32_t OffsetDelta, int32_t TotalDelta, M2Element::CElement_AnimationBlock& AnimationBlock, int32_t iElement);
+		void m_FixAnimationOffsets_Old(int32_t OffsetDelta, int32_t TotalDelta, M2Element::M2Track& AnimationBlock, int32_t iElement);
 		void m_FixAnimationM2Array_Old(int32_t OffsetDelta, int32_t TotalDelta, int16_t GlobalSequenceID, M2Array& Array, int32_t iElement);
 		void m_FixFakeAnimationBlockOffsets_Old(int32_t OffsetDelta, int32_t TotalDelta, M2Element::CElement_FakeAnimationBlock& AnimationBlock, int32_t iElement);
 

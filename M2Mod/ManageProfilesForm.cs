@@ -21,8 +21,12 @@ namespace M2Mod
 
         private void SetupProfiles()
         {
+            var selectedId = SelectedProfile?.Id;
+
             profilesListBox.Items.Clear();
             profilesListBox.Items.AddRange(ProfileManager.GetProfiles().Cast<object>().ToArray());
+
+            profilesListBox.SelectedIndex = ProfileManager.GetProfiles().FindIndex(_ => _.Id == selectedId);
         }
 
         private void CloseButton_Click(object sender, EventArgs e)
@@ -70,20 +74,25 @@ namespace M2Mod
             if (SelectedProfile == null)
                 return;
 
+            EditProfile(SelectedProfile);
+        }
+
+        private void EditProfile(SettingsProfile profile)
+        {
             using (var form = new EnterNameForm())
             {
-                form.EnteredName = SelectedProfile.Name;
+                form.EnteredName = profile.Name;
                 if (form.ShowDialog() != DialogResult.OK)
                     return;
 
                 var name = form.EnteredName.Trim();
-                if (ProfileManager.GetProfiles().Any(_ => _.Name == name))
+                if (ProfileManager.GetProfiles().Any(_ => _.Name == name && _.Id != profile.Id))
                 {
                     MessageBox.Show("Profile with this name already exists", "Error", MessageBoxButtons.OK);
                     return;
                 }
 
-                SelectedProfile.Name = form.EnteredName.Trim();
+                profile.Name = form.EnteredName.Trim();
             }
 
             SetupProfiles();
@@ -110,6 +119,32 @@ namespace M2Mod
                 ProfileManager.AddProfile(new SettingsProfile(name, SelectedProfile.Settings, SelectedProfile.FormData));
             }
 
+            SetupProfiles();
+        }
+
+        private void ProfilesListBox_DoubleClick(object sender, EventArgs e)
+        {
+            if (SelectedProfile == null)
+                return;
+
+            EditProfile(SelectedProfile);
+        }
+
+        private void MoveUpButton_Click(object sender, EventArgs e)
+        {
+            if (SelectedProfile == null)
+                return;
+
+            ProfileManager.MoveProfile(SelectedProfile.Id, false);
+            SetupProfiles();
+        }
+
+        private void MoveDownButton_Click(object sender, EventArgs e)
+        {
+            if (SelectedProfile == null)
+                return;
+
+            ProfileManager.MoveProfile(SelectedProfile.Id, true);
             SetupProfiles();
         }
     }

@@ -903,9 +903,9 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate(wchar_t const* FileName)
 			Target = Camera->Target;
 
 			// extract field of view of camera from animation block
-			if (Camera->AnimationBlock_FieldOfView.Keys.Count > 0)
+			if (Camera->AnimationBlock_FieldOfView.Values.Count > 0)
 			{
-				auto ExternalAnimations = (M2Array*)Elements[EElement_Camera].GetLocalPointer(Camera->AnimationBlock_FieldOfView.Keys.Offset);
+				auto ExternalAnimations = (M2Array*)Elements[EElement_Camera].GetLocalPointer(Camera->AnimationBlock_FieldOfView.Values.Offset);
 				auto LastElementIndex = GetLastElementIndex();
 				m2lib_assert(LastElementIndex != M2Element::EElement__Count__);
 				auto& LastElement = Elements[LastElementIndex];
@@ -1218,10 +1218,10 @@ void M2Lib::M2::PrintInfo()
         FileStream << "\t" << i << std::endl;
         FileStream << "\t" << transparency.AnimationBlock_Transparency.InterpolationType << std::endl;
         FileStream << "\t" << transparency.AnimationBlock_Transparency.GlobalSequenceID << std::endl;
-        FileStream << "\t" << transparency.AnimationBlock_Transparency.Times.Count << std::endl;
-        FileStream << "\t" << transparency.AnimationBlock_Transparency.Times.Offset << std::endl;
-        FileStream << "\t" << transparency.AnimationBlock_Transparency.Keys.Count << std::endl;
-        FileStream << "\t" << transparency.AnimationBlock_Transparency.Keys.Offset << std::endl;
+        FileStream << "\t" << transparency.AnimationBlock_Transparency.TimeStamps.Count << std::endl;
+        FileStream << "\t" << transparency.AnimationBlock_Transparency.TimeStamps.Offset << std::endl;
+        FileStream << "\t" << transparency.AnimationBlock_Transparency.Values.Count << std::endl;
+        FileStream << "\t" << transparency.AnimationBlock_Transparency.Values.Offset << std::endl;
 
             /*
             EInterpolationType InterpolationType;
@@ -2138,7 +2138,7 @@ void M2Lib::M2::m_FixAnimationM2Array_Old(int32_t OffsetDelta, int32_t TotalDelt
 			for (int32_t i = 0; i < Array.Count; ++i)
 			{
 				m2lib_assert("Out of animation index" && i < animationElement->Count);
-				if (!animations[i].IsInline())
+				if (!animations[i].IsInplace())
 					continue;
 
 				//SubArrays[i].Shift(IS_LOCAL_ANIMATION(SubArrays[i].Offset) ? OffsetDelta : TotalDelta);
@@ -2191,7 +2191,7 @@ void M2Lib::M2::m_FixAnimationM2Array(int32_t OffsetDelta, int32_t TotalDelta, i
 			animation->Flags,
 			flags);*/
 
-		if (animation->IsInline())
+		if (animation->IsInplace())
 		{
 			// we dont know actual particle emitter block size...
 			m2lib_assert("Not external offset" && (iElement == GetLastElementIndex() || SubArrays[i].Offset > Elements[iElement].Offset + Elements[iElement].SizeOriginal));
@@ -2202,26 +2202,26 @@ void M2Lib::M2::m_FixAnimationM2Array(int32_t OffsetDelta, int32_t TotalDelta, i
 	Array.Shift(OffsetDelta);
 }
 
-void M2Lib::M2::m_FixAnimationOffsets_Old(int32_t OffsetDelta, int32_t TotalDelta, CElement_AnimationBlock& AnimationBlock, int32_t iElement)
+void M2Lib::M2::m_FixAnimationOffsets_Old(int32_t OffsetDelta, int32_t TotalDelta, M2Track& AnimationBlock, int32_t iElement)
 {
-	m_FixAnimationM2Array_Old(OffsetDelta, TotalDelta, AnimationBlock.GlobalSequenceID, AnimationBlock.Times, iElement);
-	m_FixAnimationM2Array_Old(OffsetDelta, TotalDelta, AnimationBlock.GlobalSequenceID, AnimationBlock.Keys, iElement);
+	m_FixAnimationM2Array_Old(OffsetDelta, TotalDelta, AnimationBlock.GlobalSequenceID, AnimationBlock.TimeStamps, iElement);
+	m_FixAnimationM2Array_Old(OffsetDelta, TotalDelta, AnimationBlock.GlobalSequenceID, AnimationBlock.Values, iElement);
 }
 
-void M2Lib::M2::m_FixAnimationOffsets(int32_t OffsetDelta, int32_t TotalDelta, CElement_AnimationBlock& AnimationBlock, int32_t iElement)
+void M2Lib::M2::m_FixAnimationOffsets(int32_t OffsetDelta, int32_t TotalDelta, M2Track& AnimationBlock, int32_t iElement)
 {
 	if (Settings.FixAnimationsTest)
 	{
-		if (AnimationBlock.Times.Count != AnimationBlock.Keys.Count)
+		if (AnimationBlock.TimeStamps.Count != AnimationBlock.Values.Count)
 			return;
 	}
 
 	//auto animationElement = GetAnimations();
-	//m2lib_assert("count(anims) != M2Array.Count" && AnimationBlock.Times.Count == animationElement->Count);
-	//sLogger.LogInfo("seq:%i count:%u anims:%u eq:%u", AnimationBlock.GlobalSequenceID, AnimationBlock.Times.Count,animationElement->Count, AnimationBlock.Times.Count == animationElement->Count ? 1 :0);
+	//m2lib_assert("count(anims) != M2Array.Count" && AnimationBlock.TimeStamps.Count == animationElement->Count);
+	//sLogger.LogInfo("seq:%i count:%u anims:%u eq:%u", AnimationBlock.GlobalSequenceID, AnimationBlock.TimeStamps.Count,animationElement->Count, AnimationBlock.TimeStamps.Count == animationElement->Count ? 1 :0);
 
-	m_FixAnimationM2Array(OffsetDelta, TotalDelta, AnimationBlock.GlobalSequenceID, AnimationBlock.Times, iElement);
-	m_FixAnimationM2Array(OffsetDelta, TotalDelta, AnimationBlock.GlobalSequenceID, AnimationBlock.Keys, iElement);
+	m_FixAnimationM2Array(OffsetDelta, TotalDelta, AnimationBlock.GlobalSequenceID, AnimationBlock.TimeStamps, iElement);
+	m_FixAnimationM2Array(OffsetDelta, TotalDelta, AnimationBlock.GlobalSequenceID, AnimationBlock.Values, iElement);
 }
 
 void M2Lib::M2::m_FixFakeAnimationBlockOffsets(int32_t OffsetDelta, int32_t TotalDelta, CElement_FakeAnimationBlock& AnimationBlock, int32_t iElement)
@@ -2233,8 +2233,8 @@ void M2Lib::M2::m_FixFakeAnimationBlockOffsets(int32_t OffsetDelta, int32_t Tota
 	}
 
 	//auto animationElement = GetAnimations();
-	//m2lib_assert("count(anims) != M2Array.Count" && AnimationBlock.Times.Count == animationElement->Count);
-	//sLogger.LogInfo("seq:%i count:%u anims:%u eq:%u", AnimationBlock.GlobalSequenceID, AnimationBlock.Times.Count,animationElement->Count, AnimationBlock.Times.Count == animationElement->Count ? 1 :0);
+	//m2lib_assert("count(anims) != M2Array.Count" && AnimationBlock.TimeStamps.Count == animationElement->Count);
+	//sLogger.LogInfo("seq:%i count:%u anims:%u eq:%u", AnimationBlock.GlobalSequenceID, AnimationBlock.TimeStamps.Count,animationElement->Count, AnimationBlock.TimeStamps.Count == animationElement->Count ? 1 :0);
 
 	m_FixAnimationM2Array(OffsetDelta, TotalDelta, -1, AnimationBlock.Times, iElement);
 	m_FixAnimationM2Array(OffsetDelta, TotalDelta, -1, AnimationBlock.Keys, iElement);

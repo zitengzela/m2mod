@@ -100,5 +100,30 @@ namespace M2Mod.Config
         {
             return Profiles;
         }
+
+        public static void MoveProfile(Guid Id, bool Down)
+        {
+            var index = Profiles.FindIndex(_ => _.Id == Id);
+            if (index == -1)
+                return;
+
+            if (Down)
+            {
+                if (index + 1 < Profiles.Count)
+                    SwapProfiles(index, index + 1);
+            }
+            else
+            {
+                if (index - 1 >= 0)
+                    SwapProfiles(index, index - 1);
+            }
+        }
+
+        private static void SwapProfiles(int i, int j)
+        {
+            var tmp = Profiles[i];
+            Profiles[i] = Profiles[j];
+            Profiles[j] = tmp;
+        }
     }
 }

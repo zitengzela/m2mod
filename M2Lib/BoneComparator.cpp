@@ -6,16 +6,13 @@
 #include <iomanip>
 #include "StringHelpers.h"
 
-M2Lib::BoneComparator::WeightedDifferenceMap M2Lib::BoneComparator::Diff(M2* oldM2, M2* newM2, bool CompareTextures)
+M2Lib::BoneComparator::WeightedDifferenceMap M2Lib::BoneComparator::Diff(M2 const* oldM2, M2 const * newM2, bool CompareTextures)
 {
 	auto OldSkin = oldM2->Skins[0];
 	auto NewSkin = newM2->Skins[0];
 
 	using namespace M2SkinElement;
 	using namespace M2Element;
-
-	std::map<uint32_t, CElement_SubMesh*> OldSubsetsById;
-	std::map<uint32_t, CElement_SubMesh*> NewSubsetsById;
 
 	auto OldSubsetCount = OldSkin->Elements[M2SkinElement::EElement_SubMesh].Count;
 	auto OldSubsets = OldSkin->Elements[M2SkinElement::EElement_SubMesh].as<CElement_SubMesh>();
@@ -38,6 +35,8 @@ M2Lib::BoneComparator::WeightedDifferenceMap M2Lib::BoneComparator::Diff(M2* old
 		for (uint32_t n = 0; n < NewSubsetCount; ++n)
 		{
 			auto& NewSubSet = NewSubsets[n];
+			if (OldSubSet.ID != NewSubSet.ID)
+				continue;
 
 			for (uint32_t k = OldSubSet.VertexStart; k < OldSubSet.VertexStart + OldSubSet.VertexCount; ++k)
 			{
@@ -47,7 +46,7 @@ M2Lib::BoneComparator::WeightedDifferenceMap M2Lib::BoneComparator::Diff(M2* old
 				{
 					auto& NewVertex = NewVertices[NewIndices[l]];
 
-					if (!CVertex::CompareSimilar(OldVertex, NewVertex, CompareTextures, false, false, 0.0f, 0.0f))
+					if (!CVertex::CompareSimilar(OldVertex, NewVertex, CompareTextures, false, false, 1e-5f, 1e-5f))
 						continue;
 
 					for (int i = 0; i < BONES_PER_VERTEX; ++i)
@@ -65,8 +64,8 @@ M2Lib::BoneComparator::WeightedDifferenceMap M2Lib::BoneComparator::Diff(M2* old
 								candidates.push_back(NewVertex.BoneIndices[j]);
 						}
 
-						if (candidates.size() == 1)
-							OldToNewBoneMap[OldVertex.BoneIndices[i]].AddCandidate(*candidates.begin());
+						for (auto c : candidates)
+							OldToNewBoneMap[OldVertex.BoneIndices[i]].AddCandidate(c);
 					}
 				}
 			}
@@ -118,25 +117,8 @@ M2Lib::BoneComparator::CompareStatus M2Lib::BoneComparator::GetDifferenceStatus(
 	return status;
 }
 
-M2Lib::BoneComparator::ComparatorWrapper::~ComparatorWrapper()
+M2Lib::BoneComparator::ComparatorWrapper::ComparatorWrapper(M2 const* oldM2, M2 const* newM2, float weightThreshold, bool compareTextures)
 {
-	delete oldM2;
-	delete newM2;
-}
-
-M2Lib::BoneComparator::ComparatorWrapper::ComparatorWrapper(wchar_t const* oldM2Path, wchar_t const* newM2Path, float weightThreshold, bool compareTextures, Settings* settings)
-{
-	oldM2 = new M2(settings);
-	newM2 = new M2(settings);
-
-	errorStatus = oldM2->Load(oldM2Path);
-	if (errorStatus != EError_OK)
-		return;
-
-	errorStatus = newM2->Load(newM2Path);
-	if (errorStatus != EError_OK)
-		return;
-
 	diffMap = Diff(oldM2, newM2, compareTextures);
 	compareStatus = GetDifferenceStatus(diffMap, weightThreshold);
 
@@ -155,8 +137,8 @@ M2Lib::BoneComparator::ComparatorWrapper::ComparatorWrapper(wchar_t const* oldM2
 		return;
 	}
 
-	ss << L"# Old M2: " << oldM2Path << std::rendl;
-	ss << L"# New M2: " << newM2Path << std::rendl;
+	ss << L"# Old M2: " << oldM2->GetFileName() << std::rendl;
+	ss << L"# New M2: " << newM2->GetFileName() << std::rendl;
 	ss << L"# Weight threshold: " << std::setprecision(2) << weightThreshold << std::rendl;
 	ss << L"# Use this file with Blender" << std::rendl;
 	ss << L"# " << std::rendl;
@@ -203,11 +185,6 @@ M2Lib::BoneComparator::ComparatorWrapper::ComparatorWrapper(wchar_t const* oldM2
 	buffer = ss.str();
 }
 
-M2Lib::EError M2Lib::BoneComparator::ComparatorWrapper::GetErrorStatus() const
-{
-	return errorStatus;
-}
-
 M2Lib::BoneComparator::CompareStatus M2Lib::BoneComparator::ComparatorWrapper::GetResult() const
 {
 	return compareStatus;
@@ -249,13 +226,8 @@ std::map<uint32_t, float> M2Lib::BoneComparator::Candidates::GetWeightedCandidat
 	return ret;
 }
 
-M2LIB_HANDLE M2Lib::BoneComparator::Wrapper_Create(wchar_t const* oldM2Path, wchar_t const* newM2Path, float weightThreshold, bool compareTextures, Settings* settings){
-	return new ComparatorWrapper(oldM2Path, newM2Path, weightThreshold, compareTextures, settings);
-}
-
-M2Lib::EError M2Lib::BoneComparator::Wrapper_GetErrorStatus(M2LIB_HANDLE pointer)
-{
-	return static_cast<ComparatorWrapper*>(pointer)->GetErrorStatus();
+M2LIB_HANDLE M2Lib::BoneComparator::Wrapper_Create(M2LIB_HANDLE oldM2, M2LIB_HANDLE newM2, float weightThreshold, bool compareTextures){
+	return new ComparatorWrapper(static_cast<M2* const>(oldM2), static_cast<M2 * const>(newM2), weightThreshold, compareTextures);
 }
 
 M2Lib::BoneComparator::CompareStatus M2Lib::BoneComparator::Wrapper_GetResult(M2LIB_HANDLE pointer)

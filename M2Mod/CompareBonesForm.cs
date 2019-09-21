@@ -97,26 +97,72 @@ namespace M2Mod
                 weightThresholdTextBox.Text = "0";
             }
 
-            IntPtr wrapper = Imports.Wrapper_Create(oldM2TextBox.Text, newM2TextBox.Text, ProfileManager.CurrentProfile.FormData.CompareWeightThreshold, true, ref ProfileManager.CurrentProfile.Settings);
+            var oldSettings = new Settings()
+            {
+                WorkingDirectory = PropagateWorkingDirectory(oldM2TextBox.Text),
+                MappingsDirectory = ProfileManager.CurrentProfile.Settings.MappingsDirectory,
+            };
 
-            var errorStatus = Imports.Wrapper_GetErrorStatus(wrapper);
+            var oldM2 = Imports.M2_Create(ref oldSettings);
+            var errorStatus = Imports.M2_Load(oldM2, oldM2TextBox.Text);
             if (errorStatus != M2LibError.OK)
             {
-                MessageBox.Show(string.Format("Failed to compare: {0}", Imports.GetErrorText(errorStatus)), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                Imports.Wrapper_Free(wrapper);
+                MessageBox.Show(string.Format("Failed load old m2: {0}", Imports.GetErrorText(errorStatus)), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Imports.M2_Free(oldM2);
                 return;
             }
+
+            var newSettings = new Settings()
+            {
+                WorkingDirectory = PropagateWorkingDirectory(newM2TextBox.Text),
+                MappingsDirectory = ProfileManager.CurrentProfile.Settings.MappingsDirectory,
+            };
+
+            var newM2 = Imports.M2_Create(ref newSettings);
+            errorStatus = Imports.M2_Load(newM2, newM2TextBox.Text);
+            if (errorStatus != M2LibError.OK)
+            {
+                MessageBox.Show(string.Format("Failed load new m2: {0}", Imports.GetErrorText(errorStatus)), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Imports.M2_Free(oldM2);
+                Imports.M2_Free(newM2);
+                return;
+            }
+
+            IntPtr wrapper = Imports.Wrapper_Create(oldM2, newM2, ProfileManager.CurrentProfile.FormData.CompareWeightThreshold, true);
 
             resultsTextBox.Text = "";
             if (Imports.Wrapper_DiffSize(wrapper) == 0)
             {
                 MessageBox.Show("Empty result from bone comparator");
                 Imports.Wrapper_Free(wrapper);
+                Imports.M2_Free(oldM2);
+                Imports.M2_Free(newM2);
                 return;
             }
 
             resultsTextBox.Text = Imports.Wrapper_GetStringResult(wrapper);
             Imports.Wrapper_Free(wrapper);
+            Imports.M2_Free(oldM2);
+            Imports.M2_Free(newM2);
+        }
+
+        private string PropagateWorkingDirectory(string filePath)
+        {
+            var fileName = Path.GetFileName(filePath);
+
+            var storage = Imports.FileStorage_Get(ProfileManager.CurrentProfile.Settings.MappingsDirectory);
+
+            var info = Imports.FileStorage_GetFileInfoByPartialPath(storage, '/' + fileName);
+            if (info == IntPtr.Zero)
+                return "";
+
+            var infoPath = Imports.FileInfo_GetPath(info);
+            var arr = infoPath.Split('/');
+            var path = filePath;
+            for (var i = 0; i < arr.Length; ++i)
+                path = Path.GetDirectoryName(path);
+
+            return path;
         }
 
         private void SaveButton_Click(object sender, EventArgs e)
