@@ -95,8 +95,8 @@ void M2Lib::M2::FixNormals(std::list<CElement_SubMesh const*> const& source, std
 
 		for (auto SubmeshJ : target)
 		{
-			if (SubmeshI == SubmeshJ)
-				continue;
+			//if (SubmeshI == SubmeshJ)
+				//continue;
 
 			if (verticesI.empty())
 			{

@@ -11,5 +11,7 @@
         public string OldCompareM2;
         public string NewCompareM2;
         public float CompareWeightThreshold;
+        public float CompareSourceScale;
+        public bool PredictScale;
     }
 }

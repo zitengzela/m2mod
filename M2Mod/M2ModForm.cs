@@ -563,10 +563,10 @@ namespace M2Mod
             });
         }
 
-        private void CompareBonesToolStripMenuItem_Click(object sender, EventArgs e)
+        private void CompareModelsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             _ignoreErrors = false;
-            using (var form = new CompareBonesForm())
+            using (var form = new CompareModelsForm())
             {
                 form.ShowDialog();
             }

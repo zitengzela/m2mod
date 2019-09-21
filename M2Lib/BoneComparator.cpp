@@ -6,7 +6,7 @@
 #include <iomanip>
 #include "StringHelpers.h"
 
-M2Lib::BoneComparator::WeightedDifferenceMap M2Lib::BoneComparator::Diff(M2 const* oldM2, M2 const * newM2, bool CompareTextures)
+M2Lib::BoneComparator::DiffResult M2Lib::BoneComparator::Diff(M2 const* oldM2, M2 const * newM2, bool CompareTextures, bool predictScale, float& sourceScale)
 {
 	auto OldSkin = oldM2->Skins[0];
 	auto NewSkin = newM2->Skins[0];
@@ -28,6 +28,36 @@ M2Lib::BoneComparator::WeightedDifferenceMap M2Lib::BoneComparator::Diff(M2 cons
 	auto OldVertices = oldM2->Elements[EElement_Vertex].as<CVertex>();
 	auto NewVertices = newM2->Elements[EElement_Vertex].as<CVertex>();
 
+	std::set<uint16_t> matchedIndices;
+
+	auto maxZSearcher = [](CElement_SubMesh* submeshes, uint32_t submeshCount, uint16_t* Indices, CVertex* vertices) -> float
+	{
+		float maxZ = 0.0f;
+		for (uint32_t i = 0; i < submeshCount; ++i)
+		{
+			auto& subset = submeshes[i];
+			if (subset.ID != 0)
+				continue;
+
+			for (uint32_t j = subset.VertexStart; j < subset.VertexStart + subset.VertexCount; ++j)
+			{
+				auto& vertex = vertices[Indices[j]];
+
+				maxZ = std::max(vertex.Position.Z, maxZ);
+			}
+		}
+
+		return maxZ;
+	};
+
+	if (predictScale)
+	{
+		auto oldMaxZ = maxZSearcher(OldSubsets, OldSubsetCount, OldIndices, OldVertices);
+		auto newMaxZ = maxZSearcher(NewSubsets, NewSubsetCount, NewIndices, NewVertices);
+
+		sourceScale = newMaxZ / oldMaxZ;
+	}
+
 	for (uint32_t m = 0; m < OldSubsetCount; ++m)
 	{
 		auto& OldSubSet = OldSubsets[m];
@@ -40,7 +70,9 @@ M2Lib::BoneComparator::WeightedDifferenceMap M2Lib::BoneComparator::Diff(M2 cons
 
 			for (uint32_t k = OldSubSet.VertexStart; k < OldSubSet.VertexStart + OldSubSet.VertexCount; ++k)
 			{
-				auto& OldVertex = OldVertices[OldIndices[k]];
+				auto& _OldVertex = OldVertices[OldIndices[k]];
+				auto OldVertex = _OldVertex;
+				OldVertex.Position = OldVertex.Position * sourceScale;
 
 				for (uint32_t l = NewSubSet.VertexStart; l < NewSubSet.VertexStart + NewSubSet.VertexCount; ++l)
 				{
@@ -48,6 +80,8 @@ M2Lib::BoneComparator::WeightedDifferenceMap M2Lib::BoneComparator::Diff(M2 cons
 
 					if (!CVertex::CompareSimilar(OldVertex, NewVertex, CompareTextures, false, false, 1e-5f, 1e-5f))
 						continue;
+
+					matchedIndices.insert(OldIndices[k]);
 
 					for (int i = 0; i < BONES_PER_VERTEX; ++i)
 					{
@@ -64,7 +98,9 @@ M2Lib::BoneComparator::WeightedDifferenceMap M2Lib::BoneComparator::Diff(M2 cons
 								candidates.push_back(NewVertex.BoneIndices[j]);
 						}
 
-						for (auto c : candidates)
+						if (candidates.empty())
+							OldToNewBoneMap[OldVertex.BoneIndices[i]] = Candidates();
+						else for (auto c : candidates)
 							OldToNewBoneMap[OldVertex.BoneIndices[i]].AddCandidate(c);
 					}
 				}
@@ -72,11 +108,11 @@ M2Lib::BoneComparator::WeightedDifferenceMap M2Lib::BoneComparator::Diff(M2 cons
 		}
 	}
 
-	std::map<uint32_t, std::map<uint32_t, float>> res;
+	std::unordered_map<uint32_t, std::unordered_map<uint32_t, float>> res;
 	for (auto itr : OldToNewBoneMap)
 		res[itr.first] = itr.second.GetWeightedCandidates();
 
-	return res;
+	return { res, matchedIndices.size() * 1.f / OldSkin->Elements[EElement_VertexLookup].Count };
 }
 
 M2Lib::BoneComparator::CompareStatus M2Lib::BoneComparator::GetDifferenceStatus(WeightedDifferenceMap const& WeightedResult, float weightThreshold)
@@ -117,9 +153,10 @@ M2Lib::BoneComparator::CompareStatus M2Lib::BoneComparator::GetDifferenceStatus(
 	return status;
 }
 
-M2Lib::BoneComparator::ComparatorWrapper::ComparatorWrapper(M2 const* oldM2, M2 const* newM2, float weightThreshold, bool compareTextures)
+M2Lib::BoneComparator::ComparatorWrapper::ComparatorWrapper(M2 const* oldM2, M2 const* newM2, float weightThreshold, bool compareTextures, bool predictScale, float& sourceScale)
 {
-	diffMap = Diff(oldM2, newM2, compareTextures);
+	auto diff = Diff(oldM2, newM2, compareTextures, predictScale, sourceScale);
+	diffMap = diff.map;
 	compareStatus = GetDifferenceStatus(diffMap, weightThreshold);
 
 	std::wstringstream ss;
@@ -130,7 +167,8 @@ M2Lib::BoneComparator::ComparatorWrapper::ComparatorWrapper(M2 const* oldM2, M2 
 		buffer = ss.str();
 		return;
 	}
-	else if (compareStatus == CompareStatus::IdenticalWithinThreshold)
+
+	if (compareStatus == CompareStatus::IdenticalWithinThreshold)
 	{
 		ss << L"# Old and new model bones are identical within given threshold " << std::setprecision(2) << weightThreshold << std::rendl;
 		buffer = ss.str();
@@ -140,6 +178,8 @@ M2Lib::BoneComparator::ComparatorWrapper::ComparatorWrapper(M2 const* oldM2, M2 
 	ss << L"# Old M2: " << oldM2->GetFileName() << std::rendl;
 	ss << L"# New M2: " << newM2->GetFileName() << std::rendl;
 	ss << L"# Weight threshold: " << std::setprecision(2) << weightThreshold << std::rendl;
+	ss << L"# Source scale: " << std::setprecision(3) << sourceScale << (predictScale ? " (predicted)" : "") << std::rendl;
+	ss << L"# Matched vertices: " << diff.matchedPercent * 100.0f << '%' << std::rendl;
 	ss << L"# Use this file with Blender" << std::rendl;
 	ss << L"# " << std::rendl;
 	ss << L"# Output [old bone]: [new bone #1] (probability weight) [new bone #2] (probability weight) ..." << std::rendl;
@@ -171,10 +211,20 @@ M2Lib::BoneComparator::ComparatorWrapper::ComparatorWrapper(M2 const* oldM2, M2 
 			ss << L"<no candidate>";
 		else
 		{
-			for (auto candidate : weighted)
+			typedef std::pair<uint16_t, float> tty;
+
+
+			std::vector<tty> sorted(weighted.begin(), weighted.end());
+
+			std::sort(sorted.begin(), sorted.end(), [](tty const& left, tty const& right)
+			{
+				return right.second < left.second;
+			});
+
+			for (auto candidate : sorted)
 			{
 				ss << std::to_wstring(candidate.first);
-				if (weighted.size() > 1)
+				if (sorted.size() > 1)
 					ss << "(" << std::setprecision(2) << candidate.second << ")";
 				ss << " ";
 			}
@@ -209,14 +259,14 @@ void M2Lib::BoneComparator::Candidates::AddCandidate(uint32_t BoneId)
 		++itr->second;
 }
 
-std::map<uint32_t, float> M2Lib::BoneComparator::Candidates::GetWeightedCandidates()
+std::unordered_map<uint32_t, float> M2Lib::BoneComparator::Candidates::GetWeightedCandidates()
 {
 	uint32_t totalCnt = 0;
 
 	for (auto itr : BoneUsage)
 		totalCnt += itr.second;
 
-	std::map<uint32_t, float> ret;
+	std::unordered_map<uint32_t, float> ret;
 	if (totalCnt == 0)
 		return ret;
 
@@ -226,8 +276,9 @@ std::map<uint32_t, float> M2Lib::BoneComparator::Candidates::GetWeightedCandidat
 	return ret;
 }
 
-M2LIB_HANDLE M2Lib::BoneComparator::Wrapper_Create(M2LIB_HANDLE oldM2, M2LIB_HANDLE newM2, float weightThreshold, bool compareTextures){
-	return new ComparatorWrapper(static_cast<M2* const>(oldM2), static_cast<M2 * const>(newM2), weightThreshold, compareTextures);
+M2LIB_HANDLE M2Lib::BoneComparator::Wrapper_Create(M2LIB_HANDLE oldM2, M2LIB_HANDLE newM2, float weightThreshold, bool compareTextures, bool predictScale, float& sourceScale)
+{
+	return new ComparatorWrapper(static_cast<M2 const*>(oldM2), static_cast<M2 const*>(newM2), weightThreshold, compareTextures, predictScale, sourceScale);
 }
 
 M2Lib::BoneComparator::CompareStatus M2Lib::BoneComparator::Wrapper_GetResult(M2LIB_HANDLE pointer)

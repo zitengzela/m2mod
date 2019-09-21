@@ -39,6 +39,7 @@
             this.buttonReplaceM2Browse = new System.Windows.Forms.Button();
             this.panel1 = new System.Windows.Forms.Panel();
             this.importButtonGo = new System.Windows.Forms.Button();
+            this.importButtonPreload = new M2Mod.SplitButton();
             this.preloadButtonContextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.importCancelButton = new System.Windows.Forms.Button();
@@ -67,6 +68,7 @@
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.loadProfilesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.checkUpdatesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -77,15 +79,13 @@
             this.buttonOutputM2IBrowse = new System.Windows.Forms.Button();
             this.label7 = new System.Windows.Forms.Label();
             this.tabExport = new System.Windows.Forms.TabPage();
+            this.exportButtonGo = new M2Mod.SplitButton();
             this.goButtonContextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.customMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tabControl = new System.Windows.Forms.TabControl();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.profilesComboBox = new System.Windows.Forms.ComboBox();
             this.profileLabel = new System.Windows.Forms.Label();
-            this.exportButtonGo = new M2Mod.SplitButton();
-            this.importButtonPreload = new M2Mod.SplitButton();
-            this.loadProfilesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.panelImputM2Exp.SuspendLayout();
             this.panelReplaceM2.SuspendLayout();
             this.panel1.SuspendLayout();
@@ -215,6 +215,20 @@
             this.toolTip1.SetToolTip(this.importButtonGo, "Produce M2");
             this.importButtonGo.UseVisualStyleBackColor = true;
             this.importButtonGo.Click += new System.EventHandler(this.ImportButtonGo_Click);
+            // 
+            // importButtonPreload
+            // 
+            this.importButtonPreload.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            this.importButtonPreload.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.importButtonPreload.Location = new System.Drawing.Point(54, 9);
+            this.importButtonPreload.Menu = this.preloadButtonContextMenuStrip;
+            this.importButtonPreload.Name = "importButtonPreload";
+            this.importButtonPreload.Size = new System.Drawing.Size(142, 38);
+            this.importButtonPreload.TabIndex = 28;
+            this.importButtonPreload.Text = "Preload";
+            this.toolTip1.SetToolTip(this.importButtonPreload, "Load source M2 and import M2I");
+            this.importButtonPreload.UseVisualStyleBackColor = true;
+            this.importButtonPreload.Click += new System.EventHandler(this.ImportButtonPreload_Click);
             // 
             // preloadButtonContextMenuStrip
             // 
@@ -510,6 +524,13 @@
             this.settingsToolStripMenuItem.Text = "Settings";
             this.settingsToolStripMenuItem.Click += new System.EventHandler(this.SettingsToolStripMenuItem_Click);
             // 
+            // loadProfilesToolStripMenuItem
+            // 
+            this.loadProfilesToolStripMenuItem.Name = "loadProfilesToolStripMenuItem";
+            this.loadProfilesToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.loadProfilesToolStripMenuItem.Text = "Load profiles";
+            this.loadProfilesToolStripMenuItem.Click += new System.EventHandler(this.LoadProfilesToolStripMenuItem_Click);
+            // 
             // checkUpdatesToolStripMenuItem
             // 
             this.checkUpdatesToolStripMenuItem.Name = "checkUpdatesToolStripMenuItem";
@@ -535,9 +556,9 @@
             // compareBonesToolStripMenuItem
             // 
             this.compareBonesToolStripMenuItem.Name = "compareBonesToolStripMenuItem";
-            this.compareBonesToolStripMenuItem.Size = new System.Drawing.Size(158, 22);
-            this.compareBonesToolStripMenuItem.Text = "Compare bones";
-            this.compareBonesToolStripMenuItem.Click += new System.EventHandler(this.CompareBonesToolStripMenuItem_Click);
+            this.compareBonesToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.compareBonesToolStripMenuItem.Text = "Compare models";
+            this.compareBonesToolStripMenuItem.Click += new System.EventHandler(this.CompareModelsToolStripMenuItem_Click);
             // 
             // tabImport
             // 
@@ -614,6 +635,20 @@
             this.tabExport.Text = "Export";
             this.tabExport.UseVisualStyleBackColor = true;
             // 
+            // exportButtonGo
+            // 
+            this.exportButtonGo.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            this.exportButtonGo.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.exportButtonGo.Location = new System.Drawing.Point(214, 188);
+            this.exportButtonGo.Menu = this.goButtonContextMenuStrip;
+            this.exportButtonGo.Name = "exportButtonGo";
+            this.exportButtonGo.Size = new System.Drawing.Size(142, 38);
+            this.exportButtonGo.TabIndex = 26;
+            this.exportButtonGo.Text = "Go!";
+            this.toolTip1.SetToolTip(this.exportButtonGo, "Click this to perform operations.");
+            this.exportButtonGo.UseVisualStyleBackColor = true;
+            this.exportButtonGo.Click += new System.EventHandler(this.ExportButtonGo_Click);
+            // 
             // goButtonContextMenuStrip
             // 
             this.goButtonContextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -673,41 +708,6 @@
             this.profileLabel.Size = new System.Drawing.Size(36, 13);
             this.profileLabel.TabIndex = 37;
             this.profileLabel.Text = "Profile";
-            // 
-            // exportButtonGo
-            // 
-            this.exportButtonGo.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.exportButtonGo.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.exportButtonGo.Location = new System.Drawing.Point(214, 188);
-            this.exportButtonGo.Menu = this.goButtonContextMenuStrip;
-            this.exportButtonGo.Name = "exportButtonGo";
-            this.exportButtonGo.Size = new System.Drawing.Size(142, 38);
-            this.exportButtonGo.TabIndex = 26;
-            this.exportButtonGo.Text = "Go!";
-            this.toolTip1.SetToolTip(this.exportButtonGo, "Click this to perform operations.");
-            this.exportButtonGo.UseVisualStyleBackColor = true;
-            this.exportButtonGo.Click += new System.EventHandler(this.ExportButtonGo_Click);
-            // 
-            // importButtonPreload
-            // 
-            this.importButtonPreload.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.importButtonPreload.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.importButtonPreload.Location = new System.Drawing.Point(54, 9);
-            this.importButtonPreload.Menu = this.preloadButtonContextMenuStrip;
-            this.importButtonPreload.Name = "importButtonPreload";
-            this.importButtonPreload.Size = new System.Drawing.Size(142, 38);
-            this.importButtonPreload.TabIndex = 28;
-            this.importButtonPreload.Text = "Preload";
-            this.toolTip1.SetToolTip(this.importButtonPreload, "Load source M2 and import M2I");
-            this.importButtonPreload.UseVisualStyleBackColor = true;
-            this.importButtonPreload.Click += new System.EventHandler(this.ImportButtonPreload_Click);
-            // 
-            // loadProfilesToolStripMenuItem
-            // 
-            this.loadProfilesToolStripMenuItem.Name = "loadProfilesToolStripMenuItem";
-            this.loadProfilesToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.loadProfilesToolStripMenuItem.Text = "Load profiles";
-            this.loadProfilesToolStripMenuItem.Click += new System.EventHandler(this.LoadProfilesToolStripMenuItem_Click);
             // 
             // M2ModForm
             // 

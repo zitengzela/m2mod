@@ -62,7 +62,7 @@ namespace M2Mod.Interop
         public static extern void AttachLoggerCallback(LoggerDelegate callback);
 
         [DllImport("M2Lib.dll", CallingConvention = CallingConvention.Cdecl)]
-        public static extern IntPtr Wrapper_Create(IntPtr oldM2, IntPtr newM2, float weightThreshold, bool compareTextures);
+        public static extern IntPtr Wrapper_Create(IntPtr oldM2, IntPtr newM2, float weightThreshold, bool compareTextures, bool precictScale, ref float sourceScale);
 
         [DllImport("M2Lib.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern CompareStatus Wrapper_GetResult(IntPtr pointer);

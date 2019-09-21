@@ -1,6 +1,6 @@
 ﻿namespace M2Mod
 {
-    partial class CompareBonesForm
+    partial class CompareModelsForm
     {
         /// <summary>
         /// Required designer variable.
@@ -39,13 +39,16 @@
             this.oldM2Label = new System.Windows.Forms.Label();
             this.newM2TextBox = new System.Windows.Forms.TextBox();
             this.oldM2TextBox = new System.Windows.Forms.TextBox();
+            this.scaleLabel = new System.Windows.Forms.Label();
+            this.scaleTextBox = new System.Windows.Forms.TextBox();
+            this.predictScaleCheckBox = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // weightThresholdLabel
             // 
-            this.weightThresholdLabel.Anchor = System.Windows.Forms.AnchorStyles.Top;
+            this.weightThresholdLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.weightThresholdLabel.AutoSize = true;
-            this.weightThresholdLabel.Location = new System.Drawing.Point(310, 69);
+            this.weightThresholdLabel.Location = new System.Drawing.Point(391, 69);
             this.weightThresholdLabel.Name = "weightThresholdLabel";
             this.weightThresholdLabel.Size = new System.Drawing.Size(91, 13);
             this.weightThresholdLabel.TabIndex = 23;
@@ -53,19 +56,19 @@
             // 
             // weightThresholdTextBox
             // 
-            this.weightThresholdTextBox.Anchor = System.Windows.Forms.AnchorStyles.Top;
-            this.weightThresholdTextBox.Location = new System.Drawing.Point(407, 66);
+            this.weightThresholdTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.weightThresholdTextBox.Location = new System.Drawing.Point(488, 66);
             this.weightThresholdTextBox.Name = "weightThresholdTextBox";
             this.weightThresholdTextBox.Size = new System.Drawing.Size(44, 20);
             this.weightThresholdTextBox.TabIndex = 22;
             // 
             // saveButton
             // 
-            this.saveButton.Anchor = System.Windows.Forms.AnchorStyles.Top;
+            this.saveButton.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
             this.saveButton.Enabled = false;
-            this.saveButton.Location = new System.Drawing.Point(126, 65);
+            this.saveButton.Location = new System.Drawing.Point(305, 241);
             this.saveButton.Name = "saveButton";
-            this.saveButton.Size = new System.Drawing.Size(59, 20);
+            this.saveButton.Size = new System.Drawing.Size(64, 30);
             this.saveButton.TabIndex = 21;
             this.saveButton.Text = "Save";
             this.saveButton.UseVisualStyleBackColor = true;
@@ -73,10 +76,10 @@
             // 
             // compareButton
             // 
-            this.compareButton.Anchor = System.Windows.Forms.AnchorStyles.Top;
-            this.compareButton.Location = new System.Drawing.Point(61, 65);
+            this.compareButton.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            this.compareButton.Location = new System.Drawing.Point(235, 241);
             this.compareButton.Name = "compareButton";
-            this.compareButton.Size = new System.Drawing.Size(59, 20);
+            this.compareButton.Size = new System.Drawing.Size(64, 30);
             this.compareButton.TabIndex = 20;
             this.compareButton.Text = "Compare";
             this.compareButton.UseVisualStyleBackColor = true;
@@ -91,14 +94,14 @@
             this.resultsTextBox.Multiline = true;
             this.resultsTextBox.Name = "resultsTextBox";
             this.resultsTextBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.resultsTextBox.Size = new System.Drawing.Size(497, 271);
+            this.resultsTextBox.Size = new System.Drawing.Size(578, 144);
             this.resultsTextBox.TabIndex = 19;
             this.resultsTextBox.TextChanged += new System.EventHandler(this.ResultsTextBox_TextChanged);
             // 
             // newM2BrowseButton
             // 
             this.newM2BrowseButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.newM2BrowseButton.Location = new System.Drawing.Point(462, 39);
+            this.newM2BrowseButton.Location = new System.Drawing.Point(543, 39);
             this.newM2BrowseButton.Name = "newM2BrowseButton";
             this.newM2BrowseButton.Size = new System.Drawing.Size(52, 20);
             this.newM2BrowseButton.TabIndex = 18;
@@ -109,7 +112,7 @@
             // oldM2BrowseButton
             // 
             this.oldM2BrowseButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.oldM2BrowseButton.Location = new System.Drawing.Point(462, 12);
+            this.oldM2BrowseButton.Location = new System.Drawing.Point(543, 12);
             this.oldM2BrowseButton.Name = "oldM2BrowseButton";
             this.oldM2BrowseButton.Size = new System.Drawing.Size(52, 20);
             this.oldM2BrowseButton.TabIndex = 17;
@@ -141,7 +144,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.newM2TextBox.Location = new System.Drawing.Point(61, 39);
             this.newM2TextBox.Name = "newM2TextBox";
-            this.newM2TextBox.Size = new System.Drawing.Size(390, 20);
+            this.newM2TextBox.Size = new System.Drawing.Size(471, 20);
             this.newM2TextBox.TabIndex = 14;
             // 
             // oldM2TextBox
@@ -150,14 +153,47 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.oldM2TextBox.Location = new System.Drawing.Point(61, 13);
             this.oldM2TextBox.Name = "oldM2TextBox";
-            this.oldM2TextBox.Size = new System.Drawing.Size(390, 20);
+            this.oldM2TextBox.Size = new System.Drawing.Size(471, 20);
             this.oldM2TextBox.TabIndex = 13;
             // 
-            // CompareBonesForm
+            // scaleLabel
+            // 
+            this.scaleLabel.AutoSize = true;
+            this.scaleLabel.Location = new System.Drawing.Point(204, 69);
+            this.scaleLabel.Name = "scaleLabel";
+            this.scaleLabel.Size = new System.Drawing.Size(69, 13);
+            this.scaleLabel.TabIndex = 25;
+            this.scaleLabel.Text = "Source scale";
+            // 
+            // scaleTextBox
+            // 
+            this.scaleTextBox.Enabled = false;
+            this.scaleTextBox.Location = new System.Drawing.Point(154, 66);
+            this.scaleTextBox.Name = "scaleTextBox";
+            this.scaleTextBox.Size = new System.Drawing.Size(44, 20);
+            this.scaleTextBox.TabIndex = 24;
+            // 
+            // predictScaleCheckBox
+            // 
+            this.predictScaleCheckBox.AutoSize = true;
+            this.predictScaleCheckBox.Checked = true;
+            this.predictScaleCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.predictScaleCheckBox.Location = new System.Drawing.Point(61, 68);
+            this.predictScaleCheckBox.Name = "predictScaleCheckBox";
+            this.predictScaleCheckBox.Size = new System.Drawing.Size(87, 17);
+            this.predictScaleCheckBox.TabIndex = 26;
+            this.predictScaleCheckBox.Text = "Predict scale";
+            this.predictScaleCheckBox.UseVisualStyleBackColor = true;
+            this.predictScaleCheckBox.CheckedChanged += new System.EventHandler(this.PredictScaleCheckBox_CheckedChanged);
+            // 
+            // CompareModelsForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(529, 374);
+            this.ClientSize = new System.Drawing.Size(610, 276);
+            this.Controls.Add(this.predictScaleCheckBox);
+            this.Controls.Add(this.scaleLabel);
+            this.Controls.Add(this.scaleTextBox);
             this.Controls.Add(this.weightThresholdLabel);
             this.Controls.Add(this.weightThresholdTextBox);
             this.Controls.Add(this.saveButton);
@@ -169,8 +205,8 @@
             this.Controls.Add(this.oldM2Label);
             this.Controls.Add(this.newM2TextBox);
             this.Controls.Add(this.oldM2TextBox);
-            this.Name = "CompareBonesForm";
-            this.Text = "CompareBonesForm";
+            this.Name = "CompareModelsForm";
+            this.Text = "Compare models";
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -189,5 +225,8 @@
         private System.Windows.Forms.Label oldM2Label;
         private System.Windows.Forms.TextBox newM2TextBox;
         private System.Windows.Forms.TextBox oldM2TextBox;
+        private System.Windows.Forms.Label scaleLabel;
+        private System.Windows.Forms.TextBox scaleTextBox;
+        private System.Windows.Forms.CheckBox predictScaleCheckBox;
     }
 }

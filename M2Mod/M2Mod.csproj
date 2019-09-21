@@ -72,11 +72,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CompareBonesForm.cs">
+    <Compile Include="CompareModelsForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="CompareBonesForm.Designer.cs">
-      <DependentUpon>CompareBonesForm.cs</DependentUpon>
+    <Compile Include="CompareModelsForm.Designer.cs">
+      <DependentUpon>CompareModelsForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Config\ConfigFile.cs" />
     <Compile Include="Config\ProfilesConfig.cs" />
@@ -130,8 +130,8 @@
       <DependentUpon>SplitButton.cs</DependentUpon>
     </Compile>
     <Compile Include="Version.cs" />
-    <EmbeddedResource Include="CompareBonesForm.resx">
-      <DependentUpon>CompareBonesForm.cs</DependentUpon>
+    <EmbeddedResource Include="CompareModelsForm.resx">
+      <DependentUpon>CompareModelsForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="EnterNameForm.resx">
       <DependentUpon>EnterNameForm.cs</DependentUpon>

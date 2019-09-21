@@ -11,6 +11,7 @@ namespace M2Mod.Config
         public Settings Settings;
         public FormData FormData;
 
+        // needed for proper json deserialization
         public SettingsProfile()
         {
 

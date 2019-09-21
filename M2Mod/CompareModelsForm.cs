@@ -7,12 +7,12 @@ using M2Mod.Interop.Structures;
 
 namespace M2Mod
 {
-    public partial class CompareBonesForm : Form
+    public partial class CompareModelsForm : Form
     {
         private const string _m2Filter = "M2 Files|*.m2|All Files|*.*";
         private const string _txtFilter = "Txt Files|*.txt|All Files|*.*";
 
-        public CompareBonesForm()
+        public CompareModelsForm()
         {
             InitializeComponent();
 
@@ -97,6 +97,15 @@ namespace M2Mod
                 weightThresholdTextBox.Text = "0";
             }
 
+            if (!float.TryParse(scaleTextBox.Text,
+                out ProfileManager.CurrentProfile.FormData.CompareSourceScale))
+            {
+                ProfileManager.CurrentProfile.FormData.CompareSourceScale = 1.0f;
+                scaleTextBox.Text = "1";
+            }
+
+            ProfileManager.CurrentProfile.FormData.PredictScale = predictScaleCheckBox.Checked;
+
             var oldSettings = new Settings()
             {
                 WorkingDirectory = PropagateWorkingDirectory(oldM2TextBox.Text),
@@ -128,7 +137,11 @@ namespace M2Mod
                 return;
             }
 
-            IntPtr wrapper = Imports.Wrapper_Create(oldM2, newM2, ProfileManager.CurrentProfile.FormData.CompareWeightThreshold, true);
+            IntPtr wrapper = Imports.Wrapper_Create(oldM2, newM2,
+                ProfileManager.CurrentProfile.FormData.CompareWeightThreshold,
+                true,
+                ProfileManager.CurrentProfile.FormData.PredictScale,
+                ref ProfileManager.CurrentProfile.FormData.CompareSourceScale);
 
             resultsTextBox.Text = "";
             if (Imports.Wrapper_DiffSize(wrapper) == 0)
@@ -190,6 +203,11 @@ namespace M2Mod
         private void ResultsTextBox_TextChanged(object sender, EventArgs e)
         {
             saveButton.Enabled = resultsTextBox.Text.Length > 0;
+        }
+
+        private void PredictScaleCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            scaleTextBox.Enabled = !predictScaleCheckBox.Checked;
         }
     }
 }

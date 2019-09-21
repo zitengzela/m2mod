@@ -1,7 +1,7 @@
 #pragma once
 #include "M2.h"
-#include <map>
 #include <set>
+#include <unordered_map>
 
 namespace M2Lib
 {
@@ -19,20 +19,27 @@ namespace M2Lib
 		public:
 			void AddCandidate(uint32_t BoneId);
 
-			std::map<uint32_t, float> GetWeightedCandidates();
+			std::unordered_map<uint32_t, float> GetWeightedCandidates();
 
 			uint32_t Size() const { return BoneUsage.size(); }
 
 		private:
-			std::map<uint32_t, uint32_t> BoneUsage;
+			std::unordered_map<uint32_t, uint32_t> BoneUsage;
 		};
 
-		typedef std::map<uint32_t /*BoneId*/, std::map<uint32_t /*BoneId*/, float /*Probability*/>> WeightedDifferenceMap;
-		WeightedDifferenceMap Diff(M2 const* oldM2, M2 const* newM2, bool CompareTextures);
+		typedef std::unordered_map<uint32_t /*BoneId*/, std::unordered_map<uint32_t /*BoneId*/, float /*Probability*/>> WeightedDifferenceMap;
+
+		struct DiffResult
+		{
+			WeightedDifferenceMap map;
+			float matchedPercent;
+		};
+		
+		DiffResult Diff(M2 const* oldM2, M2 const* newM2, bool CompareTextures, bool predictScale, float& sourceScale);
 
 		CompareStatus GetDifferenceStatus(WeightedDifferenceMap const& WeightedResult, float weightThreshold);
 
-		M2LIB_API M2LIB_HANDLE __cdecl Wrapper_Create(M2LIB_HANDLE oldM2, M2LIB_HANDLE newM2, float weightThreshold, bool compareTextures);
+		M2LIB_API M2LIB_HANDLE __cdecl Wrapper_Create(M2LIB_HANDLE oldM2, M2LIB_HANDLE newM2, float weightThreshold, bool compareTextures, bool predictScale, float& sourceScale);
 		M2LIB_API CompareStatus __cdecl Wrapper_GetResult(M2LIB_HANDLE pointer);
 		M2LIB_API const wchar_t* __cdecl Wrapper_GetStringResult(M2LIB_HANDLE pointer);
 		M2LIB_API uint32_t __cdecl Wrapper_DiffSize(M2LIB_HANDLE pointer);
@@ -41,7 +48,7 @@ namespace M2Lib
 		class ComparatorWrapper
 		{
 		public:
-			ComparatorWrapper(M2 const* oldM2, M2 const* newM2, float weightThreshold, bool compareTextures);
+			ComparatorWrapper(M2 const* oldM2, M2 const* newM2, float weightThreshold, bool compareTextures, bool predictScale, float& sourceScale);
 			~ComparatorWrapper() = default;
 			
 			CompareStatus GetResult() const;

@@ -298,7 +298,8 @@ namespace M2ModRedux {
 			errorStatus = M2Lib::M2_Load(oldM2, StringConverter(newM2TextBox->Text).ToStringW());
 			if (errorStatus == M2Lib::EError_OK)
 			{
-				wrapper = M2Lib::BoneComparator::Wrapper_Create(oldM2, newM2, weightThreshold, true);
+				float scale = 1.f;
+				wrapper = M2Lib::BoneComparator::Wrapper_Create(oldM2, newM2, weightThreshold, true, false, scale);
 
 				resultsTextBox->Text = "";
 				if (M2Lib::BoneComparator::Wrapper_DiffSize(wrapper) != 0)
