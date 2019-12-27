@@ -19,9 +19,6 @@
     <Filter Include="Helpers">
       <UniqueIdentifier>{1f6ec346-f2a2-46f6-80ea-bda8a013f861}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Helpers\FileSystem">
-      <UniqueIdentifier>{1188fdff-1a20-4883-aebb-e5df05037b87}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Helpers\String">
       <UniqueIdentifier>{044a3415-3d92-412a-9e3c-f641f3e77c54}</UniqueIdentifier>
     </Filter>
@@ -71,9 +68,6 @@
     </ClInclude>
     <ClInclude Include="SkeletonChunk.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="FileSystem.h">
-      <Filter>Helpers\FileSystem</Filter>
     </ClInclude>
     <ClInclude Include="Logger.h">
       <Filter>Header Files</Filter>
@@ -139,9 +133,6 @@
     </ClCompile>
     <ClCompile Include="ChunkBase.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="FileSystem.cpp">
-      <Filter>Helpers\FileSystem</Filter>
     </ClCompile>
     <ClCompile Include="Logger.cpp">
       <Filter>Source Files</Filter>

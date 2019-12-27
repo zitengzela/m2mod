@@ -54,6 +54,8 @@
             this.profilesComboBox = new System.Windows.Forms.ComboBox();
             this.profilesLabel = new System.Windows.Forms.Label();
             this.editProfilesButton = new System.Windows.Forms.Button();
+            this.customFilesStartIndexTextBox = new System.Windows.Forms.TextBox();
+            this.customFilesStartIndexLabel = new System.Windows.Forms.Label();
             this.outputDirectoryGroupBox.SuspendLayout();
             this.workingDirectoryGroupBox.SuspendLayout();
             this.mappingsDirectoryGroupBox.SuspendLayout();
@@ -217,11 +219,13 @@
             // 
             this.mappingsDirectoryGroupBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.mappingsDirectoryGroupBox.Controls.Add(this.customFilesStartIndexLabel);
+            this.mappingsDirectoryGroupBox.Controls.Add(this.customFilesStartIndexTextBox);
             this.mappingsDirectoryGroupBox.Controls.Add(this.mappingsDirectoryButton);
             this.mappingsDirectoryGroupBox.Controls.Add(this.mappingsDirectoryTextBox);
             this.mappingsDirectoryGroupBox.Location = new System.Drawing.Point(12, 165);
             this.mappingsDirectoryGroupBox.Name = "mappingsDirectoryGroupBox";
-            this.mappingsDirectoryGroupBox.Size = new System.Drawing.Size(307, 56);
+            this.mappingsDirectoryGroupBox.Size = new System.Drawing.Size(307, 80);
             this.mappingsDirectoryGroupBox.TabIndex = 31;
             this.mappingsDirectoryGroupBox.TabStop = false;
             this.mappingsDirectoryGroupBox.Text = "Mappings directory";
@@ -250,7 +254,7 @@
             // saveButton
             // 
             this.saveButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.saveButton.Location = new System.Drawing.Point(151, 387);
+            this.saveButton.Location = new System.Drawing.Point(151, 404);
             this.saveButton.Name = "saveButton";
             this.saveButton.Size = new System.Drawing.Size(81, 29);
             this.saveButton.TabIndex = 27;
@@ -268,9 +272,9 @@
             this.groupBox3.Controls.Add(this.checkBoxMergeCameras);
             this.groupBox3.Controls.Add(this.checkBoxMergeAttachments);
             this.groupBox3.Controls.Add(this.checkBoxMergeBones);
-            this.groupBox3.Location = new System.Drawing.Point(12, 287);
+            this.groupBox3.Location = new System.Drawing.Point(12, 306);
             this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(307, 91);
+            this.groupBox3.Size = new System.Drawing.Size(307, 90);
             this.groupBox3.TabIndex = 26;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Import Settings";
@@ -286,7 +290,7 @@
             // closeButton
             // 
             this.closeButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.closeButton.Location = new System.Drawing.Point(238, 387);
+            this.closeButton.Location = new System.Drawing.Point(238, 404);
             this.closeButton.Name = "closeButton";
             this.closeButton.Size = new System.Drawing.Size(81, 29);
             this.closeButton.TabIndex = 28;
@@ -300,7 +304,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBox1.Controls.Add(this.label1);
             this.groupBox1.Controls.Add(this.forceExpansionComboBox);
-            this.groupBox1.Location = new System.Drawing.Point(12, 232);
+            this.groupBox1.Location = new System.Drawing.Point(12, 251);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Size = new System.Drawing.Size(307, 53);
             this.groupBox1.TabIndex = 25;
@@ -340,11 +344,27 @@
             this.editProfilesButton.UseVisualStyleBackColor = true;
             this.editProfilesButton.Click += new System.EventHandler(this.EditProfilesButton_Click);
             // 
+            // customFilesStartIndexTextBox
+            // 
+            this.customFilesStartIndexTextBox.Location = new System.Drawing.Point(9, 48);
+            this.customFilesStartIndexTextBox.Name = "customFilesStartIndexTextBox";
+            this.customFilesStartIndexTextBox.Size = new System.Drawing.Size(100, 20);
+            this.customFilesStartIndexTextBox.TabIndex = 7;
+            // 
+            // customFilesStartIndexLabel
+            // 
+            this.customFilesStartIndexLabel.AutoSize = true;
+            this.customFilesStartIndexLabel.Location = new System.Drawing.Point(115, 51);
+            this.customFilesStartIndexLabel.Name = "customFilesStartIndexLabel";
+            this.customFilesStartIndexLabel.Size = new System.Drawing.Size(114, 13);
+            this.customFilesStartIndexLabel.TabIndex = 8;
+            this.customFilesStartIndexLabel.Text = "Custom files start index";
+            // 
             // SettingsForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(331, 422);
+            this.ClientSize = new System.Drawing.Size(331, 439);
             this.Controls.Add(this.mappingsDirectoryGroupBox);
             this.Controls.Add(this.editProfilesButton);
             this.Controls.Add(this.profilesLabel);
@@ -397,5 +417,7 @@
         private System.Windows.Forms.GroupBox mappingsDirectoryGroupBox;
         private System.Windows.Forms.Button mappingsDirectoryButton;
         private System.Windows.Forms.TextBox mappingsDirectoryTextBox;
+        private System.Windows.Forms.Label customFilesStartIndexLabel;
+        private System.Windows.Forms.TextBox customFilesStartIndexTextBox;
     }
 }

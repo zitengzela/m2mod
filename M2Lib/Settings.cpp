@@ -29,4 +29,5 @@ void M2Lib::Settings::operator=(Settings const& other)
 	FixEdgeNormals = other.FixEdgeNormals;
 	IgnoreOriginalMeshIndexes = other.IgnoreOriginalMeshIndexes;
 	FixAnimationsTest = other.FixAnimationsTest;
+	CustomFilesStartIndex = other.CustomFilesStartIndex;
 }

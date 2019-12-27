@@ -129,3 +129,33 @@ void M2Lib::M2Chunk::TXACChunk::Save(std::fstream & FileStream)
 	for (uint32_t i = 0; i < ParticleEmitterAC.size(); ++i)
 		FileStream.write((char*)&ParticleEmitterAC[i], sizeof(texture_ac));
 }
+
+void M2Lib::M2Chunk::GPIDChunk::Load(std::fstream& FileStream, uint32_t Size)
+{
+	m2lib_assert((Size % 4) == 0 && "Bad GPID chunk size");
+
+	FileDataIds.resize(Size / 4);
+	for (uint32_t i = 0; i < Size / 4; ++i)
+		FileStream.read((char*)& FileDataIds[i], 4);
+}
+
+void M2Lib::M2Chunk::GPIDChunk::Save(std::fstream& FileStream)
+{
+	for (uint32_t i = 0; i < FileDataIds.size(); ++i)
+		FileStream.write((char*)& FileDataIds[i], 4);
+}
+
+void M2Lib::M2Chunk::RPIDChunk::Load(std::fstream& FileStream, uint32_t Size)
+{
+	m2lib_assert((Size % 4) == 0 && "Bad RPID chunk size");
+
+	FileDataIds.resize(Size / 4);
+	for (uint32_t i = 0; i < Size / 4; ++i)
+		FileStream.read((char*)& FileDataIds[i], 4);
+}
+
+void M2Lib::M2Chunk::RPIDChunk::Save(std::fstream& FileStream)
+{
+	for (uint32_t i = 0; i < FileDataIds.size(); ++i)
+		FileStream.write((char*)& FileDataIds[i], 4);
+}

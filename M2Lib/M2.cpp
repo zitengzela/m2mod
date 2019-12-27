@@ -167,6 +167,8 @@ M2Lib::EError M2Lib::M2::Load(const wchar_t* FileName)
 				case EM2Chunk::Skeleton: Chunk = new SKIDChunk(); break;
 				case EM2Chunk::Skin: Chunk = new SFIDChunk(); break;
 				case EM2Chunk::Texture: Chunk = new TXIDChunk(); break;
+				case EM2Chunk::ParticleGeometryModels: Chunk = new GPIDChunk(); break;
+				case EM2Chunk::ParticleRecursiveModel: Chunk = new RPIDChunk(); break;
 				case EM2Chunk::TXAC:
 					PostProcessChunks[eChunk] = { (uint32_t)FileStream.tellg(), ChunkSize };
 					FileStream.seekg(ChunkSize, std::ios::cur);
@@ -277,7 +279,9 @@ M2Lib::EError M2Lib::M2::Load(const wchar_t* FileName)
 		ChunkBase* Chunk = NULL;
 		switch (PostChunk.first)
 		{
-			case EM2Chunk::TXAC: Chunk = new TXACChunk(Header.Elements.nTextureFlags, Header.Elements.nParticleEmitter); break;
+			case EM2Chunk::TXAC:
+				Chunk = new TXACChunk(Header.Elements.nTextureFlags, Header.Elements.nParticleEmitter);
+				break;
 			default: Chunk = new RawChunk(); break;
 		}
 
@@ -404,6 +408,34 @@ M2Lib::EError M2Lib::M2::SaveSkeleton(std::wstring const& M2FileName)
 	Error = ParentSkeleton->Save(ParentSkeletonFileName.c_str());
 	if (Error != EError_OK)
 		return Error;
+
+	return EError_OK;
+}
+
+M2Lib::EError M2Lib::M2::SaveCustomMappings()
+{
+	if (customFileMappings.empty())
+		return EError_OK;
+
+	std::filesystem::path outPath = Settings.MappingsDirectory;
+	if (outPath.empty())
+		outPath = FileStorage::DefaultMappingsPath;
+
+	outPath /= std::filesystem::path(_FileName).stem().wstring() + L".txt";
+
+	std::wofstream fs(outPath.wstring(), std::ios::out | std::ios::trunc);
+	if (fs.fail())
+	{
+		sLogger.LogError(L"Failed to save custom mapping to '%s'", outPath.wstring().c_str());
+		return EError_FAIL;
+	}
+
+	for (auto info : customFileMappings)
+		fs << info.first << L";" << NormalizePath(info.second) << std::endl;
+
+	fs.close();
+
+	sLogger.LogInfo(L"Saved custom mapping to '%s'", outPath.wstring().c_str());
 
 	return EError_OK;
 }
@@ -648,7 +680,7 @@ M2Lib::EError M2Lib::M2::Save(const wchar_t* FileName)
 		return EError_FailedToSaveM2_NoFileSpecified;
 
 	auto directory = std::filesystem::path(FileName).parent_path();
-	if (!std::filesystem::is_directory(directory) && !std::filesystem::create_directories(directory))
+	if (!is_directory(directory) && !std::filesystem::create_directories(directory))
 	{
 		sLogger.LogError(L"Failed to write to directory '%s'", directory.wstring().c_str());
 
@@ -659,6 +691,8 @@ M2Lib::EError M2Lib::M2::Save(const wchar_t* FileName)
 		this->replaceM2 = replaceM2;
 
 	DoExtraWork();
+	//StoreReferencesAsCustom();
+	PrintReferencedFileInfo();
 
 	// open file stream
 	std::fstream FileStream;
@@ -746,6 +780,8 @@ M2Lib::EError M2Lib::M2::Save(const wchar_t* FileName)
 		sLogger.LogInfo(L"INFO: Put your skeleton to:");
 		sLogger.LogInfo(L"\t%s", storageRef->PathInfo(chunk->SkeletonFileDataId));
 	}
+
+	SaveCustomMappings();
 
 	return EError_OK;
 }
@@ -1520,7 +1556,163 @@ void M2Lib::M2::PrintReferencedFileInfo()
 			sLogger.LogInfo(L"\t[%u] %s", bone, storageRef->PathInfo(bone));
 	}
 
+	auto gpidChunk = (GPIDChunk*)GetChunk(EM2Chunk::ParticleGeometryModels);
+	auto rpidChunk = (RPIDChunk*)GetChunk(EM2Chunk::ParticleRecursiveModel);
+	if (gpidChunk || rpidChunk)
+	{
+		if (gpidChunk)
+		{
+			sLogger.LogInfo(L"Total particle geometry files referenced: [%u]", gpidChunk->FileDataIds.size());
+			for (auto fileDataId : gpidChunk->FileDataIds)
+				sLogger.LogInfo(L"\t[%u] %s", fileDataId, storageRef->PathInfo(fileDataId));
+		}
+
+		if (rpidChunk)
+		{
+			sLogger.LogInfo(L"Total particle geometry files referenced: [%u]", rpidChunk->FileDataIds.size());
+			for (auto fileDataId : rpidChunk->FileDataIds)
+				sLogger.LogInfo(L"\t[%u] %s", fileDataId, storageRef->PathInfo(fileDataId));
+		}
+	}
+	else
+	{
+		auto& ParticleEmitters = Elements[EElement_ParticleEmitter];
+		CElement_ParticleEmitter* Emitters = ParticleEmitters.as<CElement_ParticleEmitter>();
+
+		int geometryModelsCount = 0, recursionModelsCount = 0;
+
+		for (uint32_t j = 0; j < ParticleEmitters.Count; ++j)
+		{
+			if (Emitters[j].GeometryFileNameModel.Offset)
+			{
+				auto path = (const char*)ParticleEmitters.GetLocalPointer(Emitters[j].GeometryFileNameModel.Offset);
+				if (strlen(path) > 1)
+					++geometryModelsCount;
+			}
+
+			if (Emitters[j].RecursionFileNameModel.Offset)
+			{
+				auto path = (const char*)ParticleEmitters.GetLocalPointer(Emitters[j].RecursionFileNameModel.Offset);
+				if (strlen(path) > 1)
+					++recursionModelsCount;
+			}
+		}
+
+		sLogger.LogInfo(L"Total particle geometry files referenced inplace: %u", geometryModelsCount);
+
+		for (uint32_t j = 0; j < ParticleEmitters.Count; ++j)
+		{
+			if (!Emitters[j].GeometryFileNameModel.Offset)
+				continue;
+
+			auto path = (const char*)ParticleEmitters.GetLocalPointer(Emitters[j].GeometryFileNameModel.Offset);
+			if (strlen(path) <= 1)
+				continue;
+
+			sLogger.LogInfo(L"\t%s", StringHelpers::StringToWString(path).c_str());
+		}
+
+		sLogger.LogInfo(L"Total particle recursion files referenced inplace: %u", recursionModelsCount);
+
+		for (uint32_t j = 0; j < ParticleEmitters.Count; ++j)
+		{
+			if (!Emitters[j].RecursionFileNameModel.Offset)
+				continue;
+
+			auto path = (const char*)ParticleEmitters.GetLocalPointer(Emitters[j].RecursionFileNameModel.Offset);
+			if (strlen(path) <= 1)
+				continue;
+
+			sLogger.LogInfo(L"\t%s", StringHelpers::StringToWString(path).c_str());
+		}
+	}
+
 	sLogger.LogInfo(L"======END OF REFERENCED FILE INFO======");
+}
+
+void M2Lib::M2::StoreReferencesAsCustom()
+{
+	auto storeCustomRef = [&](uint32_t& fileDataOld)
+	{
+		auto info = storageRef->GetFileInfoByFileDataId(fileDataOld);
+
+		auto path = std::filesystem::path(info->Path);
+
+		path = path.parent_path() / (L"new_" + path.filename().wstring());
+
+		auto fileDataNew = AddCustomMapping(path.wstring().c_str());
+
+		fileDataOld = fileDataNew;
+	};
+
+	if (auto skinChunk = (SFIDChunk*)GetChunk(EM2Chunk::Skin))
+	{
+		sLogger.LogInfo(L"Total skin files referenced: %u", skinChunk->SkinsFileDataIds.size());
+		for (auto& skinFileDataId : skinChunk->SkinsFileDataIds)
+			if (skinFileDataId)
+				storeCustomRef(skinFileDataId);
+	}
+
+	if (auto skeletonChunk = (SKIDChunk*)GetChunk(EM2Chunk::Skeleton))
+	{
+		if (skeletonChunk->SkeletonFileDataId)
+			storeCustomRef(skeletonChunk->SkeletonFileDataId);
+
+		if (Skeleton)
+		{
+			using namespace SkeletonChunk;
+
+			if (auto skpdChunk = (SKPDChunk*)Skeleton->GetChunk(ESkeletonChunk::SKPD))
+				if (skpdChunk->Data.ParentSkeletonFileId)
+					storeCustomRef(skpdChunk->Data.ParentSkeletonFileId);
+
+			if (auto afidChunk = (AFIDChunk*)Skeleton->GetChunk(ESkeletonChunk::AFID))
+				for (auto& anim : afidChunk->AnimInfos)
+					if (anim.FileId)
+						storeCustomRef(anim.FileId);
+
+			if (auto boneChunk = (BFIDChunk*)Skeleton->GetChunk(ESkeletonChunk::BFID))
+				for (auto& bone : boneChunk->BoneFileDataIds)
+					if (bone)
+						storeCustomRef(bone);
+		}
+	}
+	if (auto textureChunk = (TXIDChunk*)GetChunk(EM2Chunk::Texture))
+	{
+		for (auto& textuteFileDataId : textureChunk->TextureFileDataIds)
+			if (textuteFileDataId)
+				storeCustomRef(textuteFileDataId);
+	}
+
+	if (auto physChunk = (PFIDChunk*)GetChunk(EM2Chunk::Physic))
+		if (physChunk->PhysFileId)
+			storeCustomRef(physChunk->PhysFileId);
+	
+	if (auto afidChunk = (AFIDChunk*)GetChunk(EM2Chunk::Animation))
+		for (auto& anim : afidChunk->AnimInfos)
+			if (anim.FileId)
+				storeCustomRef(anim.FileId);
+
+	if (auto boneChunk = (BFIDChunk*)GetChunk(EM2Chunk::Bone))
+	{
+		for (auto& bone : boneChunk->BoneFileDataIds)
+			if (bone)
+				storeCustomRef(bone);
+	}
+
+	if (auto gpidChunk = (GPIDChunk*)GetChunk(EM2Chunk::ParticleGeometryModels))
+	{
+		for (auto& fileDataId : gpidChunk->FileDataIds)
+			if (fileDataId)
+				storeCustomRef(fileDataId);
+	}
+
+	if (auto rpidChunk = (RPIDChunk*)GetChunk(EM2Chunk::ParticleRecursiveModel))
+	{
+		for (auto& fileDataId : rpidChunk->FileDataIds)
+			if (fileDataId)
+				storeCustomRef(fileDataId);
+	}
 }
 
 // Gets the .skin file names.
@@ -2036,10 +2228,10 @@ void M2Lib::M2::m_SaveElements_FindOffsets()
 				CElement_RibbonEmitter* RibbonEmitters = Elements[iElement].as<CElement_RibbonEmitter>();
 				for (uint32_t j = 0; j < Elements[iElement].Count; ++j)
 				{
-					VERIFY_OFFSET_LOCAL(RibbonEmitters[j].Texture.Offset);
-					RibbonEmitters[j].Texture.Offset += OffsetDelta;
-					VERIFY_OFFSET_LOCAL(RibbonEmitters[j].RenderFlag.Offset);
-					RibbonEmitters[j].RenderFlag.Offset += OffsetDelta;
+					VERIFY_OFFSET_LOCAL(RibbonEmitters[j].TextureIndices.Offset);
+					RibbonEmitters[j].TextureIndices.Offset += OffsetDelta;
+					VERIFY_OFFSET_LOCAL(RibbonEmitters[j].MaterialIndices.Offset);
+					RibbonEmitters[j].MaterialIndices.Offset += OffsetDelta;
 
 					m_FixAnimationOffsets(OffsetDelta, totalDiff, RibbonEmitters[j].AnimationBlock_Color, iElement);
 					m_FixAnimationOffsets(OffsetDelta, totalDiff, RibbonEmitters[j].AnimationBlock_Opacity, iElement);
@@ -2056,21 +2248,21 @@ void M2Lib::M2::m_SaveElements_FindOffsets()
 				CElement_ParticleEmitter* ParticleEmitters = Elements[iElement].as<CElement_ParticleEmitter>();
 				for (uint32_t j = 0; j < Elements[iElement].Count; ++j)
 				{
-					if (ParticleEmitters[j].FileNameModel.Count)
+					if (ParticleEmitters[j].GeometryFileNameModel.Count)
 					{
-						VERIFY_OFFSET_LOCAL(ParticleEmitters[j].FileNameModel.Offset);
-						ParticleEmitters[j].FileNameModel.Offset += OffsetDelta;
+						VERIFY_OFFSET_LOCAL(ParticleEmitters[j].GeometryFileNameModel.Offset);
+						ParticleEmitters[j].GeometryFileNameModel.Offset += OffsetDelta;
 					}
 					else
-						ParticleEmitters[j].FileNameModel.Offset = 0;
+						ParticleEmitters[j].GeometryFileNameModel.Offset = 0;
 
-					if (ParticleEmitters[j].ChildEmitter.Count)
+					if (ParticleEmitters[j].RecursionFileNameModel.Count)
 					{
-						VERIFY_OFFSET_LOCAL(ParticleEmitters[j].ChildEmitter.Offset);
-						ParticleEmitters[j].ChildEmitter.Offset += OffsetDelta;
+						VERIFY_OFFSET_LOCAL(ParticleEmitters[j].RecursionFileNameModel.Offset);
+						ParticleEmitters[j].RecursionFileNameModel.Offset += OffsetDelta;
 					}
 					else
-						ParticleEmitters[j].ChildEmitter.Offset = 0;
+						ParticleEmitters[j].RecursionFileNameModel.Offset = 0;
 
 					if (ParticleEmitters[j].SplinePoints.Count)
 					{
@@ -2363,6 +2555,29 @@ void M2Lib::M2::m_SaveElements_CopyElementsToHeader()
 	}
 }
 
+uint32_t M2Lib::M2::AddCustomMapping(wchar_t const* path)
+{
+	currentCustomFileDataId = storageRef->GetMaxFileDataId() + 1;
+	if (!currentCustomFileDataId)
+	{
+		if (Settings.CustomFilesStartIndex > storageRef->GetMaxFileDataId())
+			currentCustomFileDataId = Settings.CustomFilesStartIndex;
+		else
+			currentCustomFileDataId = storageRef->GetMaxFileDataId() + 1;
+	}
+
+	auto srcHash = CalcStringHash<wchar_t>(path);
+	for (auto& itr : customFileMappings)
+	{
+		if (srcHash == CalcStringHash<wchar_t>(itr.second))
+			return itr.first;
+	}
+
+	customFileMappings[currentCustomFileDataId] = path;
+
+	return currentCustomFileDataId++;
+}
+
 uint32_t M2Lib::M2::AddTexture(CElement_Texture::ETextureType Type, CElement_Texture::ETextureFlags Flags, char const* szTextureSource)
 {
 	if (Type != CElement_Texture::ETextureType::Final_Hardcoded)
@@ -2400,12 +2615,14 @@ uint32_t M2Lib::M2::AddTexture(CElement_Texture::ETextureType Type, CElement_Tex
 			inplacePath = false;
 			textureChunk->TextureFileDataIds.push_back(info->FileDataId);
 		}
-		else {
-			textureChunk->TextureFileDataIds.push_back(0);
+		else
+		{
+			auto wpath = StringHelpers::StringToWString(szTextureSource);
 
-			sLogger.LogInfo(L"Texture '%s' is not indexed in CASC, TXID chunk will be removed from model", StringHelpers::StringToWString(szTextureSource).c_str());
-			// texture is not indexed, texture chunk needs to be removed
-			needRemoveTXIDChunk = true;
+			auto fileDataId = AddCustomMapping(wpath.c_str());
+
+			sLogger.LogInfo(L"Texture '%s' is not indexed in CASC, storing as custom with entry '%u'", wpath.c_str(), fileDataId);
+			textureChunk->TextureFileDataIds.push_back(fileDataId);
 		}
 	}
 

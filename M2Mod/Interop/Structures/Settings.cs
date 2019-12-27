@@ -20,6 +20,8 @@ namespace M2Mod.Interop.Structures
         public string MappingsDirectory;
 
         public Expansion ForceLoadExpansion;
+        public uint CustomFilesStartIndex;
+
         [MarshalAs(UnmanagedType.U1)] public bool MergeBones;
         [MarshalAs(UnmanagedType.U1)] public bool MergeAttachments;
         [MarshalAs(UnmanagedType.U1)] public bool MergeCameras;

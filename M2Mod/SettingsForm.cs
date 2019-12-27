@@ -24,7 +24,9 @@ namespace M2Mod
             forceExpansionComboBox.SelectedItem = forceExpansionComboBox.Items.Cast<Expansion>()
                 .FirstOrDefault(_ => _ == Expansion.None);
 
+            _lastProfile = ProfileManager.CurrentProfile;
             SetupProfiles();
+            SetupControls(_lastProfile.Settings);
         }
 
         private void SetupProfiles()
@@ -53,10 +55,14 @@ namespace M2Mod
             checkBoxFixEdgeNormals.Checked = settings.FixEdgeNormals;
             checkBoxIgnoreOriginalMeshIndexes.Checked = settings.IgnoreOriginalMeshIndexes;
             testFixAnimationsCheckBox.Checked = settings.FixAnimationsTest;
+            customFilesStartIndexTextBox.Text = settings.CustomFilesStartIndex > 0 ? settings.CustomFilesStartIndex.ToString() : "";
         }
 
         private Settings ProduceSettings()
         {
+            if (!uint.TryParse(customFilesStartIndexTextBox.Text, out var customFilesStartIndex))
+                customFilesStartIndex = 0;
+
             return new Settings()
             {
                 WorkingDirectory = workingDirectoryTextBox.Text.Trim(),
@@ -70,7 +76,8 @@ namespace M2Mod
                 FixEdgeNormals = checkBoxFixEdgeNormals.Checked,
                 IgnoreOriginalMeshIndexes = checkBoxIgnoreOriginalMeshIndexes.Checked,
                 FixAnimationsTest = testFixAnimationsCheckBox.Checked,
-                ForceLoadExpansion = forceExpansionComboBox.SelectedItem as Expansion? ?? Expansion.None
+                ForceLoadExpansion = forceExpansionComboBox.SelectedItem as Expansion? ?? Expansion.None,
+                CustomFilesStartIndex = customFilesStartIndex
             };
         }
 
@@ -186,7 +193,8 @@ namespace M2Mod
                 Old.FixEdgeNormals != New.FixEdgeNormals ||
                 Old.IgnoreOriginalMeshIndexes != New.IgnoreOriginalMeshIndexes ||
                 Old.FixAnimationsTest != New.FixAnimationsTest ||
-                Old.ForceLoadExpansion != New.ForceLoadExpansion;
+                Old.ForceLoadExpansion != New.ForceLoadExpansion ||
+                Old.CustomFilesStartIndex != New.CustomFilesStartIndex;
         }
 
         private void EditProfilesButton_Click(object sender, EventArgs e)

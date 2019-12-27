@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Settings.h"
-#include "FileSystem.h"
 #include "StringHelpers.h"
 
 namespace M2ModRedux {

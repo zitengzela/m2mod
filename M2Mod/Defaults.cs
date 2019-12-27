@@ -18,6 +18,7 @@ namespace M2Mod
             FixEdgeNormals = true,
             IgnoreOriginalMeshIndexes = false,
             FixAnimationsTest = false,
+            CustomFilesStartIndex = 0,
         };
 
         public static SettingsProfile SettingsProfile => new SettingsProfile("Default", Settings, new FormData());

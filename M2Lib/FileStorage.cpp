@@ -1,5 +1,4 @@
 #include "FileStorage.h"
-#include "FileSystem.h"
 #include "Logger.h"
 #include "StringHelpers.h"
 #include "StringHash.h"
@@ -13,7 +12,7 @@ const std::wstring M2Lib::FileStorage::DefaultMappingsPath = std::filesystem::cu
 M2Lib::FileInfo::FileInfo(uint32_t FileDataId, const wchar_t* Path)
 {
 	this->FileDataId = FileDataId;
-	this->Path = Path;
+	this->Path = NormalizePath<wchar_t>(Path);
 }
 
 void M2Lib::FileStorage::ClearStorage()
@@ -46,6 +45,8 @@ bool M2Lib::FileStorage::ParseCsv(std::wstring const& Path)
 	std::wstring line;
 	while (std::getline(in, line))
 	{
+		StringHelpers::trim(line, { ' ', '\r','\n' });
+
 		if (line.empty())
 			continue;
 
@@ -62,7 +63,7 @@ bool M2Lib::FileStorage::ParseCsv(std::wstring const& Path)
 		auto itr1 = fileInfosByFileDataId.find(FileDataId);
 		if (itr1 != fileInfosByFileDataId.end())
 		{
-			sLogger.LogWarning(L"Duplicate storageRef entry '%u':'%s' (already used: '%u':'%s'), skipping", FileDataId, fileName, itr1->second->FileDataId, itr1->second->Path.c_str());
+			sLogger.LogWarning(L"Duplicate file storage entry '%u':'%s' (already used: '%u':'%s'), skipping", FileDataId, fileName, itr1->second->FileDataId, itr1->second->Path.c_str());
 			continue;
 		}
 
@@ -70,11 +71,13 @@ bool M2Lib::FileStorage::ParseCsv(std::wstring const& Path)
 		auto itr2 = fileInfosByNameHash.find(nameHash);
 		if (itr2 != fileInfosByNameHash.end())
 		{
-			sLogger.LogWarning(L"Duplicate storageRef entry '%u':'%s' (already used: '%u':'%s'), skipping (%llu vs %llu)", FileDataId, fileName, itr2->second->FileDataId, itr2->second->Path.c_str(), nameHash, CalcStringHash(itr2->second->Path));
+			sLogger.LogWarning(L"Duplicate file storage entry '%u':'%s' (already used: '%u':'%s')", FileDataId, fileName, itr2->second->FileDataId, itr2->second->Path.c_str());
 			continue;
 		}
 
 		auto info = new FileInfo(FileDataId, fileName);
+		if (MaxFileDataId < FileDataId)
+			MaxFileDataId = FileDataId;
 
 		fileInfosByFileDataId[FileDataId] = info;
 		fileInfosByNameHash[nameHash] = info;
@@ -169,19 +172,11 @@ M2Lib::FileInfo const* M2Lib::FileStorage::GetFileInfoByPartialPath(std::wstring
 {
 	LoadStorage();
 
-	const auto normalizePath = [](std::wstring path) -> std::wstring
-	{
-		path = FileSystemW::NormalizePath(path);
-		std::transform(path.begin(), path.end(), path.begin(), ::tolower);
-
-		return path;
-	};
-
-	const auto NameCopy = normalizePath(Name);
+	const auto NameCopy = NormalizePath(Name);
 
 	for (auto& itr : fileInfosByFileDataId)
 	{
-		if (normalizePath(itr.second->Path).find(NameCopy) != std::string::npos)
+		if (NormalizePath(itr.second->Path).find(NameCopy) != std::string::npos)
 			return itr.second;
 	}
 

@@ -12,6 +12,7 @@ namespace M2Lib
 		wchar_t WorkingDirectory[1024];
 		wchar_t MappingsDirectory[1024];
 		Expansion ForceLoadExpansion = Expansion::None;
+		uint32_t CustomFilesStartIndex = 0;
 		bool MergeBones = true;
 		bool MergeAttachments = true;
 		bool MergeCameras = true;
@@ -34,6 +35,6 @@ namespace M2Lib
 		void operator=(Settings const& other);
 	};
 
-	ASSERT_SIZE(Settings, 1024 * 2 * 2 + sizeof(wchar_t) * 1024 + 4 + 7);
+	ASSERT_SIZE(Settings, 1024 * 2 * 2 + sizeof(wchar_t) * 1024 + 4 + 7 + 4);
 #pragma pack(pop)
 }

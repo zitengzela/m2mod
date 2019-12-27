@@ -18,6 +18,7 @@ namespace M2Lib
 	class FileStorage
 	{
 		bool loadFailed = false;
+		uint32_t MaxFileDataId = 0;
 		void ClearStorage();
 		bool LoadMappings();
 
@@ -26,8 +27,6 @@ namespace M2Lib
 		std::wstring mappingsDirectory;
 
 		bool ParseCsv(std::wstring const& Path);
-
-		static const std::wstring DefaultMappingsPath;
 
 	public:
 		FileStorage(std::wstring const& mappingsDirectory);
@@ -40,11 +39,14 @@ namespace M2Lib
 
 		bool Loaded() const { return GetStorageSize() > 0; }
 		uint32_t GetStorageSize() const { return fileInfosByFileDataId.size(); }
+		uint32_t GetMaxFileDataId() const { return MaxFileDataId; }
 
 		FileInfo const* GetFileInfoByPartialPath(std::wstring const& Name);
 		FileInfo const* GetFileInfoByFileDataId(uint32_t FileDataId);
 		FileInfo const* GetFileInfoByPath(std::wstring const& Path);
 		wchar_t const* PathInfo(uint32_t FileDataId);
+
+		static const std::wstring DefaultMappingsPath;
 	};
 
 	class StorageManager

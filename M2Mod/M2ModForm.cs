@@ -21,6 +21,7 @@ namespace M2Mod
         private const string JsonFilter = "Profiles Files|*.json|All Files|*.*";
 
         private bool _ignoreErrors;
+        private bool _ignoreWarning;
         private IntPtr _preloadM2 = IntPtr.Zero;
 
         public M2ModForm()
@@ -85,17 +86,20 @@ namespace M2Mod
 
             AppendLine(message, textColor, backColor);
 
-            if (!_ignoreErrors)
+            if ((LogLevel) logLevel == LogLevel.Error)
             {
-                if ((LogLevel) logLevel == LogLevel.Error)
+                if (!_ignoreErrors)
                 {
                     if (ErrorForm.ShowError(message) == DialogResult.Ignore)
                         _ignoreErrors = true;
                 }
-                else if ((LogLevel) logLevel == LogLevel.Warning)
+            }
+            else if ((LogLevel) logLevel == LogLevel.Warning)
+            {
+                if (!_ignoreWarning)
                 {
                     if (ErrorForm.ShowWarning(message) == DialogResult.Ignore)
-                        _ignoreErrors = true;
+                        _ignoreWarning = true;
                 }
             }
         }
@@ -192,7 +196,7 @@ namespace M2Mod
 
         private void ImportButtonPreload_Click(object sender, EventArgs e)
         {
-            _ignoreErrors = false;
+            _ignoreErrors = _ignoreWarning = false;
             importButtonPreload.Enabled = false;
             importButtonPreload.Refresh();
             SetStatus("Preloading...");
@@ -327,7 +331,7 @@ namespace M2Mod
 
         private void ExportButtonGo_Click(object sender, EventArgs e)
         {
-            _ignoreErrors = false;
+            _ignoreErrors = _ignoreWarning = false;
             exportButtonGo.Enabled = false;
             exportButtonGo.Refresh();
             SetStatus("Working...");
@@ -409,7 +413,7 @@ namespace M2Mod
 
         private void LoadListfileButton_Click(object sender, EventArgs e)
         {
-            _ignoreErrors = false;
+            _ignoreErrors = _ignoreWarning = false;
 
             using (var dialog = new FolderBrowserDialog())
             {
@@ -497,7 +501,7 @@ namespace M2Mod
 
         private void CheckUpdates()
         {
-            _ignoreErrors = true;
+            _ignoreErrors = _ignoreWarning = true;
             var data = GetTags(
                 @"https://bitbucket.org/!api/2.0/repositories/suncurio/m2mod/refs/tags?pagelen=30&q=name%20~%20%22v%22&sort=name");
 
@@ -565,7 +569,7 @@ namespace M2Mod
 
         private void CompareModelsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            _ignoreErrors = false;
+            _ignoreErrors = _ignoreWarning = false;
             using (var form = new CompareModelsForm())
             {
                 form.ShowDialog();
@@ -579,7 +583,7 @@ namespace M2Mod
 
         private void ImportButtonGo_Click(object sender, EventArgs e)
         {
-            _ignoreErrors = false;
+            _ignoreErrors = _ignoreWarning = false;
             importButtonPreload.Enabled = false;
             importButtonPreload.Refresh();
             SetStatus("Importing...");

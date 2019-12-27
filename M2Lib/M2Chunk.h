@@ -15,7 +15,10 @@ namespace M2Lib
 			Bone = 'BFID',
 			Skeleton = 'SKID',
 			Texture = 'TXID',
-			TXAC = 'TXAC'
+			TXAC = 'TXAC',
+			ParticleGeometryModels = 'GPID',
+			ParticleRecursiveModel = 'RPID'
+
 		};
 
 		class PFIDChunk : public ChunkBase
@@ -94,6 +97,24 @@ namespace M2Lib
 
 			std::vector<texture_ac> TextureFlagsAC;
 			std::vector<texture_ac> ParticleEmitterAC;
+		};
+
+		class GPIDChunk : public ChunkBase
+		{
+		public:
+			void Load(std::fstream& FileStream, uint32_t Size) override;
+			void Save(std::fstream& FileStream) override;
+
+			std::vector<uint32_t> FileDataIds;
+		};
+
+		class RPIDChunk : public ChunkBase
+		{
+		public:
+			void Load(std::fstream& FileStream, uint32_t Size) override;
+			void Save(std::fstream& FileStream) override;
+
+			std::vector<uint32_t> FileDataIds;
 		};
 
 		class MD21Chunk : public RawChunk

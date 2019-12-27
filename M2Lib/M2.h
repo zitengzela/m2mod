@@ -12,12 +12,14 @@
 #include "M2Skin.h"
 #include "M2Chunk.h"
 #include "Settings.h"
+#include <unordered_map>
 
 #define DegreesToRadians 0.0174532925f
 
 namespace M2Lib
 {
 	class FileStorage;
+	struct FileInfo;
 	struct Settings;
 	class Skeleton;
 
@@ -201,6 +203,10 @@ namespace M2Lib
 		Settings Settings;
 		FileStorage* storageRef;
 
+		uint32_t AddCustomMapping(wchar_t const* path);
+		uint32_t currentCustomFileDataId = 0;
+		std::unordered_map<uint32_t, std::wstring> customFileMappings;
+
 		M2I* pInM2I;
 		M2* replaceM2;
 
@@ -239,6 +245,8 @@ namespace M2Lib
 		// prints diagnostic information.
 		void PrintInfo();
 		void PrintReferencedFileInfo();
+
+		void StoreReferencesAsCustom();
 
 		uint32_t AddBone(M2Element::CElement_Bone const& Bone);
 		uint32_t AddTexture(M2Element::CElement_Texture::ETextureType Type, M2Element::CElement_Texture::ETextureFlags Flags, char const* szTextureSource);
@@ -289,6 +297,8 @@ namespace M2Lib
 
 		EError LoadSkeleton();
 		EError SaveSkeleton(std::wstring const& M2FileName);
+
+		EError SaveCustomMappings();
 
 		ChunkBase* GetChunk(M2Chunk::EM2Chunk ChunkId);
 		void RemoveChunk(M2Chunk::EM2Chunk ChunkId);

@@ -121,7 +121,6 @@
     <ClInclude Include="ChunkBase.h" />
     <ClInclude Include="DataBinary.h" />
     <ClInclude Include="FileStorage.h" />
-    <ClInclude Include="FileSystem.h" />
     <ClInclude Include="Logger.h" />
     <ClInclude Include="lookup.h" />
     <ClInclude Include="M2.h" />
@@ -146,7 +145,6 @@
     <ClCompile Include="FileStorage.cpp" />
     <ClCompile Include="ChunkBase.cpp" />
     <ClCompile Include="DataBinary.cpp" />
-    <ClCompile Include="FileSystem.cpp" />
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="lookup3.cpp" />
     <ClCompile Include="M2.cpp" />

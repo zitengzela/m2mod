@@ -716,8 +716,8 @@ namespace M2Lib
 			int32_t ID;
 			int32_t ParentBone;
 			C3Vector Position;
-			M2Array Texture;
-			M2Array RenderFlag;
+			M2Array TextureIndices;
+			M2Array MaterialIndices;
 			M2Track AnimationBlock_Color;		// Float32x3
 			M2Track AnimationBlock_Opacity;		// uint16_t
 			M2Track AnimationBlock_HeightAbove;	// float, position of point A of ribbon leading edge.
@@ -744,9 +744,9 @@ namespace M2Lib
 			uint32_t Flags;
 			C3Vector Position;		// position relative to parent bone.
 			uint16_t ParentBone;
-			uint16_t Texture;
-			M2Array FileNameModel;	// name of model to spawn *.mdx.
-			M2Array ChildEmitter;
+			uint16_t TextureIndex;
+			M2Array GeometryFileNameModel;	// name of model to spawn *.mdx.
+			M2Array RecursionFileNameModel;
 
 			uint8_t BlendingType;
 			uint8_t EmitterType;
