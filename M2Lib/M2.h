@@ -214,9 +214,10 @@ namespace M2Lib
 		Settings Settings;
 		FileStorage* storageRef;
 
-		uint32_t AddCustomMapping(wchar_t const* path);
+		FileInfo const* AddCustomMapping(wchar_t const* path);
 		uint32_t currentCustomFileDataId = 0;
-		std::unordered_map<uint32_t, std::wstring> customFileMappings;
+		std::map<uint32_t, FileInfo const*> customFileInfosByFileDataId;
+		std::map<uint64_t, FileInfo const*> customFileInfosByNameHash;
 
 		M2I* pInM2I;
 		M2* replaceM2;
@@ -334,6 +335,10 @@ namespace M2Lib
 		void m_FixFakeAnimationBlockOffsets_Old(int32_t OffsetDelta, int32_t TotalDelta, M2Element::CElement_FakeAnimationBlock& AnimationBlock, int32_t iElement);
 
 		void m_SaveElements_CopyElementsToHeader();
+
+		FileInfo const* GetFileInfoByFileDataId(uint32_t FileDataId) const;
+		FileInfo const* GetFileInfoByPath(std::wstring const& Path) const;
+		wchar_t const* PathInfo(uint32_t FileDataId) const;
 	};
 }
 
