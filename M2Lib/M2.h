@@ -28,12 +28,23 @@ namespace M2Lib
 		class AFIDChunk;
 	}
 
+	enum SaveFlags
+	{
+		SAVE_NONE = 0,
+		SAVE_M2 = 1,	// always on
+		SAVE_SKIN = 2,
+		SAVE_SKELETON = 4,
+		SAVE_OTHER = 8,
+		SAVE_ALL = SAVE_M2 | SAVE_SKIN | SAVE_SKELETON | SAVE_OTHER,
+	};
+
 	M2LIB_API M2LIB_HANDLE __cdecl M2_Create(Settings* settings = nullptr);
 	M2LIB_API EError __cdecl M2_Load(M2LIB_HANDLE handle, const wchar_t* FileName);
-	M2LIB_API EError __cdecl M2_Save(M2LIB_HANDLE handle, const wchar_t* FileName);
+	M2LIB_API EError __cdecl M2_Save(M2LIB_HANDLE handle, const wchar_t* FileName, uint8_t saveMask);
 	M2LIB_API EError __cdecl M2_SetReplaceM2(M2LIB_HANDLE handle, const wchar_t* FileName);
 	M2LIB_API EError __cdecl M2_ExportM2Intermediate(M2LIB_HANDLE handle, const wchar_t* FileName);
 	M2LIB_API EError __cdecl M2_ImportM2Intermediate(M2LIB_HANDLE handle, const wchar_t* FileName);
+	M2LIB_API EError __cdecl M2_SetNeedRemoveTXIDChunk(M2LIB_HANDLE handle);
 	M2LIB_API void __cdecl M2_Free(M2LIB_HANDLE handle);
 
 	// load, export, import merge, save: M2 file.
@@ -235,7 +246,7 @@ namespace M2Lib
 		EError SetReplaceM2(const wchar_t* FileName);
 
 		// saves this M2 to a file.
-		EError Save(const wchar_t* FileName);
+		EError Save(const wchar_t* FileName, uint8_t saveMask);
 
 		// exports the loaded M2 as an M2I file.
 		EError ExportM2Intermediate(wchar_t const* FileName);
@@ -254,6 +265,7 @@ namespace M2Lib
 		uint32_t GetTextureIndex(M2Element::CElement_Texture::ETextureType Type, const char* szTextureSource);
 		std::wstring GetTexturePath(uint32_t Index);
 		void RemoveTXIDChunk();
+		EError SetNeedRemoveTXIDChunk();
 
 		DataElement* GetAnimations();
 		DataElement* GetAnimationsLookup();

@@ -84,7 +84,7 @@ namespace M2ModRedux
 			auto callback = static_cast<M2Lib::LoggerCallback>(ip.ToPointer());
 			GC::Collect();
 
-			M2Lib::AttachLoggerCallback(callback);
+			M2Lib::AttachLoggerCallback(M2Lib::LOG_ALL_DEFAULT, callback);
 		}
 
 		private: void TestFiles()
@@ -1199,7 +1199,7 @@ private: System::Windows::Forms::Button^  clearButton;
 			Directory::CreateDirectory(directory);
 		
 		// export M2
-		auto Error = M2Lib::M2_Save(preloadM2, StringConverter(ExportFileName).ToStringW());
+		auto Error = M2Lib::M2_Save(preloadM2, StringConverter(ExportFileName).ToStringW(), M2Lib::SAVE_ALL);
 		if (Error != M2Lib::EError_OK)
 		{
 			SetStatus(gcnew System::String(M2Lib::GetErrorText(Error)));

@@ -5,7 +5,7 @@ using M2Mod.Config;
 using M2Mod.Interop;
 using M2Mod.Interop.Structures;
 
-namespace M2Mod
+namespace M2Mod.Tools
 {
     public partial class CompareModelsForm : Form
     {

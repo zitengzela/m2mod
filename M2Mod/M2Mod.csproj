@@ -72,10 +72,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CompareModelsForm.cs">
+    <Compile Include="Interop\Structures\SaveMask.cs" />
+    <Compile Include="LogTextBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="LogTextBox.Designer.cs">
+      <DependentUpon>LogTextBox.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Tools\CompareModelsForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="CompareModelsForm.Designer.cs">
+    <Compile Include="Tools\CompareModelsForm.Designer.cs">
       <DependentUpon>CompareModelsForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Config\ConfigFile.cs" />
@@ -92,6 +99,12 @@
     </Compile>
     <Compile Include="ErrorForm.Designer.cs">
       <DependentUpon>ErrorForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="GetMappingsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="GetMappingsForm.Designer.cs">
+      <DependentUpon>GetMappingsForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Interop\ConstWCharPtrMarshaller.cs" />
     <Compile Include="Interop\Imports.cs" />
@@ -129,8 +142,14 @@
     <Compile Include="SplitButton.Designer.cs">
       <DependentUpon>SplitButton.cs</DependentUpon>
     </Compile>
+    <Compile Include="Tools\TXIDRemoverForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Tools\TXIDRemoverForm.Designer.cs">
+      <DependentUpon>TXIDRemoverForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Version.cs" />
-    <EmbeddedResource Include="CompareModelsForm.resx">
+    <EmbeddedResource Include="Tools\CompareModelsForm.resx">
       <DependentUpon>CompareModelsForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="EnterNameForm.resx">
@@ -138,6 +157,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ErrorForm.resx">
       <DependentUpon>ErrorForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="GetMappingsForm.resx">
+      <DependentUpon>GetMappingsForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="M2ModForm.resx">
       <DependentUpon>M2ModForm.cs</DependentUpon>
@@ -160,6 +182,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SplitButton.resx">
       <DependentUpon>SplitButton.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Tools\TXIDRemoverForm.resx">
+      <DependentUpon>TXIDRemoverForm.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">

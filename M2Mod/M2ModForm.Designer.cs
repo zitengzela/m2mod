@@ -39,7 +39,6 @@
             this.buttonReplaceM2Browse = new System.Windows.Forms.Button();
             this.panel1 = new System.Windows.Forms.Panel();
             this.importButtonGo = new System.Windows.Forms.Button();
-            this.importButtonPreload = new M2Mod.SplitButton();
             this.preloadButtonContextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.importCancelButton = new System.Windows.Forms.Button();
@@ -53,6 +52,7 @@
             this.buttonInputM2IBrowse = new System.Windows.Forms.Button();
             this.textBoxInputM2I = new System.Windows.Forms.TextBox();
             this.cascTabPage = new System.Windows.Forms.TabPage();
+            this.getLatestMappingLinkLabel = new System.Windows.Forms.LinkLabel();
             this.unloadMappingsButton = new System.Windows.Forms.Button();
             this.panel2 = new System.Windows.Forms.Panel();
             this.fileTestLabel = new System.Windows.Forms.Label();
@@ -61,7 +61,6 @@
             this.testInputTextBox = new System.Windows.Forms.TextBox();
             this.loadMappingsButton = new System.Windows.Forms.Button();
             this.tabLog = new System.Windows.Forms.TabPage();
-            this.logTextBox = new System.Windows.Forms.RichTextBox();
             this.clearButton = new System.Windows.Forms.Button();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
@@ -73,19 +72,22 @@
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.compareBonesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.tXIDRemoverToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tabImport = new System.Windows.Forms.TabPage();
             this.checkBoxReplaceM2 = new System.Windows.Forms.CheckBox();
             this.panelOutputM2I = new System.Windows.Forms.Panel();
             this.buttonOutputM2IBrowse = new System.Windows.Forms.Button();
             this.label7 = new System.Windows.Forms.Label();
             this.tabExport = new System.Windows.Forms.TabPage();
-            this.exportButtonGo = new M2Mod.SplitButton();
             this.goButtonContextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.customMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tabControl = new System.Windows.Forms.TabControl();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.profilesComboBox = new System.Windows.Forms.ComboBox();
             this.profileLabel = new System.Windows.Forms.Label();
+            this.exportButtonGo = new M2Mod.SplitButton();
+            this.importButtonPreload = new M2Mod.SplitButton();
+            this.logTextBox = new M2Mod.LogTextBox();
             this.panelImputM2Exp.SuspendLayout();
             this.panelReplaceM2.SuspendLayout();
             this.panel1.SuspendLayout();
@@ -216,20 +218,6 @@
             this.importButtonGo.UseVisualStyleBackColor = true;
             this.importButtonGo.Click += new System.EventHandler(this.ImportButtonGo_Click);
             // 
-            // importButtonPreload
-            // 
-            this.importButtonPreload.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.importButtonPreload.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.importButtonPreload.Location = new System.Drawing.Point(54, 9);
-            this.importButtonPreload.Menu = this.preloadButtonContextMenuStrip;
-            this.importButtonPreload.Name = "importButtonPreload";
-            this.importButtonPreload.Size = new System.Drawing.Size(142, 38);
-            this.importButtonPreload.TabIndex = 28;
-            this.importButtonPreload.Text = "Preload";
-            this.toolTip1.SetToolTip(this.importButtonPreload, "Load source M2 and import M2I");
-            this.importButtonPreload.UseVisualStyleBackColor = true;
-            this.importButtonPreload.Click += new System.EventHandler(this.ImportButtonPreload_Click);
-            // 
             // preloadButtonContextMenuStrip
             // 
             this.preloadButtonContextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -357,6 +345,7 @@
             // 
             // cascTabPage
             // 
+            this.cascTabPage.Controls.Add(this.getLatestMappingLinkLabel);
             this.cascTabPage.Controls.Add(this.unloadMappingsButton);
             this.cascTabPage.Controls.Add(this.panel2);
             this.cascTabPage.Controls.Add(this.loadMappingsButton);
@@ -367,6 +356,18 @@
             this.cascTabPage.TabIndex = 3;
             this.cascTabPage.Text = "CASC";
             this.cascTabPage.UseVisualStyleBackColor = true;
+            // 
+            // getLatestMappingLinkLabel
+            // 
+            this.getLatestMappingLinkLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.getLatestMappingLinkLabel.AutoSize = true;
+            this.getLatestMappingLinkLabel.Location = new System.Drawing.Point(229, 8);
+            this.getLatestMappingLinkLabel.Name = "getLatestMappingLinkLabel";
+            this.getLatestMappingLinkLabel.Size = new System.Drawing.Size(100, 13);
+            this.getLatestMappingLinkLabel.TabIndex = 12;
+            this.getLatestMappingLinkLabel.TabStop = true;
+            this.getLatestMappingLinkLabel.Text = "Get latest mappings";
+            this.getLatestMappingLinkLabel.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.getLatestMappingLinkLabel_LinkClicked);
             // 
             // unloadMappingsButton
             // 
@@ -453,20 +454,6 @@
             this.tabLog.Text = "Log";
             this.tabLog.UseVisualStyleBackColor = true;
             // 
-            // logTextBox
-            // 
-            this.logTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.logTextBox.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.logTextBox.DetectUrls = false;
-            this.logTextBox.Location = new System.Drawing.Point(7, 6);
-            this.logTextBox.Name = "logTextBox";
-            this.logTextBox.ReadOnly = true;
-            this.logTextBox.Size = new System.Drawing.Size(549, 194);
-            this.logTextBox.TabIndex = 2;
-            this.logTextBox.Text = "";
-            // 
             // clearButton
             // 
             this.clearButton.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
@@ -520,35 +507,36 @@
             // settingsToolStripMenuItem
             // 
             this.settingsToolStripMenuItem.Name = "settingsToolStripMenuItem";
-            this.settingsToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.settingsToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.settingsToolStripMenuItem.Text = "Settings";
             this.settingsToolStripMenuItem.Click += new System.EventHandler(this.SettingsToolStripMenuItem_Click);
             // 
             // loadProfilesToolStripMenuItem
             // 
             this.loadProfilesToolStripMenuItem.Name = "loadProfilesToolStripMenuItem";
-            this.loadProfilesToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.loadProfilesToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.loadProfilesToolStripMenuItem.Text = "Load profiles";
             this.loadProfilesToolStripMenuItem.Click += new System.EventHandler(this.LoadProfilesToolStripMenuItem_Click);
             // 
             // checkUpdatesToolStripMenuItem
             // 
             this.checkUpdatesToolStripMenuItem.Name = "checkUpdatesToolStripMenuItem";
-            this.checkUpdatesToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.checkUpdatesToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.checkUpdatesToolStripMenuItem.Text = "Check updates";
             this.checkUpdatesToolStripMenuItem.Click += new System.EventHandler(this.CheckUpdatesToolStripMenuItem_Click);
             // 
             // exitToolStripMenuItem
             // 
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.exitToolStripMenuItem.Text = "Exit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.ExitToolStripMenuItem_Click);
             // 
             // toolsToolStripMenuItem
             // 
             this.toolsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.compareBonesToolStripMenuItem});
+            this.compareBonesToolStripMenuItem,
+            this.tXIDRemoverToolStripMenuItem});
             this.toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
             this.toolsToolStripMenuItem.Size = new System.Drawing.Size(46, 20);
             this.toolsToolStripMenuItem.Text = "Tools";
@@ -556,9 +544,16 @@
             // compareBonesToolStripMenuItem
             // 
             this.compareBonesToolStripMenuItem.Name = "compareBonesToolStripMenuItem";
-            this.compareBonesToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.compareBonesToolStripMenuItem.Size = new System.Drawing.Size(165, 22);
             this.compareBonesToolStripMenuItem.Text = "Compare models";
             this.compareBonesToolStripMenuItem.Click += new System.EventHandler(this.CompareModelsToolStripMenuItem_Click);
+            // 
+            // tXIDRemoverToolStripMenuItem
+            // 
+            this.tXIDRemoverToolStripMenuItem.Name = "tXIDRemoverToolStripMenuItem";
+            this.tXIDRemoverToolStripMenuItem.Size = new System.Drawing.Size(165, 22);
+            this.tXIDRemoverToolStripMenuItem.Text = "TXID remover";
+            this.tXIDRemoverToolStripMenuItem.Click += new System.EventHandler(this.tXIDRemoverToolStripMenuItem_Click);
             // 
             // tabImport
             // 
@@ -635,20 +630,6 @@
             this.tabExport.Text = "Export";
             this.tabExport.UseVisualStyleBackColor = true;
             // 
-            // exportButtonGo
-            // 
-            this.exportButtonGo.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.exportButtonGo.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.exportButtonGo.Location = new System.Drawing.Point(214, 188);
-            this.exportButtonGo.Menu = this.goButtonContextMenuStrip;
-            this.exportButtonGo.Name = "exportButtonGo";
-            this.exportButtonGo.Size = new System.Drawing.Size(142, 38);
-            this.exportButtonGo.TabIndex = 26;
-            this.exportButtonGo.Text = "Go!";
-            this.toolTip1.SetToolTip(this.exportButtonGo, "Click this to perform operations.");
-            this.exportButtonGo.UseVisualStyleBackColor = true;
-            this.exportButtonGo.Click += new System.EventHandler(this.ExportButtonGo_Click);
-            // 
             // goButtonContextMenuStrip
             // 
             this.goButtonContextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -709,6 +690,50 @@
             this.profileLabel.TabIndex = 37;
             this.profileLabel.Text = "Profile";
             // 
+            // exportButtonGo
+            // 
+            this.exportButtonGo.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            this.exportButtonGo.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.exportButtonGo.Location = new System.Drawing.Point(214, 188);
+            this.exportButtonGo.Menu = this.goButtonContextMenuStrip;
+            this.exportButtonGo.Name = "exportButtonGo";
+            this.exportButtonGo.Size = new System.Drawing.Size(142, 38);
+            this.exportButtonGo.TabIndex = 26;
+            this.exportButtonGo.Text = "Go!";
+            this.toolTip1.SetToolTip(this.exportButtonGo, "Click this to perform operations.");
+            this.exportButtonGo.UseVisualStyleBackColor = true;
+            this.exportButtonGo.Click += new System.EventHandler(this.ExportButtonGo_Click);
+            // 
+            // importButtonPreload
+            // 
+            this.importButtonPreload.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            this.importButtonPreload.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.importButtonPreload.Location = new System.Drawing.Point(54, 9);
+            this.importButtonPreload.Menu = this.preloadButtonContextMenuStrip;
+            this.importButtonPreload.Name = "importButtonPreload";
+            this.importButtonPreload.Size = new System.Drawing.Size(142, 38);
+            this.importButtonPreload.TabIndex = 28;
+            this.importButtonPreload.Text = "Preload";
+            this.toolTip1.SetToolTip(this.importButtonPreload, "Load source M2 and import M2I");
+            this.importButtonPreload.UseVisualStyleBackColor = true;
+            this.importButtonPreload.Click += new System.EventHandler(this.ImportButtonPreload_Click);
+            // 
+            // logTextBox
+            // 
+            this.logTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.logTextBox.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.logTextBox.DetectUrls = false;
+            this.logTextBox.InlcudeTimestamp = true;
+            this.logTextBox.Location = new System.Drawing.Point(7, 6);
+            this.logTextBox.Name = "logTextBox";
+            this.logTextBox.ReadOnly = true;
+            this.logTextBox.Size = new System.Drawing.Size(549, 194);
+            this.logTextBox.TabIndex = 2;
+            this.logTextBox.Text = "";
+            this.logTextBox.UseColors = true;
+            // 
             // M2ModForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -733,6 +758,7 @@
             this.panelInputM2I.ResumeLayout(false);
             this.panelInputM2I.PerformLayout();
             this.cascTabPage.ResumeLayout(false);
+            this.cascTabPage.PerformLayout();
             this.panel2.ResumeLayout(false);
             this.panel2.PerformLayout();
             this.tabLog.ResumeLayout(false);
@@ -784,7 +810,7 @@
         private System.Windows.Forms.TextBox testInputTextBox;
         private System.Windows.Forms.Button loadMappingsButton;
         private System.Windows.Forms.TabPage tabLog;
-        private System.Windows.Forms.RichTextBox logTextBox;
+        private LogTextBox logTextBox;
         private System.Windows.Forms.Button clearButton;
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
@@ -811,6 +837,8 @@
         private System.Windows.Forms.ContextMenuStrip preloadButtonContextMenuStrip;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem loadProfilesToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem tXIDRemoverToolStripMenuItem;
+        private System.Windows.Forms.LinkLabel getLatestMappingLinkLabel;
     }
 }
 

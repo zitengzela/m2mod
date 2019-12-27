@@ -214,6 +214,8 @@ M2Lib::EError M2Lib::M2::Load(const wchar_t* FileName)
 	m_LoadElements_CopyHeaderToElements();
 	m_LoadElements_FindSizes(m_OriginalModelChunkSize);
 
+	OriginalSkinCount = Header.Elements.nSkin;
+
 	// load elements
 	for (uint32_t i = 0; i < EElement__Count__; ++i)
 	{
@@ -673,8 +675,11 @@ void M2Lib::M2::FixSkinChunk()
 	}
 }
 
-M2Lib::EError M2Lib::M2::Save(const wchar_t* FileName)
+M2Lib::EError M2Lib::M2::Save(const wchar_t* FileName, uint8_t saveMask = SAVE_ALL)
 {
+	if (!saveMask)
+		saveMask = SAVE_ALL;
+
 	// check path
 	if (!FileName)
 		return EError_FailedToSaveM2_NoFileSpecified;
@@ -694,85 +699,93 @@ M2Lib::EError M2Lib::M2::Save(const wchar_t* FileName)
 	//StoreReferencesAsCustom();
 	PrintReferencedFileInfo();
 
-	// open file stream
-	std::fstream FileStream;
-	FileStream.open(FileName, std::ios::out | std::ios::trunc | std::ios::binary);
-	if (FileStream.fail())
-		return EError_FailedToSaveM2;
-
 	sLogger.LogInfo(L"Saving model to %s", FileName);
 
 	// fill elements header data
 	m_SaveElements_FindOffsets();
 	m_SaveElements_CopyElementsToHeader();
 
-	// Reserve model chunk header
-	uint32_t const ChunkReserveOffset = 8;
-
-	uint32_t ChunkId = REVERSE_CC((uint32_t)EM2Chunk::Model);
-	FileStream.write((char*)&ChunkId, 4);
-	FileStream.seekp(4, std::ios::cur);		// reserve bytes for chunk size
-
-	//Header.Description.Version = 0x0110;
-	//Header.Description.Flags &= ~0x80;
-
-	// save header
-	uint32_t HeaderSize = GetHeaderSize();
-	FileStream.write((char*)&Header, HeaderSize);
-
-	// save elements
-	uint32_t ElementCount = Header.IsLongHeader() ? EElement__Count__ : EElement__Count__ - 1;
-	for (uint32_t i = 0; i < ElementCount; ++i)
-	{
-		if (!Elements[i].Save(FileStream, ChunkReserveOffset))
-			return EError_FailedToSaveM2;
-	}
-
-	uint32_t MD20Size = (uint32_t)FileStream.tellp();
-	MD20Size -= ChunkReserveOffset;
-
-	FileStream.seekp(4, std::ios::beg);
-	FileStream.write((char*)(&MD20Size), 4);
-
-	FileStream.seekp(0, std::ios::end);
-
 	FixSkinChunk();
 
-	for (auto chunk : Chunks)
+	if (saveMask & SAVE_M2)
 	{
-		if (chunk.first == EM2Chunk::Model)
-			continue;
+		// Reserve model chunk header
+		uint32_t const ChunkReserveOffset = 8;
 
-		//if (chunk.first == 'SFID')
-		//	continue;
-
-		uint32_t ChunkId = REVERSE_CC((uint32_t)chunk.first);
-
+		// open file stream
+		std::fstream FileStream;
+		FileStream.open(FileName, std::ios::out | std::ios::trunc | std::ios::binary);
+		if (FileStream.fail())
+			return EError_FailedToSaveM2;
+		uint32_t ChunkId = REVERSE_CC((uint32_t)EM2Chunk::Model);
 		FileStream.write((char*)&ChunkId, 4);
-		FileStream.seekp(4, std::ios::cur);		// reserve space for chunk size
-		uint32_t savePos = (uint32_t)FileStream.tellp();
-		chunk.second->Save(FileStream);
-		uint32_t ChunkSize = (uint32_t)FileStream.tellp() - savePos;
-		FileStream.seekp(savePos - 4, std::ios::beg);
-		FileStream.write((char*)&ChunkSize, 4);
+		FileStream.seekp(4, std::ios::cur);		// reserve bytes for chunk size
+
+		//Header.Description.Version = 0x0110;
+		//Header.Description.Flags &= ~0x80;
+
+		// save header
+		uint32_t HeaderSize = GetHeaderSize();
+		FileStream.write((char*)&Header, HeaderSize);
+
+		// save elements
+		uint32_t ElementCount = Header.IsLongHeader() ? EElement__Count__ : EElement__Count__ - 1;
+		for (uint32_t i = 0; i < ElementCount; ++i)
+		{
+			if (!Elements[i].Save(FileStream, ChunkReserveOffset))
+				return EError_FailedToSaveM2;
+		}
+
+		uint32_t MD20Size = (uint32_t)FileStream.tellp();
+		MD20Size -= ChunkReserveOffset;
+
+		FileStream.seekp(4, std::ios::beg);
+		FileStream.write((char*)(&MD20Size), 4);
+
 		FileStream.seekp(0, std::ios::end);
+
+		for (auto chunk : Chunks)
+		{
+			if (chunk.first == EM2Chunk::Model)
+				continue;
+
+			//if (chunk.first == 'SFID')
+			//	continue;
+
+			uint32_t ChunkId = REVERSE_CC((uint32_t)chunk.first);
+
+			FileStream.write((char*)&ChunkId, 4);
+			FileStream.seekp(4, std::ios::cur);		// reserve space for chunk size
+			uint32_t savePos = (uint32_t)FileStream.tellp();
+			chunk.second->Save(FileStream);
+			uint32_t ChunkSize = (uint32_t)FileStream.tellp() - savePos;
+			FileStream.seekp(savePos - 4, std::ios::beg);
+			FileStream.write((char*)&ChunkSize, 4);
+			FileStream.seekp(0, std::ios::end);
+		}
 	}
 
-	// save skins
-	auto Error = SaveSkins(FileName);
-	if (Error != EError_OK)
-		return Error;
+	if (saveMask & SAVE_SKIN)
+	{
+		// save skins
+		auto Error = SaveSkins(FileName);
+		if (Error != EError_OK)
+			return Error;
+	}
 
-	Error = SaveSkeleton(FileName);
-	if (Error != EError_OK)
-		return Error;
+	if (saveMask & SAVE_SKELETON)
+	{
+		auto Error = SaveSkeleton(FileName);
+		if (Error != EError_OK)
+			return Error;
+	}
 
 	if (auto chunk = (SFIDChunk*)GetChunk(EM2Chunk::Skin))
 	{
 		sLogger.LogInfo(L"INFO: Put your skins to:");
 		for (auto fileDataId : chunk->SkinsFileDataIds) {
 			sLogger.LogInfo(L"\t%s", storageRef->PathInfo(fileDataId));
-			}
+		}
 	}
 
 	if (auto chunk = (SKIDChunk*)GetChunk(EM2Chunk::Skeleton))
@@ -781,7 +794,8 @@ M2Lib::EError M2Lib::M2::Save(const wchar_t* FileName)
 		sLogger.LogInfo(L"\t%s", storageRef->PathInfo(chunk->SkeletonFileDataId));
 	}
 
-	SaveCustomMappings();
+	if (saveMask & SAVE_M2)
+		SaveCustomMappings();
 
 	return EError_OK;
 }
@@ -1430,7 +1444,7 @@ void M2Lib::M2::PrintReferencedFileInfo()
 
 	if (skinChunk)
 	{
-		sLogger.LogInfo(L"Total skin files referenced: %u", skinChunk->SkinsFileDataIds.size());
+		sLogger.LogInfo(L"Total skin files referenced: %u (in header: %u)", skinChunk->SkinsFileDataIds.size(), this->Header.Elements.nSkin);
 		for (auto skinFileDataId : skinChunk->SkinsFileDataIds)
 			if (skinFileDataId)
 				sLogger.LogInfo(L"\t[%u] %s", skinFileDataId, storageRef->PathInfo(skinFileDataId));
@@ -2743,6 +2757,41 @@ std::wstring M2Lib::M2::GetTexturePath(uint32_t Index)
 	return storageRef->GetFileInfoByFileDataId(textureChunk->TextureFileDataIds[Index])->Path;
 }
 
+M2Lib::EError M2Lib::M2::SetNeedRemoveTXIDChunk()
+{
+	auto chunkItr = Chunks.find(EM2Chunk::Texture);
+	if (chunkItr == Chunks.end())
+	{
+		sLogger.LogCustom(L"TXID chunk not present, skipping");
+		return EError_FAIL;
+	}
+
+	auto chunk = (M2Chunk::TXIDChunk*)chunkItr->second;
+
+	auto& Element = Elements[EElement_Texture];
+	for (uint32_t i = 0; i < chunk->TextureFileDataIds.size(); ++i)
+	{
+		m2lib_assert(i < Element.Count);
+		auto FileDataId = chunk->TextureFileDataIds[i];
+		if (!FileDataId)
+			continue;
+
+		auto info = storageRef->GetFileInfoByFileDataId(FileDataId);
+		if (!info)
+		{
+			sLogger.LogCustom(L"Error: failed to get path for FileDataId = [%u] for texture #%u. FileStorage is not initialized or listfile is not loaded or not up to date", FileDataId, i);
+			sLogger.LogCustom(L"Custom textures will not work ingame");
+			return EError_FAIL;
+		}
+
+		sLogger.LogCustom(L"Texture to move: [%u] %s", info->FileDataId, info->Path.c_str());
+	}
+
+	needRemoveTXIDChunk = true;
+
+	return EError_OK;
+}
+
 void M2Lib::M2::RemoveTXIDChunk()
 {
 	sLogger.LogInfo(L"Erasing TXID chunk from model");
@@ -2879,11 +2928,11 @@ M2Lib::EError M2Lib::M2_Load(M2LIB_HANDLE pointer, const wchar_t* FileName)
 	}
 }
 
-M2Lib::EError M2Lib::M2_Save(M2LIB_HANDLE handle, const wchar_t* FileName)
+M2Lib::EError M2Lib::M2_Save(M2LIB_HANDLE handle, const wchar_t* FileName, uint8_t saveMask)
 {
 	try
 	{
-		return static_cast<M2*>(handle)->Save(FileName);
+		return static_cast<M2*>(handle)->Save(FileName, saveMask);
 	}
 	catch (std::exception& e)
 	{
@@ -2928,6 +2977,20 @@ M2Lib::EError M2Lib::M2_ImportM2Intermediate(M2LIB_HANDLE handle, const wchar_t*
 		return static_cast<M2*>(handle)->ImportM2Intermediate(FileName);
 	}
 	catch (std::exception& e)
+	{
+		sLogger.LogError(L"Exception: %s", StringHelpers::StringToWString(e.what()).c_str());
+
+		return EError_FAIL;
+	}
+}
+
+M2Lib::EError M2Lib::M2_SetNeedRemoveTXIDChunk(M2LIB_HANDLE handle)
+{
+	try
+	{
+		return static_cast<M2*>(handle)->SetNeedRemoveTXIDChunk();
+	}
+	catch (std::exception & e)
 	{
 		sLogger.LogError(L"Exception: %s", StringHelpers::StringToWString(e.what()).c_str());
 

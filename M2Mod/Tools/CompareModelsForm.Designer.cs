@@ -1,4 +1,4 @@
-﻿namespace M2Mod
+﻿namespace M2Mod.Tools
 {
     partial class CompareModelsForm
     {
@@ -87,8 +87,8 @@
             // 
             // resultsTextBox
             // 
-            this.resultsTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
+            this.resultsTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this.resultsTextBox.Location = new System.Drawing.Point(17, 91);
             this.resultsTextBox.Multiline = true;
@@ -140,7 +140,7 @@
             // 
             // newM2TextBox
             // 
-            this.newM2TextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.newM2TextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this.newM2TextBox.Location = new System.Drawing.Point(61, 39);
             this.newM2TextBox.Name = "newM2TextBox";
@@ -149,7 +149,7 @@
             // 
             // oldM2TextBox
             // 
-            this.oldM2TextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.oldM2TextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this.oldM2TextBox.Location = new System.Drawing.Point(61, 13);
             this.oldM2TextBox.Name = "oldM2TextBox";

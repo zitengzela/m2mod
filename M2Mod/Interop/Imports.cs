@@ -13,7 +13,7 @@ namespace M2Mod.Interop
         public static extern M2LibError M2_Load(IntPtr handle, [MarshalAs(UnmanagedType.LPWStr)] string filePath);
 
         [DllImport("M2Lib.dll", CallingConvention = CallingConvention.Cdecl)]
-        public static extern M2LibError M2_Save(IntPtr handle, [MarshalAs(UnmanagedType.LPWStr)]string filePath);
+        public static extern M2LibError M2_Save(IntPtr handle, [MarshalAs(UnmanagedType.LPWStr)]string filePath, SaveMask saveMask);
 
         [DllImport("M2Lib.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern M2LibError M2_ExportM2Intermediate(IntPtr handle,
@@ -22,6 +22,9 @@ namespace M2Mod.Interop
         [DllImport("M2Lib.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern M2LibError M2_ImportM2Intermediate(IntPtr handle,
             [MarshalAs(UnmanagedType.LPWStr)] string filePath);
+
+        [DllImport("M2Lib.dll", CallingConvention = CallingConvention.Cdecl)]
+        public static extern M2LibError M2_SetNeedRemoveTXIDChunk(IntPtr handle);
 
         [DllImport("M2Lib.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern M2LibError M2_SetReplaceM2(IntPtr handle,
@@ -56,10 +59,13 @@ namespace M2Mod.Interop
         [return: MarshalAs(UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof(ConstWCharPtrMarshaller))]
         public static extern string FileInfo_GetPath(IntPtr pointer);
 
-        public delegate void LoggerDelegate(int logLevel, [MarshalAs(UnmanagedType.LPWStr)]string message);
+        public delegate void LoggerDelegate(LogLevel logLevel, [MarshalAs(UnmanagedType.LPWStr)]string message);
 
         [DllImport("M2Lib.dll", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void AttachLoggerCallback(LoggerDelegate callback);
+        public static extern void AttachLoggerCallback(LogLevel logLevel, LoggerDelegate callback);
+
+        [DllImport("M2Lib.dll", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void DetachLoggerCallback(LogLevel logLevel, LoggerDelegate callback);
 
         [DllImport("M2Lib.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern IntPtr Wrapper_Create(IntPtr oldM2, IntPtr newM2, float weightThreshold, bool compareTextures, bool precictScale, ref float sourceScale);

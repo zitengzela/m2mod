@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -10,6 +9,7 @@ using System.Windows.Forms;
 using M2Mod.Config;
 using M2Mod.Interop;
 using M2Mod.Interop.Structures;
+using M2Mod.Tools;
 using Newtonsoft.Json.Linq;
 
 namespace M2Mod
@@ -21,7 +21,8 @@ namespace M2Mod
         private const string JsonFilter = "Profiles Files|*.json|All Files|*.*";
 
         private bool _ignoreErrors;
-        private bool _ignoreWarning;
+        private bool _ignoreWarnings;
+
         private IntPtr _preloadM2 = IntPtr.Zero;
 
         public M2ModForm()
@@ -63,30 +64,19 @@ namespace M2Mod
         private void InitializeLogger()
         {
             logDelegate = Log;
-            Imports.AttachLoggerCallback(logDelegate);
+            Imports.AttachLoggerCallback(LogLevel.AllDefault, logDelegate);
         }
 
-        private void Log(int logLevel, string message)
+        private void ResetIgnoreWarnings()
         {
-            Color textColor, backColor;
-            switch ((LogLevel) logLevel)
-            {
-                case LogLevel.Error:
-                    textColor = Color.Black;
-                    backColor = Color.Red;
-                    break;
-                case LogLevel.Warning:
-                    textColor = Color.Black;
-                    backColor = Color.Yellow;
-                    break;
-                default:
-                    textColor = backColor = Color.Empty;
-                    break;
-            }
+            _ignoreErrors = _ignoreWarnings = false;
+        }
 
-            AppendLine(message, textColor, backColor);
+        private void Log(LogLevel logLevel, string message)
+        {
+            logTextBox.AppendLine(logLevel, message);
 
-            if ((LogLevel) logLevel == LogLevel.Error)
+            if (logLevel.HasFlag(LogLevel.Error))
             {
                 if (!_ignoreErrors)
                 {
@@ -94,40 +84,14 @@ namespace M2Mod
                         _ignoreErrors = true;
                 }
             }
-            else if ((LogLevel) logLevel == LogLevel.Warning)
+            else if (logLevel.HasFlag(LogLevel.Warning))
             {
-                if (!_ignoreWarning)
+                if (!_ignoreWarnings)
                 {
                     if (ErrorForm.ShowWarning(message) == DialogResult.Ignore)
-                        _ignoreWarning = true;
+                        _ignoreWarnings = true;
                 }
             }
-        }
-
-        private void AppendLine(string text, Color textColor, Color backColor)
-        {
-            text = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}]: {text}";
-
-            if (logTextBox.TextLength > 0)
-                text = "\r\n" + text;
-
-            if (textColor == Color.Empty)
-            {
-                logTextBox.AppendText(text);
-                return;
-            }
-
-            logTextBox.SelectionStart = logTextBox.TextLength;
-            logTextBox.SelectionLength = 0;
-
-            logTextBox.SelectionColor = textColor;
-            logTextBox.SelectionBackColor = backColor;
-            logTextBox.AppendText(text);
-            logTextBox.SelectionColor = logTextBox.ForeColor;
-            logTextBox.SelectionBackColor = logTextBox.BackColor;
-
-            logTextBox.SelectionStart = logTextBox.TextLength;
-            logTextBox.ScrollToCaret();
         }
 
         private void ButtonInputM2ExpBrowse_Click(object sender, EventArgs e)
@@ -196,7 +160,8 @@ namespace M2Mod
 
         private void ImportButtonPreload_Click(object sender, EventArgs e)
         {
-            _ignoreErrors = _ignoreWarning = false;
+            ResetIgnoreWarnings();
+
             importButtonPreload.Enabled = false;
             importButtonPreload.Refresh();
             SetStatus("Preloading...");
@@ -331,7 +296,8 @@ namespace M2Mod
 
         private void ExportButtonGo_Click(object sender, EventArgs e)
         {
-            _ignoreErrors = _ignoreWarning = false;
+            ResetIgnoreWarnings();
+
             exportButtonGo.Enabled = false;
             exportButtonGo.Refresh();
             SetStatus("Working...");
@@ -413,7 +379,7 @@ namespace M2Mod
 
         private void LoadListfileButton_Click(object sender, EventArgs e)
         {
-            _ignoreErrors = _ignoreWarning = false;
+            ResetIgnoreWarnings();
 
             using (var dialog = new FolderBrowserDialog())
             {
@@ -501,7 +467,8 @@ namespace M2Mod
 
         private void CheckUpdates()
         {
-            _ignoreErrors = _ignoreWarning = true;
+            ResetIgnoreWarnings();
+
             var data = GetTags(
                 @"https://bitbucket.org/!api/2.0/repositories/suncurio/m2mod/refs/tags?pagelen=30&q=name%20~%20%22v%22&sort=name");
 
@@ -559,7 +526,7 @@ namespace M2Mod
                 catch (Exception ex)
                 {
                     this.Invoke(new Action(() => {
-                        Log((int)LogLevel.Error, $"Failed to check updates: {ex.Message}");
+                        Log(LogLevel.Error, $"Failed to check updates: {ex.Message}");
                     }));
                     
                     MessageBox.Show("Failed to check updates", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -569,7 +536,8 @@ namespace M2Mod
 
         private void CompareModelsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            _ignoreErrors = _ignoreWarning = false;
+            ResetIgnoreWarnings();
+
             using (var form = new CompareModelsForm())
             {
                 form.ShowDialog();
@@ -583,7 +551,8 @@ namespace M2Mod
 
         private void ImportButtonGo_Click(object sender, EventArgs e)
         {
-            _ignoreErrors = _ignoreWarning = false;
+            ResetIgnoreWarnings();
+
             importButtonPreload.Enabled = false;
             importButtonPreload.Refresh();
             SetStatus("Importing...");
@@ -623,7 +592,7 @@ namespace M2Mod
                 Directory.CreateDirectory(directory);
 
             // export M2
-            var error = Imports.M2_Save(_preloadM2, ExportFileName);
+            var error = Imports.M2_Save(_preloadM2, ExportFileName, SaveMask.All);
             if (error != M2LibError.OK)
             {
                 SetStatus(Imports.GetErrorText(error));
@@ -683,6 +652,24 @@ namespace M2Mod
                     InitializeFormData();
                     formInitialized = true;
                 }
+            }
+        }
+
+        private void tXIDRemoverToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ResetIgnoreWarnings();
+
+            using (var form = new TXIDRemoverForm())
+            {
+                form.ShowDialog();
+            }
+        }
+
+        private void getLatestMappingLinkLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            using (var form = new GetMappingsForm())
+            {
+                form.ShowDialog();
             }
         }
     }
