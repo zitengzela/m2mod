@@ -72,6 +72,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Dialogs\Filters.cs" />
+    <Compile Include="Interop\CueProvider.cs" />
     <Compile Include="Interop\Structures\SaveMask.cs" />
     <Compile Include="LogTextBox.cs">
       <SubType>Component</SubType>
@@ -142,6 +144,12 @@
     <Compile Include="SplitButton.Designer.cs">
       <DependentUpon>SplitButton.cs</DependentUpon>
     </Compile>
+    <Compile Include="Tools\RemapReferencesForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Tools\RemapReferencesForm.Designer.cs">
+      <DependentUpon>RemapReferencesForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Tools\TXIDRemoverForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -182,6 +190,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SplitButton.resx">
       <DependentUpon>SplitButton.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Tools\RemapReferencesForm.resx">
+      <DependentUpon>RemapReferencesForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Tools\TXIDRemoverForm.resx">
       <DependentUpon>TXIDRemoverForm.cs</DependentUpon>

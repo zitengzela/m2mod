@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using M2Mod.Config;
+using M2Mod.Dialogs;
 using M2Mod.Interop;
 using M2Mod.Interop.Structures;
 using M2Mod.Tools;
@@ -16,10 +17,6 @@ namespace M2Mod
 {
     public partial class M2ModForm : Form
     {
-        private const string M2Filter = "M2 Files|*.m2|All Files|*.*";
-        private const string M2IFilter = "M2I Files|*.m2i|All Files|*.*";
-        private const string JsonFilter = "Profiles Files|*.json|All Files|*.*";
-
         private bool _ignoreErrors;
         private bool _ignoreWarnings;
 
@@ -98,17 +95,9 @@ namespace M2Mod
         {
             using (var dialog = new OpenFileDialog())
             {
-                dialog.Filter = M2Filter;
-
-                try
-                {
-                    dialog.FileName = textBoxInputM2Exp.Text;
-                    dialog.InitialDirectory = Path.GetDirectoryName(textBoxInputM2Exp.Text);
-                }
-                catch
-                {
-                    // ignored
-                }
+                dialog.Filter = Filters.M2;
+                dialog.FileName = Path.GetFileName(textBoxInputM2Exp.Text);
+                dialog.InitialDirectory = textBoxInputM2Exp.Text.Length > 0 ? Path.GetDirectoryName(textBoxInputM2Exp.Text) : ProfileManager.CurrentProfile.Settings.WorkingDirectory;
 
                 if (dialog.ShowDialog() == DialogResult.OK)
                 {
@@ -122,7 +111,7 @@ namespace M2Mod
         {
             using (var dialog = new SaveFileDialog())
             {
-                dialog.Filter = M2IFilter;
+                dialog.Filter = Filters.M2I;
                 try
                 {
                     dialog.FileName = textBoxOutputM2I.Text;
@@ -142,7 +131,7 @@ namespace M2Mod
         {
             using (var dialog = new OpenFileDialog())
             {
-                dialog.Filter = M2IFilter;
+                dialog.Filter = Filters.M2I;
                 try
                 {
                     dialog.FileName = textBoxInputM2I.Text;
@@ -361,16 +350,9 @@ namespace M2Mod
         {
             using (var dialog = new OpenFileDialog())
             {
-                dialog.Filter = M2Filter;
-                try
-                {
-                    dialog.FileName = textBoxReplaceM2.Text;
-                    dialog.InitialDirectory = Path.GetDirectoryName(textBoxReplaceM2.Text);
-                }
-                catch
-                {
-                    // ignored
-                }
+                dialog.Filter = Filters.M2;
+                dialog.FileName = Path.GetFileName(textBoxReplaceM2.Text);
+                dialog.InitialDirectory = textBoxReplaceM2.Text.Length > 0 ? Path.GetDirectoryName(textBoxReplaceM2.Text) : ProfileManager.CurrentProfile.Settings.WorkingDirectory;
 
                 if (dialog.ShowDialog() == DialogResult.OK)
                     textBoxReplaceM2.Text = dialog.FileName;
@@ -634,7 +616,7 @@ namespace M2Mod
         {
             using (var dialog = new OpenFileDialog())
             {
-                dialog.Filter = JsonFilter;
+                dialog.Filter = Filters.Profile;
                 try
                 {
                     dialog.FileName = "profiles.json";
@@ -668,6 +650,16 @@ namespace M2Mod
         private void getLatestMappingLinkLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
             using (var form = new GetMappingsForm())
+            {
+                form.ShowDialog();
+            }
+        }
+
+        private void remapReferencesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ResetIgnoreWarnings();
+
+            using (var form = new RemapReferencesForm())
             {
                 form.ShowDialog();
             }

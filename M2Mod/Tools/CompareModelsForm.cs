@@ -2,6 +2,7 @@
 using System.IO;
 using System.Windows.Forms;
 using M2Mod.Config;
+using M2Mod.Dialogs;
 using M2Mod.Interop;
 using M2Mod.Interop.Structures;
 
@@ -9,9 +10,6 @@ namespace M2Mod.Tools
 {
     public partial class CompareModelsForm : Form
     {
-        private const string _m2Filter = "M2 Files|*.m2|All Files|*.*";
-        private const string _txtFilter = "Txt Files|*.txt|All Files|*.*";
-
         public CompareModelsForm()
         {
             InitializeComponent();
@@ -27,16 +25,9 @@ namespace M2Mod.Tools
         {
             using (var dialog = new OpenFileDialog())
             {
-                dialog.Filter = _m2Filter;
-                try
-                {
-                    if (oldM2TextBox.Text.Length > 0)
-                        dialog.InitialDirectory = Path.GetDirectoryName(oldM2TextBox.Text);
-                }
-                catch
-                {
-                    // ignored
-                }
+                dialog.Filter = Filters.M2;
+                dialog.FileName = Path.GetFileName(oldM2TextBox.Text);
+                dialog.InitialDirectory = oldM2TextBox.Text.Length > 0 ? Path.GetDirectoryName(oldM2TextBox.Text) : ProfileManager.CurrentProfile.Settings.WorkingDirectory;
 
                 var result = dialog.ShowDialog();
                 if (result != DialogResult.OK)
@@ -50,16 +41,9 @@ namespace M2Mod.Tools
         {
             using (var dialog = new OpenFileDialog())
             {
-                dialog.Filter = _m2Filter;
-                try
-                {
-                    if (newM2TextBox.Text.Length > 0)
-                        dialog.InitialDirectory = Path.GetDirectoryName(newM2TextBox.Text);
-                }
-                catch
-                {
-                    // ignored
-                }
+                dialog.Filter = Filters.M2;
+                dialog.FileName = Path.GetFileName(newM2TextBox.Text);
+                dialog.InitialDirectory = newM2TextBox.Text.Length > 0 ? Path.GetDirectoryName(newM2TextBox.Text) : ProfileManager.CurrentProfile.Settings.WorkingDirectory;
 
                 var result = dialog.ShowDialog();
                 if (result != DialogResult.OK)
@@ -183,7 +167,7 @@ namespace M2Mod.Tools
             using (var dialog = new SaveFileDialog())
             {
                 dialog.CheckPathExists = true;
-                dialog.Filter = _txtFilter;
+                dialog.Filter = Filters.Txt;
 
                 if (oldM2TextBox.Text.Length > 0)
                 {

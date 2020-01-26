@@ -41,7 +41,7 @@ namespace M2Lib
 			EElement_ParticleEmitter = 28,
 			EElement_TextureCombinerCombo = 29,
 
-			EElement__Count__
+			EElement__CountM2__
 		};
 
 #pragma pack(push, 1)

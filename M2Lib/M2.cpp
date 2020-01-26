@@ -14,18 +14,18 @@
 using namespace M2Lib::M2Element;
 using namespace M2Lib::M2Chunk;
 
-uint32_t M2Lib::M2::GetLastElementIndex()
+uint32_t M2Lib::M2::GetLastElementIndex() const
 {
-	for (int32_t i = M2Element::EElement__Count__ - 1; i >= 0; --i)
+	for (int32_t i = EElement__CountM2__ - 1; i >= 0; --i)
 	{
 		if (!Elements[i].Data.empty())
 			return i;
 	}
 
-	return M2Element::EElement__Count__;
+	return EElement__CountM2__;
 }
 
-M2Lib::Settings const* M2Lib::M2::GetSettings()
+M2Lib::Settings const* M2Lib::M2::GetSettings() const
 {
 	return &Settings;
 }
@@ -61,7 +61,9 @@ M2Lib::M2::M2(M2Lib::Settings* Settings)
 	pInM2I = NULL;
 	replaceM2 = NULL;
 	hasLodSkins = false;
+	needRemapReferences = false;
 	needRemoveTXIDChunk = false;
+
 	if (Settings)
 		this->Settings = *Settings;
 
@@ -222,7 +224,7 @@ M2Lib::EError M2Lib::M2::Load(const wchar_t* FileName)
 	OriginalSkinCount = Header.Elements.nSkin;
 
 	// load elements
-	for (uint32_t i = 0; i < EElement__Count__; ++i)
+	for (uint32_t i = 0; i < EElement__CountM2__; ++i)
 	{
 		Elements[i].Align = 16;
 		if (!Elements[i].Load(ModelChunk->RawData.data(), 0))
@@ -311,8 +313,6 @@ M2Lib::EError M2Lib::M2::Load(const wchar_t* FileName)
 	PrintReferencedFileInfo();
 
 	sLogger.LogInfo(L"Finished loading M2");
-
-	//m_SaveElements_FindOffsets();
 
 	// done
 	return EError_OK;
@@ -419,7 +419,7 @@ M2Lib::EError M2Lib::M2::SaveSkeleton(std::wstring const& M2FileName)
 	return EError_OK;
 }
 
-M2Lib::EError M2Lib::M2::SaveCustomMappings()
+M2Lib::EError M2Lib::M2::SaveCustomMappings(wchar_t const* fileName)
 {
 	if (customFileInfosByFileDataId.empty())
 		return EError_OK;
@@ -428,9 +428,9 @@ M2Lib::EError M2Lib::M2::SaveCustomMappings()
 	if (outPath.empty())
 		outPath = FileStorage::DefaultMappingsPath;
 
-	outPath /= std::filesystem::path(_FileName).stem().wstring() + L".txt";
+	outPath /= std::filesystem::path(fileName).stem().wstring() + L".txt";
 
-	std::wofstream fs(outPath.wstring(), std::ios::out | std::ios::trunc);
+	std::wofstream fs(outPath.wstring(), std::ios::out | std::ios::app);
 	if (fs.fail())
 	{
 		sLogger.LogError(L"Failed to save custom mapping to '%s'", outPath.wstring().c_str());
@@ -443,6 +443,12 @@ M2Lib::EError M2Lib::M2::SaveCustomMappings()
 	fs.close();
 
 	sLogger.LogInfo(L"Saved custom mapping to '%s'", outPath.wstring().c_str());
+
+	for (auto itr: customFileInfosByNameHash)
+		storageRef->AddRecord(itr.second);
+
+	customFileInfosByFileDataId.clear();
+	customFileInfosByNameHash.clear();
 
 	return EError_OK;
 }
@@ -697,11 +703,12 @@ M2Lib::EError M2Lib::M2::Save(const wchar_t* FileName, uint8_t saveMask = SAVE_A
 		return EError_FailedToSaveM2;
 	}
 
-	if (replaceM2)
-		this->replaceM2 = replaceM2;
-
 	DoExtraWork();
-	//StoreReferencesAsCustom();
+
+	if (needRemapReferences)
+		if (!RemapReferences(FileName))
+			return EError_FAIL;
+
 	PrintReferencedFileInfo();
 
 	sLogger.LogInfo(L"Saving model to %s", FileName);
@@ -734,7 +741,7 @@ M2Lib::EError M2Lib::M2::Save(const wchar_t* FileName, uint8_t saveMask = SAVE_A
 		FileStream.write((char*)&Header, HeaderSize);
 
 		// save elements
-		uint32_t ElementCount = Header.IsLongHeader() ? EElement__Count__ : EElement__Count__ - 1;
+		uint32_t ElementCount = Header.IsLongHeader() ? EElement__CountM2__ : EElement__CountM2__ - 1;
 		for (uint32_t i = 0; i < ElementCount; ++i)
 		{
 			if (!Elements[i].Save(FileStream, ChunkReserveOffset))
@@ -800,7 +807,9 @@ M2Lib::EError M2Lib::M2::Save(const wchar_t* FileName, uint8_t saveMask = SAVE_A
 	}
 
 	if (saveMask & SAVE_M2)
-		SaveCustomMappings();
+		SaveCustomMappings(FileName);
+
+	CopyRemappedFiles(FileName);
 
 	return EError_OK;
 }
@@ -962,7 +971,7 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate(wchar_t const* FileName)
 			{
 				auto ExternalAnimations = (M2Array*)Elements[EElement_Camera].GetLocalPointer(Camera->AnimationBlock_FieldOfView.Values.Offset);
 				auto LastElementIndex = GetLastElementIndex();
-				m2lib_assert(LastElementIndex != M2Element::EElement__Count__);
+				m2lib_assert(LastElementIndex != M2Element::EElement__CountM2__);
 				auto& LastElement = Elements[LastElementIndex];
 				m2lib_assert(ExternalAnimations[0].Offset >= LastElement.Offset && ExternalAnimations[0].Offset < LastElement.Offset + LastElement.Data.size());
 
@@ -1266,7 +1275,7 @@ void M2Lib::M2::PrintInfo()
 	FileStream << "oTransparencies           " << Header.Elements.oTransparency << std::endl;
 	FileStream << " DataSize                 " << Elements[EElement_Transparency].Data.size() << std::endl;
 
-	CElement_Transparency* Transparencies = Elements[EElement_Transparency].as<CElement_Transparency>();
+	CElement_Transparency* Transparencies = Elements[M2Element::EElement_Transparency].as<CElement_Transparency>();
     for (uint32_t i = 0; i < Header.Elements.nTransparency; ++i)
     {
         auto transparency = Transparencies[i];
@@ -1649,19 +1658,45 @@ void M2Lib::M2::PrintReferencedFileInfo()
 	sLogger.LogInfo(L"======END OF REFERENCED FILE INFO======");
 }
 
-void M2Lib::M2::StoreReferencesAsCustom()
+bool M2Lib::M2::RemapReferences(const wchar_t* m2FileName)
 {
-	auto storeCustomRef = [&](uint32_t& fileDataOld)
+	sLogger.LogCustom(L"Custom file index starts at: %u", GetCustomMappingCounter());
+
+	auto newM2Name = std::filesystem::path(m2FileName).stem();
+
+	std::filesystem::path outPath;
+	if (!remapPath.empty())
+		outPath = remapPath;
+	else if (auto m2Info = GetFileInfoByPartialPath(L"/" / std::filesystem::path(_FileName).filename()))
+		outPath = std::filesystem::path(m2Info->Path).parent_path() / (L"remap_" + newM2Name.wstring());
+	else
+		outPath = L"remap_" + newM2Name.wstring();
+
+	sLogger.LogCustom(L"Remap base path: '%s/*'", outPath.wstring().c_str());
+
+	const auto storeCustomRef = [&](uint32_t& fileDataOld) -> bool
 	{
-		auto info = GetFileInfoByFileDataId(fileDataOld);
+		const auto info = GetFileInfoByFileDataId(fileDataOld);
 
-		auto path = std::filesystem::path(info->Path);
+		const auto newPath = outPath / std::filesystem::path(info->Path).filename();
 
-		path = path.parent_path() / (L"new_" + path.filename().wstring());
+		if (GetFileInfoByPath(newPath))
+		{
+			sLogger.LogError(L"Path '%s' already exists in mappings, choose another mapping path", newPath.wstring().c_str());
+			return false;
+		}
 
-		auto newInfo = AddCustomMapping(path.wstring().c_str());
+		const auto newInfo = AddCustomMapping(newPath.wstring().c_str());
 
 		fileDataOld = newInfo->FileDataId;
+
+		sLogger.LogCustom(L"Remapping file: [%u] %s to [%u] %s", info->FileDataId, info->Path.c_str(), newInfo->FileDataId, newInfo->Path.c_str());
+
+		const auto extension = ToLower<wchar_t>(newPath.extension().wstring().c_str());
+		if (extension != L".m2" && extension != L".skin" && extension != L".skel")
+			remapCopyFiles[info->FileDataId] = newInfo->FileDataId;
+
+		return true;
 	};
 
 	if (auto skinChunk = (SFIDChunk*)GetChunk(EM2Chunk::Skin))
@@ -1669,13 +1704,15 @@ void M2Lib::M2::StoreReferencesAsCustom()
 		sLogger.LogInfo(L"Total skin files referenced: %u", skinChunk->SkinsFileDataIds.size());
 		for (auto& skinFileDataId : skinChunk->SkinsFileDataIds)
 			if (skinFileDataId)
-				storeCustomRef(skinFileDataId);
+				if (!storeCustomRef(skinFileDataId))
+					return false;
 	}
 
 	if (auto skeletonChunk = (SKIDChunk*)GetChunk(EM2Chunk::Skeleton))
 	{
 		if (skeletonChunk->SkeletonFileDataId)
-			storeCustomRef(skeletonChunk->SkeletonFileDataId);
+			if (!storeCustomRef(skeletonChunk->SkeletonFileDataId))
+				return false;
 
 		if (Skeleton)
 		{
@@ -1683,54 +1720,119 @@ void M2Lib::M2::StoreReferencesAsCustom()
 
 			if (auto skpdChunk = (SKPDChunk*)Skeleton->GetChunk(ESkeletonChunk::SKPD))
 				if (skpdChunk->Data.ParentSkeletonFileId)
-					storeCustomRef(skpdChunk->Data.ParentSkeletonFileId);
+					if (!storeCustomRef(skpdChunk->Data.ParentSkeletonFileId))
+						return false;
 
 			if (auto afidChunk = (AFIDChunk*)Skeleton->GetChunk(ESkeletonChunk::AFID))
 				for (auto& anim : afidChunk->AnimInfos)
 					if (anim.FileId)
-						storeCustomRef(anim.FileId);
+						if (!storeCustomRef(anim.FileId))
+							return false;
 
 			if (auto boneChunk = (BFIDChunk*)Skeleton->GetChunk(ESkeletonChunk::BFID))
 				for (auto& bone : boneChunk->BoneFileDataIds)
 					if (bone)
-						storeCustomRef(bone);
+						if (!storeCustomRef(bone))
+							return false;
 		}
 	}
 	if (auto textureChunk = (TXIDChunk*)GetChunk(EM2Chunk::Texture))
 	{
 		for (auto& textuteFileDataId : textureChunk->TextureFileDataIds)
 			if (textuteFileDataId)
-				storeCustomRef(textuteFileDataId);
+				if (!storeCustomRef(textuteFileDataId))
+					return false;
 	}
 
 	if (auto physChunk = (PFIDChunk*)GetChunk(EM2Chunk::Physic))
 		if (physChunk->PhysFileId)
-			storeCustomRef(physChunk->PhysFileId);
-	
+			if (!storeCustomRef(physChunk->PhysFileId))
+				return false;
+
 	if (auto afidChunk = (AFIDChunk*)GetChunk(EM2Chunk::Animation))
 		for (auto& anim : afidChunk->AnimInfos)
 			if (anim.FileId)
-				storeCustomRef(anim.FileId);
+				if (!storeCustomRef(anim.FileId))
+					return false;
 
 	if (auto boneChunk = (BFIDChunk*)GetChunk(EM2Chunk::Bone))
 	{
 		for (auto& bone : boneChunk->BoneFileDataIds)
 			if (bone)
-				storeCustomRef(bone);
+				if (!storeCustomRef(bone))
+					return false;
 	}
 
 	if (auto gpidChunk = (GPIDChunk*)GetChunk(EM2Chunk::ParticleGeometryModels))
 	{
 		for (auto& fileDataId : gpidChunk->FileDataIds)
 			if (fileDataId)
-				storeCustomRef(fileDataId);
+				if (!storeCustomRef(fileDataId))
+					return false;
 	}
 
 	if (auto rpidChunk = (RPIDChunk*)GetChunk(EM2Chunk::ParticleRecursiveModel))
 	{
 		for (auto& fileDataId : rpidChunk->FileDataIds)
 			if (fileDataId)
-				storeCustomRef(fileDataId);
+				if (!storeCustomRef(fileDataId))
+					return false;
+	}
+
+	return true;
+}
+
+void M2Lib::M2::CopyRemappedFiles(const wchar_t* m2FileName)
+{
+	auto newM2Name = std::filesystem::path(m2FileName).stem();
+
+	auto m2Info = GetFileInfoByPartialPath(L"/" / std::filesystem::path(_FileName).filename());
+	if (!m2Info)
+	{
+		sLogger.LogError(L"Failed to detect FileDataID of source model. You must manually copy all remapped files to target directory.");
+		return;
+	}
+
+	std::filesystem::path outputDirectory;
+
+	if (wcslen(Settings.WorkingDirectory) > 0)
+		outputDirectory.assign(Settings.WorkingDirectory);
+	else
+		outputDirectory = std::filesystem::path(m2FileName).parent_path();
+
+	std::filesystem::path workingDirectory;
+
+	if (wcslen(Settings.WorkingDirectory) > 0)
+		workingDirectory = Settings.WorkingDirectory;
+	else
+	{
+		workingDirectory = FileStorage::DetectWorkingDirectory(_FileName, m2Info->Path);
+		if (workingDirectory.empty())
+		{
+			sLogger.LogError(L"Source M2 is not in standard path. You must manually copy all remapped files to target directory.");
+			return;
+		}
+	}
+
+	std::filesystem::create_directories(outputDirectory);
+
+	for (auto itr : remapCopyFiles)
+	{
+		const auto oldInfo = GetFileInfoByFileDataId(itr.first);
+		const auto newInfo = GetFileInfoByFileDataId(itr.second);
+
+		auto oldPath = workingDirectory / oldInfo->Path;
+		if (!std::filesystem::exists(oldPath))
+		{
+			sLogger.LogError(L"Expected file at %s not found", oldPath.wstring().c_str());
+			continue;
+		}
+
+		auto newPath = outputDirectory / newInfo->Path;
+
+		sLogger.LogInfo(L"Copying '%s' to '%s'", oldPath.c_str(), newPath.c_str());
+		if (!std::filesystem::copy_file(oldPath, newPath, std::filesystem::copy_options::overwrite_existing))
+			sLogger.LogError(L"Failed to copy '%s' to '%s'", oldPath.c_str(), newPath.c_str());
 	}
 }
 
@@ -1741,7 +1843,7 @@ bool M2Lib::M2::GetFileSkin(std::wstring& SkinFileNameResultBuffer, std::wstring
 	if (Save && replaceM2)
 		skinChunk = (M2Chunk::SFIDChunk*)replaceM2->GetChunk(EM2Chunk::Skin);
 	else
-		skinChunk =(M2Chunk::SFIDChunk*)GetChunk(EM2Chunk::Skin);
+		skinChunk = (M2Chunk::SFIDChunk*)GetChunk(EM2Chunk::Skin);
 
 	if (skinChunk)
 	{
@@ -1969,7 +2071,7 @@ void M2Lib::M2::m_LoadElements_CopyHeaderToElements()
 
 void M2Lib::M2::m_LoadElements_FindSizes(uint32_t ChunkSize)
 {
-	for (uint32_t i = 0; i < EElement__Count__; ++i)
+	for (uint32_t i = 0; i < EElement__CountM2__; ++i)
 	{
 		auto& Element = Elements[i];
 
@@ -1983,7 +2085,7 @@ void M2Lib::M2::m_LoadElements_FindSizes(uint32_t ChunkSize)
 		}
 
 		uint32_t NextOffset = ChunkSize;
-		for (uint32_t j = 0; j < EElement__Count__; ++j)
+		for (uint32_t j = 0; j < EElement__CountM2__; ++j)
 		{
 			if (Elements[j].Count && Elements[j].Offset > Element.Offset)
 			{
@@ -2090,11 +2192,11 @@ void M2Lib::M2::m_SaveElements_FindOffsets()
 
 	// totaldiff needed to fix animations that are in the end of a chunk
 	int32_t totalDiff = -(int32_t)m_OriginalModelChunkSize + GetHeaderSize();
-	for (uint32_t iElement = 0; iElement < EElement__Count__; ++iElement)
+	for (uint32_t iElement = 0; iElement < EElement__CountM2__; ++iElement)
 		totalDiff += Elements[iElement].Data.size();
 
 	int32_t OffsetDelta = 0;
-	for (uint32_t iElement = 0; iElement < EElement__Count__; ++iElement)
+	for (uint32_t iElement = 0; iElement < EElement__CountM2__; ++iElement)
 	{
 		// if this element has data...
 		if (Elements[iElement].Data.empty())
@@ -2323,7 +2425,7 @@ void M2Lib::M2::m_SaveElements_FindOffsets()
 	}
 
 	m_OriginalModelChunkSize = GetHeaderSize();
-	for (uint32_t iElement = 0; iElement < EElement__Count__; ++iElement)
+	for (uint32_t iElement = 0; iElement < EElement__CountM2__; ++iElement)
 		m_OriginalModelChunkSize += Elements[iElement].Data.size();
 }
 
@@ -2574,7 +2676,7 @@ void M2Lib::M2::m_SaveElements_CopyElementsToHeader()
 	}
 }
 
-M2Lib::FileInfo const* M2Lib::M2::AddCustomMapping(wchar_t const* path)
+uint32_t M2Lib::M2::GetCustomMappingCounter()
 {
 	if (!currentCustomFileDataId)
 	{
@@ -2583,6 +2685,13 @@ M2Lib::FileInfo const* M2Lib::M2::AddCustomMapping(wchar_t const* path)
 		else
 			currentCustomFileDataId = storageRef->GetMaxFileDataId() + 1;
 	}
+
+	return currentCustomFileDataId;
+}
+
+M2Lib::FileInfo const* M2Lib::M2::AddCustomMapping(wchar_t const* path)
+{
+	currentCustomFileDataId = GetCustomMappingCounter();
 
 	auto srcHash = CalcStringHash<wchar_t>(path);
 	auto itr = customFileInfosByNameHash.find(srcHash);
@@ -2800,6 +2909,14 @@ M2Lib::EError M2Lib::M2::SetNeedRemoveTXIDChunk()
 	return EError_OK;
 }
 
+M2Lib::EError M2Lib::M2::SetNeedRemapReferences(const wchar_t* remapPath)
+{
+	needRemapReferences = true;
+	this->remapPath = remapPath;
+
+	return EError_OK;
+}
+
 void M2Lib::M2::RemoveTXIDChunk()
 {
 	sLogger.LogInfo(L"Erasing TXID chunk from model");
@@ -2992,6 +3109,20 @@ M2Lib::EError M2Lib::M2_ImportM2Intermediate(M2LIB_HANDLE handle, const wchar_t*
 	}
 }
 
+M2Lib::EError M2Lib::M2_SetNeedRemapReferences(M2LIB_HANDLE handle, const wchar_t* remapPath)
+{
+	try
+	{
+		return static_cast<M2*>(handle)->SetNeedRemapReferences(remapPath);
+	}
+	catch (std::exception & e)
+	{
+		sLogger.LogError(L"Exception: %s", StringHelpers::StringToWString(e.what()).c_str());
+
+		return EError_FAIL;
+	}
+}
+
 M2Lib::EError M2Lib::M2_SetNeedRemoveTXIDChunk(M2LIB_HANDLE handle)
 {
 	try
@@ -3028,6 +3159,19 @@ M2Lib::FileInfo const* M2Lib::M2::GetFileInfoByPath(std::wstring const& Path) co
 		return itr->second;
 
 	return storageRef->GetFileInfoByPath(Path);
+}
+
+M2Lib::FileInfo const* M2Lib::M2::GetFileInfoByPartialPath(std::wstring const& Path) const
+{
+	const auto NameCopy = NormalizePath(Path);
+
+	for (auto& itr : customFileInfosByFileDataId)
+	{
+		if (NormalizePath(itr.second->Path).find(NameCopy) != std::string::npos)
+			return itr.second;
+	}
+
+	return storageRef->GetFileInfoByPartialPath(Path);
 }
 
 wchar_t const* M2Lib::M2::PathInfo(uint32_t FileDataId) const

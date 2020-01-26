@@ -62,3 +62,23 @@ std::basic_string<char> M2Lib::NormalizePath(std::basic_string<char> const& path
 
 template
 std::basic_string<wchar_t> M2Lib::NormalizePath(std::basic_string<wchar_t> const& path);
+
+template <>
+std::basic_string<char> M2Lib::ToLower(std::basic_string<char> const& str)
+{
+	auto copy = str;
+
+	std::transform(copy.begin(), copy.end(), copy.begin(), tolower);
+
+	return str;
+}
+
+template <>
+std::basic_string<wchar_t> M2Lib::ToLower(std::basic_string<wchar_t> const& str)
+{
+	auto copy = str;
+
+	std::transform(copy.begin(), copy.end(), copy.begin(), towlower);
+
+	return str;
+}

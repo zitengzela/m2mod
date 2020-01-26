@@ -44,6 +44,8 @@
             this.checkBoxMergeBones = new System.Windows.Forms.CheckBox();
             this.forceExpansionComboBox = new System.Windows.Forms.ComboBox();
             this.mappingsDirectoryGroupBox = new System.Windows.Forms.GroupBox();
+            this.customFilesStartIndexLabel = new System.Windows.Forms.Label();
+            this.customFilesStartIndexTextBox = new System.Windows.Forms.TextBox();
             this.mappingsDirectoryButton = new System.Windows.Forms.Button();
             this.mappingsDirectoryTextBox = new System.Windows.Forms.TextBox();
             this.saveButton = new System.Windows.Forms.Button();
@@ -54,8 +56,6 @@
             this.profilesComboBox = new System.Windows.Forms.ComboBox();
             this.profilesLabel = new System.Windows.Forms.Label();
             this.editProfilesButton = new System.Windows.Forms.Button();
-            this.customFilesStartIndexTextBox = new System.Windows.Forms.TextBox();
-            this.customFilesStartIndexLabel = new System.Windows.Forms.Label();
             this.outputDirectoryGroupBox.SuspendLayout();
             this.workingDirectoryGroupBox.SuspendLayout();
             this.mappingsDirectoryGroupBox.SuspendLayout();
@@ -231,6 +231,22 @@
             this.mappingsDirectoryGroupBox.Text = "Mappings directory";
             this.toolTip1.SetToolTip(this.mappingsDirectoryGroupBox, "Directory where *.csv files are");
             // 
+            // customFilesStartIndexLabel
+            // 
+            this.customFilesStartIndexLabel.AutoSize = true;
+            this.customFilesStartIndexLabel.Location = new System.Drawing.Point(115, 51);
+            this.customFilesStartIndexLabel.Name = "customFilesStartIndexLabel";
+            this.customFilesStartIndexLabel.Size = new System.Drawing.Size(114, 13);
+            this.customFilesStartIndexLabel.TabIndex = 8;
+            this.customFilesStartIndexLabel.Text = "Custom files start index";
+            // 
+            // customFilesStartIndexTextBox
+            // 
+            this.customFilesStartIndexTextBox.Location = new System.Drawing.Point(9, 48);
+            this.customFilesStartIndexTextBox.Name = "customFilesStartIndexTextBox";
+            this.customFilesStartIndexTextBox.Size = new System.Drawing.Size(100, 20);
+            this.customFilesStartIndexTextBox.TabIndex = 7;
+            // 
             // mappingsDirectoryButton
             // 
             this.mappingsDirectoryButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
@@ -344,22 +360,6 @@
             this.editProfilesButton.UseVisualStyleBackColor = true;
             this.editProfilesButton.Click += new System.EventHandler(this.EditProfilesButton_Click);
             // 
-            // customFilesStartIndexTextBox
-            // 
-            this.customFilesStartIndexTextBox.Location = new System.Drawing.Point(9, 48);
-            this.customFilesStartIndexTextBox.Name = "customFilesStartIndexTextBox";
-            this.customFilesStartIndexTextBox.Size = new System.Drawing.Size(100, 20);
-            this.customFilesStartIndexTextBox.TabIndex = 7;
-            // 
-            // customFilesStartIndexLabel
-            // 
-            this.customFilesStartIndexLabel.AutoSize = true;
-            this.customFilesStartIndexLabel.Location = new System.Drawing.Point(115, 51);
-            this.customFilesStartIndexLabel.Name = "customFilesStartIndexLabel";
-            this.customFilesStartIndexLabel.Size = new System.Drawing.Size(114, 13);
-            this.customFilesStartIndexLabel.TabIndex = 8;
-            this.customFilesStartIndexLabel.Text = "Custom files start index";
-            // 
             // SettingsForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -375,6 +375,7 @@
             this.Controls.Add(this.groupBox3);
             this.Controls.Add(this.closeButton);
             this.Controls.Add(this.groupBox1);
+            this.MinimumSize = new System.Drawing.Size(347, 478);
             this.Name = "SettingsForm";
             this.Text = "Settings";
             this.outputDirectoryGroupBox.ResumeLayout(false);

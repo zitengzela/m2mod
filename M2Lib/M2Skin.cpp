@@ -48,7 +48,7 @@ M2Lib::EError M2Lib::M2Skin::Load(wchar_t const* FileName)
 	m_LoadElements_FindSizes(FileSize);
 
 	// load elements
-	for (uint32_t i = 0; i < EElement__Count__; ++i)
+	for (uint32_t i = 0; i < EElement__CountM2Skin__; ++i)
 	{
 		if (!Elements[i].Load(FileStream, 0))
 			return EError_FailedToLoadSKIN_FileMissingOrCorrupt;
@@ -86,7 +86,7 @@ M2Lib::EError M2Lib::M2Skin::Save(const wchar_t* FileName)
 	FileStream.write((char*)&Header, HeaderSize);
 
 	// save elements
-	for (uint32_t i = 0; i != EElement__Count__; i++)
+	for (uint32_t i = 0; i != EElement__CountM2Skin__; i++)
 	{
 		if (!Elements[i].Save(FileStream, 0))
 			return EError_FailedToSaveSKIN;
@@ -566,7 +566,7 @@ void M2Lib::M2Skin::m_LoadElements_CopyHeaderToElements()
 
 void M2Lib::M2Skin::m_LoadElements_FindSizes(uint32_t FileSize)
 {
-	for (uint32_t i = 0; i < EElement__Count__; ++i)
+	for (uint32_t i = 0; i < EElement__CountM2Skin__; ++i)
 	{
 		auto& Element = Elements[i];
 
@@ -580,7 +580,7 @@ void M2Lib::M2Skin::m_LoadElements_FindSizes(uint32_t FileSize)
 		}
 
 		uint32_t NextOffset = FileSize;
-		for (uint32_t j = i + 1; j < EElement__Count__; ++j)
+		for (uint32_t j = i + 1; j < EElement__CountM2Skin__; ++j)
 		{
 			if (Elements[j].Offset)
 			{
@@ -600,7 +600,7 @@ void M2Lib::M2Skin::m_SaveElements_FindOffsets()
 	uint32_t CurrentOffset = sizeof(Header);
 	CurrentOffset = (CurrentOffset + 15) & ~15;
 
-	for (uint32_t i = 0; i < EElement__Count__; ++i)
+	for (uint32_t i = 0; i < EElement__CountM2Skin__; ++i)
 	{
 		if (!Elements[i].Data.empty())
 		{

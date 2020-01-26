@@ -33,7 +33,7 @@ namespace M2Lib
 			EElement_Material,
 			EElement_Flags,
 
-			EElement__Count__
+			EElement__CountM2Skin__
 		};
 
 #pragma pack(push, 1)

@@ -402,7 +402,7 @@ M2Lib::EError M2Lib::M2I::Load(wchar_t const* FileName, M2Lib::M2* pM2, bool Ign
 					auto ExternalAnimations = (M2Array*)pM2->Elements[M2Element::EElement_Camera].GetLocalPointer(pCameraToMod->AnimationBlock_FieldOfView.Values.Offset);
 
 					auto LastElementIndex = pM2->GetLastElementIndex();
-					m2lib_assert(LastElementIndex != M2Element::EElement__Count__);
+					m2lib_assert(LastElementIndex != M2Element::EElement__CountM2__);
 					auto& LastElement = pM2->Elements[LastElementIndex];
 					m2lib_assert(ExternalAnimations[0].Offset >= LastElement.Offset && ExternalAnimations[0].Offset < LastElement.Offset + LastElement.Data.size());
 

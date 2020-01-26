@@ -24,6 +24,9 @@ namespace M2Mod.Interop
             [MarshalAs(UnmanagedType.LPWStr)] string filePath);
 
         [DllImport("M2Lib.dll", CallingConvention = CallingConvention.Cdecl)]
+        public static extern M2LibError M2_SetNeedRemapReferences(IntPtr handle, [MarshalAs(UnmanagedType.LPWStr)]string filePath);
+
+        [DllImport("M2Lib.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern M2LibError M2_SetNeedRemoveTXIDChunk(IntPtr handle);
 
         [DllImport("M2Lib.dll", CallingConvention = CallingConvention.Cdecl)]

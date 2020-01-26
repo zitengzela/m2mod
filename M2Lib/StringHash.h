@@ -9,4 +9,7 @@ namespace M2Lib
 
 	template <class T>
 	std::basic_string<T> NormalizePath(std::basic_string<T> const& path);
+
+	template <class T>
+	std::basic_string<T> ToLower(std::basic_string<T> const& str);
 }

@@ -119,6 +119,14 @@ void M2Lib::FileStorage::SetMappingsDirectory(std::wstring const& mappingsDirect
 	ClearStorage();
 }
 
+void M2Lib::FileStorage::AddRecord(FileInfo const* record)
+{
+	auto nameHash = CalcStringHash(record->Path);
+
+	fileInfosByFileDataId[record->FileDataId] = record;
+	fileInfosByNameHash[nameHash] = record;
+}
+
 M2Lib::FileStorage::~FileStorage()
 {
 	ClearStorage();
@@ -216,6 +224,23 @@ wchar_t const* M2Lib::FileStorage::PathInfo(uint32_t FileDataId)
 		return L"<not found in listfile>";
 
 	return info->Path.c_str();
+}
+
+std::filesystem::path M2Lib::FileStorage::DetectWorkingDirectory(std::filesystem::path fullPath, std::filesystem::path relativePath)
+{
+	for (;;)
+	{
+		if (relativePath.empty())
+			return fullPath;
+
+		if (ToLower(relativePath.filename().wstring()) == ToLower(fullPath.filename().wstring()))
+		{
+			relativePath = relativePath.parent_path();
+			fullPath = fullPath.parent_path();
+		}
+		else
+			return "";
+	}
 }
 
 M2Lib::FileStorage* M2Lib::StorageManager::GetStorage(std::wstring const& mappingDirectory)

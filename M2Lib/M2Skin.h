@@ -70,7 +70,7 @@ namespace M2Lib
 		std::wstring _FileName;
 
 		CM2SkinHeader Header;
-		DataElement Elements[M2SkinElement::EElement__Count__];
+		DataElement Elements[M2SkinElement::EElement__CountM2Skin__];
 
 		std::vector<SubmeshExtraData const*> ExtraDataBySubmeshIndex;
 

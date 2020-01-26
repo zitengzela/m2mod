@@ -5,6 +5,12 @@
 #include <map>
 #include <unordered_map>
 
+namespace std {
+	namespace filesystem {
+		class path;
+	}
+}
+
 namespace M2Lib
 {
 	struct FileInfo
@@ -31,6 +37,8 @@ namespace M2Lib
 	public:
 		FileStorage(std::wstring const& mappingsDirectory);
 		void SetMappingsDirectory(std::wstring const& mappingsDirectory);
+		void AddRecord(FileInfo const* record);
+		static std::filesystem::path DetectWorkingDirectory(std::filesystem::path fullPath, std::filesystem::path relativePath);
 
 		~FileStorage();
 
