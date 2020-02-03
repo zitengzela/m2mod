@@ -1,4 +1,6 @@
-﻿namespace M2Mod.Tools
+﻿using M2Mod.Controls;
+
+namespace M2Mod.Tools
 {
     partial class RemapReferencesForm
     {
@@ -34,7 +36,7 @@
             this.oldM2Label = new System.Windows.Forms.Label();
             this.m2PathTextBox = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
-            this.remapRelativePathTextBox = new System.Windows.Forms.TextBox();
+            this.remapRelativePathTextBox = new M2Mod.Controls.CueTextBox();
             this.logTextBox = new M2Mod.LogTextBox();
             this.SuspendLayout();
             // 
@@ -102,6 +104,7 @@
             // 
             this.remapRelativePathTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.remapRelativePathTextBox.Cue = "example: textures/custom";
             this.remapRelativePathTextBox.Location = new System.Drawing.Point(122, 39);
             this.remapRelativePathTextBox.Name = "remapRelativePathTextBox";
             this.remapRelativePathTextBox.Size = new System.Drawing.Size(410, 20);
@@ -153,6 +156,6 @@
         private System.Windows.Forms.Label oldM2Label;
         private System.Windows.Forms.TextBox m2PathTextBox;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.TextBox remapRelativePathTextBox;
+        private M2Mod.Controls.CueTextBox remapRelativePathTextBox;
     }
 }

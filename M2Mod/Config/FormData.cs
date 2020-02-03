@@ -13,5 +13,8 @@
         public float CompareWeightThreshold;
         public float CompareSourceScale;
         public bool PredictScale;
+        public string FixNormalSettings;
+        public bool IncludeHair;
+        public bool IncludeFacials;
     }
 }

@@ -30,6 +30,9 @@ namespace M2Mod.Interop
         public static extern M2LibError M2_SetNeedRemoveTXIDChunk(IntPtr handle);
 
         [DllImport("M2Lib.dll", CallingConvention = CallingConvention.Cdecl)]
+        public static extern M2LibError M2_SetNormalizationRules(IntPtr handle, uint[] data, int len);
+
+        [DllImport("M2Lib.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern M2LibError M2_SetReplaceM2(IntPtr handle,
             [MarshalAs(UnmanagedType.LPWStr)] string filePath);
 

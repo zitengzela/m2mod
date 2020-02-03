@@ -72,7 +72,19 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Controls\CueTextBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Controls\CueTextBox.Designer.cs">
+      <DependentUpon>CueTextBox.cs</DependentUpon>
+    </Compile>
     <Compile Include="Dialogs\Filters.cs" />
+    <Compile Include="FixNormalsSettingsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FixNormalsSettingsForm.Designer.cs">
+      <DependentUpon>FixNormalsSettingsForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Interop\CueProvider.cs" />
     <Compile Include="Interop\Structures\SaveMask.cs" />
     <Compile Include="LogTextBox.cs">
@@ -138,10 +150,10 @@
       <DependentUpon>SettingsForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Config\SettingsProfile.cs" />
-    <Compile Include="SplitButton.cs">
+    <Compile Include="Controls\SplitButton.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="SplitButton.Designer.cs">
+    <Compile Include="Controls\SplitButton.Designer.cs">
       <DependentUpon>SplitButton.cs</DependentUpon>
     </Compile>
     <Compile Include="Tools\RemapReferencesForm.cs">
@@ -157,6 +169,9 @@
       <DependentUpon>TXIDRemoverForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Version.cs" />
+    <EmbeddedResource Include="FixNormalsSettingsForm.resx">
+      <DependentUpon>FixNormalsSettingsForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Tools\CompareModelsForm.resx">
       <DependentUpon>CompareModelsForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -188,7 +203,7 @@
     <EmbeddedResource Include="SettingsForm.resx">
       <DependentUpon>SettingsForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="SplitButton.resx">
+    <EmbeddedResource Include="Controls\SplitButton.resx">
       <DependentUpon>SplitButton.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Tools\RemapReferencesForm.resx">

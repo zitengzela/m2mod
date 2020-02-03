@@ -1,4 +1,4 @@
-﻿namespace M2Mod
+﻿namespace M2Mod.Controls
 {
     partial class SplitButton
     {

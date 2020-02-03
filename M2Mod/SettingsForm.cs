@@ -14,6 +14,10 @@ namespace M2Mod
 
         private SettingsProfile SelectedProfile => profilesComboBox.SelectedItem as SettingsProfile;
 
+        private string FixNormalSettings;
+        private bool IncludeFacials;
+        private bool IncludeHair;
+
         public SettingsForm()
         {
             InitializeComponent();
@@ -26,7 +30,7 @@ namespace M2Mod
 
             _lastProfile = ProfileManager.CurrentProfile;
             SetupProfiles();
-            SetupControls(_lastProfile.Settings);
+            SetupControls(_lastProfile);
         }
 
         private void SetupProfiles()
@@ -39,8 +43,10 @@ namespace M2Mod
                 : profilesComboBox.Items[0];
         }
 
-        private void SetupControls(Settings settings)
+        private void SetupControls(SettingsProfile profile)
         {
+            var settings = profile.Settings;
+
             forceExpansionComboBox.SelectedItem = forceExpansionComboBox.Items.Cast<Expansion>()
                 .FirstOrDefault(_ => _ == settings.ForceLoadExpansion);
 
@@ -56,6 +62,10 @@ namespace M2Mod
             checkBoxIgnoreOriginalMeshIndexes.Checked = settings.IgnoreOriginalMeshIndexes;
             testFixAnimationsCheckBox.Checked = settings.FixAnimationsTest;
             customFilesStartIndexTextBox.Text = settings.CustomFilesStartIndex > 0 ? settings.CustomFilesStartIndex.ToString() : "";
+
+            FixNormalSettings = profile.FormData.FixNormalSettings;
+            IncludeFacials = profile.FormData.IncludeFacials;
+            IncludeHair = profile.FormData.IncludeHair;
         }
 
         private Settings ProduceSettings()
@@ -87,7 +97,8 @@ namespace M2Mod
             {
                 if (!Directory.Exists(workingDirectoryTextBox.Text))
                 {
-                    MessageBox.Show("Working directory does not exist", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show("Working directory does not exist", "Error", MessageBoxButtons.OK,
+                        MessageBoxIcon.Error);
                     return;
                 }
             }
@@ -96,7 +107,8 @@ namespace M2Mod
             {
                 if (!Directory.Exists(outputDirectoryTextBox.Text))
                 {
-                    MessageBox.Show("Output directory does not exist", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show("Output directory does not exist", "Error", MessageBoxButtons.OK,
+                        MessageBoxIcon.Error);
                     return;
                 }
             }
@@ -105,12 +117,23 @@ namespace M2Mod
             {
                 if (!Directory.Exists(mappingsDirectoryTextBox.Text))
                 {
-                    MessageBox.Show("Mappings directory does not exist", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show("Mappings directory does not exist", "Error", MessageBoxButtons.OK,
+                        MessageBoxIcon.Error);
                     return;
                 }
             }
 
+            if (!uint.TryParse(customFilesStartIndexTextBox.Text, out var customFilesStartIndex))
+            {
+                MessageBox.Show("Custom file index is not a number", "Error", MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+                return;
+            }
+
             SelectedProfile.Settings = ProduceSettings();
+            SelectedProfile.FormData.FixNormalSettings = FixNormalSettings;
+            SelectedProfile.FormData.IncludeFacials = IncludeFacials;
+            SelectedProfile.FormData.IncludeHair = IncludeHair;
         }
 
         private void WorkingDirectoryBrowseButton_Click(object sender, EventArgs e)
@@ -149,7 +172,7 @@ namespace M2Mod
 
         private void CloseButton_Click(object sender, EventArgs e)
         {
-            if (SettingsChanged(ProduceSettings(), SelectedProfile.Settings))
+            if (SettingsChanged(SelectedProfile))
             {
                 if (DialogResult.OK != MessageBox.Show("Your unsaved changes will be lost. Are you sure?", "Warning",
                         MessageBoxButtons.OKCancel, MessageBoxIcon.Warning))
@@ -164,7 +187,7 @@ namespace M2Mod
             if (_lastProfile == profilesComboBox.SelectedItem)
                 return;
 
-            if (_lastProfile != null && SettingsChanged(ProduceSettings(), _lastProfile.Settings))
+            if (_lastProfile != null && SettingsChanged(_lastProfile))
             {
                 var res = MessageBox.Show("Your unsaved changes will be lost. Are you sure?", "Warning",
                     MessageBoxButtons.OKCancel, MessageBoxIcon.Warning);
@@ -175,26 +198,31 @@ namespace M2Mod
                 }
             }
 
-            this.SetupControls((profilesComboBox.SelectedItem as SettingsProfile).Settings);
+            this.SetupControls(profilesComboBox.SelectedItem as SettingsProfile);
 
             this._lastProfile = SelectedProfile;
         }
 
-        private static bool SettingsChanged(Settings Old, Settings New)
+        private bool SettingsChanged(SettingsProfile old)
         {
+            var New = ProduceSettings();
+
             return
-                Old.WorkingDirectory != New.WorkingDirectory ||
-                Old.OutputDirectory != New.OutputDirectory ||
-                Old.MappingsDirectory != New.MappingsDirectory ||
-                Old.MergeBones != New.MergeBones ||
-                Old.MergeAttachments != New.MergeAttachments ||
-                Old.MergeCameras != New.MergeCameras ||
-                Old.FixSeams != New.FixSeams ||
-                Old.FixEdgeNormals != New.FixEdgeNormals ||
-                Old.IgnoreOriginalMeshIndexes != New.IgnoreOriginalMeshIndexes ||
-                Old.FixAnimationsTest != New.FixAnimationsTest ||
-                Old.ForceLoadExpansion != New.ForceLoadExpansion ||
-                Old.CustomFilesStartIndex != New.CustomFilesStartIndex;
+                old.Settings.WorkingDirectory != New.WorkingDirectory ||
+                old.Settings.OutputDirectory != New.OutputDirectory ||
+                old.Settings.MappingsDirectory != New.MappingsDirectory ||
+                old.Settings.MergeBones != New.MergeBones ||
+                old.Settings.MergeAttachments != New.MergeAttachments ||
+                old.Settings.MergeCameras != New.MergeCameras ||
+                old.Settings.FixSeams != New.FixSeams ||
+                old.Settings.FixEdgeNormals != New.FixEdgeNormals ||
+                old.Settings.IgnoreOriginalMeshIndexes != New.IgnoreOriginalMeshIndexes ||
+                old.Settings.FixAnimationsTest != New.FixAnimationsTest ||
+                old.Settings.ForceLoadExpansion != New.ForceLoadExpansion ||
+                old.Settings.CustomFilesStartIndex != New.CustomFilesStartIndex ||
+                old.FormData.IncludeFacials != IncludeFacials ||
+                old.FormData.IncludeHair != IncludeHair ||
+                old.FormData.FixNormalSettings != FixNormalSettings;
         }
 
         private void EditProfilesButton_Click(object sender, EventArgs e)
@@ -219,6 +247,29 @@ namespace M2Mod
 
                 if (dialog.ShowDialog() == DialogResult.OK)
                     mappingsDirectoryTextBox.Text = dialog.SelectedPath;
+            }
+        }
+
+        private void checkBoxFixEdgeNormals_CheckedChanged(object sender, EventArgs e)
+        {
+            buttonEdgeConfigure.Enabled = checkBoxFixEdgeNormals.Checked;
+        }
+
+        private void buttonEdgeConfigure_Click(object sender, EventArgs e)
+        {
+            using (var form = new FixNormalsSettingsForm())
+            {
+                form.Data = FixNormalSettings;
+                form.IncludeFacials = IncludeFacials;
+                form.IncludeHair= IncludeHair;
+
+                var result = form.ShowDialog();
+                if (result == DialogResult.OK)
+                {
+                    FixNormalSettings = form.Data;
+                    IncludeFacials = form.IncludeFacials;
+                    IncludeHair = form.IncludeHair;
+                }
             }
         }
     }

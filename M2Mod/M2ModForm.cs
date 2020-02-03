@@ -198,6 +198,32 @@ namespace M2Mod
                 }
             }
 
+            try
+            {
+                var normalizationSettings =
+                    FixNormalsSettingsForm.ParseSettings(ProfileManager.CurrentProfile.FormData.FixNormalSettings);
+                if (ProfileManager.CurrentProfile.FormData.IncludeFacials)
+                    normalizationSettings.Add(0xFFFFFFFF); // -1
+                if (ProfileManager.CurrentProfile.FormData.IncludeHair)
+                    normalizationSettings.Add(0xFFFFFFFE); // -2
+
+                Error = Imports.M2_SetNormalizationRules(_preloadM2, normalizationSettings.ToArray(),
+                    normalizationSettings.Count);
+                if (Error != M2LibError.OK)
+                {
+                    SetStatus(Imports.GetErrorText(Error));
+                    PreloadTransition(false);
+                    return;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                SetStatus(ex.Message);
+                PreloadTransition(false);
+                return;
+            }
+
             // import M2I
             Error = Imports.M2_ImportM2Intermediate(_preloadM2, textBoxInputM2I.Text);
             if (Error != M2LibError.OK)

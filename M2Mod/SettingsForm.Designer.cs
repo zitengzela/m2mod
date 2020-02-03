@@ -56,6 +56,7 @@
             this.profilesComboBox = new System.Windows.Forms.ComboBox();
             this.profilesLabel = new System.Windows.Forms.Label();
             this.editProfilesButton = new System.Windows.Forms.Button();
+            this.buttonEdgeConfigure = new System.Windows.Forms.Button();
             this.outputDirectoryGroupBox.SuspendLayout();
             this.workingDirectoryGroupBox.SuspendLayout();
             this.mappingsDirectoryGroupBox.SuspendLayout();
@@ -116,6 +117,7 @@
             this.checkBoxFixEdgeNormals.Text = "Fix Edge Normals";
             this.toolTip1.SetToolTip(this.checkBoxFixEdgeNormals, "Will fix visual shading difference on sharp edges");
             this.checkBoxFixEdgeNormals.UseVisualStyleBackColor = true;
+            this.checkBoxFixEdgeNormals.CheckedChanged += new System.EventHandler(this.checkBoxFixEdgeNormals_CheckedChanged);
             // 
             // checkBoxIgnoreOriginalMeshIndexes
             // 
@@ -229,7 +231,7 @@
             this.mappingsDirectoryGroupBox.TabIndex = 31;
             this.mappingsDirectoryGroupBox.TabStop = false;
             this.mappingsDirectoryGroupBox.Text = "Mappings directory";
-            this.toolTip1.SetToolTip(this.mappingsDirectoryGroupBox, "Directory where *.csv files are");
+            this.toolTip1.SetToolTip(this.mappingsDirectoryGroupBox, "Directory where *.csv or *.txt files are");
             // 
             // customFilesStartIndexLabel
             // 
@@ -239,6 +241,8 @@
             this.customFilesStartIndexLabel.Size = new System.Drawing.Size(114, 13);
             this.customFilesStartIndexLabel.TabIndex = 8;
             this.customFilesStartIndexLabel.Text = "Custom files start index";
+            this.toolTip1.SetToolTip(this.customFilesStartIndexLabel, "Your custom texture filedata id entries will be generated starting from this inde" +
+        "x");
             // 
             // customFilesStartIndexTextBox
             // 
@@ -282,6 +286,7 @@
             // 
             this.groupBox3.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBox3.Controls.Add(this.buttonEdgeConfigure);
             this.groupBox3.Controls.Add(this.checkBoxFixEdgeNormals);
             this.groupBox3.Controls.Add(this.checkBoxIgnoreOriginalMeshIndexes);
             this.groupBox3.Controls.Add(this.testFixAnimationsCheckBox);
@@ -360,6 +365,17 @@
             this.editProfilesButton.UseVisualStyleBackColor = true;
             this.editProfilesButton.Click += new System.EventHandler(this.EditProfilesButton_Click);
             // 
+            // buttonEdgeConfigure
+            // 
+            this.buttonEdgeConfigure.Enabled = false;
+            this.buttonEdgeConfigure.Location = new System.Drawing.Point(236, 16);
+            this.buttonEdgeConfigure.Name = "buttonEdgeConfigure";
+            this.buttonEdgeConfigure.Size = new System.Drawing.Size(66, 21);
+            this.buttonEdgeConfigure.TabIndex = 23;
+            this.buttonEdgeConfigure.Text = "Configure";
+            this.buttonEdgeConfigure.UseVisualStyleBackColor = true;
+            this.buttonEdgeConfigure.Click += new System.EventHandler(this.buttonEdgeConfigure_Click);
+            // 
             // SettingsForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -420,5 +436,6 @@
         private System.Windows.Forms.TextBox mappingsDirectoryTextBox;
         private System.Windows.Forms.Label customFilesStartIndexLabel;
         private System.Windows.Forms.TextBox customFilesStartIndexTextBox;
+        private System.Windows.Forms.Button buttonEdgeConfigure;
     }
 }

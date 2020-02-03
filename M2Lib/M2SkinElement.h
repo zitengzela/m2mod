@@ -17,7 +17,8 @@ namespace M2Lib
 		Subset_Cloak = 2,
 		Subset_Hair = 3,
 		Subset_Facial = 4,
-		Subset_Unknown = 5
+		Subset_Eyes = 5,
+		Subset_Unknown = 6
 	};
 
 	namespace M2SkinElement

@@ -1,4 +1,6 @@
-﻿namespace M2Mod
+﻿using M2Mod.Controls;
+
+namespace M2Mod
 {
     partial class M2ModForm
     {
@@ -39,7 +41,7 @@
             this.buttonReplaceM2Browse = new System.Windows.Forms.Button();
             this.panel1 = new System.Windows.Forms.Panel();
             this.importButtonGo = new System.Windows.Forms.Button();
-            this.importButtonPreload = new M2Mod.SplitButton();
+            this.importButtonPreload = new M2Mod.Controls.SplitButton();
             this.preloadButtonContextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.importCancelButton = new System.Windows.Forms.Button();
@@ -81,7 +83,7 @@
             this.buttonOutputM2IBrowse = new System.Windows.Forms.Button();
             this.label7 = new System.Windows.Forms.Label();
             this.tabExport = new System.Windows.Forms.TabPage();
-            this.exportButtonGo = new M2Mod.SplitButton();
+            this.exportButtonGo = new M2Mod.Controls.SplitButton();
             this.goButtonContextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.customMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tabControl = new System.Windows.Forms.TabControl();

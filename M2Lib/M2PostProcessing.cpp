@@ -44,15 +44,20 @@ void M2Lib::M2::FixNormals(float AngularTolerance)
 	uint32_t meshCount = pSkin->Elements[EElement_SubMesh].Count;
 	std::list<CElement_SubMesh const*> body, armor, rest;
 
-	std::set<uint32_t> bodyMeshIds;
 	uint32_t unkCount = 0;
 	for (uint32_t i = 0; i < meshCount; ++i)
 	{
 		auto submesh = &allMeshes[i];
+
+		if (normalizationRules.IsMatch(submesh->ID))
+		{
+			body.push_back(submesh);
+			continue;
+		}
+
 		switch (GetSubSetType(submesh->ID))
 		{
 			case Subset_Body:
-				bodyMeshIds.insert(submesh->ID);
 				body.push_back(submesh);
 				break;
 			case Subset_Armor:

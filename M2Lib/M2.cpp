@@ -2917,6 +2917,13 @@ M2Lib::EError M2Lib::M2::SetNeedRemapReferences(const wchar_t* remapPath)
 	return EError_OK;
 }
 
+M2Lib::EError M2Lib::M2::SetNormalizationRules(uint32_t* data, uint32_t len)
+{
+	normalizationRules.Initialize(data, len);
+
+	return EError_OK;
+}
+
 void M2Lib::M2::RemoveTXIDChunk()
 {
 	sLogger.LogInfo(L"Erasing TXID chunk from model");
@@ -3137,6 +3144,20 @@ M2Lib::EError M2Lib::M2_SetNeedRemoveTXIDChunk(M2LIB_HANDLE handle)
 	}
 }
 
+M2Lib::EError M2Lib::M2_SetNormalizationRules(M2LIB_HANDLE handle, uint32_t* data, uint32_t len)
+{
+	try
+	{
+		return static_cast<M2*>(handle)->SetNormalizationRules(data, len);
+	}
+	catch (std::exception& e)
+	{
+		sLogger.LogError(L"Exception: %s", StringHelpers::StringToWString(e.what()).c_str());
+
+		return EError_FAIL;
+	}
+}
+
 void M2Lib::M2_Free(M2LIB_HANDLE handle)
 {
 	delete static_cast<M2*>(handle);
@@ -3181,4 +3202,43 @@ wchar_t const* M2Lib::M2::PathInfo(uint32_t FileDataId) const
 		return itr->second->Path.c_str();
 
 	return storageRef->PathInfo(FileDataId);
+}
+
+void M2Lib::NormalizationRules::Initialize(uint32_t* data, uint32_t len)
+{
+	raw = std::vector<uint32_t>(data, data + len);
+}
+
+bool M2Lib::NormalizationRules::IsMatch(uint32_t meshId)
+{
+	for (auto const& rule : raw)
+	{
+		if (IsMatch(rule, meshId))
+			return true;
+	}
+
+	return false;
+}
+
+bool M2Lib::NormalizationRules::IsMatch(uint32_t rule, uint32_t meshId)
+{
+	auto subsetType = GetSubSetType(meshId);
+	if (rule == -1 && subsetType == Subset_Facial)
+		return true;
+
+	if (rule == -2 && subsetType == Subset_Hair)
+		return true;
+
+	for (uint32_t i = 0; i < 4; ++i)
+	{
+		if (((rule >> i) & 0xFF) == ((meshId / (10 * (i + 1))) % 10))
+			continue;
+
+		if (((rule >> i) & 0xFF) == 0x1F)
+			continue;
+
+		return false;
+	}
+
+	return true;
 }

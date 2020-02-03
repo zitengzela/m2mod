@@ -46,7 +46,20 @@ namespace M2Lib
 	M2LIB_API EError __cdecl M2_ImportM2Intermediate(M2LIB_HANDLE handle, const wchar_t* FileName);
 	M2LIB_API EError __cdecl M2_SetNeedRemapReferences(M2LIB_HANDLE handle, const wchar_t* remapPath);
 	M2LIB_API EError __cdecl M2_SetNeedRemoveTXIDChunk(M2LIB_HANDLE handle);
+	M2LIB_API EError __cdecl M2_SetNormalizationRules(M2LIB_HANDLE handle, uint32_t* data, uint32_t len);
 	M2LIB_API void __cdecl M2_Free(M2LIB_HANDLE handle);
+
+	class NormalizationRules
+	{
+		std::vector<uint32_t> raw;
+
+		static bool IsMatch(uint32_t rule, uint32_t meshId);
+
+	public:
+		void Initialize(uint32_t* data, uint32_t len);
+
+		bool IsMatch(uint32_t meshId);
+	};
 
 	// load, export, import merge, save: M2 file.
 	class M2
@@ -216,6 +229,8 @@ namespace M2Lib
 
 		bool needRemoveTXIDChunk; // TXID chunk will be removed when model has textures that are not indexed in CASC storage
 
+		NormalizationRules normalizationRules;
+
 		uint32_t m_OriginalModelChunkSize;
 		Settings Settings;
 		FileStorage* storageRef;
@@ -276,6 +291,7 @@ namespace M2Lib
 		void RemoveTXIDChunk();
 		EError SetNeedRemoveTXIDChunk();
 		EError SetNeedRemapReferences(const wchar_t* remapPath);
+		EError SetNormalizationRules(uint32_t* data, uint32_t len);
 
 		DataElement* GetAnimations();
 		DataElement* GetAnimationsLookup();

@@ -7,8 +7,9 @@ uint32_t M2Lib::GetSubSetType(uint32_t SubsetId)
 		case 1:
 		case 2:
 		case 3:
-		case 17:
 			return Subset_Facial;
+		case 17:
+			return Subset_Eyes;
 		default:
 			break;
 	}
