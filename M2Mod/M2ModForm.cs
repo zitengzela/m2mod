@@ -201,7 +201,7 @@ namespace M2Mod
             try
             {
                 var normalizationSettings =
-                    FixNormalsSettingsForm.ParseSettings(ProfileManager.CurrentProfile.FormData.FixNormalSettings);
+                    FixNormalsSettingsForm.ParseSettings(ProfileManager.CurrentProfile.FormData.FixNormalSettings ?? "");
                 if (ProfileManager.CurrentProfile.FormData.IncludeFacials)
                     normalizationSettings.Add(0xFFFFFFFF); // -1
                 if (ProfileManager.CurrentProfile.FormData.IncludeHair)
