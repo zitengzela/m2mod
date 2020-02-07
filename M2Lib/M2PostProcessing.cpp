@@ -20,6 +20,8 @@ namespace M2Lib
 		void Initialize(M2* m2)
 		{
 			this->m2 = m2;
+			uniqueVerticesMap.clear();
+			verticesMap.clear();
 		}
 
 		std::set<uint16_t> const& GetEdgeVertices(CElement_SubMesh const* submesh)
