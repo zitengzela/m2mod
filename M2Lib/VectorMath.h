@@ -5,59 +5,16 @@
 
 namespace M2Lib::Geometry
 {
-	class Edge;
-	class Triangle;
-
-	class Vertex
-	{
-	public:
-		Vertex() = default;
-		Vertex(uint16_t Index)
-		{
-			this->Index = Index;
-		}
-
-		uint16_t Index;
-		Edge* pEdge;
-	};
-
 	class Edge
 	{
 	public:
-		Edge() = default;
-
-		Edge(uint16_t VertexA, uint16_t VertexB);
-
-		bool operator==(const Edge& other) const
+		static uint32_t GetHash(uint16_t indexA, uint16_t indexB)
 		{
-			return GetHash() == other.GetHash();
+			if (indexA > indexB)
+				std::swap(indexA, indexB);
+
+			return (uint32_t(indexA) << 16) | uint32_t(indexB);
 		}
-
-		uint32_t GetHash() const
-		{
-			return (uint32_t(A->Index) << 16) | uint32_t(B->Index);
-		}
-
-		std::shared_ptr<Vertex> A;
-		std::shared_ptr<Vertex> B;
-		bool IsUnique = false;
-		Triangle* pTriangle;
-	};
-
-	class Triangle
-	{
-	public:
-		Triangle() = default;
-		Triangle(uint16_t VertexA, uint16_t VertexB, uint16_t VertexC);
-
-		uint16_t A;
-		uint16_t B;
-		uint16_t C;
-
-		std::shared_ptr<Edge> EdgeA;
-		std::shared_ptr<Edge> EdgeB;
-		std::shared_ptr<Edge> EdgeC;
-		bool IsOnEdge() const;
 	};
 
 	class Plane

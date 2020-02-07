@@ -109,8 +109,6 @@ namespace M2Lib
 
 		void CopyMaterial(uint32_t SrcMeshIndex, uint32_t DstMeshIndex);
 
-		std::list<std::shared_ptr<Geometry::Triangle>> GetEdgeTriangles(M2SkinElement::CElement_SubMesh const* submesh) const;
-
 		class MeshInfo
 		{
 		public:

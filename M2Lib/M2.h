@@ -59,6 +59,8 @@ namespace M2Lib
 		void Initialize(uint32_t* data, uint32_t len);
 
 		bool IsMatch(uint32_t meshId);
+
+		std::vector<uint32_t> const& GetRules() const { return raw; };
 	};
 
 	// load, export, import merge, save: M2 file.
@@ -312,7 +314,7 @@ namespace M2Lib
 		void FixSeamsClothing(float PositionalTolerance, float AngularTolerance);
 		// averages normals on mesh edges
 		void FixNormals(float AngularTolerance);
-		void FixNormals(std::list<M2SkinElement::CElement_SubMesh const*> const& source, std::list<M2SkinElement::CElement_SubMesh const*> const& target, float AngularTolerance, bool preferSource);
+		void FixNormals(std::list<M2SkinElement::CElement_SubMesh const*> const& sourceList, std::list<M2SkinElement::CElement_SubMesh const*> const& targetList, float AngularTolerance, bool preferSource);
 
 		void DoExtraWork();
 

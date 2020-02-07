@@ -278,25 +278,68 @@ std::unordered_map<uint32_t, float> M2Lib::BoneComparator::Candidates::GetWeight
 
 M2LIB_HANDLE M2Lib::BoneComparator::Wrapper_Create(M2LIB_HANDLE oldM2, M2LIB_HANDLE newM2, float weightThreshold, bool compareTextures, bool predictScale, float& sourceScale)
 {
-	return new ComparatorWrapper(static_cast<M2 const*>(oldM2), static_cast<M2 const*>(newM2), weightThreshold, compareTextures, predictScale, sourceScale);
+	try
+	{
+		return new ComparatorWrapper(static_cast<M2 const*>(oldM2), static_cast<M2 const*>(newM2), weightThreshold, compareTextures, predictScale, sourceScale);
+	}
+	catch (std::exception & e)
+	{
+		sLogger.LogError(L"Exception: %s", StringHelpers::StringToWString(e.what()).c_str());
+
+		return nullptr;
+	}
 }
 
 M2Lib::BoneComparator::CompareStatus M2Lib::BoneComparator::Wrapper_GetResult(M2LIB_HANDLE pointer)
 {
-	return static_cast<ComparatorWrapper*>(pointer)->GetResult();
+	try
+	{
+		return static_cast<ComparatorWrapper*>(pointer)->GetResult();
+	}
+	catch (std::exception & e)
+	{
+		sLogger.LogError(L"Exception: %s", StringHelpers::StringToWString(e.what()).c_str());
+
+		return CompareStatus::Identical;
+	}
 }
 
 const wchar_t* M2Lib::BoneComparator::Wrapper_GetStringResult(M2LIB_HANDLE pointer)
 {
-	return static_cast<ComparatorWrapper*>(pointer)->GetStringResult();
+	try
+	{
+		return static_cast<ComparatorWrapper*>(pointer)->GetStringResult();
+	}
+	catch (std::exception & e)
+	{
+		sLogger.LogError(L"Exception: %s", StringHelpers::StringToWString(e.what()).c_str());
+
+		return L"";
+	}
 }
 
 uint32_t M2Lib::BoneComparator::Wrapper_DiffSize(M2LIB_HANDLE pointer)
 {
-	return static_cast<ComparatorWrapper*>(pointer)->DiffSize();
+	try
+	{
+		return static_cast<ComparatorWrapper*>(pointer)->DiffSize();
+	}
+	catch (std::exception & e)
+	{
+		sLogger.LogError(L"Exception: %s", StringHelpers::StringToWString(e.what()).c_str());
+
+		return 0;
+	}
 }
 
 void M2Lib::BoneComparator::Wrapper_Free(M2LIB_HANDLE pointer)
 {
-	delete static_cast<ComparatorWrapper*>(pointer);
+	try
+	{
+		delete static_cast<ComparatorWrapper*>(pointer);
+	}
+	catch (std::exception & e)
+	{
+		sLogger.LogError(L"Exception: %s", StringHelpers::StringToWString(e.what()).c_str());
+	}
 }

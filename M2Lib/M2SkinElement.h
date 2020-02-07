@@ -161,18 +161,3 @@ namespace M2Lib
 
 #pragma pack(pop)
 }
-
-namespace std
-{
-	template<>
-	struct hash<M2Lib::Geometry::Edge>
-	{
-		std::size_t operator()(const M2Lib::Geometry::Edge& obj) const
-		{
-			uint32_t hash = (((uint32_t)obj.A->Index) << 16) | (uint32_t)obj.B->Index;
-
-			return std::hash<uint32_t>()(hash);
-		}
-	};
-}
-

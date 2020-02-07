@@ -3229,12 +3229,13 @@ bool M2Lib::NormalizationRules::IsMatch(uint32_t rule, uint32_t meshId)
 	if (rule == -2 && subsetType == Subset_Hair)
 		return true;
 
-	for (uint32_t i = 0; i < 4; ++i)
+	uint32_t decMult = 1;
+	for (uint32_t i = 0; i < 4; ++i, decMult *= 10)
 	{
-		if (((rule >> i) & 0xFF) == ((meshId / (10 * (i + 1))) % 10))
+		if (((rule >> (i * 8)) & 0xFF) == ((meshId % (decMult * 10)) / decMult))
 			continue;
 
-		if (((rule >> i) & 0xFF) == 0x1F)
+		if (((rule >> (i * 8)) & 0xFF) == 0x1F)
 			continue;
 
 		return false;

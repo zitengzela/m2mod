@@ -86,9 +86,9 @@ namespace M2Mod
                     var c = _[_.Length - i - 1];
 
                     if (char.IsDigit(c) && uint.TryParse(c.ToString(), out var charVal))
-                        res |= charVal << i;
+                        res |= charVal << (i * 8);
                     else if (_[i] == 'x')
-                        res |= 0x1Fu << i;
+                        res |= 0x1Fu << (i * 8);
                     else
                         throw new Exception($"Can't parse '{_}'");
                 }

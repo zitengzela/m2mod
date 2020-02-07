@@ -138,6 +138,7 @@ namespace M2Mod.Tools
             }
 
             resultsTextBox.Text = Imports.Wrapper_GetStringResult(wrapper);
+
             Imports.Wrapper_Free(wrapper);
             Imports.M2_Free(oldM2);
             Imports.M2_Free(newM2);

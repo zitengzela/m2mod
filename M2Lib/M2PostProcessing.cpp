@@ -1,6 +1,8 @@
 #include "M2.h"
 #include "Logger.h"
 #include <set>
+#include <iomanip>
+#include <sstream>
 
 using namespace M2Lib::M2Element;
 using namespace M2Lib::M2Chunk;
@@ -8,50 +10,135 @@ using namespace M2Lib::M2SkinElement;
 
 namespace M2Lib
 {
-	class EdgeTriangleLookup
+	class EdgeLookup
 	{
-		M2Skin* skin = nullptr;
+		M2* m2 = nullptr;
 
-		std::map<CElement_SubMesh const*, std::list<std::shared_ptr<Geometry::Triangle>>> edgeTriangleMap;
+		std::map<CElement_SubMesh const*, std::set<uint16_t>> uniqueVerticesMap, verticesMap;
 
 	public:
-		void Initialize(M2Skin* skin)
+		void Initialize(M2* m2)
 		{
-			this->skin = skin;
+			this->m2 = m2;
 		}
 
-		std::list<std::shared_ptr<Geometry::Triangle>> const* GetEdgeTriangles(CElement_SubMesh const* submesh)
+		std::set<uint16_t> const& GetEdgeVertices(CElement_SubMesh const* submesh)
 		{
-			auto itr = edgeTriangleMap.find(submesh);
-			if (itr != edgeTriangleMap.end())
-				return &itr->second;
+			auto cached = uniqueVerticesMap.find(submesh);
+			if (cached != uniqueVerticesMap.end())
+				return cached->second;
 
-			auto res = edgeTriangleMap.emplace(submesh, skin->GetEdgeTriangles(submesh));
+			auto VertexCount = m2->Elements[EElement_Vertex].Count;
 
-			return &res.first->second;
+			uint32_t TriangleIndexStart = submesh->GetStartTrianlgeIndex();
+			uint32_t TriangleIndexEnd = submesh->GetEndTriangleIndex();
+
+			uint16_t* Triangles = m2->Skins[0]->Elements[EElement_TriangleIndex].as<uint16_t>();
+			uint16_t* Indices = m2->Skins[0]->Elements[EElement_VertexLookup].as<uint16_t>();
+
+			std::map<uint32_t, uint16_t> usageCounters;
+
+			for (uint32_t k = TriangleIndexStart; k < TriangleIndexEnd; k += 3)
+			{
+				m2lib_assert(k + 2 < m2->Skins[0]->Elements[EElement_TriangleIndex].Count);
+
+				uint16_t indexA = Indices[Triangles[k]];
+				m2lib_assert(indexA < VertexCount);
+				uint16_t indexB = Indices[Triangles[k + 1]];
+				m2lib_assert(indexB < VertexCount);
+				uint16_t indexC = Indices[Triangles[k + 2]];
+				m2lib_assert(indexC < VertexCount);
+
+				auto hashA = Geometry::Edge::GetHash(indexA, indexB);
+				auto hashB = Geometry::Edge::GetHash(indexA, indexC);
+				auto hashC = Geometry::Edge::GetHash(indexB, indexC);
+
+				auto itr = usageCounters.find(hashA);
+				if (itr == usageCounters.end())
+					usageCounters[hashA] = 1;
+				else
+					++itr->second;
+
+				itr = usageCounters.find(hashB);
+				if (itr == usageCounters.end())
+					usageCounters[hashB] = 1;
+				else
+					++itr->second;
+
+				itr = usageCounters.find(hashC);
+				if (itr == usageCounters.end())
+					usageCounters[hashC] = 1;
+				else
+					++itr->second;
+			}
+
+			for (const auto itr : usageCounters)
+			{
+				if (itr.second > 1)
+					continue;
+
+				uniqueVerticesMap[submesh].insert(itr.first >> 16);
+				uniqueVerticesMap[submesh].insert(itr.first & 0xFF);
+			}
+
+			return uniqueVerticesMap[submesh];
+		}
+
+		std::set<uint16_t> const& GetVertices(CElement_SubMesh const* submesh)
+		{
+			auto cached = verticesMap.find(submesh);
+			if (cached != verticesMap.end())
+				return cached->second;
+
+			auto VertexCount = m2->Elements[EElement_Vertex].Count;
+
+			uint32_t TriangleIndexStart = submesh->GetStartTrianlgeIndex();
+			uint32_t TriangleIndexEnd = submesh->GetEndTriangleIndex();
+
+			uint16_t* Triangles = m2->Skins[0]->Elements[EElement_TriangleIndex].as<uint16_t>();
+			uint16_t* Indices = m2->Skins[0]->Elements[EElement_VertexLookup].as<uint16_t>();
+
+			for (uint32_t k = TriangleIndexStart; k < TriangleIndexEnd; k += 3)
+			{
+				m2lib_assert(k + 2 < m2->Skins[0]->Elements[EElement_TriangleIndex].Count);
+
+				uint16_t indexA = Indices[Triangles[k]];
+				m2lib_assert(indexA < VertexCount);
+				uint16_t indexB = Indices[Triangles[k + 1]];
+				m2lib_assert(indexB < VertexCount);
+				uint16_t indexC = Indices[Triangles[k + 2]];
+				m2lib_assert(indexC < VertexCount);
+
+				verticesMap[submesh].insert(indexA);
+				verticesMap[submesh].insert(indexB);
+				verticesMap[submesh].insert(indexC);
+			}
+
+			return verticesMap[submesh];
 		}
 	};
 }
 
-M2Lib::EdgeTriangleLookup triangleLookup;
+M2Lib::EdgeLookup triangleLookup;
 
 void M2Lib::M2::FixNormals(float AngularTolerance)
 {
 	auto pSkin = Skins[0];
-	auto& SubMeshes = pSkin->Elements[EElement_SubMesh];
 	
 	auto allMeshes = pSkin->Elements[EElement_SubMesh].as<CElement_SubMesh>();
 	uint32_t meshCount = pSkin->Elements[EElement_SubMesh].Count;
 	std::list<CElement_SubMesh const*> body, armor, rest;
 
+	std::list<uint32_t> bodyMeshIds, armorMeshIds, exclusiveMeshIds;
 	uint32_t unkCount = 0;
 	for (uint32_t i = 0; i < meshCount; ++i)
 	{
-		auto submesh = &allMeshes[i];
+		const auto submesh = &allMeshes[i];
 
 		if (normalizationRules.IsMatch(submesh->ID))
 		{
 			body.push_back(submesh);
+			exclusiveMeshIds.push_back(submesh->ID);
 			continue;
 		}
 
@@ -59,8 +146,10 @@ void M2Lib::M2::FixNormals(float AngularTolerance)
 		{
 			case Subset_Body:
 				body.push_back(submesh);
+				bodyMeshIds.push_back(submesh->ID);
 				break;
 			case Subset_Armor:
+				armorMeshIds.push_back(submesh->ID);
 				armor.push_back(submesh);
 				break;
 			case Subset_Unknown:
@@ -73,161 +162,101 @@ void M2Lib::M2::FixNormals(float AngularTolerance)
 		}
 	}
 
+	std::wstringstream ss;
+	ss << L"Exclusive normalization rules: ";
+	for (auto id : normalizationRules.GetRules())
+		ss << std::hex << std::setfill(L'0') << std::setw(8) << id << " ";
+	sLogger.LogInfo(ss.str().c_str());
+
 	sLogger.LogInfo(L"Body mesh count: %u, armor mesh count: %u, rest mesh count: %u", body.size(), armor.size(), rest.size());
 
 	//sLogger.LogInfo(L"Body meshes:");
 	//for (auto id : bodyMeshIds)
 	//	sLogger.LogInfo(L"%u", id);
 
-	triangleLookup.Initialize(pSkin);
+	triangleLookup.Initialize(this);
 
 	FixNormals(body, body, -1.0f, false);
 	FixNormals(body, armor, -1.0f, true);
 }
 
-void M2Lib::M2::FixNormals(std::list<CElement_SubMesh const*> const& source, std::list<CElement_SubMesh const*> const& target, float AngularTolerance, bool preferSource)
+void M2Lib::M2::FixNormals(std::list<CElement_SubMesh const*> const& sourceList, std::list<CElement_SubMesh const*> const& targetList, float AngularTolerance, bool preferSource)
 {
-	auto pSkin = Skins[0];
 	auto VertexList = Elements[EElement_Vertex].as<CVertex>();
 	auto VertexCount = Elements[EElement_Vertex].Count;
 
+	uint32_t similar = 0, compared = 0;
 	// lookup hash map to make it slow af
 	std::set<uint32_t> processedVertices;
-	for (auto SubmeshI : source)
+
+	for (auto SubmeshI : sourceList)
 	{
-		//sLogger.LogInfo("Mesh %u Edges %u", SubmeshI->ID, EdgesI.size());
-		std::unordered_set<std::shared_ptr<Geometry::Vertex>> verticesI;
+		//sLogger.LogError(L"Mesh %u", SubmeshI->ID);
+		auto verticesI = triangleLookup.GetEdgeVertices(SubmeshI);
 
-		for (auto SubmeshJ : target)
+		for (auto iVertex : verticesI)
 		{
-			//if (SubmeshI == SubmeshJ)
-				//continue;
+			m2lib_assert(iVertex < VertexCount);
+			auto vertexI = &VertexList[iVertex];
+			if (processedVertices.find(iVertex) != processedVertices.end())
+				continue;
 
-			if (verticesI.empty())
+			auto newNormal = vertexI->Normal;
+
+			std::set<uint16_t> averaged;
+			for (auto SubmeshJ : targetList)
 			{
-				auto trianglesI = triangleLookup.GetEdgeTriangles(SubmeshI);
-				//sLogger.LogError("Mesh %u edge triangles: %u", SubmeshI->ID, trianglesI.size());
-				for (auto& triangle : *trianglesI)
-				{
-					if (triangle->EdgeA->IsUnique)
-					{
-						verticesI.insert(triangle->EdgeA->A);
-						verticesI.insert(triangle->EdgeA->B);
-					}
-
-					if (triangle->EdgeB->IsUnique)
-					{
-						verticesI.insert(triangle->EdgeB->A);
-						verticesI.insert(triangle->EdgeB->B);
-					}
-
-					if (triangle->EdgeC->IsUnique)
-					{
-						verticesI.insert(triangle->EdgeC->A);
-						verticesI.insert(triangle->EdgeC->B);
-					}
-				}
-			}
-
-			auto trianglesJ = triangleLookup.GetEdgeTriangles(SubmeshJ);
-			//sLogger.LogError("Mesh %u edge triangles: %u", SubmeshJ->ID, trianglesJ.size());
-			std::unordered_set<std::shared_ptr<Geometry::Vertex>> verticesJ;
-			for (auto& triangle : *trianglesJ)
-			{
-				if (triangle->EdgeA->IsUnique)
-				{
-					verticesJ.insert(triangle->EdgeA->A);
-					verticesJ.insert(triangle->EdgeA->B);
-				}
-
-				if (triangle->EdgeB->IsUnique)
-				{
-					verticesJ.insert(triangle->EdgeB->A);
-					verticesJ.insert(triangle->EdgeB->B);
-				}
-
-				if (triangle->EdgeC->IsUnique)
-				{
-					verticesJ.insert(triangle->EdgeC->A);
-					verticesJ.insert(triangle->EdgeC->B);
-				}
-			}
-
-			for (auto iVertex : verticesI)
-			{
-				m2lib_assert(iVertex->Index < VertexCount);
-				auto vertexI = &VertexList[iVertex->Index];
-				if (processedVertices.find(iVertex->Index) != processedVertices.end())
-					continue;
-				processedVertices.insert(iVertex->Index);
-
-				m2lib_assert(iVertex->pEdge->pTriangle->A < VertexCount);
-				auto vertexA1 = &VertexList[iVertex->pEdge->pTriangle->A];
-				m2lib_assert(iVertex->pEdge->pTriangle->B < VertexCount);
-				auto vertexB1 = &VertexList[iVertex->pEdge->pTriangle->B];
-				m2lib_assert(iVertex->pEdge->pTriangle->C < VertexCount);
-				auto vertexC1 = &VertexList[iVertex->pEdge->pTriangle->C];
-				Geometry::Plane a(vertexA1->Position, vertexB1->Position, vertexC1->Position);
-
-				std::list<std::pair<C3Vector, CVertex*>> normalsToAvg;
-
+				auto verticesJ = triangleLookup.GetVertices(SubmeshJ);
 				for (auto jVertex : verticesJ)
 				{
-					if (processedVertices.find(jVertex->Index) != processedVertices.end())
+					if (iVertex == jVertex)
 						continue;
-					processedVertices.insert(jVertex->Index);
-					//if (iVertex->Index == jVertex->Index)
-					//	continue;
 
-					auto vertexJ = &VertexList[jVertex->Index];
+					if (processedVertices.find(jVertex) != processedVertices.end())
+						continue;
+
+					auto vertexJ = &VertexList[jVertex];
 
 					static float const tolerance = 1e-4f;
 
-					/*if (!floatEq(vertexI->Position.X, vertexJ->Position.X, tolerance) ||
-						!floatEq(vertexI->Position.Y, vertexJ->Position.Y, tolerance) ||
-						!floatEq(vertexI->Position.Z, vertexJ->Position.Z, tolerance))
-						continue;*/
-
-					if (!CVertex::CompareSimilar(*vertexI, *vertexJ, false, false, false, -1.f, AngularTolerance))
+					++compared;
+					if (!CVertex::CompareSimilar(*vertexI, *vertexJ, false, false, false, -1.0f, AngularTolerance))
 						continue;
 
-					auto vertexA2 = &VertexList[jVertex->pEdge->pTriangle->A];
-					auto vertexB2 = &VertexList[jVertex->pEdge->pTriangle->B];
-					auto vertexC2 = &VertexList[jVertex->pEdge->pTriangle->C];
+					processedVertices.insert(jVertex);
 
-					Geometry::Plane b(vertexA2->Position, vertexB2->Position, vertexC2->Position);
+					++similar;
 
-					if (AngularTolerance > 0.0f && Geometry::CalculateAngle(a, b) > AngularTolerance)
-						continue;
-
-					normalsToAvg.emplace_back(b.Normal, vertexJ);
+					newNormal = newNormal + vertexJ->Normal;
+					averaged.insert(jVertex);
 				}
+			}
 
-				if (!normalsToAvg.empty())
-				{
-					C3Vector newNormal = a.Normal;
+			processedVertices.insert(iVertex);
 
-					if (!preferSource)
-					{
-						for (auto itr : normalsToAvg)
-							newNormal = newNormal + itr.first;
+			// if normal is zero, then possibly something is wrong
+			// perhaps it's two surfaces on each other
+			if (floatEq(newNormal.Length(), 0.0f))
+				continue;
 
-						// if normal is zero, then possibly something is wrong
-						// perhaps it's two surfaces on each other
-						if (floatEq(newNormal.Length(), 0.0f))
-							continue;
+			if (!preferSource)
+			{
+				newNormal.Normalize();
 
-						newNormal.Normalize();
+				for (auto itr : averaged)
+					VertexList[itr].Normal = newNormal;
 
-						vertexI->Normal = newNormal;
-					}
-
-					for (auto itr : normalsToAvg)
-						itr.second->Normal = newNormal;
-				}
+				vertexI->Normal = newNormal;
+			}
+			else
+			{
+				for (auto itr : averaged)
+					VertexList[itr].Normal = vertexI->Normal;
 			}
 		}
 	}
+
+	//sLogger.LogError(L"Similar vertices count: %u, compared: %u", similar, compared);
 }
 
 void M2Lib::M2::Scale(float Scale)
