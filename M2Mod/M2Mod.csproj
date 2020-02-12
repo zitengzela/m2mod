@@ -72,12 +72,24 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Config\NormalizationConfig.cs" />
+    <Compile Include="Config\Normalization\AdvancedConfig.cs" />
+    <Compile Include="Config\Normalization\SimpleConfig.cs" />
     <Compile Include="Controls\CueTextBox.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Controls\CueTextBox.Designer.cs">
       <DependentUpon>CueTextBox.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\NormalizationRule.cs" />
+    <Compile Include="Controls\NormalizeRuleControlContainer.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\NormalizeRuleControlContainer.Designer.cs">
+      <DependentUpon>NormalizeRuleControlContainer.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\NormalizeRuleType.cs" />
+    <Compile Include="Interop\Structures\SubsetType.cs" />
     <Compile Include="Dialogs\Filters.cs" />
     <Compile Include="FixNormalsSettingsForm.cs">
       <SubType>Form</SubType>
@@ -92,6 +104,12 @@
     </Compile>
     <Compile Include="LogTextBox.Designer.cs">
       <DependentUpon>LogTextBox.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\NormalizationRuleControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\NormalizationRuleControl.Designer.cs">
+      <DependentUpon>NormalizationRuleControl.cs</DependentUpon>
     </Compile>
     <Compile Include="Tools\CompareModelsForm.cs">
       <SubType>Form</SubType>
@@ -140,7 +158,7 @@
       <DependentUpon>ManageProfilesForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Config\ProfileManager.cs" />
-    <Compile Include="Config\FormData.cs" />
+    <Compile Include="Config\Configuration.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SettingsForm.cs">
@@ -169,8 +187,14 @@
       <DependentUpon>TXIDRemoverForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Version.cs" />
+    <EmbeddedResource Include="Controls\NormalizeRuleControlContainer.resx">
+      <DependentUpon>NormalizeRuleControlContainer.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FixNormalsSettingsForm.resx">
       <DependentUpon>FixNormalsSettingsForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\NormalizationRuleControl.resx">
+      <DependentUpon>NormalizationRuleControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Tools\CompareModelsForm.resx">
       <DependentUpon>CompareModelsForm.cs</DependentUpon>
@@ -232,6 +256,7 @@
   <ItemGroup>
     <Content Include="app.ico" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\Fody.6.0.0\build\Fody.targets" Condition="Exists('..\packages\Fody.6.0.0\build\Fody.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

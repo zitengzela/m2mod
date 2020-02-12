@@ -1,6 +1,8 @@
-﻿namespace M2Mod.Config
+﻿using System.Collections.Generic;
+
+namespace M2Mod.Config
 {
-    public struct FormData
+    public class Configuration
     {
         public string InputM2Exp;
         public string OutputM2I;
@@ -13,8 +15,10 @@
         public float CompareWeightThreshold;
         public float CompareSourceScale;
         public bool PredictScale;
-        public string FixNormalSettings;
-        public bool IncludeHair;
-        public bool IncludeFacials;
+        public NormalizationConfig NormalizationConfig = new NormalizationConfig();
+
+        public Configuration()
+        {
+        }
     }
 }

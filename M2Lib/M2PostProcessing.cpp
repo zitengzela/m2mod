@@ -125,65 +125,58 @@ M2Lib::EdgeLookup triangleLookup;
 
 void M2Lib::M2::FixNormals(float AngularTolerance)
 {
+	triangleLookup.Initialize(this);
+
+	/*std::wstringstream ss;
+	ss << "Rules:\r\n";
+	for (auto const& rule : normalizationRules.GetRules())
+	{
+		rule.Write(ss);
+		ss << "\r\n";
+	}
+
+	sLogger.LogError(ss.str().c_str());*/
+
+	for (auto const& rule : normalizationRules.GetRules())
+		FixNormals(rule, -1/*AngularTolerance*/);
+
 	auto pSkin = Skins[0];
 	
 	auto allMeshes = pSkin->Elements[EElement_SubMesh].as<CElement_SubMesh>();
 	uint32_t meshCount = pSkin->Elements[EElement_SubMesh].Count;
-	std::list<CElement_SubMesh const*> body, armor, rest;
 
-	std::list<uint32_t> bodyMeshIds, armorMeshIds, exclusiveMeshIds;
+	std::list<uint32_t> bodyMeshIds, armorMeshIds;
 	uint32_t unkCount = 0;
 	for (uint32_t i = 0; i < meshCount; ++i)
 	{
 		const auto submesh = &allMeshes[i];
 
-		if (normalizationRules.IsMatch(submesh->ID))
-		{
-			body.push_back(submesh);
-			exclusiveMeshIds.push_back(submesh->ID);
-			continue;
-		}
-
 		switch (GetSubSetType(submesh->ID))
 		{
 			case Subset_Body:
-				body.push_back(submesh);
 				bodyMeshIds.push_back(submesh->ID);
 				break;
 			case Subset_Armor:
 				armorMeshIds.push_back(submesh->ID);
-				armor.push_back(submesh);
 				break;
 			case Subset_Unknown:
 				++unkCount;
-				rest.push_back(submesh);
 				break;
 			default:
-				rest.push_back(submesh);
 				break;
 		}
 	}
 
-	std::wstringstream ss;
-	ss << L"Exclusive normalization rules: ";
-	for (auto id : normalizationRules.GetRules())
-		ss << std::hex << std::setfill(L'0') << std::setw(8) << id << " ";
-	sLogger.LogInfo(ss.str().c_str());
-
-	sLogger.LogInfo(L"Body mesh count: %u, armor mesh count: %u, rest mesh count: %u", body.size(), armor.size(), rest.size());
-
-	//sLogger.LogInfo(L"Body meshes:");
-	//for (auto id : bodyMeshIds)
-	//	sLogger.LogInfo(L"%u", id);
-
-	triangleLookup.Initialize(this);
-
-	FixNormals(body, body, -1.0f, false);
-	FixNormals(body, armor, -1.0f, true);
+	sLogger.LogInfo(L"Body mesh count: %u, armor mesh count: %u", bodyMeshIds.size(), armorMeshIds.size());
 }
 
-void M2Lib::M2::FixNormals(std::list<CElement_SubMesh const*> const& sourceList, std::list<CElement_SubMesh const*> const& targetList, float AngularTolerance, bool preferSource)
+void M2Lib::M2::FixNormals(NormalizationRule const& rule, float AngularTolerance)
 {
+	auto pSkin = Skins[0];
+
+	auto allMeshes = pSkin->Elements[EElement_SubMesh].as<CElement_SubMesh>();
+	uint32_t meshCount = pSkin->Elements[EElement_SubMesh].Count;
+
 	auto VertexList = Elements[EElement_Vertex].as<CVertex>();
 	auto VertexCount = Elements[EElement_Vertex].Count;
 
@@ -191,8 +184,12 @@ void M2Lib::M2::FixNormals(std::list<CElement_SubMesh const*> const& sourceList,
 	// lookup hash map to make it slow af
 	std::set<uint32_t> processedVertices;
 
-	for (auto SubmeshI : sourceList)
+	for (uint32_t i = 0; i < meshCount; ++i)
 	{
+		auto SubmeshI = &allMeshes[i];
+		if (!rule.IsSourceMatch(SubmeshI->ID))
+			continue;
+
 		//sLogger.LogError(L"Mesh %u", SubmeshI->ID);
 		auto verticesI = triangleLookup.GetEdgeVertices(SubmeshI);
 
@@ -206,8 +203,12 @@ void M2Lib::M2::FixNormals(std::list<CElement_SubMesh const*> const& sourceList,
 			auto newNormal = vertexI->Normal;
 
 			std::set<uint16_t> averaged;
-			for (auto SubmeshJ : targetList)
+			for (uint32_t j = 0; j < meshCount; ++j)
 			{
+				auto SubmeshJ = &allMeshes[j];
+				if (!rule.IsTargetMatch(SubmeshJ->ID))
+					continue;
+
 				auto verticesJ = triangleLookup.GetVertices(SubmeshJ);
 				for (auto jVertex : verticesJ)
 				{
@@ -241,7 +242,7 @@ void M2Lib::M2::FixNormals(std::list<CElement_SubMesh const*> const& sourceList,
 			if (floatEq(newNormal.Length(), 0.0f))
 				continue;
 
-			if (!preferSource)
+			if (!rule.IsPreferSource())
 			{
 				newNormal.Normalize();
 

@@ -16,9 +16,9 @@ namespace M2Mod.Tools
 
             this.Icon = Properties.Resources.Icon;
 
-            oldM2TextBox.Text = ProfileManager.CurrentProfile.FormData.OldCompareM2;
-            newM2TextBox.Text = ProfileManager.CurrentProfile.FormData.NewCompareM2;
-            weightThresholdTextBox.Text = ProfileManager.CurrentProfile.FormData.CompareWeightThreshold.ToString();
+            oldM2TextBox.Text = ProfileManager.CurrentProfile.Configuration.OldCompareM2;
+            newM2TextBox.Text = ProfileManager.CurrentProfile.Configuration.NewCompareM2;
+            weightThresholdTextBox.Text = ProfileManager.CurrentProfile.Configuration.CompareWeightThreshold.ToString();
         }
 
         private void OldM2BrowseButton_Click(object sender, EventArgs e)
@@ -71,24 +71,24 @@ namespace M2Mod.Tools
                 return;
             }
 
-            ProfileManager.CurrentProfile.FormData.OldCompareM2 = oldM2TextBox.Text;
-            ProfileManager.CurrentProfile.FormData.NewCompareM2 = newM2TextBox.Text;
+            ProfileManager.CurrentProfile.Configuration.OldCompareM2 = oldM2TextBox.Text;
+            ProfileManager.CurrentProfile.Configuration.NewCompareM2 = newM2TextBox.Text;
 
             if (!float.TryParse(weightThresholdTextBox.Text,
-                out ProfileManager.CurrentProfile.FormData.CompareWeightThreshold))
+                out ProfileManager.CurrentProfile.Configuration.CompareWeightThreshold))
             {
-                ProfileManager.CurrentProfile.FormData.CompareWeightThreshold = 0.0f;
+                ProfileManager.CurrentProfile.Configuration.CompareWeightThreshold = 0.0f;
                 weightThresholdTextBox.Text = "0";
             }
 
             if (!float.TryParse(scaleTextBox.Text,
-                out ProfileManager.CurrentProfile.FormData.CompareSourceScale))
+                out ProfileManager.CurrentProfile.Configuration.CompareSourceScale))
             {
-                ProfileManager.CurrentProfile.FormData.CompareSourceScale = 1.0f;
+                ProfileManager.CurrentProfile.Configuration.CompareSourceScale = 1.0f;
                 scaleTextBox.Text = "1";
             }
 
-            ProfileManager.CurrentProfile.FormData.PredictScale = predictScaleCheckBox.Checked;
+            ProfileManager.CurrentProfile.Configuration.PredictScale = predictScaleCheckBox.Checked;
 
             var oldSettings = new Settings()
             {
@@ -122,10 +122,10 @@ namespace M2Mod.Tools
             }
 
             IntPtr wrapper = Imports.Wrapper_Create(oldM2, newM2,
-                ProfileManager.CurrentProfile.FormData.CompareWeightThreshold,
+                ProfileManager.CurrentProfile.Configuration.CompareWeightThreshold,
                 true,
-                ProfileManager.CurrentProfile.FormData.PredictScale,
-                ref ProfileManager.CurrentProfile.FormData.CompareSourceScale);
+                ProfileManager.CurrentProfile.Configuration.PredictScale,
+                ref ProfileManager.CurrentProfile.Configuration.CompareSourceScale);
 
             resultsTextBox.Text = "";
             if (Imports.Wrapper_DiffSize(wrapper) == 0)

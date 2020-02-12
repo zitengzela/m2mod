@@ -14,9 +14,8 @@ namespace M2Mod
 
         private SettingsProfile SelectedProfile => profilesComboBox.SelectedItem as SettingsProfile;
 
-        private string FixNormalSettings;
-        private bool IncludeFacials;
-        private bool IncludeHair;
+        private NormalizationConfig normalizationConfig;
+        private bool normalizationConfigChanged;
 
         public SettingsForm()
         {
@@ -61,11 +60,9 @@ namespace M2Mod
             checkBoxFixEdgeNormals.Checked = settings.FixEdgeNormals;
             checkBoxIgnoreOriginalMeshIndexes.Checked = settings.IgnoreOriginalMeshIndexes;
             testFixAnimationsCheckBox.Checked = settings.FixAnimationsTest;
-            customFilesStartIndexTextBox.Text = settings.CustomFilesStartIndex > 0 ? settings.CustomFilesStartIndex.ToString() : "";
+            customFilesStartIndexTextBox.Text = settings.CustomFilesStartIndex > 0 ? settings.CustomFilesStartIndex.ToString() : "0";
 
-            FixNormalSettings = profile.FormData.FixNormalSettings;
-            IncludeFacials = profile.FormData.IncludeFacials;
-            IncludeHair = profile.FormData.IncludeHair;
+            normalizationConfig = profile.Configuration.NormalizationConfig;
         }
 
         private Settings ProduceSettings()
@@ -131,9 +128,8 @@ namespace M2Mod
             }
 
             SelectedProfile.Settings = ProduceSettings();
-            SelectedProfile.FormData.FixNormalSettings = FixNormalSettings;
-            SelectedProfile.FormData.IncludeFacials = IncludeFacials;
-            SelectedProfile.FormData.IncludeHair = IncludeHair;
+            SelectedProfile.Configuration.NormalizationConfig = normalizationConfig;
+            normalizationConfigChanged = false;
         }
 
         private void WorkingDirectoryBrowseButton_Click(object sender, EventArgs e)
@@ -220,9 +216,7 @@ namespace M2Mod
                 old.Settings.FixAnimationsTest != New.FixAnimationsTest ||
                 old.Settings.ForceLoadExpansion != New.ForceLoadExpansion ||
                 old.Settings.CustomFilesStartIndex != New.CustomFilesStartIndex ||
-                old.FormData.IncludeFacials != IncludeFacials ||
-                old.FormData.IncludeHair != IncludeHair ||
-                old.FormData.FixNormalSettings != FixNormalSettings;
+                normalizationConfigChanged;
         }
 
         private void EditProfilesButton_Click(object sender, EventArgs e)
@@ -259,16 +253,13 @@ namespace M2Mod
         {
             using (var form = new FixNormalsSettingsForm())
             {
-                form.Data = FixNormalSettings;
-                form.IncludeFacials = IncludeFacials;
-                form.IncludeHair= IncludeHair;
+                form.InitializeFromConfig(normalizationConfig);
 
                 var result = form.ShowDialog();
                 if (result == DialogResult.OK)
                 {
-                    FixNormalSettings = form.Data;
-                    IncludeFacials = form.IncludeFacials;
-                    IncludeHair = form.IncludeHair;
+                    normalizationConfigChanged = true;
+                    normalizationConfig = form.ProduceConfig();
                 }
             }
         }

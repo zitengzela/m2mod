@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using M2Mod.Controls;
 using M2Mod.Interop.Structures;
 
 namespace M2Mod.Interop
@@ -30,7 +31,9 @@ namespace M2Mod.Interop
         public static extern M2LibError M2_SetNeedRemoveTXIDChunk(IntPtr handle);
 
         [DllImport("M2Lib.dll", CallingConvention = CallingConvention.Cdecl)]
-        public static extern M2LibError M2_SetNormalizationRules(IntPtr handle, uint[] data, int len);
+        public static extern M2LibError M2_AddNormalizationRule(IntPtr handle,
+            NormalizeRuleType sourceType, uint[] sourceData, int sourceDataLen,
+            NormalizeRuleType targetType, uint[] targetData, int targetDataLen, bool preferSource);
 
         [DllImport("M2Lib.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern M2LibError M2_SetReplaceM2(IntPtr handle,

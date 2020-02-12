@@ -1,6 +1,5 @@
 ﻿using System;
 using M2Mod.Interop.Structures;
-using Newtonsoft.Json;
 
 namespace M2Mod.Config
 {
@@ -9,20 +8,19 @@ namespace M2Mod.Config
         public Guid Id;
         public string Name;
         public Settings Settings;
-        public FormData FormData;
+        public Configuration Configuration = new Configuration();
 
         // needed for proper json deserialization
         public SettingsProfile()
         {
-
         }
 
-        public SettingsProfile(string name, Settings settings, FormData formData)
+        public SettingsProfile(string name, Settings settings, Configuration configuration)
         {
             Id = Guid.NewGuid();
             Name = name;
             Settings = settings;
-            FormData = formData;
+            Configuration = configuration;
         }
 
         public override string ToString()

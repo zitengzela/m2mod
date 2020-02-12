@@ -21,6 +21,6 @@ namespace M2Mod
             CustomFilesStartIndex = 0,
         };
 
-        public static SettingsProfile SettingsProfile => new SettingsProfile("Default", Settings, new FormData());
+        public static SettingsProfile SettingsProfile => new SettingsProfile("Default", Settings, new Configuration());
     };
 }

@@ -18,7 +18,7 @@ namespace M2Mod.Controls
         [DefaultValue(""), Browsable(true), DesignerSerializationVisibility(DesignerSerializationVisibility.Visible), Category("Appearance")]
         public string Cue
         {
-            get { return string.IsNullOrWhiteSpace(cue) ? string.Empty : cue; }
+            get => string.IsNullOrWhiteSpace(cue) ? string.Empty : cue;
             set
             {
                 cue = string.IsNullOrWhiteSpace(value) ? string.Empty : value;

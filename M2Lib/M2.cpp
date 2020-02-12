@@ -2917,9 +2917,9 @@ M2Lib::EError M2Lib::M2::SetNeedRemapReferences(const wchar_t* remapPath)
 	return EError_OK;
 }
 
-M2Lib::EError M2Lib::M2::SetNormalizationRules(uint32_t* data, uint32_t len)
+M2Lib::EError M2Lib::M2::AddNormalizationRule(int sourceType, uint32_t* sourceData, uint32_t sourceLen, int targetType, uint32_t* targetData, uint32_t targetLen, bool preferSource)
 {
-	normalizationRules.Initialize(data, len);
+	normalizationRules.Add(sourceType, sourceData, sourceLen, targetType, targetData, targetLen, preferSource);
 
 	return EError_OK;
 }
@@ -3144,11 +3144,11 @@ M2Lib::EError M2Lib::M2_SetNeedRemoveTXIDChunk(M2LIB_HANDLE handle)
 	}
 }
 
-M2Lib::EError M2Lib::M2_SetNormalizationRules(M2LIB_HANDLE handle, uint32_t* data, uint32_t len)
+M2Lib::EError M2Lib::M2_AddNormalizationRule(M2LIB_HANDLE handle, int sourceType, uint32_t* sourceData, uint32_t sourceLen, int targetType, uint32_t* targetData, uint32_t targetLen, bool preferSource)
 {
 	try
 	{
-		return static_cast<M2*>(handle)->SetNormalizationRules(data, len);
+		return static_cast<M2*>(handle)->AddNormalizationRule(sourceType, sourceData, sourceLen, targetType, targetData, targetLen, preferSource);
 	}
 	catch (std::exception& e)
 	{
@@ -3204,31 +3204,8 @@ wchar_t const* M2Lib::M2::PathInfo(uint32_t FileDataId) const
 	return storageRef->PathInfo(FileDataId);
 }
 
-void M2Lib::NormalizationRules::Initialize(uint32_t* data, uint32_t len)
+bool M2Lib::NormalizationRule::RuleSet::IsMatch(uint32_t rule, uint32_t meshId)
 {
-	raw = std::vector<uint32_t>(data, data + len);
-}
-
-bool M2Lib::NormalizationRules::IsMatch(uint32_t meshId)
-{
-	for (auto const& rule : raw)
-	{
-		if (IsMatch(rule, meshId))
-			return true;
-	}
-
-	return false;
-}
-
-bool M2Lib::NormalizationRules::IsMatch(uint32_t rule, uint32_t meshId)
-{
-	auto subsetType = GetSubSetType(meshId);
-	if (rule == -1 && subsetType == Subset_Facial)
-		return true;
-
-	if (rule == -2 && subsetType == Subset_Hair)
-		return true;
-
 	uint32_t decMult = 1;
 	for (uint32_t i = 0; i < 4; ++i, decMult *= 10)
 	{
@@ -3242,4 +3219,64 @@ bool M2Lib::NormalizationRules::IsMatch(uint32_t rule, uint32_t meshId)
 	}
 
 	return true;
+}
+
+M2Lib::NormalizationRule::RuleSet::RuleSet(uint32_t* data, uint32_t len)
+{
+	rules = std::vector<uint32_t>(data, data + len);
+}
+
+bool M2Lib::NormalizationRule::RuleSet::IsMatch(uint32_t meshId) const
+{
+	for (auto rule : rules)
+		if (IsMatch(rule, meshId))
+			return true;
+
+	return false;
+}
+
+void M2Lib::NormalizationRule::RuleSet::Write(std::wostream& s) const
+{
+	for (auto rule : rules)
+		s << std::hex << std::setw(4) << std::setfill(L'0') << rule << L" ";
+}
+
+M2Lib::NormalizationRule::NormalizationRule(int sourceType, uint32_t* sourceData, uint32_t sourceLen, int targetType,
+	uint32_t* targetData, uint32_t targetLen, bool preferSource) :
+	sourceRuleType(sourceType), sourceRules(sourceData, sourceLen), targetRuleType(targetType), targetRules(targetData, targetLen), preferSource(preferSource)
+{
+}
+
+bool M2Lib::NormalizationRule::IsMatch(uint32_t sourceMeshId, uint32_t targetMeshId) const
+{
+	return IsSourceMatch(sourceMeshId) && IsTargetMatch(targetMeshId);
+}
+
+bool M2Lib::NormalizationRule::IsSourceMatch(uint32_t meshId) const
+{
+	return sourceRuleType > 0 ? (sourceRuleType - 1 == GetSubSetType(meshId)) : sourceRules.IsMatch(meshId);
+}
+
+bool M2Lib::NormalizationRule::IsTargetMatch(uint32_t meshId) const
+{
+	return targetRuleType > 0 ? (targetRuleType - 1 == GetSubSetType(meshId)) : targetRules.IsMatch(meshId);
+}
+
+void M2Lib::NormalizationRule::Write(std::wostream& s) const
+{
+	s << L"S: " << sourceRuleType << " ";
+	sourceRules.Write(s);
+	s << L"T: " << targetRuleType << " ";
+	targetRules.Write(s);
+	s << L"D: " << (int)preferSource;
+}
+
+void M2Lib::NormalizationRules::Clear()
+{
+	Rules.clear();
+}
+
+void M2Lib::NormalizationRules::Add(int sourceType, uint32_t* sourceData, uint32_t sourceLen, int targetType, uint32_t* targetData, uint32_t targetLen, bool preferSource)
+{
+	Rules.emplace_back(sourceType, sourceData, sourceLen, targetType, targetData, targetLen, preferSource);
 }

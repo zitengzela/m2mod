@@ -46,21 +46,50 @@ namespace M2Lib
 	M2LIB_API EError __cdecl M2_ImportM2Intermediate(M2LIB_HANDLE handle, const wchar_t* FileName);
 	M2LIB_API EError __cdecl M2_SetNeedRemapReferences(M2LIB_HANDLE handle, const wchar_t* remapPath);
 	M2LIB_API EError __cdecl M2_SetNeedRemoveTXIDChunk(M2LIB_HANDLE handle);
-	M2LIB_API EError __cdecl M2_SetNormalizationRules(M2LIB_HANDLE handle, uint32_t* data, uint32_t len);
+	M2LIB_API EError __cdecl M2_AddNormalizationRule(M2LIB_HANDLE handle, int sourceType, uint32_t* sourceData, uint32_t sourceLen, int targetType, uint32_t* targetData, uint32_t targetLen, bool preferSource);
 	M2LIB_API void __cdecl M2_Free(M2LIB_HANDLE handle);
+
+	class NormalizationRule
+	{
+		class RuleSet
+		{
+			std::vector<uint32_t> rules;
+
+			static bool IsMatch(uint32_t rule, uint32_t meshId);
+
+		public:
+			RuleSet(uint32_t* data, uint32_t len);
+
+			bool IsMatch(uint32_t meshId) const;
+
+			void Write(std::wostream& s) const;
+		};
+
+		int sourceRuleType;
+		RuleSet sourceRules;
+		int targetRuleType;
+		RuleSet targetRules;
+		bool preferSource;
+	public:
+		NormalizationRule(int sourceType, uint32_t* sourceData, uint32_t sourceLen, int targetType, uint32_t* targetData, uint32_t targetLen, bool preferSource);
+
+		bool IsMatch(uint32_t sourceMeshId, uint32_t targetMeshId) const;
+		bool IsSourceMatch(uint32_t meshId) const;
+		bool IsTargetMatch(uint32_t meshId) const;
+
+		bool IsPreferSource() const { return preferSource; }
+
+		void Write(std::wostream& s) const;
+	};
 
 	class NormalizationRules
 	{
-		std::vector<uint32_t> raw;
-
-		static bool IsMatch(uint32_t rule, uint32_t meshId);
+		std::list<NormalizationRule> Rules;
 
 	public:
-		void Initialize(uint32_t* data, uint32_t len);
-
-		bool IsMatch(uint32_t meshId);
-
-		std::vector<uint32_t> const& GetRules() const { return raw; };
+		void Add(int sourceType, uint32_t* sourceData, uint32_t sourceLen, int targetType, uint32_t* targetData, uint32_t targetLen, bool preferSource);
+		std::list<NormalizationRule> const& GetRules() const { return Rules; }
+		void Clear();
 	};
 
 	// load, export, import merge, save: M2 file.
@@ -293,7 +322,7 @@ namespace M2Lib
 		void RemoveTXIDChunk();
 		EError SetNeedRemoveTXIDChunk();
 		EError SetNeedRemapReferences(const wchar_t* remapPath);
-		EError SetNormalizationRules(uint32_t* data, uint32_t len);
+		EError AddNormalizationRule(int sourceType, uint32_t* sourceData, uint32_t sourceLen, int targetType, uint32_t* targetData, uint32_t targetLen, bool preferSource);
 
 		DataElement* GetAnimations();
 		DataElement* GetAnimationsLookup();
@@ -314,7 +343,7 @@ namespace M2Lib
 		void FixSeamsClothing(float PositionalTolerance, float AngularTolerance);
 		// averages normals on mesh edges
 		void FixNormals(float AngularTolerance);
-		void FixNormals(std::list<M2SkinElement::CElement_SubMesh const*> const& sourceList, std::list<M2SkinElement::CElement_SubMesh const*> const& targetList, float AngularTolerance, bool preferSource);
+		void FixNormals(NormalizationRule const& rule, float AngularTolerance);
 
 		void DoExtraWork();
 

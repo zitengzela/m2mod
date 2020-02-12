@@ -41,7 +41,7 @@ namespace M2Mod
                 if (form.ShowDialog() != DialogResult.OK)
                     return;
 
-                ProfileManager.AddProfile(new SettingsProfile(form.EnteredName.Trim(), Defaults.Settings, new FormData()));
+                ProfileManager.AddProfile(new SettingsProfile(form.EnteredName.Trim(), Defaults.Settings, new Configuration()));
             }
 
             SetupProfiles();
@@ -116,7 +116,7 @@ namespace M2Mod
                     return;
                 }
 
-                ProfileManager.AddProfile(new SettingsProfile(name, SelectedProfile.Settings, SelectedProfile.FormData));
+                ProfileManager.AddProfile(new SettingsProfile(name, SelectedProfile.Settings, SelectedProfile.Configuration));
             }
 
             SetupProfiles();

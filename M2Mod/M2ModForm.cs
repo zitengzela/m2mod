@@ -46,12 +46,12 @@ namespace M2Mod
 
         private void InitializeFormData()
         {
-            textBoxInputM2Exp.Text = ProfileManager.CurrentProfile.FormData.InputM2Exp;
-            textBoxOutputM2I.Text = ProfileManager.CurrentProfile.FormData.OutputM2I;
-            textBoxInputM2Imp.Text = ProfileManager.CurrentProfile.FormData.InputM2Imp;
-            textBoxInputM2I.Text = ProfileManager.CurrentProfile.FormData.InputM2I;
-            textBoxReplaceM2.Text = ProfileManager.CurrentProfile.FormData.ReplaceM2;
-            checkBoxReplaceM2.Checked = ProfileManager.CurrentProfile.FormData.ReplaceM2Checked;
+            textBoxInputM2Exp.Text = ProfileManager.CurrentProfile.Configuration.InputM2Exp;
+            textBoxOutputM2I.Text = ProfileManager.CurrentProfile.Configuration.OutputM2I;
+            textBoxInputM2Imp.Text = ProfileManager.CurrentProfile.Configuration.InputM2Imp;
+            textBoxInputM2I.Text = ProfileManager.CurrentProfile.Configuration.InputM2I;
+            textBoxReplaceM2.Text = ProfileManager.CurrentProfile.Configuration.ReplaceM2;
+            checkBoxReplaceM2.Checked = ProfileManager.CurrentProfile.Configuration.ReplaceM2Checked;
         }
 
         private static string VersionString => $"v{Version.Major}.{Version.Minor}.{Version.Patch}";
@@ -200,20 +200,20 @@ namespace M2Mod
 
             try
             {
-                var normalizationSettings =
-                    FixNormalsSettingsForm.ParseSettings(ProfileManager.CurrentProfile.FormData.FixNormalSettings ?? "");
-                if (ProfileManager.CurrentProfile.FormData.IncludeFacials)
-                    normalizationSettings.Add(0xFFFFFFFF); // -1
-                if (ProfileManager.CurrentProfile.FormData.IncludeHair)
-                    normalizationSettings.Add(0xFFFFFFFE); // -2
-
-                Error = Imports.M2_SetNormalizationRules(_preloadM2, normalizationSettings.ToArray(),
-                    normalizationSettings.Count);
-                if (Error != M2LibError.OK)
+                foreach (var ruleSet in ProfileManager.CurrentProfile.Configuration.NormalizationConfig.GetRules())
                 {
-                    SetStatus(Imports.GetErrorText(Error));
-                    PreloadTransition(false);
-                    return;
+                    var sourceRules = ruleSet.SourceRules.Serialize().ToArray();
+                    var targetRules = ruleSet.TargetRules.Serialize().ToArray();
+
+                    Error = Imports.M2_AddNormalizationRule(_preloadM2,
+                        ruleSet.SourceType, sourceRules, sourceRules.Length,
+                        ruleSet.TargetType, targetRules, targetRules.Length, ruleSet.PreferSourceDirection);
+                    if (Error != M2LibError.OK)
+                    {
+                        SetStatus(Imports.GetErrorText(Error));
+                        PreloadTransition(false);
+                        return;
+                    }
                 }
             }
             catch (Exception ex)
@@ -447,12 +447,12 @@ namespace M2Mod
 
         private void SaveFormDataToProfile(SettingsProfile profile)
         {
-            profile.FormData.InputM2Exp = textBoxInputM2Exp.Text;
-            profile.FormData.OutputM2I = this.textBoxOutputM2I.Text;
-            profile.FormData.InputM2Imp = this.textBoxInputM2Imp.Text;
-            profile.FormData.InputM2I = this.textBoxInputM2I.Text;
-            profile.FormData.ReplaceM2 = this.textBoxReplaceM2.Text;
-            profile.FormData.ReplaceM2Checked = this.checkBoxReplaceM2.Checked;
+            profile.Configuration.InputM2Exp = textBoxInputM2Exp.Text;
+            profile.Configuration.OutputM2I = this.textBoxOutputM2I.Text;
+            profile.Configuration.InputM2Imp = this.textBoxInputM2Imp.Text;
+            profile.Configuration.InputM2I = this.textBoxInputM2I.Text;
+            profile.Configuration.ReplaceM2 = this.textBoxReplaceM2.Text;
+            profile.Configuration.ReplaceM2Checked = this.checkBoxReplaceM2.Checked;
         }
 
         private void M2Mod_FormClosing(object sender, FormClosingEventArgs e)

@@ -16,6 +16,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "M2Mod", "M2Mod\M2Mod.csproj", "{804C5F6F-D8A8-45C0-BAD6-A52E7B69049F}"
+	ProjectSection(ProjectDependencies) = postProject
+		{881DD3B6-0C01-44BA-86A4-09C9ADC86ECB} = {881DD3B6-0C01-44BA-86A4-09C9ADC86ECB}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
