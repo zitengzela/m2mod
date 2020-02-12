@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.saveButton = new System.Windows.Forms.Button();
             this.cancelButton = new System.Windows.Forms.Button();
             this.tabControl1 = new System.Windows.Forms.TabControl();
@@ -38,6 +39,9 @@
             this.hairCheckBox = new System.Windows.Forms.CheckBox();
             this.facialsCheckBox = new System.Windows.Forms.CheckBox();
             this.settingsTextBox = new System.Windows.Forms.TextBox();
+            this.label1 = new System.Windows.Forms.Label();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.linkLabel1 = new System.Windows.Forms.LinkLabel();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.tabPage2.SuspendLayout();
@@ -81,6 +85,8 @@
             // tabPage1
             // 
             this.tabPage1.BackColor = System.Drawing.SystemColors.Control;
+            this.tabPage1.Controls.Add(this.linkLabel1);
+            this.tabPage1.Controls.Add(this.label1);
             this.tabPage1.Controls.Add(this.label2);
             this.tabPage1.Controls.Add(this.hairCheckBox);
             this.tabPage1.Controls.Add(this.facialsCheckBox);
@@ -100,7 +106,7 @@
             this.tabPage2.Location = new System.Drawing.Point(4, 22);
             this.tabPage2.Name = "tabPage2";
             this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(510, 210);
+            this.tabPage2.Size = new System.Drawing.Size(510, 331);
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "Advanced";
             // 
@@ -119,16 +125,16 @@
             this.label2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.label2.AutoEllipsis = true;
-            this.label2.Location = new System.Drawing.Point(5, 35);
+            this.label2.Location = new System.Drawing.Point(5, 45);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(499, 13);
             this.label2.TabIndex = 10;
-            this.label2.Text = "Custom mesh ids go here:";
+            this.label2.Text = "Custom rules go here:";
             // 
             // hairCheckBox
             // 
             this.hairCheckBox.AutoSize = true;
-            this.hairCheckBox.Location = new System.Drawing.Point(73, 10);
+            this.hairCheckBox.Location = new System.Drawing.Point(74, 21);
             this.hairCheckBox.Name = "hairCheckBox";
             this.hairCheckBox.Size = new System.Drawing.Size(45, 17);
             this.hairCheckBox.TabIndex = 9;
@@ -138,7 +144,7 @@
             // facialsCheckBox
             // 
             this.facialsCheckBox.AutoSize = true;
-            this.facialsCheckBox.Location = new System.Drawing.Point(8, 10);
+            this.facialsCheckBox.Location = new System.Drawing.Point(9, 21);
             this.facialsCheckBox.Name = "facialsCheckBox";
             this.facialsCheckBox.Size = new System.Drawing.Size(59, 17);
             this.facialsCheckBox.TabIndex = 8;
@@ -150,11 +156,33 @@
             this.settingsTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.settingsTextBox.Location = new System.Drawing.Point(5, 60);
+            this.settingsTextBox.Location = new System.Drawing.Point(5, 61);
             this.settingsTextBox.Multiline = true;
             this.settingsTextBox.Name = "settingsTextBox";
-            this.settingsTextBox.Size = new System.Drawing.Size(499, 265);
+            this.settingsTextBox.Size = new System.Drawing.Size(499, 264);
             this.settingsTextBox.TabIndex = 7;
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(6, 3);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(279, 13);
+            this.label1.TabIndex = 11;
+            this.label1.Text = "Check additional meshes to be aligned with body meshes:";
+            // 
+            // linkLabel1
+            // 
+            this.linkLabel1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.linkLabel1.AutoSize = true;
+            this.linkLabel1.LinkColor = System.Drawing.Color.Black;
+            this.linkLabel1.Location = new System.Drawing.Point(488, 43);
+            this.linkLabel1.Name = "linkLabel1";
+            this.linkLabel1.Size = new System.Drawing.Size(13, 13);
+            this.linkLabel1.TabIndex = 12;
+            this.linkLabel1.TabStop = true;
+            this.linkLabel1.Text = "?";
+            this.toolTip1.SetToolTip(this.linkLabel1, "sdfsd");
             // 
             // FixNormalsSettingsForm
             // 
@@ -185,5 +213,8 @@
         private System.Windows.Forms.CheckBox hairCheckBox;
         private System.Windows.Forms.CheckBox facialsCheckBox;
         private System.Windows.Forms.TextBox settingsTextBox;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.ToolTip toolTip1;
+        private System.Windows.Forms.LinkLabel linkLabel1;
     }
 }

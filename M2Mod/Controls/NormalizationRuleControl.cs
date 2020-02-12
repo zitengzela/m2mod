@@ -7,6 +7,8 @@ namespace M2Mod.Controls
 {
     public partial class NormalizationRuleControl : UserControl
     {
+        private const string RuleTooltip = "Must contain space-separated entries, each is 4-digit mesh id, example: 1234 or 12x4 where 'x' matches any number";
+
         public NormalizationRuleControl()
         {
             InitializeComponent();
@@ -20,6 +22,9 @@ namespace M2Mod.Controls
             targetTypeComboBox.Items.Clear();
             targetTypeComboBox.Items.AddRange(items);
             targetTypeComboBox.SelectedIndex = 1;
+
+            toolTip1.SetToolTip(sourceTextBox, RuleTooltip);
+            toolTip1.SetToolTip(targetTextBox, RuleTooltip);
         }
 
         [DefaultValue(NormalizeRuleType.Body), Browsable(true), DesignerSerializationVisibility(DesignerSerializationVisibility.Visible), Category("Appearance")]

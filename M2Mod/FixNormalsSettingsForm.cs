@@ -11,7 +11,7 @@ namespace M2Mod
 {
     public partial class FixNormalsSettingsForm : Form
     {
-        private static readonly string[] DefaultContent = new string[] {
+        private static readonly string[] DefaultDataContent = new string[] {
             "#lines starting with # are ignored",
             "#each line is separate entry containing 4-digit mesh id",
             "#example: 1234 or 12x4 where 'x' matches any number"
@@ -22,6 +22,7 @@ namespace M2Mod
             InitializeComponent();
 
             this.Icon = Properties.Resources.Icon;
+            toolTip1.SetToolTip(this.linkLabel1, string.Join("\r\n", DefaultDataContent));
         }
 
         private void saveButton_Click(object sender, EventArgs e)
@@ -140,7 +141,7 @@ namespace M2Mod
             hairCheckBox.Checked = normalizationConfig.Simple.AlignHair;
             settingsTextBox.Text = !string.IsNullOrWhiteSpace(normalizationConfig.Simple.Data)
                 ? normalizationConfig.Simple.Data
-                : string.Join("\r\n", DefaultContent);
+                : string.Join("\r\n", DefaultDataContent);
 
             foreach (var rule in normalizationConfig.Advanced.Rules)
                 AddControlRule(rule);
