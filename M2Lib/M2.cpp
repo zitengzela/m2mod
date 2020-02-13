@@ -1051,7 +1051,7 @@ M2Lib::EError M2Lib::M2::ImportM2Intermediate(wchar_t const* FileName)
 
 	Skins[0] = pNewSkin0;
 
-	if (Settings.FixSeams)
+	if (false && Settings.FixSeams)
 	{
 		// fix normals within submeshes
 		FixSeamsSubMesh(SubmeshPositionalTolerance, SubmeshAngularTolerance * DegreesToRadians);
