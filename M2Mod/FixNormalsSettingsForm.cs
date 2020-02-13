@@ -42,6 +42,15 @@ namespace M2Mod
                     rule.SourceRules.Serialize();
                     rule.TargetRules.Serialize();
                 }
+
+                if (tabControl1.SelectedIndex == 1 && !rules.Any())
+                {
+                    var res = MessageBox.Show(
+                        "You have not created any normalization rules. Are you sure you want to continue?", "Warning",
+                        MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                    if (res != DialogResult.Yes)
+                        return;
+                }
             }
             catch (Exception ex)
             {
