@@ -41,6 +41,7 @@ namespace M2Mod
             this.buttonReplaceM2Browse = new System.Windows.Forms.Button();
             this.panel1 = new System.Windows.Forms.Panel();
             this.importButtonGo = new System.Windows.Forms.Button();
+            this.importButtonPreload = new M2Mod.Controls.SplitButton();
             this.preloadButtonContextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.importCancelButton = new System.Windows.Forms.Button();
@@ -63,6 +64,7 @@ namespace M2Mod
             this.testInputTextBox = new System.Windows.Forms.TextBox();
             this.loadMappingsButton = new System.Windows.Forms.Button();
             this.tabLog = new System.Windows.Forms.TabPage();
+            this.logTextBox = new M2Mod.LogTextBox();
             this.clearButton = new System.Windows.Forms.Button();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
@@ -82,15 +84,13 @@ namespace M2Mod
             this.buttonOutputM2IBrowse = new System.Windows.Forms.Button();
             this.label7 = new System.Windows.Forms.Label();
             this.tabExport = new System.Windows.Forms.TabPage();
+            this.exportButtonGo = new M2Mod.Controls.SplitButton();
             this.goButtonContextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.customMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tabControl = new System.Windows.Forms.TabControl();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.profilesComboBox = new System.Windows.Forms.ComboBox();
             this.profileLabel = new System.Windows.Forms.Label();
-            this.exportButtonGo = new M2Mod.Controls.SplitButton();
-            this.importButtonPreload = new M2Mod.Controls.SplitButton();
-            this.logTextBox = new M2Mod.LogTextBox();
             this.panelImputM2Exp.SuspendLayout();
             this.panelReplaceM2.SuspendLayout();
             this.panel1.SuspendLayout();
@@ -220,6 +220,20 @@ namespace M2Mod
             this.toolTip1.SetToolTip(this.importButtonGo, "Produce M2");
             this.importButtonGo.UseVisualStyleBackColor = true;
             this.importButtonGo.Click += new System.EventHandler(this.ImportButtonGo_Click);
+            // 
+            // importButtonPreload
+            // 
+            this.importButtonPreload.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            this.importButtonPreload.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.importButtonPreload.Location = new System.Drawing.Point(54, 9);
+            this.importButtonPreload.Menu = this.preloadButtonContextMenuStrip;
+            this.importButtonPreload.Name = "importButtonPreload";
+            this.importButtonPreload.Size = new System.Drawing.Size(142, 38);
+            this.importButtonPreload.TabIndex = 28;
+            this.importButtonPreload.Text = "Preload";
+            this.toolTip1.SetToolTip(this.importButtonPreload, "Load source M2 and import M2I");
+            this.importButtonPreload.UseVisualStyleBackColor = true;
+            this.importButtonPreload.Click += new System.EventHandler(this.ImportButtonPreload_Click);
             // 
             // preloadButtonContextMenuStrip
             // 
@@ -457,6 +471,22 @@ namespace M2Mod
             this.tabLog.Text = "Log";
             this.tabLog.UseVisualStyleBackColor = true;
             // 
+            // logTextBox
+            // 
+            this.logTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.logTextBox.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.logTextBox.DetectUrls = false;
+            this.logTextBox.InlcudeTimestamp = true;
+            this.logTextBox.Location = new System.Drawing.Point(7, 6);
+            this.logTextBox.Name = "logTextBox";
+            this.logTextBox.ReadOnly = true;
+            this.logTextBox.Size = new System.Drawing.Size(549, 194);
+            this.logTextBox.TabIndex = 2;
+            this.logTextBox.Text = "";
+            this.logTextBox.UseColors = true;
+            // 
             // clearButton
             // 
             this.clearButton.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
@@ -579,7 +609,7 @@ namespace M2Mod
             this.tabImport.Padding = new System.Windows.Forms.Padding(3);
             this.tabImport.Size = new System.Drawing.Size(560, 230);
             this.tabImport.TabIndex = 1;
-            this.tabImport.Text = "Import";
+            this.tabImport.Text = "M2I->M2";
             this.tabImport.UseVisualStyleBackColor = true;
             // 
             // checkBoxReplaceM2
@@ -638,8 +668,22 @@ namespace M2Mod
             this.tabExport.Padding = new System.Windows.Forms.Padding(3);
             this.tabExport.Size = new System.Drawing.Size(560, 230);
             this.tabExport.TabIndex = 0;
-            this.tabExport.Text = "Export";
+            this.tabExport.Text = "M2 -> M2I";
             this.tabExport.UseVisualStyleBackColor = true;
+            // 
+            // exportButtonGo
+            // 
+            this.exportButtonGo.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            this.exportButtonGo.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.exportButtonGo.Location = new System.Drawing.Point(214, 188);
+            this.exportButtonGo.Menu = this.goButtonContextMenuStrip;
+            this.exportButtonGo.Name = "exportButtonGo";
+            this.exportButtonGo.Size = new System.Drawing.Size(142, 38);
+            this.exportButtonGo.TabIndex = 26;
+            this.exportButtonGo.Text = "Go!";
+            this.toolTip1.SetToolTip(this.exportButtonGo, "Click this to perform operations.");
+            this.exportButtonGo.UseVisualStyleBackColor = true;
+            this.exportButtonGo.Click += new System.EventHandler(this.ExportButtonGo_Click);
             // 
             // goButtonContextMenuStrip
             // 
@@ -700,50 +744,6 @@ namespace M2Mod
             this.profileLabel.Size = new System.Drawing.Size(36, 13);
             this.profileLabel.TabIndex = 37;
             this.profileLabel.Text = "Profile";
-            // 
-            // exportButtonGo
-            // 
-            this.exportButtonGo.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.exportButtonGo.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.exportButtonGo.Location = new System.Drawing.Point(214, 188);
-            this.exportButtonGo.Menu = this.goButtonContextMenuStrip;
-            this.exportButtonGo.Name = "exportButtonGo";
-            this.exportButtonGo.Size = new System.Drawing.Size(142, 38);
-            this.exportButtonGo.TabIndex = 26;
-            this.exportButtonGo.Text = "Go!";
-            this.toolTip1.SetToolTip(this.exportButtonGo, "Click this to perform operations.");
-            this.exportButtonGo.UseVisualStyleBackColor = true;
-            this.exportButtonGo.Click += new System.EventHandler(this.ExportButtonGo_Click);
-            // 
-            // importButtonPreload
-            // 
-            this.importButtonPreload.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.importButtonPreload.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.importButtonPreload.Location = new System.Drawing.Point(54, 9);
-            this.importButtonPreload.Menu = this.preloadButtonContextMenuStrip;
-            this.importButtonPreload.Name = "importButtonPreload";
-            this.importButtonPreload.Size = new System.Drawing.Size(142, 38);
-            this.importButtonPreload.TabIndex = 28;
-            this.importButtonPreload.Text = "Preload";
-            this.toolTip1.SetToolTip(this.importButtonPreload, "Load source M2 and import M2I");
-            this.importButtonPreload.UseVisualStyleBackColor = true;
-            this.importButtonPreload.Click += new System.EventHandler(this.ImportButtonPreload_Click);
-            // 
-            // logTextBox
-            // 
-            this.logTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.logTextBox.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.logTextBox.DetectUrls = false;
-            this.logTextBox.InlcudeTimestamp = true;
-            this.logTextBox.Location = new System.Drawing.Point(7, 6);
-            this.logTextBox.Name = "logTextBox";
-            this.logTextBox.ReadOnly = true;
-            this.logTextBox.Size = new System.Drawing.Size(549, 194);
-            this.logTextBox.TabIndex = 2;
-            this.logTextBox.Text = "";
-            this.logTextBox.UseColors = true;
             // 
             // M2ModForm
             // 

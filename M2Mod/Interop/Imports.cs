@@ -91,5 +91,11 @@ namespace M2Mod.Interop
 
         [DllImport("M2Lib.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern void Wrapper_Free(IntPtr pointer);
+
+        [return: MarshalAs(UnmanagedType.LPWStr)]
+        public delegate string SaveMappingsDelegate();
+
+        [DllImport("M2Lib.dll", CallingConvention = CallingConvention.Cdecl)]
+        public static extern M2LibError M2_SetSaveMappingsCallback(IntPtr handle, SaveMappingsDelegate callback);
     }
 }

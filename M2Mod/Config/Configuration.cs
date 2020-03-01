@@ -1,8 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace M2Mod.Config
 {
-    public class Configuration
+    public class Configuration : ICloneable
     {
         public string InputM2Exp;
         public string OutputM2I;
@@ -19,6 +20,25 @@ namespace M2Mod.Config
 
         public Configuration()
         {
+        }
+
+        public object Clone()
+        {
+            return new Configuration()
+            {
+                InputM2Exp = InputM2Exp,
+                OutputM2I = OutputM2I,
+                InputM2Imp = InputM2Imp,
+                InputM2I = InputM2I,
+                ReplaceM2 = ReplaceM2,
+                ReplaceM2Checked = ReplaceM2Checked,
+                OldCompareM2 = OldCompareM2,
+                NewCompareM2 = NewCompareM2,
+                CompareWeightThreshold = CompareWeightThreshold,
+                CompareSourceScale = CompareSourceScale,
+                PredictScale = PredictScale,
+                NormalizationConfig = NormalizationConfig.Clone() as NormalizationConfig
+            };
         }
     }
 }

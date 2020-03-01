@@ -599,8 +599,34 @@ namespace M2Mod
             if (!Directory.Exists(directory))
                 Directory.CreateDirectory(directory);
 
+            var error = Imports.M2_SetSaveMappingsCallback(_preloadM2, () =>
+            {
+                var dialog = new SaveFileDialog {Filter = Filters.Txt};
+                try
+                {
+                    dialog.Title = "Select mappings file to append entries to";
+                    dialog.InitialDirectory = ProfileManager.CurrentProfile.Settings.MappingsDirectory;
+                    dialog.FileName = Path.GetFileNameWithoutExtension(textBoxInputM2Imp.Text) + ".txt";
+                }
+                catch
+                {
+                    // ignored
+                }
+
+                if (dialog.ShowDialog() == DialogResult.OK)
+                    return dialog.FileName;
+
+                return "";
+            });
+            if (error != M2LibError.OK)
+            {
+                SetStatus(Imports.GetErrorText(error));
+                PreloadTransition(false);
+                return;
+            }
+
             // export M2
-            var error = Imports.M2_Save(_preloadM2, ExportFileName, SaveMask.All);
+            error = Imports.M2_Save(_preloadM2, ExportFileName, SaveMask.All);
             if (error != M2LibError.OK)
             {
                 SetStatus(Imports.GetErrorText(error));

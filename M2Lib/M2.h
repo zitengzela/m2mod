@@ -38,16 +38,7 @@ namespace M2Lib
 		SAVE_ALL = SAVE_M2 | SAVE_SKIN | SAVE_SKELETON | SAVE_OTHER,
 	};
 
-	M2LIB_API M2LIB_HANDLE __cdecl M2_Create(Settings* settings = nullptr);
-	M2LIB_API EError __cdecl M2_Load(M2LIB_HANDLE handle, const wchar_t* FileName);
-	M2LIB_API EError __cdecl M2_Save(M2LIB_HANDLE handle, const wchar_t* FileName, uint8_t saveMask);
-	M2LIB_API EError __cdecl M2_SetReplaceM2(M2LIB_HANDLE handle, const wchar_t* FileName);
-	M2LIB_API EError __cdecl M2_ExportM2Intermediate(M2LIB_HANDLE handle, const wchar_t* FileName);
-	M2LIB_API EError __cdecl M2_ImportM2Intermediate(M2LIB_HANDLE handle, const wchar_t* FileName);
-	M2LIB_API EError __cdecl M2_SetNeedRemapReferences(M2LIB_HANDLE handle, const wchar_t* remapPath);
-	M2LIB_API EError __cdecl M2_SetNeedRemoveTXIDChunk(M2LIB_HANDLE handle);
-	M2LIB_API EError __cdecl M2_AddNormalizationRule(M2LIB_HANDLE handle, int sourceType, uint32_t* sourceData, uint32_t sourceLen, int targetType, uint32_t* targetData, uint32_t targetLen, bool preferSource);
-	M2LIB_API void __cdecl M2_Free(M2LIB_HANDLE handle);
+	typedef wchar_t const* (__stdcall* SaveMappingsCallback)();
 
 	class NormalizationRule
 	{
@@ -264,13 +255,14 @@ namespace M2Lib
 
 		uint32_t m_OriginalModelChunkSize;
 		Settings Settings;
-		FileStorage* storageRef;
+		FileStorage* storageRef = nullptr;
 
 		uint32_t GetCustomMappingCounter();
 		FileInfo const* AddCustomMapping(wchar_t const* path);
 		uint32_t currentCustomFileDataId = 0;
 		std::map<uint32_t, FileInfo const*> customFileInfosByFileDataId;
 		std::map<uint64_t, FileInfo const*> customFileInfosByNameHash;
+		SaveMappingsCallback saveMappingsCallback = nullptr;
 
 		M2I* pInM2I;
 		M2* replaceM2;
@@ -323,6 +315,7 @@ namespace M2Lib
 		EError SetNeedRemoveTXIDChunk();
 		EError SetNeedRemapReferences(const wchar_t* remapPath);
 		EError AddNormalizationRule(int sourceType, uint32_t* sourceData, uint32_t sourceLen, int targetType, uint32_t* targetData, uint32_t targetLen, bool preferSource);
+		EError SetSaveMappingsCallback(SaveMappingsCallback callback);
 
 		DataElement* GetAnimations();
 		DataElement* GetAnimationsLookup();
@@ -398,5 +391,19 @@ namespace M2Lib
 		FileInfo const* GetFileInfoByPartialPath(std::wstring const& Path) const;
 		wchar_t const* PathInfo(uint32_t FileDataId) const;
 	};
+
+
+	M2LIB_API M2LIB_HANDLE __cdecl M2_Create(Settings* settings = nullptr);
+	M2LIB_API EError __cdecl M2_Load(M2LIB_HANDLE handle, const wchar_t* FileName);
+	M2LIB_API EError __cdecl M2_Save(M2LIB_HANDLE handle, const wchar_t* FileName, uint8_t saveMask);
+	M2LIB_API EError __cdecl M2_SetReplaceM2(M2LIB_HANDLE handle, const wchar_t* FileName);
+	M2LIB_API EError __cdecl M2_ExportM2Intermediate(M2LIB_HANDLE handle, const wchar_t* FileName);
+	M2LIB_API EError __cdecl M2_ImportM2Intermediate(M2LIB_HANDLE handle, const wchar_t* FileName);
+	M2LIB_API EError __cdecl M2_SetNeedRemapReferences(M2LIB_HANDLE handle, const wchar_t* remapPath);
+	M2LIB_API EError __cdecl M2_SetNeedRemoveTXIDChunk(M2LIB_HANDLE handle);
+	M2LIB_API EError __cdecl M2_AddNormalizationRule(M2LIB_HANDLE handle, int sourceType, uint32_t* sourceData, uint32_t sourceLen, int targetType, uint32_t* targetData, uint32_t targetLen, bool preferSource);
+	M2LIB_API EError __cdecl M2_SetSaveMappingsCallback(M2LIB_HANDLE handle, SaveMappingsCallback callback);
+	M2LIB_API void __cdecl M2_Free(M2LIB_HANDLE handle);
+	
 }
 

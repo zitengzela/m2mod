@@ -22,11 +22,11 @@ namespace M2Mod.Config
 
         public static void AddProfile(SettingsProfile profile) => Profiles.Add(profile);
 
-        public static void RemoveProfile(Guid Id) => Profiles.RemoveAll(_ => _.Id == Id);
+        public static void RemoveProfile(Guid id) => Profiles.RemoveAll(_ => _.Id == id);
 
         public static bool Load(string file, bool createDefault)
         {
-            ConfigFile config = new ConfigFile();
+            var config = new ConfigFile();
             try
             {
                 if (string.IsNullOrWhiteSpace(file))
@@ -101,13 +101,13 @@ namespace M2Mod.Config
             return Profiles;
         }
 
-        public static void MoveProfile(Guid Id, bool Down)
+        public static void MoveProfile(Guid id, bool down)
         {
-            var index = Profiles.FindIndex(_ => _.Id == Id);
+            var index = Profiles.FindIndex(_ => _.Id == id);
             if (index == -1)
                 return;
 
-            if (Down)
+            if (down)
             {
                 if (index + 1 < Profiles.Count)
                     SwapProfiles(index, index + 1);

@@ -9,7 +9,7 @@ namespace M2Mod.Controls
         public static byte AnyDigit = 0x10;
     }
 
-    public class RuleList
+    public class RuleList : ICloneable
     {
         public List<string> Rules { get; private set; } = new List<string>();
 
@@ -59,9 +59,17 @@ namespace M2Mod.Controls
 
             return res;
         }
+
+        public object Clone()
+        {
+            return new RuleList()
+            {
+                Rules = new List<string>(Rules)
+            };
+        }
     }
 
-    public class NormalizationRule
+    public class NormalizationRule : ICloneable
     {
         public NormalizeRuleType SourceType = NormalizeRuleType.Body;
         public RuleList SourceRules = new RuleList();
@@ -90,6 +98,19 @@ namespace M2Mod.Controls
             {
                 return false;
             }
+        }
+
+        public object Clone()
+        {
+            return new NormalizationRule()
+            {
+                SourceType = SourceType,
+                SourceRules = SourceRules.Clone() as RuleList,
+                TargetType = TargetType,
+                TargetRules = TargetRules.Clone() as RuleList,
+                PreferSourceDirection = PreferSourceDirection,
+                Enabled = Enabled
+            };
         }
     }
 }

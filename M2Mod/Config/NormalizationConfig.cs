@@ -1,11 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using M2Mod.Config.Normalization;
 using M2Mod.Controls;
 
 namespace M2Mod.Config
 {
-    public class NormalizationConfig
+    public class NormalizationConfig : ICloneable
     {
         public bool UseAdvanced;
         public SimpleConfig Simple = new SimpleConfig();
@@ -49,6 +50,16 @@ namespace M2Mod.Config
             rules.AddRange(SimpleConfig.ParseData(Simple.Data));
 
             return rules;
+        }
+
+        public object Clone()
+        {
+            return new NormalizationConfig()
+            {
+                UseAdvanced = UseAdvanced,
+                Simple = Simple.Clone() as SimpleConfig,
+                Advanced = Advanced.Clone() as AdvancedConfig,
+            };
         }
     }
 }

@@ -3,7 +3,7 @@ using M2Mod.Interop.Structures;
 
 namespace M2Mod.Config
 {
-    public class SettingsProfile
+    public class SettingsProfile : ICloneable
     {
         public Guid Id;
         public string Name;
@@ -23,9 +23,19 @@ namespace M2Mod.Config
             Configuration = configuration;
         }
 
+        public void SetName(string name)
+        {
+            Name = name;
+        }
+
         public override string ToString()
         {
             return Name;
+        }
+
+        public object Clone()
+        {
+            return new SettingsProfile(Name, Settings, Configuration.Clone() as Configuration);
         }
     }
 }

@@ -424,11 +424,21 @@ M2Lib::EError M2Lib::M2::SaveCustomMappings(wchar_t const* fileName)
 	if (customFileInfosByFileDataId.empty())
 		return EError_OK;
 
-	std::filesystem::path outPath = Settings.MappingsDirectory;
-	if (outPath.empty())
-		outPath = FileStorage::DefaultMappingsPath;
+	std::filesystem::path outPath;
+	auto customPath = saveMappingsCallback ? saveMappingsCallback() : L"";
+	if (wcslen(customPath) > 0)
+		outPath = customPath;
+	else
+	{
+		if (saveMappingsCallback)
+			return EError_FAIL;
 
-	outPath /= std::filesystem::path(fileName).stem().wstring() + L".txt";
+		outPath = Settings.MappingsDirectory;
+		if (outPath.empty())
+			outPath = FileStorage::DefaultMappingsPath;
+
+		outPath /= std::filesystem::path(fileName).stem().wstring() + L".txt";
+	}
 
 	std::wofstream fs(outPath.wstring(), std::ios::out | std::ios::app);
 	if (fs.fail())
@@ -807,7 +817,11 @@ M2Lib::EError M2Lib::M2::Save(const wchar_t* FileName, uint8_t saveMask = SAVE_A
 	}
 
 	if (saveMask & SAVE_M2)
-		SaveCustomMappings(FileName);
+	{
+		auto Error = SaveCustomMappings(FileName);
+		if (Error != EError_OK)
+			return Error;
+	}
 
 	CopyRemappedFiles(FileName);
 
@@ -2924,6 +2938,13 @@ M2Lib::EError M2Lib::M2::AddNormalizationRule(int sourceType, uint32_t* sourceDa
 	return EError_OK;
 }
 
+M2Lib::EError M2Lib::M2::SetSaveMappingsCallback(SaveMappingsCallback callback)
+{
+	this->saveMappingsCallback = callback;
+
+	return EError_OK;
+}
+
 void M2Lib::M2::RemoveTXIDChunk()
 {
 	sLogger.LogInfo(L"Erasing TXID chunk from model");
@@ -3151,6 +3172,20 @@ M2Lib::EError M2Lib::M2_AddNormalizationRule(M2LIB_HANDLE handle, int sourceType
 		return static_cast<M2*>(handle)->AddNormalizationRule(sourceType, sourceData, sourceLen, targetType, targetData, targetLen, preferSource);
 	}
 	catch (std::exception& e)
+	{
+		sLogger.LogError(L"Exception: %s", StringHelpers::StringToWString(e.what()).c_str());
+
+		return EError_FAIL;
+	}
+}
+
+M2Lib::EError M2Lib::M2_SetSaveMappingsCallback(M2LIB_HANDLE handle, SaveMappingsCallback callback)
+{
+	try
+	{
+		return static_cast<M2*>(handle)->SetSaveMappingsCallback(callback);
+	}
+	catch (std::exception & e)
 	{
 		sLogger.LogError(L"Exception: %s", StringHelpers::StringToWString(e.what()).c_str());
 

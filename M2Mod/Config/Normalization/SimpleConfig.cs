@@ -1,10 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using M2Mod.Controls;
 
 namespace M2Mod.Config.Normalization
 {
-    public class SimpleConfig
+    public class SimpleConfig : ICloneable
     {
         public bool AlignFacials;
         public bool AlignHair;
@@ -32,6 +33,16 @@ namespace M2Mod.Config.Normalization
             });
 
             return tmp4;
+        }
+
+        public object Clone()
+        {
+            return new SimpleConfig()
+            {
+                AlignFacials = AlignFacials,
+                AlignHair = AlignHair,
+                Data = Data
+            };
         }
     }
 }

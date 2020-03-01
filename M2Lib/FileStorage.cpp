@@ -22,6 +22,7 @@ void M2Lib::FileStorage::ClearStorage()
 		delete info.second;
 	fileInfosByFileDataId.clear();
 	fileInfosByNameHash.clear();
+	MaxFileDataId = 0;
 }
 
 uint32_t M2Lib::FileInfo_GetFileDataId(M2LIB_HANDLE handle)
@@ -121,10 +122,11 @@ void M2Lib::FileStorage::SetMappingsDirectory(std::wstring const& mappingsDirect
 
 void M2Lib::FileStorage::AddRecord(FileInfo const* record)
 {
-	auto nameHash = CalcStringHash(record->Path);
-
 	fileInfosByFileDataId[record->FileDataId] = record;
-	fileInfosByNameHash[nameHash] = record;
+	fileInfosByNameHash[CalcStringHash(record->Path)] = record;
+
+	if (record->FileDataId > MaxFileDataId)
+		MaxFileDataId = record->FileDataId;
 }
 
 M2Lib::FileStorage::~FileStorage()

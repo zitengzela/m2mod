@@ -116,7 +116,10 @@ namespace M2Mod
                     return;
                 }
 
-                ProfileManager.AddProfile(new SettingsProfile(name, SelectedProfile.Settings, SelectedProfile.Configuration));
+                var clone = SelectedProfile.Clone() as SettingsProfile;
+                clone.SetName(name);
+
+                ProfileManager.AddProfile(clone);
             }
 
             SetupProfiles();
