@@ -90,7 +90,7 @@
     </Compile>
     <Compile Include="Controls\NormalizeRuleType.cs" />
     <Compile Include="Extensions.cs" />
-    <Compile Include="Interop\Structures\SubsetType.cs" />
+    <Compile Include="Interop\Structures\MeshType.cs" />
     <Compile Include="Dialogs\Filters.cs" />
     <Compile Include="FixNormalsSettingsForm.cs">
       <SubType>Form</SubType>

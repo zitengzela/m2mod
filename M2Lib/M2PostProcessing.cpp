@@ -151,15 +151,15 @@ void M2Lib::M2::FixNormals(float AngularTolerance)
 	{
 		const auto submesh = &allMeshes[i];
 
-		switch (GetSubSetType(submesh->ID))
+		switch (GetGeosetType(submesh->ID))
 		{
-			case Subset_Body:
+			case GeosetType_Body:
 				bodyMeshIds.push_back(submesh->ID);
 				break;
-			case Subset_Armor:
+			case GeosetType_Armor:
 				armorMeshIds.push_back(submesh->ID);
 				break;
-			case Subset_Unknown:
+			case GeosetType_Unknown:
 				++unkCount;
 				break;
 			default:
@@ -206,6 +206,11 @@ void M2Lib::M2::FixNormals(NormalizationRule const& rule, float AngularTolerance
 			for (uint32_t j = 0; j < meshCount; ++j)
 			{
 				auto SubmeshJ = &allMeshes[j];
+
+				// hack: do not align face geosets against each other
+				if (IsFaceGeoset(SubmeshI->ID) && IsFaceGeoset(SubmeshJ->ID))
+					continue;
+
 				if (!rule.IsTargetMatch(SubmeshJ->ID))
 					continue;
 

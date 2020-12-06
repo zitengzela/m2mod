@@ -1,6 +1,6 @@
 ﻿namespace M2Mod.Interop.Structures
 {
-    enum SubsetType : int
+    enum MeshType : int
     {
         Body = 0,
         Armor = 1,
@@ -8,6 +8,7 @@
         Hair = 3,
         Facial = 4,
         Eyes = 5,
-        Unknown = 6
+        Accessories = 6,
+        Unknown = 7,
     }
 }

@@ -980,6 +980,8 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate(wchar_t const* FileName)
 			Position = Camera->Position;
 			Target = Camera->Target;
 
+			FoV = 0.785398163f;	// 45 degrees in radians, assuming that WoW stores camera FoV in radians. or maybe it's half FoV.
+
 			// extract field of view of camera from animation block
 			if (Camera->AnimationBlock_FieldOfView.Values.Count > 0)
 			{
@@ -987,13 +989,12 @@ M2Lib::EError M2Lib::M2::ExportM2Intermediate(wchar_t const* FileName)
 				auto LastElementIndex = GetLastElementIndex();
 				m2lib_assert(LastElementIndex != M2Element::EElement__CountM2__);
 				auto& LastElement = Elements[LastElementIndex];
-				m2lib_assert(ExternalAnimations[0].Offset >= LastElement.Offset && ExternalAnimations[0].Offset < LastElement.Offset + LastElement.Data.size());
-
-				float* FieldOfView_Keys = (float*)LastElement.GetLocalPointer(ExternalAnimations[0].Offset);
-				FoV = FieldOfView_Keys[0];
+				if (ExternalAnimations[0].Offset > 0) {
+					m2lib_assert(ExternalAnimations[0].Offset >= LastElement.Offset && ExternalAnimations[0].Offset < LastElement.Offset + LastElement.Data.size());
+					float* FieldOfView_Keys = (float*)LastElement.GetLocalPointer(ExternalAnimations[0].Offset);
+					FoV = FieldOfView_Keys[0];
+				}
 			}
-			else
-				FoV = 0.785398163f;	// 45 degrees in radians, assuming that WoW stores camera FoV in radians. or maybe it's half FoV.
 		}
 
 		DataBinary.Write<uint8_t>(1);	// has data
@@ -3289,12 +3290,12 @@ bool M2Lib::NormalizationRule::IsMatch(uint32_t sourceMeshId, uint32_t targetMes
 
 bool M2Lib::NormalizationRule::IsSourceMatch(uint32_t meshId) const
 {
-	return sourceRuleType > 0 ? (sourceRuleType - 1 == GetSubSetType(meshId)) : sourceRules.IsMatch(meshId);
+	return sourceRuleType > 0 ? (sourceRuleType - 1 == GetGeosetType(meshId)) : sourceRules.IsMatch(meshId);
 }
 
 bool M2Lib::NormalizationRule::IsTargetMatch(uint32_t meshId) const
 {
-	return targetRuleType > 0 ? (targetRuleType - 1 == GetSubSetType(meshId)) : targetRules.IsMatch(meshId);
+	return targetRuleType > 0 ? (targetRuleType - 1 == GetGeosetType(meshId)) : targetRules.IsMatch(meshId);
 }
 
 void M2Lib::NormalizationRule::Write(std::wostream& s) const

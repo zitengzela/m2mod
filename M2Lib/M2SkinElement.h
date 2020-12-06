@@ -10,15 +10,16 @@ namespace M2Lib
 {
 	class M2Skin;
 
-	enum SubsetType
+	enum GetosetType
 	{
-		Subset_Body = 0,
-		Subset_Armor = 1,
-		Subset_Cloak = 2,
-		Subset_Hair = 3,
-		Subset_Facial = 4,
-		Subset_Eyes = 5,
-		Subset_Unknown = 6
+		GeosetType_Body = 0,
+		GeosetType_Armor = 1,
+		GeosetType_Cloak = 2,
+		GeosetType_Hair = 3,
+		GeosetType_Facial = 4,
+		GeosetType_Eyes = 5,
+		GeosetType_Accessories = 6,
+		GeosetType_Unknown = 7,
 	};
 
 	namespace M2SkinElement
@@ -156,8 +157,9 @@ namespace M2Lib
 		ASSERT_SIZE(CElement_Flags, 12);
 	}
 
-	uint32_t GetSubSetType(uint32_t SubsetId);
-	bool IsAlignedSubset(uint32_t SubsetId);
+	uint32_t GetGeosetType(uint32_t GeosetId);
+	bool IsAlignedGeoset(uint32_t GeosetId);
+	bool IsFaceGeoset(uint32_t GeosetId);
 
 #pragma pack(pop)
 }

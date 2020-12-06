@@ -1,31 +1,22 @@
 #include "M2SkinElement.h"
 
-uint32_t M2Lib::GetSubSetType(uint32_t SubsetId)
+uint32_t M2Lib::GetGeosetType(uint32_t GeosetId)
 {
-	switch (SubsetId / 100)
+	switch (GeosetId / 100)
 	{
+		case 0:
+		{
+			if (GeosetId > 0)
+				return GeosetType_Hair;
+
+			return GeosetType_Body;
+		}
 		case 1:
 		case 2:
 		case 3:
-			return Subset_Facial;
-		case 17:
-			return Subset_Eyes;
-		default:
-			break;
-	}
-
-	switch (SubsetId / 100)
-	{
-		case 0:
-			if (SubsetId > 0)
-				return Subset_Hair;
-			break;
-		default:
-			break;
-	}
-
-	switch (SubsetId / 100)
-	{
+		case 16:	// dwarf nose earrings, mechagnome chin
+		case 34:
+			return GeosetType_Facial;
 		case 4:
 		case 5:
 		case 8:
@@ -36,60 +27,56 @@ uint32_t M2Lib::GetSubSetType(uint32_t SubsetId)
 		case 18:
 		case 20:
 		case 22:
+		case 23:
 		{
-			if (SubsetId % 10 != 1)
-				return Subset_Armor;
-			break;
+			if (GeosetId % 10 != 1)
+				return GeosetType_Armor;
+
+			return GeosetType_Body;
 		}
-		default:
-			break;
-	}
-
-	switch (SubsetId / 100)
-	{
-		case 12:
-		case 15:
-			return Subset_Cloak;
-		default:
-			break;
-	}
-
-	switch (SubsetId)
-	{
-		case 0:
-		case 401:
-		case 501:
-		case 1301:
-		case 2001:
-		case 2201:
-		case 2301:
-			return Subset_Body;
-		default:
-			break;
-	}
-
-	switch (SubsetId / 100)
-	{
+		case 6:
 		case 7:
 		case 19:
-			return Subset_Body;
+		case 38:
+		case 40:
+		case 41:
+			return GeosetType_Body;
+		case 12:
+		case 14:
+		case 15:
+			return GeosetType_Cloak;
+		case 17:
+		case 33:
+			return GeosetType_Eyes;
+		case 24:
+		case 25:
+		case 29:
+		case 30:
+		case 31:
+		case 35:
+		case 36:
+		case 37:
+		case 39:
+			return GeosetType_Accessories;
+		case 32:
+			return GeosetType_Body;
 		default:
 			break;
 	}
 
-	return Subset_Unknown;
+	return GeosetType_Unknown;
 }
 
-bool M2Lib::IsAlignedSubset(uint32_t SubsetId)
+bool M2Lib::IsAlignedGeoset(uint32_t GeosetId)
 {
-	uint32_t SubsetType = GetSubSetType(SubsetId);
-	if (SubsetType == Subset_Body)
+	uint32_t GeosetType = GetGeosetType(GeosetId);
+	if (GeosetType == GeosetType_Body)
 		return true;
 
-	if (SubsetType != Subset_Armor)
+	if (GeosetType != GeosetType_Armor)
 		return false;
 
-	switch (SubsetId / 100)
+	switch (GeosetId / 100)
 	{
 		case 4:
 		case 8:
@@ -102,4 +89,9 @@ bool M2Lib::IsAlignedSubset(uint32_t SubsetId)
 	}
 
 	return false;
+}
+
+bool M2Lib::IsFaceGeoset(uint32_t GeosetId)
+{
+	return (GeosetId / 100) == 32;
 }

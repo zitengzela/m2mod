@@ -197,6 +197,9 @@ namespace M2Lib
 			enum EFlags
 				: uint32_t
 			{
+				EFlags_IgnoreParentTranslate = 0x1,
+				EFlags_IgnoreParentScale = 0x2,
+				EFlags_IgnoreParentRotation = 0x4,
 				EFlags_SphericalBillboard = 0x8,
 				EFlags_BilboardLockX = 0x10,
 				EFlags_BilboardLockY = 0x20,
@@ -262,6 +265,52 @@ namespace M2Lib
 				EBoneLookup_Wheel6,
 				EBoneLookup_Wheel7,
 				EBoneLookup_Wheel8,
+
+				EBoneLookup_FaceAttenuation,
+				EBoneLookup_CapeParent,
+				EBoneLookup_CapeChild1,
+				EBoneLookup_CapeChild2,
+				EBoneLookup_CapeChild3,
+				EBoneLookup_CapeChild4,
+				EBoneLookup_Unk41,
+				EBoneLookup_Unk42,
+				EBoneLookup_TabardParent,
+				EBoneLookup_TabardChild1,
+				EBoneLookup_TabardChild2,
+				EBoneLookup_UnkHeadTop46,
+				EBoneLookup_UnkHeadTop47,
+				EBoneLookup_UpperBodyParent,
+				EBoneLookup_NeckParent,
+				EBoneLookup_NeckChild1,
+				EBoneLookup_LowerBodyParent,
+				EBoneLookup_Buckle,
+				EBoneLookup_Chest,
+				EBoneLookup_Main,
+				EBoneLookup_LegR,
+				EBoneLookup_LegL,
+				EBoneLookup_KneeR,
+				EBoneLookup_KneeL,
+				EBoneLookup_FootL,
+				EBoneLookup_FootR,
+				EBoneLookup_ElbowR,
+				EBoneLookup_ElbowL,
+				EBoneLookup_UnkElbowLChild63,
+				EBoneLookup_HandR,
+				EBoneLookup_HandL,
+				EBoneLookup_WeaponR,
+				EBoneLookup_WeaponL,
+				EBoneLookup_UnkWristLChild68,
+				EBoneLookup_UnkWristRChild69,
+				EBoneLookup_KneedRUpperRig,
+				EBoneLookup_KneeLUpperRig,
+				EBoneLookup_ArmR2,
+				EBoneLookup_ArmL2,
+				EBoneLookup_ElbowRUpperRig,
+				EBoneLookup_ElbowLUpperRig,
+				EBoneLookup_ForearmR,
+				EBoneLookup_ForearmL,
+				EBoneLookup_WristRUpperRig,
+				EBoneLookup_WristLUpperRig,
 			};
 
 		public:
@@ -307,7 +356,13 @@ namespace M2Lib
 				GuildBackgroundColor = 15,
 				GuildEmblemColor = 16,
 				GuildBorderColor = 17,
-				GuildEmblem = 18
+				GuildEmblem = 18,
+				Eyes = 19,
+				Accessory = 20,
+				SecondarySkin = 21,
+				SecondaryHair = 22,
+				SecondaryUnk = 23,
+				Unk24 = 24,
 			};
 
 			static std::string GetTypeString(ETextureType Type);
@@ -542,7 +597,9 @@ namespace M2Lib
 				EID_AlteredSoulderL = 52,
 				EID_BeltBuckle = 53,
 				EID_SheathCrossbow = 54,
-				EID_HeadTop = 55	// horns?
+				EID_HeadTop = 55,	// horns?
+				EID_Backpack = 57,
+				EID_Unknown60 = 60,
 			};
 
 		public:

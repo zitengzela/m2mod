@@ -399,16 +399,20 @@ M2Lib::EError M2Lib::M2I::Load(wchar_t const* FileName, M2Lib::M2* pM2, bool Ign
 			{
 				if (pCameraToMod->AnimationBlock_FieldOfView.Values.Count > 0)
 				{
+					auto value = DataBinary.Read<float>();
+
 					auto ExternalAnimations = (M2Array*)pM2->Elements[M2Element::EElement_Camera].GetLocalPointer(pCameraToMod->AnimationBlock_FieldOfView.Values.Offset);
 
 					auto LastElementIndex = pM2->GetLastElementIndex();
 					m2lib_assert(LastElementIndex != M2Element::EElement__CountM2__);
 					auto& LastElement = pM2->Elements[LastElementIndex];
-					m2lib_assert(ExternalAnimations[0].Offset >= LastElement.Offset && ExternalAnimations[0].Offset < LastElement.Offset + LastElement.Data.size());
 
-					float* FieldOfView_Keys = (float*)LastElement.GetLocalPointer(ExternalAnimations[0].Offset);
-					auto value = DataBinary.Read<float>();
-					FieldOfView_Keys[0] = value;
+					if (ExternalAnimations[0].Offset > 0) {
+						m2lib_assert(ExternalAnimations[0].Offset >= LastElement.Offset && ExternalAnimations[0].Offset < LastElement.Offset + LastElement.Data.size());
+
+						float* FieldOfView_Keys = (float*)LastElement.GetLocalPointer(ExternalAnimations[0].Offset);
+						FieldOfView_Keys[0] = value;
+					}
 				}
 				else
 					DataBinary.Read<float>();
